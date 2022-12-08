@@ -161,7 +161,7 @@ class ModelTest(object):
                 outmsg = "%s New: %8.4e\t Old: non-existent\n" % (link_name, new_link_masses[k])
                 continue
             outmsg = "%s New: %8.4e\t Old: %8.4e\t Diff: %8.4e" % (link_name, new_link_masses[k], old_link_masses[k], new_link_masses[k] - old_link_masses[k])
-            if abs(new_link_masses[k] - old_link_masses[k]) > self.new.tolerances["tolerance_mass"]:
+            if abs(new_link_masses[k] - old_link_masses[k]) > self.new.tolerances["mass"]:
                 outmsg +=" too big!"
                 success = False
             log.info(outmsg)
@@ -193,9 +193,9 @@ class ModelTest(object):
                 "{:f}".format(left_mass),
                 "{:f}".format(right_mass),
                 "{:f}".format(diff),
-                "!!!" if diff is None or np.abs(diff) > self.new.tolerances["tolerance_mass"] or np.isnan(diff) else ""
+                "!!!" if diff is None or np.abs(diff) > self.new.tolerances["mass"] or np.isnan(diff) else ""
             ))
-            success &= not (np.abs(diff) > self.new.tolerances["tolerance_mass"] or np.isnan(diff))
+            success &= not (np.abs(diff) > self.new.tolerances["mass"] or np.isnan(diff))
         log.info(f"  Success? {success}")
         return success
 
@@ -219,12 +219,12 @@ class ModelTest(object):
             diff = np.linalg.inv(root2old_links[k]).dot(root2new_links[k])
             diff_o = representation.Pose.from_matrix(diff)
             outmsg = "%s Difference: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple([link_name] + diff_o.xyz.tolist() + diff_o.rpy.tolist())
-            if np.linalg.norm(diff[0:3, 3]) > self.new.tolerances["tolerance_distance"] or \
-               any(abs(diff_o.rpy) > [self.new.tolerances["tolerance_rad"]]*3):
-                if np.linalg.norm(diff[0:3, 3]) > self.new.tolerances["tolerance_distance"]:
-                    outmsg += " %.6f" % (np.linalg.norm(diff[0:3, 3])) + " > " + str(self.new.tolerances["tolerance_distance"])
-                if any(abs(diff_o.rpy) > [self.new.tolerances["tolerance_rad"]]*3):
-                    outmsg += str(abs(diff_o.rpy)) + " > " + str([self.new.tolerances["tolerance_rad"]]*3)
+            if np.linalg.norm(diff[0:3, 3]) > self.new.tolerances["distance"] or \
+               any(abs(diff_o.rpy) > [self.new.tolerances["rad"]]*3):
+                if np.linalg.norm(diff[0:3, 3]) > self.new.tolerances["distance"]:
+                    outmsg += " %.6f" % (np.linalg.norm(diff[0:3, 3])) + " > " + str(self.new.tolerances["distance"])
+                if any(abs(diff_o.rpy) > [self.new.tolerances["rad"]]*3):
+                    outmsg += str(abs(diff_o.rpy)) + " > " + str([self.new.tolerances["rad"]]*3)
                 outmsg += " !!!"
                 log.error(outmsg)
                 # print("Difference as Transformation Matrix from old to new:")
@@ -341,7 +341,7 @@ class ModelTest(object):
         log.info(f"  Total mass of old model = {self.old_hyrodyn.mass}")
         log.info(f"  Total mass of new model = {self.new_hyrodyn.mass}")
         value = self.old_hyrodyn.mass - self.new_hyrodyn.mass
-        check = value < self.new.tolerances["tolerance_mass"] * self.old_hyrodyn.mass
+        check = value < self.new.tolerances["mass"] * self.old_hyrodyn.mass
         log.info("  Success? {check} Diff: {value}")
         return check
 
@@ -368,7 +368,7 @@ class ModelTest(object):
         log.info(f"  COM of new robot = {self.new_hyrodyn.com}")
         diff = self.old_hyrodyn.com - self.new_hyrodyn.com
         value = np.linalg.norm(diff)
-        check = value < (self.new.tolerances["tolerance_distance"] and
+        check = value < (self.new.tolerances["distance"] and
                          not any([np.isnan(x) for x in diff.reshape((diff.size,))]))
         log.info(f"  Success? {check} Diff: {value}")
         return check
@@ -416,12 +416,12 @@ class ModelTest(object):
                     "{:f}".format(v["O"]) if v["O"] is not None else "   ---   ",
                     "{:f}".format(v["N"]) if v["N"] is not None else "   ---   ",
                     "{:f}".format(diff) if v["O"] is not None and v["N"] is not None else "   ---   ",
-                    "!!!" if diff is None or np.abs(diff) > self.new.tolerances["tolerance"] or np.isnan(diff) else ""
+                    "!!!" if diff is None or np.abs(diff) > self.new.tolerances["default"] or np.isnan(diff) else ""
                 ))
             if self.old_hyrodyn.Tau_actuated.shape == self.new_hyrodyn.Tau_actuated.shape:
                 diff = np.abs(self.old_hyrodyn.Tau_actuated - self.new_hyrodyn.Tau_actuated)
                 value = np.amax(diff)
-                check = value < (self.new.tolerances["tolerance"] and
+                check = value < (self.new.tolerances["default"] and
                                  not any([np.isnan(x) for x in diff.reshape((diff.size,))]))
             else:
                 value = None
@@ -465,7 +465,7 @@ class ModelTest(object):
             log.info(f"ee pose of old model {old_pose}")
             log.info(f"ee pose of new model {new_pose}")
             value = np.linalg.norm(old_pose[0, 0:3] - new_pose[0, 0:3])
-            check = value < self.new.tolerances["tolerance_distance"]
+            check = value < self.new.tolerances["distance"]
             log.info(f"  Success? {check} Diff: {value}")
             succ &= check
         return succ
@@ -501,7 +501,7 @@ class ModelTest(object):
                                        left_pose[0, 6]]).reshape(1, 7)
         log.info(f"  (-y) Left EE of new model {mirrored_left_pose[0, 0:3]}")
         value = np.linalg.norm(right_pose[0, 0:3] - mirrored_left_pose[0, 0:3])
-        check = value < self.new.tolerances["tolerance_distance"]
+        check = value < self.new.tolerances["distance"]
         log.info(f"  Success? {check} Diff: {value}")
         log.info("!!! Check ignores orientation !!!")
         return check
@@ -544,9 +544,9 @@ class ModelTest(object):
                 "{:f}".format(left_torque),
                 "{:f}".format(right_torque),
                 "{:f}".format(diff),
-                "!!!" if diff is None or np.abs(diff) > self.new.tolerances["tolerance"] or np.isnan(diff) else ""
+                "!!!" if diff is None or np.abs(diff) > self.new.tolerances["default"] or np.isnan(diff) else ""
             ))
-            success &= not (np.abs(diff) > self.new.tolerances["tolerance"] or np.isnan(diff))
+            success &= not (np.abs(diff) > self.new.tolerances["default"] or np.isnan(diff))
         log.info(f"  Success? {success}")
         return success
 

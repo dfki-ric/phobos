@@ -63,12 +63,14 @@ class BaseModel(yaml.YAMLObject):
 
         # parse export_config
         self.export_meshes = {}
-        self.export_xmlfile = []
+        self.export_xmlfile = None
         for ec in self.export_config:
             if ec["type"] in KINEMATIC_TYPES:
                 assert "mesh_format" in ec
-                if type(ec["additional_meshes"]) == str:
+                if "additional_meshes" in ec and type(ec["additional_meshes"]) == str:
                     ec["additional_meshes"] = [ec["additional_meshes"]]
+                elif "additional_meshes" in ec and type(ec["additional_meshes"]) == list:
+                    pass
                 else:
                     ec["additional_meshes"] = []
                 if "link_in_smurf" in ec and ec["link_in_smurf"] is True:
@@ -394,7 +396,7 @@ class BaseModel(yaml.YAMLObject):
 
     def process(self):
         misc.recreate_dir(self.pipeline, self.tempdir)
-        misc.recreate_dir(self.pipeline, self.basedir)
+        misc.recreate_dir(self.pipeline, self.exportdir)
 
         self._join_to_basefile()
         self._load_robot()
@@ -421,6 +423,8 @@ class BaseModel(yaml.YAMLObject):
             _default = {} if "$default" not in self.frames else self.frames["$default"]
             _ignore_new_links = []
             for linkname, config in self.frames.items():
+                if linkname.startswith("$"):
+                    continue
                 self.frames[linkname] = misc.merge_default(config, _default)
                 config = copy(self.frames[linkname])
                 if self.robot.get_link(linkname) is None:
@@ -441,7 +445,7 @@ class BaseModel(yaml.YAMLObject):
                 linkname = link.name
                 if linkname in _ignore_new_links:
                     continue
-                config = self.frames["linkname"] if linkname in self.frames else _default
+                config = self.frames[linkname] if linkname in self.frames else _default
                 for k, v in config.items():
                     if k in ["transform_frame", "transform_link"]:
                         transformation = transform.create_transformation(
@@ -456,7 +460,7 @@ class BaseModel(yaml.YAMLObject):
                         #         ).dot(transformation)
                         # else: BY
                         self.robot.transform_link_orientation(
-                            linkname=k,
+                            linkname=linkname,
                             transformation=transformation,
                             only_frame=(k == "transform_frame"),
                             # transform_to="transform" in v.keys() and v["transform"] == "TO"
@@ -471,12 +475,19 @@ class BaseModel(yaml.YAMLObject):
                         link.add_annotation(k, v, overwrite=True)
             
         if hasattr(self, "joints"):
+            if '$replace_joint_types' in self.joints:
+                for joint in self.robot.joints:
+                    for old, new in self.joints["$replace_joint_types"].items():
+                        if joint.joint_type == old:
+                            joint.joint_type = new
             transmissions = {}
             _default = {} if "$default" not in self.joints else self.joints["$default"]
             for jointname, config in self.joints.items():
+                if jointname.startswith("$"):
+                    continue
                 if self.robot.get_joint(jointname, verbose=True) is None and ("cut_joint" not in config or config["cut_joint"] is False):
                     raise NameError(f"There is no joint with name {jointname}")
-                else:  # cut_joint
+                elif self.robot.get_joint(jointname, verbose=True) is None and ("cut_joint" in config and config["cut_joint"] is True):  # cut_joint
                     # [TODO pre_v2.0.0] Review and Check whether this works as expected
                     # Check whether everything is given and calculate origin and axis (?)
                     _joint = representation.Joint(**config)
@@ -486,46 +497,56 @@ class BaseModel(yaml.YAMLObject):
                     self.robot.add_aggregate(_joint)
             for joint in self.robot.joints:
                 jointname = joint.name
-                config = misc.merge_default(self.joints[jointname], _default)
-                for k, v in config.items():
-                    if k in ["min", "max", "eff", "vel"]:
-                        if joint.limit is None:
-                            joint.limit = representation.JointLimit()
-                    if k == "move_joint_axis_to_intersection":
-                        self.robot.move_joint_to_intersection(jointname, v)
-                    elif k == "type":
-                        joint.joint_type = v
-                    elif k == "min":
-                        joint.limit.lower = misc.read_number_from_config(v)
-                    elif k == "max":
-                        joint.limit.upper = misc.read_number_from_config(v)
-                    elif k == "eff":
-                        joint.limit.effort = misc.read_number_from_config(v)
-                    elif k == "vel":
-                        joint.limit.velocity = misc.read_number_from_config(v)
-                    elif k == "movement_depends_on":
-                        for jd in v:
-                            joint.joint_dependencies.append(representation.JointMimic(joint=jd["joint_name"],
-                                                                                      offset=jd["offset"],
-                                                                                      multiplier=jd["multiplier"]))
-                    elif k == "active":
-                        # [TODO!!! pre_v2.0.0] add provider for default values
-                        # v = misc.merge_default(v, default_motor)
-                        if type(v) == dict:
-                            if "name" not in v:
-                                v["name"] = jointname+"_motor"
-                            if "joint" not in v:
-                                v["joint"] = jointname
-                            else:
-                                assert jointname == v["joint"]
-                            _motor = representation.Motor(**v)
-                            self.robot.add_motor(_motor)
-                        elif v is True:
-                            _motor = representation.Motor(name=jointname+"_motor", joint=jointname)
-                            self.robot.add_motor(_motor)
-                    else:  # axis
-                        joint.add_annotation(k, v, overwrite=True)
-                    # [TODO pre_v2.0.0] Re-add transmission support
+                if jointname in self.joints:
+                    config = misc.merge_default(self.joints[jointname], _default)
+                    for k, v in config.items():
+                        if k in ["min", "max", "eff", "vel"]:
+                            if joint.limit is None:
+                                joint.limit = representation.JointLimit()
+                        if k == "move_joint_axis_to_intersection":
+                            self.robot.move_joint_to_intersection(jointname, v)
+                        elif k == "type":
+                            joint.joint_type = v
+                        elif k == "min":
+                            joint.limit.lower = misc.read_number_from_config(v)
+                        elif k == "max":
+                            joint.limit.upper = misc.read_number_from_config(v)
+                        elif k == "eff":
+                            joint.limit.effort = misc.read_number_from_config(v)
+                        elif k == "vel":
+                            joint.limit.velocity = misc.read_number_from_config(v)
+                        elif k == "movement_depends_on":
+                            for jd in v:
+                                joint.joint_dependencies.append(representation.JointMimic(joint=jd["joint_name"],
+                                                                                          offset=jd["offset"],
+                                                                                          multiplier=jd["multiplier"]))
+                        elif k == "active":
+                            # [TODO!!! pre_v2.0.0] add provider for default values
+                            # v = misc.merge_default(v, default_motor)
+                            if type(v) == dict:
+                                if "name" not in v:
+                                    v["name"] = jointname+"_motor"
+                                if "joint" not in v:
+                                    v["joint"] = jointname
+                                else:
+                                    assert jointname == v["joint"]
+                                _motor = representation.Motor(**v)
+                                self.robot.add_motor(_motor)
+                            elif v is True:
+                                _motor = representation.Motor(name=jointname+"_motor", joint=jointname)
+                                self.robot.add_motor(_motor)
+                        elif k == "mimic":
+                            if "joint_name" in v:
+                                v["joint"] = v.pop("joint_name")
+                            joint.mimic = representation.JointMimic(**v)
+                        else:  # axis
+                            joint.add_annotation(k, v, overwrite=True)
+                elif "$default" in self.joints:
+                    config = _default
+                    for k, v in config.items():
+                        if k not in ["min", "max", "eff", "vel", "movement_depends_on", "active"] + representation.Joint._class_variables:
+                            joint.add_annotation(k, v, overwrite=True)
+                # [TODO pre_v2.0.0] Re-add transmission support
                 joint.link_with_robot(self.robot)
     
         # Check for joint definitions
@@ -541,13 +562,12 @@ class BaseModel(yaml.YAMLObject):
 
         if hasattr(self, 'collisions'):
             for link in self.robot.links:
-                conf = deepcopy(self.collisions["default"])
+                conf = deepcopy(self.collisions["$default"])
                 exclude = self.collisions["exclude"] if "exclude" in self.collisions.keys() else []
                 if link.name in exclude:
                     continue
                 if link.name in self.collisions.keys():
-                    for k, v in self.collisions[link.name].items():
-                        conf[k] = v
+                    conf = misc.merge_default(self.collisions[link.name], conf)
                 if "remove" in conf.keys():
                     if type(conf["remove"]) is list:
                         remove_collision(self.robot, link.name, collisionname=conf["remove"])
@@ -602,16 +622,16 @@ class BaseModel(yaml.YAMLObject):
                         coll.add_annotations(**conf)
 
         # Re-export meshes
+        assert self.processed_meshes == []
         for mt, mp in self.export_meshes.items():
             log.info('  Re-exporting meshes')
             misc.create_symlink(
                 self.pipeline, os.path.join(self.pipeline.temp_dir, str(mp)), os.path.join(self.exportdir, str(mp))
             )
-            assert self.processed_meshes == []
             for link in self.robot.links:
                 v_c = 0
                 for v in link.visuals + link.collisions:
-                    if isinstance(v.geometry, representation.Mesh) and v.geometry.filename not in self.processed_meshes:
+                    if isinstance(v.geometry, representation.Mesh) and v.geometry.filename:
                         v_c += 1
                         if "mars_obj" in v.geometry.filename.lower() or v.geometry.filename.lower().endswith(".mars.obj"):
                             mesh = v.geometry.load_mesh(urdf_path=os.path.dirname(self.basefile), mars_mesh=True)
@@ -622,21 +642,15 @@ class BaseModel(yaml.YAMLObject):
                                 log.warning(f"Loading obj mesh {v.geometry.filename}, "
                                             f"where the orientation convention might be unknown")
                             mesh = v.geometry.load_mesh(urdf_path=os.path.dirname(self.basefile))
-                        meshexport = os.path.join(self.exportdir, mp, os.path.basename(v.geometry.filename)[:-3])
+                        meshexport = os.path.join(self.exportdir, mp, os.path.basename(v.geometry.filename)[:-3]) + mt.replace("_", ".")
                         v.geometry.filename = v.geometry.filename.replace(" ", "_")
                         v.geometry.filename = meshexport
                         if mt == "mars_obj":
-                            export_mars_mesh(mesh, meshexport + "obj", urdf_path=self.exporturdf)
-                            v.geometry.filename += "obj"
+                            export_mars_mesh(mesh, meshexport, urdf_path=self.export_xmlfile)
                         elif mt == "bobj":
-                            export_bobj_mesh(mesh, meshexport + "bobj", urdf_path=self.exporturdf)
-                            v.geometry.filename += "bobj"
-                        elif mt == "obj":
-                            export_mesh(mesh, meshexport + "obj", urdf_path=self.exporturdf)
-                            v.geometry.filename += "obj"
-                        elif mt == "stl":
-                            export_mesh(mesh, meshexport + "stl", urdf_path=self.exporturdf)
-                            v.geometry.filename += "stl"
+                            export_bobj_mesh(mesh, meshexport, urdf_path=self.export_xmlfile)
+                        elif mt in ["obj", "stl"]:
+                            export_mesh(mesh, meshexport, urdf_path=self.export_xmlfile)
                         elif mt == "dae":
                             color = None
                             for m in self.robot.materials:
@@ -644,10 +658,9 @@ class BaseModel(yaml.YAMLObject):
                                     continue
                                 else:
                                     color = m.color.rgba
-                            export_mesh(mesh, meshexport + "dae", urdf_path=self.exporturdf, dae_mesh_color=color)
-                            v.geometry.filename += "dae"
+                            export_mesh(mesh, urdf_path=self.export_xmlfile, dae_mesh_color=color)
                         else:
-                            raise ValueError("Unknown mesh type" + self.typedef["output_mesh_format"].lower())
+                            raise ValueError("Unknown mesh type: " + mt)
                         self.processed_meshes.append(os.path.realpath(v.geometry._filename))
 
         if hasattr(self, "exoskeletons") or hasattr(self, "submechanisms"):

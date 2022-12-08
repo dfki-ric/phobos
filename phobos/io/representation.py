@@ -5,6 +5,7 @@ import numpy as np
 from .base import Representation
 from .smurf_reflection import SmurfBase
 from .xml_factory import singular as _singular, plural as _plural
+from .yaml_reflection import to_yaml
 from ..geometry.geometry import identical
 from ..geometry.io import import_mesh, import_mars_mesh
 from ..utils.misc import trunc, execute_shell_command, to_hex_color, color_parser
@@ -689,6 +690,8 @@ class Joint(Representation, SmurfBase):
                  noDataPackage=False, reducedDataPackage=False, cut_joint=False, constraint_axes=None, **kwargs):
         self.name = name
         self.returns = ['name']
+        assert parent is not None
+        assert child is not None
         self.parent = parent if type(parent) == str else parent.name
         assert self.parent is not None
         self.child = child if type(child) == str else child.name
@@ -741,7 +744,7 @@ class Joint(Representation, SmurfBase):
 
     @property
     def mimic(self):
-        if self.joint_dependencies is not None and len(self.joint_dependencies)==1:
+        if self.joint_dependencies is not None and len(self.joint_dependencies) == 1:
             return self.joint_dependencies[0]
         else:
             return None
@@ -753,8 +756,11 @@ class Joint(Representation, SmurfBase):
             self._joint_dependencies = []
         elif self._joint_dependencies is not None and len(self._joint_dependencies) == 1:
             self._joint_dependencies[0] = value
+        elif self._joint_dependencies is not None and len(self._joint_dependencies) == 0:
+            self._joint_dependencies = [value]
         else:
-            raise ValueError("Can not set mimic for a joint that depends on mulitple joints. Consider using the joint_dependency setter.")
+            raise ValueError(f"Can not set mimic for joint {str(self)} that depends on multiple joints. "
+                             f"Consider using the joint_dependency setter.\n {to_yaml(self._joint_dependencies)}")
 
     @property
     def springStiffness(self):

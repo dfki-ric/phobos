@@ -77,14 +77,13 @@ def find_close_ancestor_links(robot, linkname):
             tree.append(pjoint.child)
             jointnames = robot.get_children(pjoint.child)
             for j_name in jointnames:
-                pjoint = robot.get_joint(j_name)
+                pjoint = robot.get_joint(j_name, verbose=True)
+                assert pjoint is not None
                 res, fc = go_tree_down(pjoint)
                 tree += res
                 far_children += fc
         elif pjoint is not None:
             far_children += [pjoint.child]
-        else:
-            far_children += robot.get_children(pjoint.child)
         return tree, far_children
 
     jointname = robot.get_parent(linkname)
@@ -152,6 +151,8 @@ def get_joints_depth_first(robot, start_link, independent_joints=None):
 
 
 def get_joints(robot, joint_desc):
+    if joint_desc is None:
+        joint_desc = "ALL"
     robot_joint_names = [jnt.name for jnt in robot.joints]
     if type(joint_desc) == list:
         return list(set(joint_desc))

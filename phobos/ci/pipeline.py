@@ -6,7 +6,7 @@ import yaml
 
 from ..defs import *
 from .test_model import TestModel
-from .model import Model
+from .base_model import BaseModel
 from .model_testing import ModelTest
 from .compare_model import CompareModel
 from .xtype_model import XTypeModel
@@ -91,7 +91,7 @@ class Pipeline(yaml.YAMLObject):
                 continue
             try:
                 if list(cfg.keys())[0] == "model":
-                    self.models += [Model(os.path.join(self.configdir, md), self, self.processed_model_exists)]
+                    self.models += [BaseModel(os.path.join(self.configdir, md), self, self.processed_model_exists)]
                 elif list(cfg.keys())[0] == "xtype_model":
                     self.models += [XTypeModel(os.path.join(self.configdir, md), self, self.processed_model_exists)]
                 else:
@@ -208,7 +208,7 @@ class Pipeline(yaml.YAMLObject):
         export_meshes = {}
         for model in self.models:
             export_meshes = misc.merge_default(model.export_meshes, export_meshes)
-        for mt, mp in export_meshes:
+        for mt, mp in export_meshes.items():
             misc.create_dir(self, os.path.join(self.temp_dir, str(mp)))
             ext = mt
             misc.copy(self, os.path.join(self.root, str(mp), "*."+ext), os.path.join(self.temp_dir, str(mp)))

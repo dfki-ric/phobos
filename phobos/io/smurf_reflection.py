@@ -39,6 +39,9 @@ class SmurfBase(YamlReflection):
 
         return list(set(out))
 
+    def add_annotation(self, key, value, overwrite=False):
+        self.add_annotations(overwrite=overwrite, **{key: value})
+
     def add_annotations(self, overwrite=False, **kwargs):
         # Just Parse everything else
         for category, information in kwargs.items():

@@ -255,17 +255,18 @@ class Submechanism(HyrodynAnnotation):
 
     def link_with_robot(self, robot, check_linkage_later=False):
         super(Submechanism, self).link_with_robot(robot, check_linkage_later=True)
-        if self._multi_joint_dependencies is not None and len(self._multi_joint_dependencies) > 0:
-            for mjd in self._multi_joint_dependencies:
-                joint = self._related_robot_instance.get_joint(mjd["name"])
-                for jd in mjd["depends_on"]:
-                    joint.joint_dependencies = joint.joint_dependencies + [jd]
-        if self._loop_constraints is not None and len(self._loop_constraints) > 0:
-            for lc in self._loop_constraints:
-                joint = self._related_robot_instance.get_joint(lc["cut_joint"])
-                joint.cut_joint = True
-                for ax in lc["constraint_axes"]:
-                    joint.constraint_axes.append(ConstraintAxis(**ax))
+        # [TODO pre_v2.0.0] This doesn't work correctly
+        # if self._multi_joint_dependencies is not None and len(self._multi_joint_dependencies) > 0:
+        #     for mjd in self._multi_joint_dependencies:
+        #         joint = self._related_robot_instance.get_joint(mjd["name"])
+        #         for jd in mjd["depends_on"]:
+        #             joint.joint_dependencies = joint.joint_dependencies + [jd]
+        # if self._loop_constraints is not None and len(self._loop_constraints) > 0:
+        #     for lc in self._loop_constraints:
+        #         joint = self._related_robot_instance.get_joint(lc["cut_joint"])
+        #         joint.cut_joint = True
+        #         for ax in lc["constraint_axes"]:
+        #             joint.constraint_axes.append(ConstraintAxis(**ax))
         if not check_linkage_later:
             assert self.check_linkage()
 
