@@ -256,9 +256,9 @@ class Submechanism(HyrodynAnnotation):
                     joint.joint_dependencies = joint.joint_dependencies + [jd]
         if self._loop_constraints is not None and len(self._loop_constraints) > 0:
             for lc in self._loop_constraints:
-                joint = self._related_robot_instance.get_joint(lc["cut_joint"])
+                joint = self._related_robot_instance.get_joint(lc.cut_joint)
                 joint.cut_joint = True
-                for ax in lc["constraint_axes"]:
+                for ax in lc.constraint_axes:
                     joint.constraint_axes.append(ConstraintAxis(**ax))
         if not check_linkage_later:
             assert self.check_linkage()
