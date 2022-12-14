@@ -672,6 +672,13 @@ class JointMimic(Representation, SmurfBase):
         return self.joint is None and self.multiplier is None and self.offset is None
 
 
+class ConstraintAxis(SmurfBase):
+    def __init__(self, name, axis, **kwargs):
+        kwargs["name"] = name
+        kwargs["axis"] = axis
+        super(ConstraintAxis, self).__init__(**kwargs)
+
+
 class Joint(Representation, SmurfBase):
     TYPES = ['unknown', 'revolute', 'continuous', 'prismatic', 'floating', 'planar', 'fixed']
 
@@ -703,9 +710,12 @@ class Joint(Representation, SmurfBase):
             origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=self.parent)
         self._origin = _singular(origin)
         self.limit = _singular(limit)
-        self._joint_dependencies = _plural(mimic)
+        if "joint_dependencies" in kwargs:
+            self.joint_dependencies = kwargs.pop("joint_dependencies") + _plural(mimic)
+        else:
+            self.joint_dependencies = _plural(mimic)
         self.cut_joint = cut_joint
-        self.constraint_axes = constraint_axes if constraint_axes is not None else []
+        self.constraint_axes = _plural(constraint_axes)
         self.motor = (motor if type(motor) == str else motor.name) if motor is not None else None
         if noDataPackage is not None:
             self.noDataPackage = noDataPackage
@@ -716,6 +726,7 @@ class Joint(Representation, SmurfBase):
         # dynamics
         self.dynamics = _singular(dynamics)
         SmurfBase.__init__(self, **kwargs)
+        self.returns += ["joint_dependencies"]
         self.excludes += ["limit", "mimic", "axis", "dynamics"]
 
     def link_with_robot(self, robot, check_linkage_later=False):
@@ -824,26 +835,17 @@ class Joint(Representation, SmurfBase):
     @joint_dependencies.setter
     def joint_dependencies(self, new_val):
         self._joint_dependencies = []
-        if len(new_val) <= 1:
-            self._joint_dependencies = new_val
-            return
-        else:
-            self._joint_dependencies = []
-        for idx, v1 in enumerate(new_val[:-1]):
-            skip = False
-            for v2 in new_val[idx:]:
-                if v1.equivalent(v2) and v1 != v2:
-                    log.error(v1.to_yaml())
-                    log.error(v2.to_yaml())
-                    raise AssertionError("Received conflicting joint dependencies!")
-                elif v1 == v2:
-                    skip = True
-            if not skip:
-                self._joint_dependencies.append(v1)
+        new_val = _plural(new_val)
+        for jd in new_val:
+            if type(jd) == dict:
+                self._joint_dependencies.append(JointMimic(**jd))
+            elif type(jd) == JointMimic:
+                self._joint_dependencies.append(jd)
+            else:
+                raise TypeError(f"Incompatible type for defining a joint dependency: {type(jd)}")
         if self._related_robot_instance is not None:
             for jd in self._joint_dependencies:
-                jd.link_with_robot(robot=self._related_robot_instance)
-
+                jd.link_with_robot(self._related_robot_instance)
 
 class Interface(Representation, SmurfBase):
     _class_variables = ["name", "origin", "parent"]

@@ -3,7 +3,7 @@ from copy import copy
 import numpy
 
 from .smurf_reflection import SmurfBase
-from .representation import JointMimic
+from .representation import JointMimic, ConstraintAxis
 from ..utils import tree
 from ..utils.transform import matrix_to_quaternion, quaternion_to_rpy
 
@@ -13,51 +13,52 @@ log = get_logger(__name__)
 __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 
 
-class ConstraintAxis(SmurfBase):
-    def __init__(self, name, axis, **kwargs):
-        kwargs["name"] = name
-        kwargs["axis"] = axis
-        super(ConstraintAxis, self).__init__(**kwargs)
-
-
+# This class is only for smurf formatting and isn't used for data storage
 class LoopConstraint(SmurfBase):
     _class_variables = ["cut_joint", "predecessor_body", "successor_body"]
-    type_dict = {
-        "cut_joint": "joints",
-        "predecessor_body": "links",
-        "successor_body": "links"
-    }
 
-    def __init__(self, cut_joint, predecessor_body, successor_body, constraint_axes=None):
-        kwargs = {"cut_joint": cut_joint,
-                  "predecessor_body": predecessor_body,
-                  "successor_body": successor_body}
-        if constraint_axes is None:
-            constraint_axes = []
-        assert all([isinstance(ax, ConstraintAxis) for ax in constraint_axes])
-        kwargs["constraint_axes"] = constraint_axes
-        super(LoopConstraint, self).__init__(**kwargs)
+    def __init__(self, joint, **kwargs):
+        self.joint = joint
+        super(LoopConstraint, self).__init__(
+            returns=["cut_joint", "predecessor_body", "successor_body", "constraint_axes"],
+            **kwargs
+        )
+
+    @property
+    def cut_joint(self):
+        return self.joint
+
+    @property
+    def predecessor_body(self):
+        return self.joint.parent
+
+    @property
+    def successor_body(self):
+        return self.joint.child
+
+    @property
+    def constraint_axes(self):
+        return self.joint.constraint_axes
 
 
+# This class is only for smurf formatting and isn't used for data storage
 class MultiJointDependency(SmurfBase):
-    _class_variables = ["joint", "joint_dependencies"]
+    _class_variables = ["name", "depends_on"]
 
-    def __init__(self, joint, joint_dependencies=None, name=None):
-        if joint_dependencies is None:
-            joint_dependencies = []
-        assert all([isinstance(jd, JointMimic) for jd in joint_dependencies])
-        kwargs = {"joint": joint,
-                  "joint_dependencies": joint_dependencies}
-        if name is not None:
-            kwargs["name"] = name
-        super(MultiJointDependency, self).__init__(**kwargs)
-
-    def add_dependency(self, joint_dependency):
-        assert isinstance(joint_dependency, JointMimic)
-        self.joint_dependencies += [joint_dependency]
+    def __init__(self, joint=None, **kwargs):
+        self.joint = joint
+        super(MultiJointDependency, self).__init__(returns=["name", "depends_on"], **kwargs)
 
     def is_empty(self):
-        return len(self.joint_dependencies) == 0
+        return len(self.joint.joint_dependencies) == 0
+
+    @property
+    def name(self):
+        return str(self.joint)
+
+    @property
+    def depends_on(self):
+        return self.joint.joint_dependencies
 
 
 class HyrodynAnnotation(SmurfBase):
@@ -199,31 +200,32 @@ class Submechanism(HyrodynAnnotation):
             multi_joint_dependencies = []
         if loop_constraints is None:
             loop_constraints = []
-        self._multi_joint_dependencies = multi_joint_dependencies
-        self._loop_constraints = loop_constraints
+        self.multi_joint_dependencies = multi_joint_dependencies
+        self.loop_constraints = loop_constraints
         self.returns += ["multi_joint_dependencies", "loop_constraints"]
         self._has_unlinked_changes = multi_joint_dependencies is not None or loop_constraints is not None
 
     @property
     def multi_joint_dependencies(self):
         if self._related_robot_instance is not None:
+            # update the internal multi_joint_dependencies
+            self._multi_joint_dependencies = []
             for j in self.get_joints() + [lc.cut_joint for lc in self.loop_constraints]:
                 joint = self._related_robot_instance.get_joint(j, verbose=True)
                 assert joint is not None
                 if len(joint.joint_dependencies) > 1:
-                    if self._multi_joint_dependencies is None:
-                        self._multi_joint_dependencies = []
-                    self._multi_joint_dependencies.append({"name": str(joint), "depends_on": joint.joint_dependencies})
+                    self._multi_joint_dependencies.append(MultiJointDependency(joint).to_yaml())
         if self._multi_joint_dependencies is not None and len(self._multi_joint_dependencies) > 0:
             return self._multi_joint_dependencies
         else:
-            return None
+            return []
 
     @multi_joint_dependencies.setter
     def multi_joint_dependencies(self, value):
         if self._related_robot_instance is None:
             self._multi_joint_dependencies = value
         else:
+            # [ToDo v2.1.0] do this from here
             raise RuntimeError("Please set the joint_dependencies of the corresponding joint.")
 
     @property
@@ -237,13 +239,11 @@ class Submechanism(HyrodynAnnotation):
                     loop_closure_joints.append(lcj)
             for joint in loop_closure_joints:
                 if joint.cut_joint:
-                    self._loop_constraints.append(LoopConstraint(cut_joint=joint, predecessor_body=joint.parent,
-                                                                 successor_body=joint.child,
-                                                                 constraint_axes=joint.constraint_axes))
+                    self._loop_constraints.append(LoopConstraint(joint).to_yaml())
         if self._loop_constraints is not None and len(self._loop_constraints) > 0:
             return self._loop_constraints
         else:
-            return None
+            return []
 
     @loop_constraints.setter
     def loop_constraints(self, value):
@@ -255,18 +255,19 @@ class Submechanism(HyrodynAnnotation):
 
     def link_with_robot(self, robot, check_linkage_later=False):
         super(Submechanism, self).link_with_robot(robot, check_linkage_later=True)
-        # [TODO pre_v2.0.0] This doesn't work correctly
-        # if self._multi_joint_dependencies is not None and len(self._multi_joint_dependencies) > 0:
-        #     for mjd in self._multi_joint_dependencies:
-        #         joint = self._related_robot_instance.get_joint(mjd["name"])
-        #         for jd in mjd["depends_on"]:
-        #             joint.joint_dependencies = joint.joint_dependencies + [jd]
-        # if self._loop_constraints is not None and len(self._loop_constraints) > 0:
-        #     for lc in self._loop_constraints:
-        #         joint = self._related_robot_instance.get_joint(lc["cut_joint"])
-        #         joint.cut_joint = True
-        #         for ax in lc["constraint_axes"]:
-        #             joint.constraint_axes.append(ConstraintAxis(**ax))
+        if self._multi_joint_dependencies is not None and len(self._multi_joint_dependencies) > 0:
+            for mjd in self._multi_joint_dependencies:
+                joint = self._related_robot_instance.get_joint(mjd["name"])
+                joint.joint_dependencies = []
+                for jd in mjd["depends_on"]:
+                    joint.joint_dependencies = joint.joint_dependencies + [jd]
+        if self._loop_constraints is not None and len(self._loop_constraints) > 0:
+            for lc in self._loop_constraints:
+                joint = self._related_robot_instance.get_joint(lc["cut_joint"])
+                joint.cut_joint = True
+                joint.constraint_axes = []
+                for ax in lc["constraint_axes"]:
+                    joint.constraint_axes.append(ConstraintAxis(**ax))
         if not check_linkage_later:
             assert self.check_linkage()
 
@@ -279,22 +280,32 @@ class Submechanism(HyrodynAnnotation):
         if not check_linkage_later:
             assert self.check_unlinkage()
 
-    def regenerate(self, robot):
+    def regenerate(self, robot, absorb_fixed=True):
+        """
+        Sorts all joints depth first and fills the jointsnames entry already with all fied joints that are inbetween the submechanism
+        Fixed joints that are between this and other submechanisms have to be managed by the robot.
+        Args:
+            robot: The robot instance to which this submechanism belongs
+
+        Returns:
+            None
+        """
         jointnames = set()
-        root = self.get_root(robot)
-        for j in self.jointnames_spanningtree:
-            # chain from root of submech to this j
-            chain = robot.get_chain(root, robot.get_joint(j).parent, links=False)
-            for c in chain:
-                if robot.get_joint(c).joint_type == "fixed":
-                    jointnames.add(c)
-            # chain from j to the leaves
-            leaves = robot.get_leaves(start=robot.get_joint(j).child)
-            for leave in leaves:
-                chain = robot.get_chain(robot.get_joint(j).child, leave, links=False)
-                if all([robot.get_joint(joint).joint_type == "fixed" for joint in chain]):
-                    # if all joints in the chain after j are fixed
-                    jointnames.update(chain)
+        if absorb_fixed:
+            root = tree.skip_upwards_over_fixed(robot, robot.get_parent(self.get_root(robot)), only_single_parents=True)
+        else:
+            root = self.get_root(robot)
+        leaves = self.get_leaves(robot)
+        if absorb_fixed:
+            _leaves = []
+            for l in leaves:
+                _leaves += tree.skip_downwards_over_fixed(robot, l)
+            leaves = list(set(_leaves))
+        for leave in leaves:
+            chain = robot.get_chain(root, leave, links=False)
+            if all([robot.get_joint(joint).joint_type == "fixed" for joint in chain]):
+                # if all joints in the chain after j are fixed
+                jointnames.update(chain)
         self.jointnames = sorted([j for j in self.jointnames_spanningtree]+list(jointnames), key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))
         self.jointnames_spanningtree = sorted([j for j in self.jointnames_spanningtree], key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))
         self.jointnames_active = sorted(self.jointnames_active, key=lambda x: self.jointnames_spanningtree.index(x))
