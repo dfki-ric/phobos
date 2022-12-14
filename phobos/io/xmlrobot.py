@@ -370,10 +370,13 @@ class XMLRobot(Representation):
         if links:
             chain.append(str(tip))
         link = str(tip)
-        assert self.get_link(root) is not None
-        assert self.get_link(link) is not None
         while str(link) != str(root):
-            (joint, parent) = self.parent_map[link]
+            assert self.get_link(root) is not None
+            assert self.get_link(link) is not None
+            try:
+                (joint, parent) = self.parent_map[link]
+            except KeyError:
+                raise KeyError(f"{link} is not in chain between {root}->{tip} or this is not a valid chain from the robot's root ({self.get_root()})")
             if joints:
                 if fixed or self.get_joint(joint).joint_type != 'fixed':
                     chain.append(joint)
@@ -665,7 +668,7 @@ class XMLRobot(Representation):
 
         return children
 
-    def get_leaves(self, start=None):
+    def get_leaves(self, start=None, stop=None):
         """
         Get all leaves of the given start link.
         If start is provided, returns leaves of the sub tree
@@ -675,10 +678,19 @@ class XMLRobot(Representation):
         all_leaves = [link for link in self.links if str(link) not in self.child_map.keys()]
         if start is None:
             return all_leaves
+        else:
+            assert self.get_link(start, verbose=True) is not None
 
         chains_to_leave = {str(leave): [str(link) for link in self.get_chain(self.get_root(), leave, joints=False)] for leave in all_leaves}
-
-        return [leave for leave, chain in chains_to_leave.items() if str(start) in chain]
+        # reduce to valid chains regarding the start
+        chains_to_leave = {leave: chain for leave, chain in chains_to_leave.items() if start in chain}
+        leaves = list(chains_to_leave.keys())
+        if stop is not None:
+            # reduce to only those stops that are in the tree with "start" as root
+            stop = [s for s in stop if any([s in c for c in chains_to_leave.values()])]
+            # remove leaves of branches that are stopped and add the stops therefore
+            leaves = [l for l in leaves if not any([s in chains_to_leave[l] for s in stop])] + stop
+        return leaves
 
     def get_transformation(self, end, start=None):
         """

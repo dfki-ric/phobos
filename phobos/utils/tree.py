@@ -1,20 +1,39 @@
 import numpy as np
 
 
-def skip_upwards_over_fixed(input_spanningtree, input_model, joint_name):
+def skip_upwards_over_fixed(robot, joint_name, only_single_parents=True):
     """
-    In the given jointnames spanningtree of the given input_model it goes upward in the urdf tree while skipping over
-    fixed joints. Returns the next movable parent name of the given fixed joint in input_spanningtree.
+    From the given joint upwards gets the rootest joint while skipping any fixed joint that is not yet in a submechanism
     """
-    j = input_model.get_joint(joint_name)
+    j = robot.get_joint(joint_name)
     if j.joint_type == 'fixed':
-        parents = input_model.get_parent(j.parent)
-        if parents is not None:
-            return skip_upwards_over_fixed(input_spanningtree, input_model, parents)
+        parent = robot.get_joint(robot.get_parent(j.parent))
+        if parent is not None and (not only_single_parents or len(robot.get_children(parent.parent)) == 1) and\
+                not any([parent in sm.get_joints() for sm in robot.submechanisms]):
+            return skip_upwards_over_fixed(robot, parent, only_single_parents)
         else:
             return j.name
     else:
         return j.name
+
+
+def skip_downwards_over_fixed(robot, joint_name):
+    """
+    Starting from the given joint names returns the end of all branches that are fixed and not already present in any
+    submechanism
+    """
+    j = robot.get_joint(joint_name)
+    if j.joint_type == 'fixed':
+        children = robot.get_joint(robot.get_children(j.child))
+        out = []
+        for child in children:
+            if not any([child in sm.get_joints() for sm in robot.submechanisms]):
+                out += skip_downwards_over_fixed(robot, child)
+            else:
+                out += [j.name]
+        return out
+    else:
+        return [j.name]
 
 
 def find_common_root(input_model, input_spanningtree):
@@ -151,6 +170,15 @@ def get_joints_depth_first(robot, start_link, independent_joints=None):
 
 
 def get_joints(robot, joint_desc):
+    """
+    Provides a list of jointnames from the given robot specified by the given joint descriptor
+    Args:
+        robot: the robot instance
+        joint_desc: joint descriptor: ALL, INDEPENDENT, ACTIVE, list of jointnames
+
+    Returns:
+        list of jointnames
+    """
     if joint_desc is None:
         joint_desc = "ALL"
     robot_joint_names = [jnt.name for jnt in robot.joints]

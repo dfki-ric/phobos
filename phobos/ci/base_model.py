@@ -69,9 +69,7 @@ class BaseModel(yaml.YAMLObject):
                 assert "mesh_format" in ec
                 if "additional_meshes" in ec and type(ec["additional_meshes"]) == str:
                     ec["additional_meshes"] = [ec["additional_meshes"]]
-                elif "additional_meshes" in ec and type(ec["additional_meshes"]) == list:
-                    pass
-                else:
+                elif not ("additional_meshes" in ec and type(ec["additional_meshes"]) == list):
                     ec["additional_meshes"] = []
                 if "link_in_smurf" in ec and ec["link_in_smurf"] is True:
                     if self.export_xmlfile is not None:
@@ -385,7 +383,7 @@ class BaseModel(yaml.YAMLObject):
         # 3. save combined_model to the temp directory
         assert len(combined_model.links) == len(combined_model.joints) + 1
         combined_model.name = "combined_model"
-        combined_model.full_export(self.basedir)
+        combined_model.full_export(self.basedir, check_submechs=False)
 
     def recreate_sym_links(self):
         for mt, mp in self.export_meshes.items():

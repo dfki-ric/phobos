@@ -364,7 +364,7 @@ class Robot(SMURFRobot):
         return new_robot
 
     # export methods
-    def export_urdf(self, outputfile=None, export_visuals=True, export_collisions=True, create_pdf=False,
+    def export_urdf(self, outputfile=None, export_visuals=True, export_collisions=True,
                     ros_pkg=False, export_with_ros_pathes=None, float_fmt_dict=None):
         """Export the mechanism to the given output file.
         If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
@@ -409,12 +409,10 @@ class Robot(SMURFRobot):
                 f.write(xml_string)
                 f.close()
 
-        if create_pdf:
-            self.export_pdf(outputfile[:-5]+".pdf")
         log.info("URDF written to {}".format(outputfile))
         return
 
-    def export_sdf(self, outputfile=None, export_visuals=True, export_collisions=True, create_pdf=False,
+    def export_sdf(self, outputfile=None, export_visuals=True, export_collisions=True,
                    ros_pkg=False, export_with_ros_pathes=None, float_fmt_dict=None):
         """Export the mechanism to the given output file.
         If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
@@ -458,20 +456,18 @@ class Robot(SMURFRobot):
                 f.write(xml_string)
                 f.close()
 
-        if create_pdf:
-            self.export_pdf(outputfile[:-5]+".pdf")
         log.info("SDF written to {}".format(outputfile))
         return
 
     def export_xml(self, outputdir=None, export_visuals=True, export_collisions=True,
                    create_pdf=False, ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
-                   export_joint_limits=True, export_submodels=True, format="urdf", filename=None,
+                   export_joint_limits=False, export_submodels=False, format="urdf", filename=None,
                    float_fmt_dict=None, no_format_dir=False):
         """ Exports all model information stored inside this instance.
         """
         assert self.get_root()
         format = format.lower()
-        assert format in KINEMATIC_TYPES
+        assert format in KINEMATIC_TYPES, format
         # Main model
         if no_format_dir:
             model_file = os.path.join(outputdir, f"{self.name if filename is None else filename}")
@@ -499,7 +495,12 @@ class Robot(SMURFRobot):
             raise IOError("Unknown export format:" + format)
 
         if export_joint_limits:
-            self.export_joint_limits(outputdir if no_format_dir else os.path.join(outputdir, format))
+            self.export_joint_limits(outputdir if no_format_dir else os.path.join(outputdir, format),
+                                     filename=f"joint_limits_{self.name if filename is None else filename}.yml")
+
+        if create_pdf:
+            self.export_pdf(outputdir if no_format_dir else os.path.join(outputdir, format),
+                                     filename=f"{self.name if filename is None else filename}.pdf")
 
         if self._submodels and export_submodels:
             submodel_folder = os.path.join(outputdir, "submodels")
@@ -518,7 +519,7 @@ class Robot(SMURFRobot):
         return model_file
 
     def export_xml_with_meshes(self, outputdir=None, export_visuals=True, export_collisions=True, create_pdf=False,
-                               ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None, export_joint_limits=True,
+                               ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None, export_joint_limits=False,
                                export_submodels=True, format="urdf", filename=None, float_fmt_dict=None):
         # [TODO pre_v2.0.0] export meshes
         return self.export_xml(outputdir=outputdir, export_visuals=export_visuals, export_collisions=export_collisions,
@@ -527,7 +528,7 @@ class Robot(SMURFRobot):
                                export_submodels=export_submodels, format=format, filename=filename,
                                float_fmt_dict=float_fmt_dict)
 
-    def export_smurf(self, outputdir=None, outputfile=None, robotfile=None):
+    def export_smurf(self, outputdir=None, outputfile=None, robotfile=None, check_submechs=True):
         """ Export self and all annotations inside a given folder with structure
         """
         # Convert to absolute path
@@ -560,7 +561,7 @@ class Robot(SMURFRobot):
         submechanisms = {}
         if self.autogenerate_submechanisms is None or self.autogenerate_submechanisms is True:
             self.generate_submechanisms()
-        if (self.submechanisms is not None and len(self.submechanisms)) > 0 or (self.exoskeletons is not None and len(self.exoskeletons)):
+        if check_submechs and (self.submechanisms is not None and len(self.submechanisms)) > 0 or (self.exoskeletons is not None and len(self.exoskeletons)):
             missing_joints = self._get_joints_not_included_in_submechanisms()
             if len(missing_joints) != 0:
                 log.warning(f"Not all joints defined in the submechanisms definition! Lacking definition for: \n{missing_joints}")
@@ -576,7 +577,8 @@ class Robot(SMURFRobot):
                 sm.file_path = "../submechanisms/" + os.path.basename(sm.file_path)
                 if not os.path.isfile(sm.file_path):
                     self.export_submodel(name="#sub_mech#", outputdir=os.path.join(outputdir, "submechanisms"),
-                                         filename=os.path.basename(sm.file_path), only_urdf=True, no_format_dir=True)
+                                         filename=os.path.basename(sm.file_path), only_urdf=True, no_format_dir=True,
+                                         export_joint_limits=True)
                 else:
                     log.warning(f"File {sm.file_path} does already exist. Not exported submechanism urdf.")
                 self.remove_submodel(name="#sub_mech#")
@@ -814,7 +816,7 @@ class Robot(SMURFRobot):
 
     def export_submodel(self, name, outputdir=None, filename=None, export_visuals=True, export_collisions=True,
                         robotname=None, create_pdf=False, ros_pkg=False, export_with_ros_pathes=None,
-                        ros_pkg_name=None, export_joint_limits=True, only_urdf=None, formats="urdf",
+                        ros_pkg_name=None, export_joint_limits=False, only_urdf=None, formats=["urdf"],
                         float_fmt_dict=None, no_format_dir=True):
         """
         Export the submodel to the given output.
@@ -874,7 +876,8 @@ class Robot(SMURFRobot):
 
     def full_export(self, outputdir=None, export_visuals=True, export_collisions=True,
                     create_pdf=False, ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
-                    export_joint_limits=True, export_submodels=True, formats=["urdf"], filename=None, float_fmt_dict=None):
+                    export_joint_limits=False, export_submodels=True, formats=["urdf"], filename=None,
+                    float_fmt_dict=None, check_submechs=True):
         # [TODO pre_v2.0.0] add provider for default values and solve this via default export config
         robotfile = None
         for format in formats:
@@ -882,10 +885,10 @@ class Robot(SMURFRobot):
                 outputdir=outputdir, export_visuals=export_visuals, export_collisions=export_collisions,
                 create_pdf=create_pdf, ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes, ros_pkg_name=ros_pkg_name,
                 export_joint_limits=export_joint_limits, export_submodels=export_submodels, format=format, filename=filename,
-                float_fmt_dict=float_fmt_dict, no_format_dir=False
+                float_fmt_dict=float_fmt_dict, no_format_dir=False,
             )
             robotfile = xml_file if robotfile is None else robotfile
-        self.export_smurf(outputdir=outputdir, robotfile=robotfile)
+        self.export_smurf(outputdir=outputdir, robotfile=robotfile, check_submechs=check_submechs)
 
     def export_pdf(self, outputfile):
         SUBMECH_COLORS = ["cyan", "darkslateblue", "steelblue", "indigo", "darkblue", "royalblue", "lightskyblue",
@@ -1002,7 +1005,8 @@ class Robot(SMURFRobot):
                 else:
                     _export_config = [ec for ec in export_config if ec["type"] != "submodel"]
                 export_robot_instance.export(
-                    outputdir=os.path.join("submodels", export["name"]),
+                    outputdir=os.path.join(outputdir, "submodels", export["name"]),
+                    rel_mesh_pathes=rel_mesh_pathes,
                     export_config=_export_config,
                     copy_meshes=False,
                     no_smurf=no_smurf
@@ -1234,9 +1238,9 @@ class Robot(SMURFRobot):
             linknames = list(parentset.union(childrenset))
         else:
             linknames = set()
-            _stop = set(stop)
+            _stop = list(set(stop))
             if include_unstopped_branches:
-                _stop = _stop | set(self.get_leaves(start))
+                _stop = self.get_leaves(start, stop=_stop)
             for leave in _stop:
                 # print(start, leave, self.get_chain(start, leave, joints=False))
                 linknames = linknames | set(self.get_chain(start, leave, joints=False))

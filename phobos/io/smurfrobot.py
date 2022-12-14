@@ -482,6 +482,7 @@ class SMURFRobot(XMLRobot):
                         "a preliminary version has been created. Make sure to check it before usage.")
         for sm in self.submechanisms + self.exoskeletons:
             sm.regenerate(self)
+        # All fixed joints inside the submechanisms are handled by now, next we handle remaining joints
         missing_joints = self._get_joints_not_included_in_submechanisms()
         sorted_joints = [jn.name for jn in self.get_joints_ordered_df()]
         if len(missing_joints) == 0:
@@ -490,7 +491,7 @@ class SMURFRobot(XMLRobot):
         for jointname in missing_joints:
             joint = self.get_joint(jointname)
             if joint.joint_type != "fixed" and joint._child.is_human is False and joint.cut_joint is False:
-                # If we have not already inserted this joint (fixed) let's create a serial mechanism for it
+                # Normal moving joints are considered as serial if there is no submechanism given
                 self.add_aggregate("submechanisms", Submechanism(
                     name="serial",
                     contextual_name="serial",
