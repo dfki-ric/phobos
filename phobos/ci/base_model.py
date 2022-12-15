@@ -145,14 +145,14 @@ class BaseModel(yaml.YAMLObject):
             if os.path.exists(os.path.join(self.basedir, "smurf", "combined_model.smurf")):
                 # may be there is already an assembly from a stopped job
                 self.robot = Robot(name=self.robotname if self.robotname else None,
-                                   smurffile=os.path.join(self.basedir, "smurf", "combined_model.smurf"))
+                                   inputfile=os.path.join(self.basedir, "smurf", "combined_model.smurf"))
             else:
                 # create a robot with the basic properties given
                 self.robot = Robot(name=self.robotname if self.robotname else None)
         else:
             if os.path.exists(os.path.join(self.exportdir, "smurf", self.robotname + ".smurf")):
                 self.robot = Robot(name=self.robotname if self.robotname else None,
-                                   smurffile=os.path.join(self.exportdir, "smurf", self.robotname + ".smurf"))
+                                   inputfile=os.path.join(self.exportdir, "smurf", self.robotname + ".smurf"))
             else:
                 raise Exception('Preprocessed file {} not found!'.format(self.basefile))
 
@@ -483,7 +483,7 @@ class BaseModel(yaml.YAMLObject):
                 if jointname.startswith("$"):
                     continue
                 if self.robot.get_joint(jointname, verbose=True) is None and ("cut_joint" not in config or config["cut_joint"] is False):
-                    raise NameError(f"There is no joint with name {jointname}")
+                    log.warning(f"There is no joint with name {jointname}")
                 elif self.robot.get_joint(jointname, verbose=True) is None and ("cut_joint" in config and config["cut_joint"] is True):  # cut_joint
                     # [TODO pre_v2.0.0] Review and Check whether this works as expected
                     # Check whether everything is given and calculate origin and axis (?)
@@ -491,7 +491,7 @@ class BaseModel(yaml.YAMLObject):
                     assert "constraint_axes" in config
                     _joint.constraint_axes = [ConstraintAxis(**ca) for ca in config["constraint_axes"]]
                     assert _joint.check_valid()
-                    self.robot.add_aggregate(_joint)
+                    self.robot.add_aggregate("joint", _joint)
             for joint in self.robot.joints:
                 jointname = joint.name
                 if jointname in self.joints:
@@ -738,7 +738,7 @@ class BaseModel(yaml.YAMLObject):
 
     def export(self):
         ros_pkg_name = self.robot.export(self.exportdir, self.export_meshes, self.export_config,
-                          ros_pkg_later=True)
+                                         ros_pkg_later=True)
 
         if hasattr(self, "deployment") and "keep_files" in self.deployment:
             git.reset(self.targetdir, "autobuild", "master")

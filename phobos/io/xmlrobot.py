@@ -623,7 +623,7 @@ class XMLRobot(Representation):
         if type(name) in [list, tuple, set]:
             return [self.get_parent(n, targettype=targettype) for n in name]
         # Check if the name is present
-        assert self.get_link(name) is not None
+        assert self.get_link(name, verbose=True) is not None, name
         if str(name) in self.parent_map.keys():
             parents = self.parent_map[str(name)]
         elif str(name) in self.child_map.keys():
@@ -675,15 +675,15 @@ class XMLRobot(Representation):
         :param start: the root link for which to get the leaves
         :return:
         """
-        all_leaves = [link for link in self.links if str(link) not in self.child_map.keys()]
+        all_leaves = [str(link) for link in self.links if str(link) not in self.child_map.keys()]
         if start is None:
             return all_leaves
         else:
             assert self.get_link(start, verbose=True) is not None
-
         chains_to_leave = {str(leave): [str(link) for link in self.get_chain(self.get_root(), leave, joints=False)] for leave in all_leaves}
         # reduce to valid chains regarding the start
-        chains_to_leave = {leave: chain for leave, chain in chains_to_leave.items() if start in chain}
+        if str(start) != str(self.get_root()):
+            chains_to_leave = {leave: chain for leave, chain in chains_to_leave.items() if str(start) in chain}
         leaves = list(chains_to_leave.keys())
         if stop is not None:
             # reduce to only those stops that are in the tree with "start" as root

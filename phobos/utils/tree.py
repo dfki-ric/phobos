@@ -1,20 +1,16 @@
 import numpy as np
 
 
-def skip_upwards_over_fixed(robot, joint_name, only_single_parents=True):
+def skip_upwards_over_fixed(robot, link_name, only_single_parents=True):
     """
-    From the given joint upwards gets the rootest joint while skipping any fixed joint that is not yet in a submechanism
+    From the given link upwards gets the rootest joint while skipping any fixed joint that is not yet in a submechanism
     """
-    j = robot.get_joint(joint_name)
-    if j.joint_type == 'fixed':
-        parent = robot.get_joint(robot.get_parent(j.parent))
-        if parent is not None and (not only_single_parents or len(robot.get_children(parent.parent)) == 1) and\
-                not any([parent in sm.get_joints() for sm in robot.submechanisms]):
-            return skip_upwards_over_fixed(robot, parent, only_single_parents)
-        else:
-            return j.name
+    j = robot.get_joint(robot.get_parent(link_name))
+    if j is not None and j.joint_type == 'fixed' and not any([j.name in sm.get_joints() for sm in robot.submechanisms])\
+            and (not only_single_parents or len(robot.get_children(j.parent)) == 1):
+        return skip_upwards_over_fixed(robot, j.parent, only_single_parents)
     else:
-        return j.name
+        return link_name
 
 
 def skip_downwards_over_fixed(robot, joint_name):
@@ -189,12 +185,12 @@ def get_joints(robot, joint_desc):
             if joint_desc.upper() == "INDEPENDENT":
                 joints = set()
                 for sm in robot.submechanisms:
-                    joints.union([joint for joint in sm.jointnames_independent if joint in robot_joint_names])
+                    joints = joints.union([joint for joint in sm.jointnames_independent if joint in robot_joint_names])
                 return list(joints)
             elif joint_desc.upper() == "ACTIVE":
                 joints = set()
                 for sm in robot.submechanisms:
-                    joints.union([joint for joint in sm.jointnames_active if joint in robot_joint_names])
+                    joints = joints.union([joint for joint in sm.jointnames_active if joint in robot_joint_names])
                 return list(joints)
             elif joint_desc.upper() == "ALL":
                 return list(set(robot_joint_names))

@@ -124,9 +124,9 @@ class HyrodynAnnotation(SmurfBase):
 
     def get_root_joints(self, robot):
         "Returns the joints that are connected to the root link of this submechanism"
-        out = [jn for jn in self.get_joints() if jn in robot.get_children(self.get_root(robot))]
-        assert len(out) > 0
-        return out
+        root_joints = [jn for jn in self.get_joints() if jn in robot.get_children(self.get_root(robot))]
+        assert len(root_joints) > 0, self.to_yaml()
+        return root_joints
 
     def get_leaves(self, robot):
         return tree.find_leaves(robot, self.get_joints())
@@ -148,7 +148,7 @@ class HyrodynAnnotation(SmurfBase):
             },
             include_unstopped_branches=False, extend_by_single_fixed=True)
 
-    def regenerate(self, robot):
+    def regenerate(self, robot, absorb_fixed=True):
         raise NotImplementedError
 
     def get_rotation_convention(self):
@@ -292,20 +292,24 @@ class Submechanism(HyrodynAnnotation):
         """
         jointnames = set()
         if absorb_fixed:
-            root = tree.skip_upwards_over_fixed(robot, robot.get_parent(self.get_root(robot)), only_single_parents=True)
+            root = tree.skip_upwards_over_fixed(robot, self.get_root(robot), only_single_parents=True)
         else:
             root = self.get_root(robot)
         leaves = self.get_leaves(robot)
         if absorb_fixed:
             _leaves = []
             for l in leaves:
-                _leaves += tree.skip_downwards_over_fixed(robot, l)
+                for j in robot.get_children(l):
+                    _leaves += tree.skip_downwards_over_fixed(robot, j)
             leaves = list(set(_leaves))
         for leave in leaves:
-            chain = robot.get_chain(root, leave, links=False)
+            chain = robot.get_chain(root, robot.get_joint(leave).child, links=False)
             if all([robot.get_joint(joint).joint_type == "fixed" for joint in chain]):
                 # if all joints in the chain after j are fixed
                 jointnames.update(chain)
+        root_joint = robot.get_parent(root)
+        if root_joint is not None and robot.get_joint(root_joint):
+            jointnames.add(root_joint)
         self.jointnames = sorted([j for j in self.jointnames_spanningtree]+list(jointnames), key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))
         self.jointnames_spanningtree = sorted([j for j in self.jointnames_spanningtree], key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))
         self.jointnames_active = sorted(self.jointnames_active, key=lambda x: self.jointnames_spanningtree.index(x))
@@ -326,7 +330,7 @@ class Exoskeleton(HyrodynAnnotation):
             around=around, auto_gen=auto_gen, type=None
         )
 
-    def regenerate(self, robot):
+    def regenerate(self, robot, absorb_fixed=True):
         joints_df = robot.get_joints_ordered_df()
         self.jointnames = [str(j) for j in joints_df if j._child.is_human]
         self.jointnames_spanningtree = [str(j) for j in joints_df if j._child.is_human and j.joint_type != "fixed"]

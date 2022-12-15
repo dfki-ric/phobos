@@ -485,11 +485,11 @@ class Robot(SMURFRobot):
         assert len(self.links) == len(self.joints) + 1
         if format == "urdf":
             self.export_urdf(outputfile=model_file, export_visuals=export_visuals,
-                             export_collisions=export_collisions, create_pdf=create_pdf,
+                             export_collisions=export_collisions,
                              ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes, float_fmt_dict=float_fmt_dict)
         elif format == "sdf":
             self.export_sdf(outputfile=model_file, export_visuals=export_visuals,
-                            export_collisions=export_collisions, create_pdf=create_pdf,
+                            export_collisions=export_collisions,
                             ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes, float_fmt_dict=float_fmt_dict)
         else:
             raise IOError("Unknown export format:" + format)
@@ -562,13 +562,12 @@ class Robot(SMURFRobot):
         if self.autogenerate_submechanisms is None or self.autogenerate_submechanisms is True:
             self.generate_submechanisms()
         if check_submechs and (self.submechanisms is not None and len(self.submechanisms)) > 0 or (self.exoskeletons is not None and len(self.exoskeletons)):
-            missing_joints = self._get_joints_not_included_in_submechanisms()
+            missing_joints = [(j, self.get_joint(j).joint_type) for j in self._get_joints_not_included_in_submechanisms()]
             if len(missing_joints) != 0:
                 log.warning(f"Not all joints defined in the submechanisms definition! Lacking definition for: \n{missing_joints}")
             double_joints = self._get_joints_included_twice_in_submechanisms()
             if len(double_joints) != 0:
-                log.error(f"The following joints are multiply defined in the submechanisms definition: \n{double_joints}")
-                raise AssertionError
+                raise AssertionError(f"The following joints are multiply defined in the submechanisms definition: \n{double_joints}")
         for sm in self.submechanisms + self.exoskeletons:
             if hasattr(sm, "file_path"):
                 _submodel = self.define_submodel(name="#sub_mech#", start=sm.get_root(self),
@@ -974,20 +973,20 @@ class Robot(SMURFRobot):
         for export in export_config:
             export_robot_instance = self.duplicate()
             if export["type"] in KINEMATIC_TYPES:
-                if export["link_in_smurf"]:
-                    assert xml_file_in_smurf is None, "Only one xml file can be linked in the SMURF"
-                    xml_file_in_smurf = os.path.join(export["type"].lower(), self.name, "."+export["type"].lower())
                 if export["enforce_zero"]:
                     export_robot_instance.enforce_zero()
                 if export["ros_pathes"]:
                     ros_pkg |= export["ros_pathes"]
-                export_robot_instance.export_xml(
+                xml_file = export_robot_instance.export_xml(
                     outputdir=outputdir,
                     format=export["type"],
                     ros_pkg=export["ros_pkg"] if "ros_pkg" in export else None,
                     ros_pkg_name=ros_pkg_name,
                     float_fmt_dict=export["float_format_dict"] if "float_format_dict" in export else None
                 )
+                if export["link_in_smurf"]:
+                    assert xml_file_in_smurf is None, "Only one xml file can be linked in the SMURF"
+                    xml_file_in_smurf = xml_file
             elif export["type"] == "submodel":
                 export_robot_instance = export_robot_instance.define_submodel(
                     name=export["name"],
@@ -1242,34 +1241,7 @@ class Robot(SMURFRobot):
             if include_unstopped_branches:
                 _stop = self.get_leaves(start, stop=_stop)
             for leave in _stop:
-                # print(start, leave, self.get_chain(start, leave, joints=False))
-                linknames = linknames | set(self.get_chain(start, leave, joints=False))
-            # linknames = set()
-            # try:
-            #     chains = [[str(link) for link in self.get_chain(self.get_root(), leave, joints=False)] for leave
-            #                         in self.get_leaves()]
-            #     chains = [chain for chain in chains if str(start) in chain]
-            #     for chain in chains:
-            #         begin = chain.index(str(start))
-            #         end = None
-            #         for leave in stop:
-            #             if str(leave) in chain:
-            #                 assert end is None, f"The leave {chain[end]} and {str(leave)} are on the same branch."
-            #                 end = chain.index(str(leave))
-            #                 while extend_by_single_fixed and end+1 < len(chain) and\
-            #                     self.get_joint(self.get_parent(chain[end+1])).joint_type == "fixed" and \
-            #                     len(self.get_children(chain[end])) == 1:
-            #                     end += 1
-            #         if end is not None:
-            #             linknames.update(chain[begin:end+1])
-            #         elif include_unstopped_branches:
-            #             linknames.update(chain[begin:])
-            # except Exception as e:
-            #     log.info(self.get_root())
-            #     log.info(self.parent_map.keys())
-            #     log.info([link.name for link in self.links])
-            #     log.info(f"Start {start} Stop {stop}")
-            #     raise e
+                linknames = linknames.union(self.get_chain(start, leave, joints=False))
             linknames = list(linknames)
 
         jointnames = [str(j) for j in self.get_joint(self.get_parent(linknames)) if j is not None and j.parent in linknames]

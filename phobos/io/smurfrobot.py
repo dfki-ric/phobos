@@ -36,6 +36,8 @@ class SMURFRobot(XMLRobot):
         # Modular stuff
         self.interfaces = []
 
+        if inputfile is None and smurffile is not None:
+            inputfile = smurffile
         if inputfile is not None:
             if inputfile.lower().endswith(".smurf") and smurffile is None:
                 smurffile = inputfile
@@ -426,9 +428,7 @@ class SMURFRobot(XMLRobot):
         """
         sorted_joints = [jn.name for jn in self.get_joints_ordered_df()]
         # sorted_links = [jn.name for jn in self.get_links_ordered_df()]
-        for x in self.submechanisms:
-            assert len(x.get_root_joints(self)) > 0, x.name
-        self.submechanisms = sorted(self.submechanisms, key=lambda submech: sorted_joints.index(submech.get_root_joints(self)[0]))
+        self.submechanisms = sorted([sm for sm in self.submechanisms if not sm.is_empty()], key=lambda submech: sorted_joints.index(submech.get_root_joints(self)[0]))
         for sm in self.submechanisms + self.exoskeletons:
             for key in ["jointnames", "jointnames_spanningtree", "jointnames_active", "jointnames_independent", "jointnames_dependent"]:
                 if hasattr(sm, key) and getattr(sm, key) is not None:
