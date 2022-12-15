@@ -13,7 +13,7 @@ from ..core import Robot
 from ..geometry import replace_collision, join_collisions, remove_collision, import_mesh, import_mars_mesh, \
     export_mesh, export_mars_mesh, export_bobj_mesh
 from ..io.hyrodyn import ConstraintAxis
-from ..utils import misc, git, xml, transform, tree
+from ..utils import misc, git, xml, transform, tree, defaults
 from ..io import representation, sensor_representations, poses
 from ..utils.commandline_logging import get_logger
 log = get_logger(__name__)
@@ -51,10 +51,10 @@ class BaseModel(yaml.YAMLObject):
         assert hasattr(self, "robotname") and len(self.robotname) > 0
         assert hasattr(self, "export_config") and len(self.export_config) >= 1
         assert hasattr(self, "test") and len(self.test) >= 1
-        # self.test = misc.merge_default(
-        #   self.test,
-        #   self.pipeline.default_test if hasattr(pipeline, "default_test") else default_test
-        # )  # [TODO pre_v2.0.0] add default provider
+        self.test = misc.merge_default(
+          self.test,
+          self.pipeline.default_test if hasattr(pipeline, "default_test") else defaults.get_default_ci_test_definition()
+        )
 
         # get directories for this model
         self.exportdir = os.path.join(self.pipeline.temp_dir, self.modelname)
@@ -428,9 +428,8 @@ class BaseModel(yaml.YAMLObject):
                 if self.robot.get_link(linkname) is None:
                     assert "transform_frame" not in config and "transform_link" not in config
                     assert "joint" in config
-                    # [TODO!!! pre_v2.0.0] add provider for default values
-                    # _joint_def = misc.merge_default(config.pop("joint"), default_joint)
                     _joint_def = config.pop("joint")
+                    _joint_def = misc.merge_default(_joint_def, defaults.get_default_joint(_joint_def["type"]))
                     _joint = representation.Joint(
                         child=linkname,
                         parent=_joint_def.pop("parent"),
@@ -519,8 +518,7 @@ class BaseModel(yaml.YAMLObject):
                                                                                           offset=jd["offset"],
                                                                                           multiplier=jd["multiplier"]))
                         elif k == "active":
-                            # [TODO!!! pre_v2.0.0] add provider for default values
-                            # v = misc.merge_default(v, default_motor)
+                            v = misc.merge_default(v, defaults.get_default_motor())
                             if type(v) == dict:
                                 if "name" not in v:
                                     v["name"] = jointname+"_motor"
