@@ -658,6 +658,7 @@ class JointMimic(Representation, SmurfBase):
         assert self.multiplier is not None
         self.offset = offset
         assert self.offset is not None
+        self.returns += ["joint", "multiplier", "offset"]
 
     def equivalent(self, other):
         return other.joint == self.joint
@@ -677,6 +678,9 @@ class ConstraintAxis(SmurfBase):
         kwargs["name"] = name
         kwargs["axis"] = axis
         super(ConstraintAxis, self).__init__(**kwargs)
+
+    def stringable(self):
+        return False
 
 
 class Joint(Representation, SmurfBase):
@@ -729,7 +733,7 @@ class Joint(Representation, SmurfBase):
         # dynamics
         self.dynamics = _singular(dynamics)
         SmurfBase.__init__(self, **kwargs)
-        self.returns += ["joint_dependencies"]
+        self.returns += ["joint_dependencies", "parent", "child"]
         self.excludes += ["limit", "mimic", "axis", "dynamics"]
 
     def link_with_robot(self, robot, check_linkage_later=False):

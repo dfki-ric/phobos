@@ -68,7 +68,7 @@ class Pipeline(yaml.YAMLObject):
             try:
                 cfg = load_json(open(os.path.join(self.configdir, md), "r").read())
                 cfg_ = cfg[list(cfg.keys())[0]]
-            except KeyError as e:
+            except Exception as e:
                 self.processing_failed[md[:-4]]["load"] = ''.join(traceback.format_exception(None, e, e.__traceback__))
                 log.error("Could not load model config " + md)
                 traceback.print_exc()

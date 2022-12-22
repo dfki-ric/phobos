@@ -552,6 +552,7 @@ class Robot(SMURFRobot):
 
         # Export the smurf files
         smurf_dir = os.path.join(outputdir, "smurf")
+        self.smurffile = os.path.join(smurf_dir, "{}.smurf".format(self.name))
         if not os.path.exists(smurf_dir):
             os.mkdir(smurf_dir)
         # Export attr
@@ -577,7 +578,7 @@ class Robot(SMURFRobot):
                 _submodel = self.define_submodel(name="#sub_mech#", start=sm.get_root(self),
                                                  stop=sm.get_leaves(self), robotname=str(sm),
                                                  no_submechanisms=True, include_unstopped_branches=False)
-                sm.file_path = "../submechanisms/" + os.path.basename(sm.file_path)
+                sm.file_path = f"../submechanisms/{str(sm)}.urdf"
                 if not os.path.isfile(sm.file_path):
                     self.export_submodel(name="#sub_mech#", outputdir=os.path.join(outputdir, "submechanisms"),
                                          filename=os.path.basename(sm.file_path), only_urdf=True, no_format_dir=True,
@@ -632,7 +633,7 @@ class Robot(SMURFRobot):
             'description': self.description
         }
 
-        with open(os.path.join(smurf_dir, "{}.smurf".format(self.name)), "w+") as stream:
+        with open(self.smurffile, "w+") as stream:
             stream.write(dump_json(annotation_dict, default_style=False, sort_keys=True))
         log.info(f"SMURF written to {smurf_dir}")
 
@@ -965,8 +966,8 @@ class Robot(SMURFRobot):
         graph[0].write_pdf(outputfile)
 
     def export(self, outputdir, rel_mesh_pathes, export_config, ros_pkg_name=None, copy_meshes=False, no_smurf=False,
-               ros_pkg_later=False):
-        xml_file_in_smurf    = None
+               ros_pkg_later=False, check_submechs=True):
+        xml_file_in_smurf = None
         ros_pkg = False
         if ros_pkg_name is None:
             ros_pkg_name = os.path.basename(outputdir)
@@ -975,6 +976,9 @@ class Robot(SMURFRobot):
             pass
         for export in export_config:
             export_robot_instance = self.duplicate()
+            if export_robot_instance.autogenerate_submechanisms is None or export_robot_instance.autogenerate_submechanisms is True:
+                export_robot_instance.generate_submechanisms()
+                export_robot_instance.autogenerate_submechanisms = False  # because it's already done here
             if export["type"] in KINEMATIC_TYPES:
                 if export["enforce_zero"]:
                     export_robot_instance.enforce_zero()
@@ -1023,10 +1027,14 @@ class Robot(SMURFRobot):
                     **export
                 )
             elif export["type"] == "joint_limits":
+                kwargs = {}
+                if "file_name" in export:
+                    kwargs["file_name"] = export["file_name"]
+                if "joints" in export:
+                    kwargs["joint_desc"] = export["joints"]
                 export_robot_instance.export_joint_limits(
                     outputdir=outputdir,
-                    file_name=export["file_name"],
-                    joint_desc=export["joints"]
+                    **kwargs
                 )
             else:
                 log.error(f"Can't export according to following export configuration:\n{export}")
@@ -1034,7 +1042,8 @@ class Robot(SMURFRobot):
         if not no_smurf:
             self.export_smurf(
                 outputdir=outputdir,
-                robotfile=xml_file_in_smurf
+                robotfile=xml_file_in_smurf,
+                check_submechs=check_submechs
             )
         # export ros package files
         if ros_pkg and not ros_pkg_later:
@@ -1230,8 +1239,8 @@ class Robot(SMURFRobot):
         return self.instantiate_submodel(name, no_submechanisms=no_submechanisms,
                                          include_unstopped_branches=include_unstopped_branches)
 
-    def get_links_and_joints_in_subtree(self, start, stop=None, include_unstopped_branches=True, extend_by_single_fixed=False):
-        assert self.get_link(start) is not None
+    def get_links_and_joints_in_subtree(self, start, stop=None, include_unstopped_branches=True):
+        assert self.get_link(start, verbose=True) is not None
         if stop is None:
             # Collect all links on the way to the leaves
             parents, children = self._get_children_lists([start], [])
@@ -1254,7 +1263,7 @@ class Robot(SMURFRobot):
         return linknames, jointnames
 
     def instantiate_submodel(self, name=None, definition=None,
-                             include_unstopped_branches=None, extend_by_single_fixed=False,
+                             include_unstopped_branches=None,
                              no_submechanisms=False):
         """
         Instantiates a submodel by it's definition. Takes either name or definition. If both are given, the submodel
@@ -1288,7 +1297,7 @@ class Robot(SMURFRobot):
 
         linknames, jointnames = self.get_links_and_joints_in_subtree(
             start=definition["start"], stop=definition["stop"],
-            include_unstopped_branches=include_unstopped_branches, extend_by_single_fixed=extend_by_single_fixed)
+            include_unstopped_branches=include_unstopped_branches)
 
         links = self.get_link(linknames)
         materials = set()
@@ -2063,6 +2072,9 @@ class Robot(SMURFRobot):
             visual_replacements: dict or list of dicts, applied on visualnames
             visual_prefix: str
             visual_suffix: str
+            submechanism_replacements: dict or list of dicts, applied on submechanism contextual names
+            submechanism_prefix: str
+            submechanism_suffix: str
         }
         :param cfg:
         :return:
@@ -2082,6 +2094,9 @@ class Robot(SMURFRobot):
         joint_replacements = cfg["joint_replacements"] if "joint_replacements" in cfg.keys() else {}
         joint_suffix = cfg["joint_suffix"] if "joint_suffix" in cfg.keys() else ""
         joint_prefix = cfg["joint_prefix"] if "joint_prefix" in cfg.keys() else ""
+        submech_replacements = cfg["submechanisms_replacements"] if "submechanisms_replacements" in cfg.keys() else {}
+        submech_suffix = cfg["submechanisms_suffix"] if "submechanisms_suffix" in cfg.keys() else ""
+        submech_prefix = cfg["submechanisms_prefix"] if "submechanisms_prefix" in cfg.keys() else ""
         for link in self.links:
             self.rename("link", link.name, replacements=replacements, prefix=prefix, suffix=suffix)
             self.rename("link", link.name, replacements=link_replacements, prefix=link_prefix, suffix=link_suffix)
@@ -2100,6 +2115,9 @@ class Robot(SMURFRobot):
             else:
                 self.rename(targettype="joint", target=joint.name, prefix=prefix, suffix=suffix, replacements=replacements)
                 self.rename(targettype="joint", target=joint.name, prefix=joint_prefix, suffix=joint_suffix, replacements=joint_replacements)
+        for submech in self.submechanisms:
+                self.rename(targettype="submechanism", target=submech.name, prefix=prefix, suffix=suffix, replacements=replacements)
+                self.rename(targettype="submechanism", target=submech.name, prefix=submech_prefix, suffix=submech_suffix, replacements=submech_replacements)
         if "append_link_suffix" in cfg.keys() and cfg["append_link_suffix"] is not False:
             for link in self.links:
                 if not link.name[-4:].upper() == "LINK":
