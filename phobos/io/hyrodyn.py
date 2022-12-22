@@ -6,7 +6,7 @@ from .smurf_reflection import SmurfBase
 from .representation import JointMimic, ConstraintAxis
 from ..utils import tree
 from ..utils.transform import matrix_to_quaternion, quaternion_to_rpy
-
+from .xml_factory import plural as _plural
 from ..utils.commandline_logging import get_logger
 log = get_logger(__name__)
 
@@ -17,12 +17,20 @@ __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 class LoopConstraint(SmurfBase):
     _class_variables = ["cut_joint", "predecessor_body", "successor_body"]
 
-    def __init__(self, joint, **kwargs):
-        self.joint = joint
+    def __init__(self, cut_joint, predecessor_body=None, successor_body=None, constraint_axes=None, **kwargs):
+        self.joint = cut_joint
+        if type(self.joint) == str:
+            assert predecessor_body is not None
+            assert successor_body is not None
+            assert constraint_axes is not None
+            self._predecessor_body = predecessor_body
+            self._successor_body = successor_body
+            self._constraint_axes = [ConstraintAxis(**ca) for ca in _plural(constraint_axes)]
         super(LoopConstraint, self).__init__(
             returns=["cut_joint", "predecessor_body", "successor_body", "constraint_axes"],
             **kwargs
         )
+        self.excludes += ["joint"]
 
     @property
     def cut_joint(self):
@@ -30,15 +38,24 @@ class LoopConstraint(SmurfBase):
 
     @property
     def predecessor_body(self):
+        if type(self.joint) == str:
+            return self._predecessor_body
         return self.joint.parent
 
     @property
     def successor_body(self):
+        if type(self.joint) == str:
+            return self._successor_body
         return self.joint.child
 
     @property
     def constraint_axes(self):
+        if type(self.joint) == str:
+            return self._constraint_axes
         return self.joint.constraint_axes
+
+    def stringable(self):
+        return False
 
 
 # This class is only for smurf formatting and isn't used for data storage
@@ -74,15 +91,12 @@ class HyrodynAnnotation(SmurfBase):
                  jointnames_spanningtree, jointnames_active=None,
                  jointnames_independent=None, jointnames_dependent=None,
                  jointnames=None, file_path=None,
-                 loop_constraints=None, multi_joint_dependencies=None,
                  type=None, around=None, auto_gen=False, **kwargs):
         kwargs = {
             "name": name,
             "contextual_name": contextual_name,
-            "jointnames_spanningtree": jointnames_spanningtree,
+            "jointnames_spanningtree": jointnames_spanningtree if jointnames_spanningtree is not None else [],
             "jointnames": jointnames,
-            "multi_joint_dependencies": multi_joint_dependencies,
-            "loop_constraints": loop_constraints,
             "auto_gen": auto_gen
         }
         if file_path is not None and file_path is not False:
@@ -146,9 +160,9 @@ class HyrodynAnnotation(SmurfBase):
                 "name": str(self),
                 "start": self.get_root(robot), "stop": self.get_leaves(robot)
             },
-            include_unstopped_branches=False, extend_by_single_fixed=True)
+            include_unstopped_branches=False)
 
-    def regenerate(self, robot, absorb_fixed=True):
+    def regenerate(self, robot, absorb_fixed_upwards=False, absorb_fixed_downwards=False):
         raise NotImplementedError
 
     def get_rotation_convention(self):
@@ -193,15 +207,14 @@ class Submechanism(HyrodynAnnotation):
             jointnames_spanningtree=jointnames_spanningtree,
             jointnames_active=jointnames_active, jointnames_independent=jointnames_independent,
             jointnames=jointnames, file_path=file_path,
-            loop_constraints=loop_constraints, multi_joint_dependencies=multi_joint_dependencies,
             type=type, around=None, auto_gen=auto_gen, **kwargs
         )
         if multi_joint_dependencies is None:
             multi_joint_dependencies = []
         if loop_constraints is None:
             loop_constraints = []
-        self.multi_joint_dependencies = multi_joint_dependencies
-        self.loop_constraints = loop_constraints
+        self._multi_joint_dependencies = multi_joint_dependencies
+        self.loop_constraints = [LoopConstraint(**lc) for lc in loop_constraints]
         self.returns += ["multi_joint_dependencies", "loop_constraints"]
         self._has_unlinked_changes = multi_joint_dependencies is not None or loop_constraints is not None
 
@@ -239,7 +252,7 @@ class Submechanism(HyrodynAnnotation):
                     loop_closure_joints.append(lcj)
             for joint in loop_closure_joints:
                 if joint.cut_joint:
-                    self._loop_constraints.append(LoopConstraint(joint).to_yaml())
+                    self._loop_constraints.append(LoopConstraint(joint))
         if self._loop_constraints is not None and len(self._loop_constraints) > 0:
             return self._loop_constraints
         else:
@@ -248,26 +261,29 @@ class Submechanism(HyrodynAnnotation):
     @loop_constraints.setter
     def loop_constraints(self, value):
         if self._related_robot_instance is None:
+            assert all([isinstance(v, LoopConstraint) for v in value])
             self._loop_constraints = value
         else:
-            raise RuntimeError("Please set the cut_joint and constraint_axes of the corresponding cut-joint!"
+            raise RuntimeError("Please set the cut_joint and constraint_axes of the corresponding joint instance!"
                                "Loop constraints will be filled automatically")
 
     def link_with_robot(self, robot, check_linkage_later=False):
         super(Submechanism, self).link_with_robot(robot, check_linkage_later=True)
         if self._multi_joint_dependencies is not None and len(self._multi_joint_dependencies) > 0:
             for mjd in self._multi_joint_dependencies:
-                joint = self._related_robot_instance.get_joint(mjd["name"])
+                joint = robot.get_joint(mjd["name"])
                 joint.joint_dependencies = []
                 for jd in mjd["depends_on"]:
                     joint.joint_dependencies = joint.joint_dependencies + [jd]
         if self._loop_constraints is not None and len(self._loop_constraints) > 0:
             for lc in self._loop_constraints:
-                joint = self._related_robot_instance.get_joint(lc["cut_joint"])
-                joint.cut_joint = True
-                joint.constraint_axes = []
-                for ax in lc["constraint_axes"]:
-                    joint.constraint_axes.append(ConstraintAxis(**ax))
+                joint = robot.get_joint(lc.cut_joint)
+                if not joint.cut_joint or len(joint.constraint_axes) == 0:
+                    joint.cut_joint = True
+                    joint.constraint_axes = []
+                    for ax in lc.constraint_axes:
+                        joint.constraint_axes.append(ax)
+            self._loop_constraints = []
         if not check_linkage_later:
             assert self.check_linkage()
 
@@ -280,7 +296,7 @@ class Submechanism(HyrodynAnnotation):
         if not check_linkage_later:
             assert self.check_unlinkage()
 
-    def regenerate(self, robot, absorb_fixed=True):
+    def regenerate(self, robot, absorb_fixed_upwards=False, absorb_fixed_downwards=False):
         """
         Sorts all joints depth first and fills the jointsnames entry already with all fied joints that are inbetween the submechanism
         Fixed joints that are between this and other submechanisms have to be managed by the robot.
@@ -290,28 +306,22 @@ class Submechanism(HyrodynAnnotation):
         Returns:
             None
         """
-        jointnames = set()
-        if absorb_fixed:
+        jointnames = set([str(joint) for joint in self.jointnames if robot.get_joint(joint) is not None])
+        if absorb_fixed_upwards:
             root = tree.skip_upwards_over_fixed(robot, self.get_root(robot), only_single_parents=True)
         else:
             root = self.get_root(robot)
         leaves = self.get_leaves(robot)
-        if absorb_fixed:
+        if absorb_fixed_downwards:
             _leaves = []
             for l in leaves:
-                for j in robot.get_children(l):
-                    _leaves += tree.skip_downwards_over_fixed(robot, j)
+                _leaves += tree.skip_downwards_over_fixed(robot, l, self)
             leaves = list(set(_leaves))
         for leave in leaves:
-            chain = robot.get_chain(root, robot.get_joint(leave).child, links=False)
-            if all([robot.get_joint(joint).joint_type == "fixed" for joint in chain]):
-                # if all joints in the chain after j are fixed
-                jointnames.update(chain)
-        root_joint = robot.get_parent(root)
-        if root_joint is not None and robot.get_joint(root_joint):
-            jointnames.add(root_joint)
-        self.jointnames = sorted([j for j in self.jointnames_spanningtree]+list(jointnames), key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))
-        self.jointnames_spanningtree = sorted([j for j in self.jointnames_spanningtree], key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))
+            chain = robot.get_chain(root, robot.get_link(leave, verbose=True), links=False)
+            jointnames = jointnames.union(chain)
+        self.jointnames = sorted(jointnames.union(self.jointnames_spanningtree), key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))
+        self.jointnames_spanningtree = sorted(self.jointnames_spanningtree, key=lambda x: [str(y) for y in robot.get_joints_ordered_df()].index(x))
         self.jointnames_active = sorted(self.jointnames_active, key=lambda x: self.jointnames_spanningtree.index(x))
         self.jointnames_independent = sorted(self.jointnames_independent, key=lambda x: self.jointnames_spanningtree.index(x))
 
@@ -330,7 +340,7 @@ class Exoskeleton(HyrodynAnnotation):
             around=around, auto_gen=auto_gen, type=None
         )
 
-    def regenerate(self, robot, absorb_fixed=True):
+    def regenerate(self, robot, absorb_fixed_upwards=False, absorb_fixed_downwards=False):
         joints_df = robot.get_joints_ordered_df()
         self.jointnames = [str(j) for j in joints_df if j._child.is_human]
         self.jointnames_spanningtree = [str(j) for j in joints_df if j._child.is_human and j.joint_type != "fixed"]

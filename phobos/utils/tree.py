@@ -6,30 +6,37 @@ def skip_upwards_over_fixed(robot, link_name, only_single_parents=True):
     From the given link upwards gets the rootest joint while skipping any fixed joint that is not yet in a submechanism
     """
     j = robot.get_joint(robot.get_parent(link_name))
-    if j is not None and j.joint_type == 'fixed' and not any([j.name in sm.get_joints() for sm in robot.submechanisms])\
+    if j is not None and j.joint_type == 'fixed' and not any([str(j) in [str(sj) for sj in sm.get_joints()] for sm in robot.submechanisms])\
             and (not only_single_parents or len(robot.get_children(j.parent)) == 1):
         return skip_upwards_over_fixed(robot, j.parent, only_single_parents)
+    elif j is not None and j.joint_type == 'fixed' and\
+            not any([str(j) in [str(sj) for sj in sm.get_joints()] or str(robot.get_parent(j.parent)) in [str(sj) for sj in sm.get_joints()] for sm in robot.submechanisms])\
+            and (not only_single_parents or len(robot.get_children(j.parent)) > 1):
+        out = robot.get_parent(j.parent, targettype="link")
+        if out is not None:
+            return out
+        else:
+            return j.parent
     else:
         return link_name
 
 
-def skip_downwards_over_fixed(robot, joint_name):
+def skip_downwards_over_fixed(robot, link_name, submechanism):
     """
     Starting from the given joint names returns the end of all branches that are fixed and not already present in any
     submechanism
     """
-    j = robot.get_joint(joint_name)
-    if j.joint_type == 'fixed':
-        children = robot.get_joint(robot.get_children(j.child))
-        out = []
-        for child in children:
-            if not any([child in sm.get_joints() for sm in robot.submechanisms]):
-                out += skip_downwards_over_fixed(robot, child)
-            else:
-                out += [j.name]
-        return out
-    else:
-        return [j.name]
+    out = set()
+    children = robot.get_joint(robot.get_children(link_name))
+    if len(children) == 0:
+        return [link_name]
+    all_children_in_submech = all([str(child) in [str(sj) for sj in submechanism.get_joints()] for child in children])
+    for j in children:
+        if (j.joint_type == 'fixed' and not any([str(j) in [str(sj) for sj in sm.get_joints()] for sm in robot.submechanisms])) or all_children_in_submech:
+            out = out.union(skip_downwards_over_fixed(robot, j.child, submechanism))
+        else:
+            out.add(link_name)
+    return list(out)
 
 
 def find_common_root(input_model, input_spanningtree):
@@ -51,15 +58,6 @@ def find_common_root(input_model, input_spanningtree):
     return intersection[-1]
 
 
-def get_all_children(input_model, linkname):
-    children = []
-    for child in input_model.get_children(linkname):
-        children += [child]
-        joint = input_model.get_joint(child)
-        children += get_all_children(input_model, joint.child)
-    return children
-
-
 def find_leaves(input_model, input_spanningtree):
     """
     Finds the leaves in the given spanning tree
@@ -70,8 +68,8 @@ def find_leaves(input_model, input_spanningtree):
     leaves = []
     for jointname in input_spanningtree:
         joint = input_model.get_joint(jointname)
-        children = get_all_children(input_model, joint.child)
-        if not any([x in children for x in input_spanningtree]):
+        children = input_model.get_children(joint.child)
+        if not any([x in input_spanningtree for x in children]):
             leaves += [joint.child]
     return leaves
 
