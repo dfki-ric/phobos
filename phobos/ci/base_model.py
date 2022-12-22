@@ -340,12 +340,12 @@ class BaseModel(yaml.YAMLObject):
                     log.error(f"Parent links: {sorted([lnk.name for lnk in parent.links])}")
                     raise AssertionError(
                         "Problem with assembling joint " + child["joint"]["parent"] + " -> " + child["joint"]["child"]
-                        + ": the parent link doesn't exist!")
+                        + ": the parent link doesn't exist! (Further info above)")
                 elif att_model.get_link(child["joint"]["child"]) is None:
                     log.error(f"Child links: {sorted([lnk.name for lnk in att_model.links])}")
                     raise AssertionError(
                         "Problem with assembling joint " + child["joint"]["parent"] + " -> " + child["joint"]["child"]
-                        + ": the child link doesn't exist!")
+                        + ": the child link doesn't exist! (Further info above)")
                 assert att_model.get_joint(child["joint"]["name"]) is None and parent.get_joint(child["joint"]["name"]) is None, f'Can not join using joint name {child["joint"]["name"]} as this name already exists.'
                 joint = representation.Joint(
                     name=child["joint"]["name"],
@@ -479,12 +479,13 @@ class BaseModel(yaml.YAMLObject):
                             joint.joint_type = new
             transmissions = {}
             _default = {} if "$default" not in self.joints else self.joints["$default"]
+            faulty_joint_defs = []
             for jointname, config in self.joints.items():
                 if jointname.startswith("$"):
                     continue
-                if self.robot.get_joint(jointname, verbose=True) is None and ("cut_joint" not in config or config["cut_joint"] is False):
-                    log.warning(f"There is no joint with name {jointname}")
-                elif self.robot.get_joint(jointname, verbose=True) is None and ("cut_joint" in config and config["cut_joint"] is True):  # cut_joint
+                if self.robot.get_joint(jointname) is None and ("cut_joint" not in config or config["cut_joint"] is False):
+                    faulty_joint_defs += [(jointname, [str(j) for j in self.robot.joints if jointname in str(j) or str(j) in jointname])]
+                elif self.robot.get_joint(jointname) is None and ("cut_joint" in config and config["cut_joint"] is True):  # cut_joint
                     # [TODO pre_v2.0.0] Review and Check whether this works as expected
                     # Check whether everything is given and calculate origin and axis (?)
                     _joint = representation.Joint(**config)
@@ -492,6 +493,10 @@ class BaseModel(yaml.YAMLObject):
                     _joint.constraint_axes = [ConstraintAxis(**ca) for ca in config["constraint_axes"]]
                     assert _joint.check_valid()
                     self.robot.add_aggregate("joint", _joint)
+            if len(faulty_joint_defs) > 0:
+                log.error("The following joint changes are defined but the joint does not exist:")
+                for fjd in faulty_joint_defs:
+                    log.error(f"- {fjd[0]} "+(f"Did you mean: {fjd[1]}" if len(fjd[1]) > 0 else ""))
             for joint in self.robot.joints:
                 jointname = joint.name
                 if jointname in self.joints:

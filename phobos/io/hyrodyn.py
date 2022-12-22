@@ -212,7 +212,7 @@ class Submechanism(HyrodynAnnotation):
             self._multi_joint_dependencies = []
             for j in self.get_joints() + [lc.cut_joint for lc in self.loop_constraints]:
                 joint = self._related_robot_instance.get_joint(j, verbose=True)
-                assert joint is not None
+                assert joint is not None, f"(see above for more info)\n{self.get_joints()}\n{[lc.cut_joint for lc in self.loop_constraints]}"
                 if len(joint.joint_dependencies) > 1:
                     self._multi_joint_dependencies.append(MultiJointDependency(joint).to_yaml())
         if self._multi_joint_dependencies is not None and len(self._multi_joint_dependencies) > 0:

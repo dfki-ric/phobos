@@ -313,8 +313,8 @@ class Robot(SMURFRobot):
                     if values.get('id') is not None:
                         values['targets'] = [
                             x for x in values['id'] if (
-                                    new_robot.get_joint(x, verbose=False) is not None or
-                                    new_robot.get_link(x, verbose=False) is not None or
+                                    new_robot.get_joint(x) is not None or
+                                    new_robot.get_link(x) is not None or
                                     new_robot.get_collision_by_name(x) is not None or
                                     new_robot.get_visual_by_name(x) is not None
                             )
@@ -496,11 +496,13 @@ class Robot(SMURFRobot):
 
         if export_joint_limits:
             self.export_joint_limits(outputdir if no_format_dir else os.path.join(outputdir, format),
-                                     filename=f"joint_limits_{self.name if filename is None else filename}.yml")
+                                     file_name=f"joint_limits_{self.name if filename is None else filename}.yml")
 
         if create_pdf:
-            self.export_pdf(outputdir if no_format_dir else os.path.join(outputdir, format),
-                                     filename=f"{self.name if filename is None else filename}.pdf")
+            self.export_pdf(
+                os.path.join(outputdir, f"{self.name if filename is None else filename}.pdf")
+                if no_format_dir else os.path.join(outputdir, format, f"{self.name if filename is None else filename}.pdf")
+            )
 
         if self._submodels and export_submodels:
             submodel_folder = os.path.join(outputdir, "submodels")
@@ -557,16 +559,18 @@ class Robot(SMURFRobot):
             'motors', 'sensors', 'materials', "joints", "links", 'collisions', 'poses',
             "submechanisms", "exoskeletons", "interfaces"
         ]
-        export_files = [os.path.relpath(robotfile, outputdir + "/smurf")]
+        export_files = [os.path.relpath(robotfile, outputdir + "/smurf")] if robotfile is not None else []
         submechanisms = {}
         if self.autogenerate_submechanisms is None or self.autogenerate_submechanisms is True:
             self.generate_submechanisms()
         if check_submechs and (self.submechanisms is not None and len(self.submechanisms)) > 0 or (self.exoskeletons is not None and len(self.exoskeletons)):
             missing_joints = [(j, self.get_joint(j).joint_type) for j in self._get_joints_not_included_in_submechanisms()]
             if len(missing_joints) != 0:
-                log.warning(f"Not all joints defined in the submechanisms definition! Lacking definition for: \n{missing_joints}")
+                log.warning(f"{self.smurffile}: Not all joints defined in the submechanisms definition! "+("(only fixed joints)" if all([j[1] == "fixed" for j in missing_joints]) else ""))
+                log.debug(f"Lacking definitions for:\n{missing_joints}")
             double_joints = self._get_joints_included_twice_in_submechanisms()
             if len(double_joints) != 0:
+                print({dj: [sm.to_yaml() for sm in self.submechanisms if dj in sm.get_joints()] for dj in double_joints})
                 raise AssertionError(f"The following joints are multiply defined in the submechanisms definition: \n{double_joints}")
         for sm in self.submechanisms + self.exoskeletons:
             if hasattr(sm, "file_path"):
@@ -931,10 +935,9 @@ class Robot(SMURFRobot):
                 out += "\"];\n"
             for i, sm in enumerate(self.submechanisms):
                 out += f"node [shape=ellipse, color={SUBMECH_COLORS[i%len(SUBMECH_COLORS)]}, fontcolor=black];\n"
-                assert len(sm.get_joints()) == len(set(sm.get_joints()))
                 for joint in sorted(sm.get_joints()):
                     joint = self.get_joint(joint)
-                    assert str(joint) not in printed_joints, str(printed_joints)
+                    assert str(joint) not in printed_joints, str(joint)+" "+str(printed_joints)
                     printed_joints.append(str(joint))
                     out += add_joint(joint)
                     ## includes the submechanisms deeper by drawing an error to them
@@ -1303,7 +1306,7 @@ class Robot(SMURFRobot):
         for joint in _joints:
             if any([jd.joint not in jointnames for jd in joint.joint_dependencies]):
                 _joint = joint.duplicate()
-                log.warning(f"Removing mimic relation in submodel {definition['robotname']} for {_joint.name} (mimiced "
+                log.debug(f"Removing mimic relation in submodel {definition['robotname']} for {_joint.name} (mimiced "
                             f"{_joint.mimic.joint})!")
                 _joint.joint_dependencies = [jd for jd in _joint.joint_dependencies if jd.joint in jointnames]
                 joints.append(_joint)
@@ -1956,6 +1959,7 @@ class Robot(SMURFRobot):
         # find-bitmask-algo
         bits = [[] for _ in range(16)]  # list of list for each bit containing the collisions that lie on this bit
         X = coll_matrix
+        not_possible = []
         for i in range(X.shape[0]):
             for j in range(X.shape[1]):
                 if i == j or coll_matrix[i, j] == 0:
@@ -1982,7 +1986,11 @@ class Robot(SMURFRobot):
                     if coll_exists:
                         break
                 if not coll_exists:
-                    log.warning(f"Auto-Bitmask algorithm was unable to create the collision: {coll_names[i]} <-> {coll_names[j]}")
+                    not_possible.append((coll_names[i], coll_names[j]))
+        if len(not_possible) > 0:
+            log.warning(f"Auto-Bitmask algorithm was unable to create bitmasks that are able to represent all collisions!")
+            for np in not_possible:
+                log.debug(f"  {np[0]} <-> {np[1]}")
         for b in bits:
             for i in b:
                 for j in b:

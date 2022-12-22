@@ -206,6 +206,7 @@ class XMLRobot(Representation):
         if type(elem) == list:
             return [self.add_aggregate(typeName, e) for e in elem]
         if typeName in 'joints':
+            assert elem.name not in [str(j) for j in self.joints], f"Robot has already a joint with name {elem.name}"
             self.parent_map[str(elem.child)] = (elem.name, elem.parent)
             # self.parent_map[str(elem.name)] = (elem.name, elem.parent)
             if elem.parent in self.child_map:
@@ -366,12 +367,13 @@ class XMLRobot(Representation):
         return
 
     def get_chain(self, root, tip, joints=True, links=True, fixed=True):
+        assert root is not None
         chain = []
         if links:
             chain.append(str(tip))
         link = str(tip)
         while str(link) != str(root):
-            assert self.get_link(root) is not None
+            assert self.get_link(root, verbose=True) is not None
             assert self.get_link(link) is not None
             try:
                 (joint, parent) = self.parent_map[link]
@@ -415,7 +417,7 @@ class XMLRobot(Representation):
             log.warning(f"Robot {self.name} has no {targettype} with name {target}, only these: {repr(names)}")
         return None
 
-    def get_link(self, link_name, verbose=True) -> [representation.Link, list]:
+    def get_link(self, link_name, verbose=False) -> [representation.Link, list]:
         """
         Returns the link(s) corresponding to the link name(s).
         :param link_name: the name of the joint to get

@@ -49,7 +49,7 @@ def as_mesh(scene_or_mesh, scale=None):
 def export_bobj(outname, mesh):
     """
     Exports the mesh as bobj.
-    [TODO pre_v2.0.0] Export UVs, too
+    [TODO v2.1.0] Export UVs, too
     """
     num_normals = 1
     # numUVs = 1
@@ -62,7 +62,7 @@ def export_bobj(outname, mesh):
     #     write_uv = False
 
     if os.path.isfile(outname):
-        # [TODO pre_v2.0.0] load bobj mesh
+        # [TODO v2.1.0] load bobj mesh
         # test_mesh = import_mesh(outname)
         # if all(trimesh.comparison.identifier_simple(mesh) == trimesh.comparison.identifier_simple(test_mesh)):
         log.warning(f"Mesh {outname} does already exist. Skipping export.")

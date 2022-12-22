@@ -5,6 +5,33 @@ from ..defs import BASE_LOG_LEVEL, LOG_FILE_CONVENTION
 SUPPORTED_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 LOGGER_NAME = "phobos_log"
 
+#The background is set with 40 plus the number of the color, and the foreground with 30
+BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
+
+#These are the sequences need to get colored ouput
+RESET_SEQ = "\033[0m"
+COLOR_SEQ = "\033[1;%dm"
+BOLD_SEQ = "\033[1m"
+COLORS = {
+    'WARNING': YELLOW,
+    'INFO': WHITE,
+    'DEBUG': BLUE,
+    'CRITICAL': RED,
+    'ERROR': RED
+}
+
+
+class ColoredFormatter(logging.Formatter):
+    def __init__(self, msg, use_color = True):
+        logging.Formatter.__init__(self, msg)
+        self.use_color = use_color
+
+    def format(self, record):
+        levelname = record.levelname
+        if self.use_color and levelname in COLORS:
+            return BOLD_SEQ + COLOR_SEQ % (30 + COLORS[levelname]) + levelname + ": " + RESET_SEQ + logging.Formatter.format(self, record)
+        return logging.Formatter.format(self, record)
+
 
 def setup_logger_level(log_level=BASE_LOG_LEVEL, file_name=LOG_FILE_CONVENTION):
     """
@@ -25,7 +52,7 @@ def setup_logger_level(log_level=BASE_LOG_LEVEL, file_name=LOG_FILE_CONVENTION):
             logger.setLevel(logging.ERROR)
         elif log_level.upper() == "CRITICAL":
             logger.setLevel(logging.CRITICAL)
-        sh_formatter = logging.Formatter("%(message)s")
+        sh_formatter = ColoredFormatter("%(message)s")
         formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         sh = logging.StreamHandler(sys.stdout)
         sh.setFormatter(sh_formatter)

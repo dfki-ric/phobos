@@ -579,6 +579,8 @@ class SMURFRobot(XMLRobot):
                sm.name = "serial_chain"
                sm.contextual_name = "serial_chain" + str(counter)
                counter += 1
+        assert len(self._get_joints_included_twice_in_submechanisms()) == 0, self._get_joints_included_twice_in_submechanisms()
+        assert len(self._get_joints_not_included_in_submechanisms()) == 0, self._get_joints_not_included_in_submechanisms()
 
     def get_loop_closure_joints(self):
         return [j for j in self.joints if j.cut_joint]
