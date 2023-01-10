@@ -306,7 +306,7 @@ class Submechanism(HyrodynAnnotation):
         Returns:
             None
         """
-        jointnames = set([str(joint) for joint in self.jointnames if robot.get_joint(joint) is not None])
+        jointnames = set([str(joint) for joint in self.get_joints() if robot.get_joint(joint) is not None])
         if absorb_fixed_upwards:
             root = tree.skip_upwards_over_fixed(robot, self.get_root(robot), only_single_parents=True)
         else:
