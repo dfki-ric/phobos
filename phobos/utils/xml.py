@@ -3,7 +3,7 @@ import numpy as np
 
 from . import misc
 from ..io import representation
-from ..utils.commandline_logging import get_logger
+from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 

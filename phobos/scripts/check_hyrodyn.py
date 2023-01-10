@@ -20,7 +20,7 @@ def main(args):
     import argparse
     import os.path as path
     from ..core import Robot
-    from ..utils.commandline_logging import setup_logger_level
+    from ..commandline_logging import setup_logger_level
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
     parser.add_argument('robot_file', type=str, help='Path to the urdf file')

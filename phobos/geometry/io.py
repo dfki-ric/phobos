@@ -13,7 +13,7 @@ from . import geometry
 from .geometry import identical, improve_mesh, reduce_mesh
 from ..defs import BPY_AVAILABLE
 from ..utils import misc, xml as xml_utils
-from ..utils.commandline_logging import get_logger
+from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 

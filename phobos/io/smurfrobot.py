@@ -12,7 +12,7 @@ from ..geometry import import_mesh
 from ..utils import tree
 from ..defs import load_json, dump_json, dump_yaml
 from ..utils.transform import inv
-from ..utils.commandline_logging import get_logger
+from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 

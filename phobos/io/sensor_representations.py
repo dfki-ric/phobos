@@ -6,7 +6,7 @@ from .representation import Pose
 from .smurf_reflection import SmurfBase
 from ..io import representation
 from ..utils import transform
-from ..utils.commandline_logging import get_logger
+from ..commandline_logging import get_logger
 from .xml_factory import singular as _singular, plural as _plural
 
 log = get_logger(__name__)

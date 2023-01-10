@@ -18,8 +18,7 @@ INFO = 'Loads a "smurfs" file in pyBullet.'
 def main(args):
     import argparse
     import os
-    from ..defs import BASE_LOG_LEVEL
-    from ..utils.commandline_logging import setup_logger_level
+    from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + os.path.basename(__file__)[:-3])
     parser.add_argument('smurfs', type=str, help='Path to the smurfs file', default="pipeline.yml")

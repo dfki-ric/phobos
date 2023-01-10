@@ -15,7 +15,7 @@ from ..geometry import replace_collision, join_collisions, remove_collision, imp
 from ..io.hyrodyn import ConstraintAxis
 from ..utils import misc, git, xml, transform, tree, defaults
 from ..io import representation, sensor_representations, poses
-from ..utils.commandline_logging import get_logger
+from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 SUBMECHS_VIA_ASSEMBLIES = False

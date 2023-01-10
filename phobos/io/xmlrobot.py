@@ -8,7 +8,7 @@ from . import representation, xml_factory, sensor_representations
 from .base import Representation
 from ..utils.transform import create_transformation, get_adjoint, inv
 from ..utils.tree import get_joints_depth_first
-from ..utils.commandline_logging import get_logger
+from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 

@@ -1,5 +1,4 @@
 #!python3
-from ..utils.commandline_logging import setup_logger_level
 
 def can_be_used():
     return True
@@ -17,7 +16,7 @@ def main(args):
 
     import argparse
     import os
-    from ..defs import BASE_LOG_LEVEL
+    from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos "+os.path.basename(__file__)[:-3])
     parser.add_argument('config_file', type=str, help='Path to the pipeline configfile', default="pipeline.yml")

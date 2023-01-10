@@ -24,7 +24,7 @@ from ..utils.transform import create_transformation, inv, get_adjoint, round_arr
 from ..utils.tree import find_close_ancestor_links, get_joints
 from ..utils.xml import read_urdf_filename, transform_object, get_joint_info_dict
 
-from ..utils.commandline_logging import get_logger
+from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 

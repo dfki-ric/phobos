@@ -15,8 +15,7 @@ def main(args):
     import os
 
     from ..scenes import Scene, Assembly
-    from ..defs import BASE_LOG_LEVEL
-    from ..utils.commandline_logging import setup_logger_level
+    from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser()
     parser.add_argument("input", type=str, help="SMURFA or SMURFS file")

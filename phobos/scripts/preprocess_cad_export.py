@@ -23,8 +23,7 @@ def main(args):
     from phobos.utils.transform import order_angles
     from phobos.defs import load_json, dump_json, dump_yaml
     from phobos.core import Robot
-    from ..defs import BASE_LOG_LEVEL
-    from ..utils.commandline_logging import setup_logger_level
+    from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     def invertJoint(urdfpath, name):
         try:

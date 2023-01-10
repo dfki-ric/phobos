@@ -22,8 +22,7 @@ def main(args):
 
     from phobos.ci import XTypePipeline
     import phobos.utils.misc as misc
-    from ..utils.commandline_logging import setup_logger_level
-    from ..defs import BASE_LOG_LEVEL
+    from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     try:
         from deimos.deimos import Deimos

@@ -8,7 +8,7 @@ from xml.dom.minidom import parseString
 from xml.etree import ElementTree as ET
 
 from ..defs import dump_json
-from ..utils.commandline_logging import get_logger
+from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 

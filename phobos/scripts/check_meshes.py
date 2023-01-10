@@ -20,8 +20,8 @@ def main(args):
     from ..utils import xml
     from ..core.robot import Robot
     from ..io import representation
-    from ..defs import load_json, dump_json, dump_yaml, BASE_LOG_LEVEL
-    from ..utils.commandline_logging import setup_logger_level
+    from ..defs import load_json, dump_json, dump_yaml
+    from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
     parser.add_argument('robot_file', type=str, help='Path to the urdf or smurf file')

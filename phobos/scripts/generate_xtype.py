@@ -55,8 +55,7 @@ def main(args):
     import os.path as path
     from ..utils.git import get_repo_data
     from ..core import Robot
-    from ..defs import BASE_LOG_LEVEL
-    from ..utils.commandline_logging import setup_logger_level
+    from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     cm = xtypes_py.ComponentModel()
 

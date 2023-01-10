@@ -4,7 +4,7 @@ import os
 
 from ..core import Robot
 from ..defs import load_json, dump_json, dump_yaml
-from ..utils.commandline_logging import get_logger
+from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 

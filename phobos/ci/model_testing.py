@@ -10,7 +10,7 @@ from ..io.representation import Pose
 from ..utils import xml
 from ..utils.hyrodyn import get_load_report, debug_report
 from ..utils.misc import execute_shell_command, list_files
-from ..utils.commandline_logging import get_logger
+from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 

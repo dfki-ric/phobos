@@ -12,7 +12,7 @@ from ..utils.misc import trunc, execute_shell_command, to_hex_color, color_parse
 from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix
 from ..utils import xml as xml_utils, transform
 
-from ..utils.commandline_logging import get_logger
+from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 __IMPORTS__ = [x for x in dir() if not x.startswith("__")]

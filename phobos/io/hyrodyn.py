@@ -7,7 +7,7 @@ from .representation import JointMimic, ConstraintAxis
 from ..utils import tree
 from ..utils.transform import matrix_to_quaternion, quaternion_to_rpy
 from .xml_factory import plural as _plural
-from ..utils.commandline_logging import get_logger
+from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 __IMPORTS__ = [x for x in dir() if not x.startswith("__")]

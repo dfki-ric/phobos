@@ -16,8 +16,7 @@ def main(args):
     import sys
     import os.path as path
     from ..core.robot import Robot
-    from ..defs import BASE_LOG_LEVEL
-    from ..utils.commandline_logging import setup_logger_level
+    from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
     parser.add_argument('input_file', type=str, help='Path to the urdf or smurf file')

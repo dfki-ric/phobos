@@ -10,7 +10,7 @@ import numpy as np
 from . import io
 from ..io import representation
 from ..utils import misc
-from ..utils.commandline_logging import get_logger
+from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 

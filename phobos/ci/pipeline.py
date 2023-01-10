@@ -11,7 +11,7 @@ from .model_testing import ModelTest
 from .compare_model import CompareModel
 from .xtype_model import XTypeModel
 from ..utils import git, misc
-from ..utils.commandline_logging import get_logger
+from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 # Failure States:

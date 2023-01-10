@@ -2,7 +2,7 @@ import os
 
 from . import misc
 from .misc import execute_shell_command
-from ..utils.commandline_logging import get_logger
+from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 
@@ -181,7 +181,8 @@ def get_repo_data(directory):
     url, _ = execute_shell_command("git remote get-url --push autobuild || true", directory, silent=True)
     if url == "":
         url, _ = execute_shell_command("git remote get-url --push origin || true", directory, silent=True)
-    return author.strip(), maintainer.strip(), url.strip()
+    return author.strip().replace("<", "").replace(">", ""), maintainer.strip().replace("<", "").replace(">", ""),\
+           url.strip()
 
 
 def has_diff(repo, file=None):

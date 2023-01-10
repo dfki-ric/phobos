@@ -1,9 +1,10 @@
 import logging
 import sys
-from ..defs import BASE_LOG_LEVEL, LOG_FILE_CONVENTION
 
 SUPPORTED_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]
 LOGGER_NAME = "phobos_log"
+BASE_LOG_LEVEL = "WARNING"
+LOG_FILE_CONVENTION = None
 
 #The background is set with 40 plus the number of the color, and the foreground with 30
 BLACK, RED, GREEN, YELLOW, BLUE, MAGENTA, CYAN, WHITE = range(8)
