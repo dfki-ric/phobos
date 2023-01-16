@@ -149,7 +149,7 @@ def main(args):
 
         if os.path.basename(os.path.dirname(__file__)) == "ci-run":
             readme_path = pkg_resources.resource_filename(__name__, "data/README-for-input-repo.md.in")
-            manifest_path = pkg_resources.resource_filename(__name__, "data/manifest-for-input-repo.xml.in")
+            manifest_path = pkg_resources.resource_filename(__name__, "data/manifest.xml.in")
             if not os.path.exists(os.path.join(args.output_directory, "README.md")):
                 copy(None, readme_path, os.path.join(args.output_directory, "README.md"))
             if not os.path.exists(os.path.join(args.output_directory, "manifest.xml")):
@@ -174,7 +174,7 @@ def main(args):
                 content = regex_replace(content, {
                     "\$INPUTNAME": os.path.basename(os.path.abspath(args.output_directory))
                 })
-                log.info("  Replacing $INPUTNAME with" +
+                log.debug("  Replacing $INPUTNAME with" +
                       str(os.path.basename(os.path.abspath(args.output_directory))) + "in README.md ...")
             with open(os.path.join(args.output_directory, "README.md"), "w") as readme:
                 readme.write(content)

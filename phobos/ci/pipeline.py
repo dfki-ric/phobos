@@ -25,8 +25,8 @@ NA_TEST = int('01000000', 2)
 NA_DEPL = int('10000000', 2)
 
 
-class Pipeline(yaml.YAMLObject):
-    def __init__(self, configfile, processed_model_exists):
+class Pipeline(yaml.YAMLObject):    
+    def __init__(self, configfile, processed_model_exists, subclass=False):
         self.processing_failed = {}
         self.test_results = {}
         self.configdir = os.path.abspath(os.path.dirname(configfile))
@@ -34,87 +34,97 @@ class Pipeline(yaml.YAMLObject):
         if not os.path.isfile(configfile):
             raise Exception('{} not found!'.format(configfile))
 
-        self.model_definitions = []
         self.root = ".."
+        self.model_definitions = []
         kwargs = load_json(open(configfile, 'r'))['pipeline']
         for (k, v) in kwargs.items():
             setattr(self, k, v)
 
-        assert hasattr(self, "model_definitions") and len(self.model_definitions) > 0
-        assert hasattr(self, "root") and self.root is not None and len(self.root) > 0
-
-        self.root = os.path.abspath(os.path.join(self.configdir, self.root))
-        log.info(f"Working from {self.root}")
-        self.git_rev = git.revision(os.path.abspath(self.configdir))
         self.temp_dir = os.path.join(self.root, "temp")
         self.faillog = os.path.join(self.temp_dir, "failures.txt")
         self.test_protocol = os.path.join(self.temp_dir, "test_protocol.txt")
-        if os.path.isfile(self.faillog) and processed_model_exists:
-            with open(self.faillog, "r") as f:
-                self.processing_failed = load_json(f.read())
 
-        log.debug(f"Models to process: {self.model_definitions}")
-        log.debug(f"Finished reading config {configfile}")
-
-        self.models = []
-        input_meshes = []
-        order = 0
-        for md in self.model_definitions:
-            order += 1
-            log.info(f"Loading {md} ...")
-            if md[:-4] not in self.processing_failed.keys():
-                self.processing_failed[md[:-4]] = {"load": "N/A", "process": "N/A", "test": "N/A", "deploy": "N/A",
-                                                   "order": order}
-            try:
-                cfg = load_json(open(os.path.join(self.configdir, md), "r").read())
-                cfg_ = cfg[list(cfg.keys())[0]]
-            except Exception as e:
-                self.processing_failed[md[:-4]]["load"] = ''.join(traceback.format_exception(None, e, e.__traceback__))
-                log.error("Could not load model config " + md)
-                traceback.print_exc()
-                continue
-            fstate = self._get_model_failure_state(md[:-4])
-            self.processing_failed[md[:-4]]["load"] = ""
-            if bool(fstate & (F_PROC | NA_PROC)) and processed_model_exists:
-                log.warning("Skipping model " + md + " as it was not successfully processed")
-                self.processing_failed[md[:-4]]["load"] += \
-                    "Skipping model " + md + " as it was not successfully processed!\n"
-                continue
-            elif bool(fstate & (F_PROC | NA_PROC)):
-                # reset processing error
-                self.processing_failed[md[:-4]]["process"] = "N/A"
-            if any(["derived_base" in v.keys() and self._get_model_failure_state(
-                    v["derived_base"][:-4]) & (F_LOAD | F_PROC) for _, v in cfg_["input_models"].items()]):
-                log.warning("Skipping model " + md + " as at least one parent model was not successfully processed!")
-                self.processing_failed[md[:-4]]["load"] += \
-                    "Skipping model " + md + " as at least one parent model was not successfully processed!\n"
-                continue
-            try:
-                if list(cfg.keys())[0] == "model":
-                    self.models += [BaseModel(os.path.join(self.configdir, md), self, self.processed_model_exists)]
-                elif list(cfg.keys())[0] == "xtype_model":
-                    self.models += [XTypeModel(os.path.join(self.configdir, md), self, self.processed_model_exists)]
-                else:
-                    self.processing_failed[md[:-4]]["load"] = f"Skipping {md} as it is no valid model definition!\n"
+        if not subclass:
+            assert hasattr(self, "model_definitions") and len(self.model_definitions) > 0
+            assert hasattr(self, "root") and self.root is not None and len(self.root) > 0
+    
+            self.root = os.path.abspath(os.path.join(self.configdir, self.root))
+            log.info(f"Working from {self.root}")
+            self.git_rev = git.revision(os.path.abspath(self.configdir))
+            self.temp_dir = os.path.join(self.root, "temp")
+            self.faillog = os.path.join(self.temp_dir, "failures.txt")
+            self.test_protocol = os.path.join(self.temp_dir, "test_protocol.txt")
+            if os.path.isfile(self.faillog) and processed_model_exists:
+                with open(self.faillog, "r") as f:
+                    self.processing_failed = load_json(f.read())
+    
+            log.debug(f"Models to process: {self.model_definitions}")
+            log.debug(f"Finished reading config {configfile}")
+    
+            self.models = []
+            input_meshes = []
+            order = 0
+            for md in self.model_definitions:
+                order += 1
+                log.info(f"Loading {md} ...")
+                if md[:-4] not in self.processing_failed.keys():
+                    self.processing_failed[md[:-4]] = {"load": "N/A", "process": "N/A", "test": "N/A", "deploy": "N/A",
+                                                       "order": order}
+                try:
+                    _file = os.path.join(self.configdir, md)
+                    if not os.path.isfile(_file):
+                        raise AssertionError(f"File {_file} does not exist!")
+                    cfg = load_json(open(_file, "r").read())
+                    cfg_ = cfg[list(cfg.keys())[0]]
+                    if "input_models" not in cfg_.keys():
+                        raise AssertionError(f"{_file} lacks input_models key!")
+                except Exception as e:
+                    self.processing_failed[md[:-4]]["load"] = ''.join(traceback.format_exception(None, e, e.__traceback__))
+                    log.error("Could not load model config " + md)
+                    traceback.print_exc()
+                    continue
+                fstate = self._get_model_failure_state(md[:-4])
+                self.processing_failed[md[:-4]]["load"] = ""
+                if bool(fstate & (F_PROC | NA_PROC)) and processed_model_exists:
+                    log.warning("Skipping model " + md + " as it was not successfully processed")
+                    self.processing_failed[md[:-4]]["load"] += \
+                        "Skipping model " + md + " as it was not successfully processed!\n"
+                    continue
+                elif bool(fstate & (F_PROC | NA_PROC)):
+                    # reset processing error
+                    self.processing_failed[md[:-4]]["process"] = "N/A"
+                if any(["derived_base" in v.keys() and self._get_model_failure_state(
+                        v["derived_base"][:-4]) & (F_LOAD | F_PROC) for _, v in cfg_["input_models"].items()]):
+                    log.warning("Skipping model " + md + " as at least one parent model was not successfully processed!")
+                    self.processing_failed[md[:-4]]["load"] += \
+                        "Skipping model " + md + " as at least one parent model was not successfully processed!\n"
+                    continue
+                try:
+                    if list(cfg.keys())[0] == "model":
+                        self.models += [BaseModel(os.path.join(self.configdir, md), self, self.processed_model_exists)]
+                    elif list(cfg.keys())[0] == "xtype_model":
+                        self.models += [XTypeModel(os.path.join(self.configdir, md), self, self.processed_model_exists)]
+                    else:
+                        self.processing_failed[md[:-4]]["load"] = f"Skipping {md} as it is no valid model definition!\n"
+                        log.error(self.processing_failed[md[:-4]]["load"])
+                        continue
+                    for m in self.models[-1].get_input_meshes():
+                        for m2 in input_meshes:
+                            if os.path.basename(m) == os.path.basename(m2) and os.path.dirname(m) != os.path.dirname(m):
+                                raise Exception(
+                                    "You can not import two different meshes with the same name!\n"
+                                    "In model {} you tried to import:\n  {} but\n  {} already exists!".format(md, m, m2)
+                                )
+                    input_meshes += self.models[-1].get_input_meshes()
+                    self.processing_failed[md[:-4]]["load"] = "Good"
+                except Exception as e:
+                    self.processing_failed[md[:-4]]["load"] += "Loading " + md + " failed with the following error:" +\
+                                                               ''.join(traceback.format_exception(None, e, e.__traceback__))
                     log.error(self.processing_failed[md[:-4]]["load"])
                     continue
-                for m in self.models[-1].get_input_meshes():
-                    for m2 in input_meshes:
-                        if os.path.basename(m) == os.path.basename(m2) and os.path.dirname(m) != os.path.dirname(m):
-                            raise Exception(
-                                "You can not import two different meshes with the same name!\n"
-                                "In model {} you tried to import:\n  {} but\n  {} already exists!".format(md, m, m2)
-                            )
-                input_meshes += self.models[-1].get_input_meshes()
-                self.processing_failed[md[:-4]]["load"] = "Good"
-            except Exception as e:
-                self.processing_failed[md[:-4]]["load"] += "Loading " + md + " failed with the following error:" +\
-                                                           ''.join(traceback.format_exception(None, e, e.__traceback__))
-                log.error(self.processing_failed[md[:-4]]["load"])
-                continue
-        if os.path.exists(os.path.join(self.temp_dir)):
-            with open(self.faillog, "w") as f:
-                f.write(dump_json(self.processing_failed, default_flow_style=False))
+            if os.path.exists(os.path.join(self.temp_dir)):
+                with open(self.faillog, "w") as f:
+                    f.write(dump_json(self.processing_failed, default_flow_style=False))
 
     def _get_model_failure_state(self, modelname):
         state = 0
@@ -260,6 +270,7 @@ class Pipeline(yaml.YAMLObject):
             model.processed_model_exists = True
             model._load_robot()
             log.info(f"\nTesting {model.modelname} model...")
+            print(f"\nTesting {model.modelname} model...")
             try:
                 model.recreate_sym_links()
                 commit_hash = ""
@@ -273,7 +284,7 @@ class Pipeline(yaml.YAMLObject):
                         compare_model_path,
                         branch=model.test["compare_model"]["branch"],
                         recursive=True,
-                        ignore_failure=True
+                        ignore_failure=False
                     )
                     if "ignore_failing_tests_for" not in model.test["compare_model"].keys():
                         model.test["compare_model"]["ignore_failing_tests_for"] = "None"
@@ -293,9 +304,7 @@ class Pipeline(yaml.YAMLObject):
                                 submechanisms_file=os.path.join(
                                     compare_model_path,
                                     model.test["compare_model"]["submechanisms_in_repo"]
-                                    if "submechanisms_in_repo" in model.test["compare_model"]
-                                    else None
-                                )
+                                ) if "submechanisms_in_repo" in model.test["compare_model"] and model.test["compare_model"]["submechanisms_in_repo"] is not None else None
                             )
                         except Exception as e:
                             model.test["compare_model"]["issues"] = repr(e)
@@ -365,7 +374,7 @@ class Pipeline(yaml.YAMLObject):
                             log.error(f"Hyrodyn-Test {test} failed for {model.modelname}")
                 self.processing_failed[model.modelname]["test"] = "Good"
             except Exception as e:
-                log.error(f"\nFailed testing {model.modelname} model with the following error and skipped to nexr:\n {e}")
+                log.error(f"\nFailed testing {model.modelname} model with the following error and skipped to next:\n {e}")
                 self.processing_failed[model.modelname]["test"] = ''.join(
                     traceback.format_exception(None, e, e.__traceback__)) + "\n"
                 traceback.print_exc()
@@ -467,9 +476,8 @@ class Pipeline(yaml.YAMLObject):
         for model in self.models:
             fstate = self._get_model_failure_state(model.modelname)
             if bool(fstate & (F_LOAD | F_PROC | NA_LOAD | NA_PROC)):
-                log.warning("\nSkipping", model.modelname,
-                      "model as it wasn't successfully created. (Code: " + bin(fstate) + ")",
-                      file=sys.stderr)
+                log.warning(f"\nSkipping {model.modelname} model as it wasn't successfully created."
+                            f"(Code: " + bin(fstate) + ")")
                 continue
             log.info(f"\nDeploying {model.modelname} model...")
             try:
@@ -477,8 +485,7 @@ class Pipeline(yaml.YAMLObject):
                                        failed_model=bool(fstate & F_TEST) or bool(fstate & NA_TEST))
                 self.processing_failed[model.modelname]["deploy"] = "Good" + " (" + dpl_msg + ")"
             except Exception as e:
-                log.error("\nFailed deploying", model.modelname, "model with the following error and skipped to next:\n", e,
-                      file=sys.stderr)
+                log.error("\nFailed deploying {model.modelname} model with the following error and skipped to next:\n {e}")
                 self.processing_failed[model.modelname]["deploy"] = ''.join(
                     traceback.format_exception(None, e, e.__traceback__))
                 traceback.print_exc()
@@ -504,205 +511,232 @@ class Pipeline(yaml.YAMLObject):
         return os.path.relpath(path, self.root)
 
 
-class TestingPipeline(yaml.YAMLObject):
-    def __init__(self, root, configfile):
+class TestingPipeline(Pipeline):
+    def __init__(self, root, configfile, place_temp_in=None):
+        super(TestingPipeline, self).__init__(configfile, processed_model_exists=True, subclass=True)
         self.root = root
         self.configfile = os.path.join(self.root, configfile)
         self.configdir = os.path.dirname(self.configfile)
+        self.processed_model_exists = True
         if not os.path.isfile(self.configfile):
             raise Exception('{} not found!'.format(self.configfile))
-
-        kwargs = load_json(open(configfile, 'r'))['test']
-
-        for (k, v) in kwargs.items():
-            setattr(self, k, v)
 
         print("Working from", self.root)
         self.git_rev = git.revision(os.path.abspath(self.root))
         self.git_branch = git.get_branch(os.path.abspath(self.root))
-        self.temp_dir = os.path.join(self.root, "temp")
-        self.test_protocol = os.path.join(self.temp_dir, "test_protocol.txt")
-        self.test_results = {}
         if not os.path.exists(self.temp_dir):
             os.makedirs(self.temp_dir)
         assert (hasattr(self, "model"))
-        self.model = TestModel(root=self.root, **self.model)
+        load_failed = False
+        self.models = [TestModel(root=self.root, test=self.test, tempdir=self.temp_dir, **self.model)]
+        try:
+            self.models[0]._load_robot()
+        except Exception as e:
+            load_failed = e
+            log.error(f"Failed loading model:\n{e}")
         self.n_failed_tests = 0
         self.n_done_tests = 0
-        self.processing_failed = {self.model.modelname: {}}
 
         print("Finished reading config", configfile)
+
+        self.processing_failed = {self.models[0].modelname: {
+            "load": "GOOD" if not load_failed else "ERROR:\n"+str(load_failed),
+            "test": "N/A", "order": 0}
+        }
+
+        if os.path.exists(os.path.join(self.temp_dir)):
+            with open(self.faillog, "w") as f:
+                f.write(dump_json(self.processing_failed, default_flow_style=False))
 
     def relpath(self, path):
         return os.path.relpath(path, self.root)
 
-    def get_coverage(self):
-        return 1 - (self.n_failed_tests / self.n_done_tests)
+    def get_coverage(self, phases=None):
+        return super(TestingPipeline, self).get_coverage(["test"])
 
-    def test_models(self):
-        """Runs the configured test_routines over all models"""
-        failures_ignored_for = []
-        log.info(f"\nTesting {self.model.modelname} model...")
-        try:
-            commit_hash = ""
-            compare_model = None
-            if any(["compare" in x for x in self.tests]):
-                assert (hasattr(self, "compare_model") and self.compare_model is not None)
-                # Load compare model
-                compare_model_path = os.path.join(self.temp_dir, "compare_model")
-                log.info(f"{self.git_branch}, {str(self.compare_model['branch']).strip()}")
-                git.clone(
-                    self,
-                    self.compare_model["git"],
-                    compare_model_path,
-                    branch=self.compare_model["branch"],
-                    recursive=True,
-                    ignore_failure=True,
-                    commit_id=git.get_previous_commit_hash(self.root) if self.git_branch == self.compare_model[
-                        "branch"].strip() else None,
-                    shallow=2
-                )
-                if self.git_rev == git.revision(compare_model_path):
-                    git.checkout(git.get_previous_commit_hash(compare_model_path), compare_model_path)
-                log.info(f"Comparing with compare model at commit {git.revision(compare_model_path)}")
-                if "ignore_failing_tests_for" not in self.compare_model.keys():
-                    self.compare_model["ignore_failing_tests_for"] = "None"
-                if os.path.exists(os.path.join(compare_model_path, self.compare_model["model_in_repo"])):
-                    commit_hash = git.revision(compare_model_path)
-                    self.compare_model["commit"] = commit_hash[:8]
-                    if commit_hash.startswith(str(self.compare_model["ignore_failing_tests_for"])):
-                        failures_ignored_for += [self.model.modelname]
-                    log.info("Loading compare model:",
-                          self.relpath(os.path.join(compare_model_path, self.compare_model["model_in_repo"])),
-                          flush=True)
-                    compare_model = CompareModel(
-                        name=self.model.modelname,
-                        directory=compare_model_path,
-                        robotfile=os.path.join(compare_model_path, self.compare_model["model_in_repo"]),
-                        submechanisms_file=os.path.join(
-                            compare_model_path,
-                            self.compare_model["submechanisms_path"]
-                            if "submechanisms_path" in self.compare_model
-                            else "submechanisms/submechanisms.yml"
-                        ) if hasattr(self.model,
-                                     "submechanisms_file") and self.model.submechanisms_file is not None else None
-                    )
-                else:
-                    log.warning("Compare model not found!")
+    # def test_models(self):
+    #     """Runs the configured test_routines over all models"""
+    #     failures_ignored_for = []
+    #     log.info(f"\nTesting {self.model.modelname} model...")
+    #     try:
+    #         commit_hash = ""
+    #         compare_model = None
+    #         if any(["compare" in x for x in self.tests]):
+    #             if not (hasattr(self, "compare_model") and self.compare_model is not None):
+    #                 log.error("Giving compare model is mandatory, e.g.specify the previous version in this repo.")
+    #                 sys.exit(1)
+    #             if "model_in_repo" not in self.compare_model:
+    #                 self.compare_model["model_in_repo"] = self.model.model_in_repo
+    #             if "submechanisms_in_repo" not in self.compare_model:
+    #                 self.compare_model["submechanisms_in_repo"] = self.model.submechanisms_in_repo
+    #             # Load compare model
+    #             compare_model_path = os.path.join(self.temp_dir, "compare_model")
+    #             log.info(f"{self.git_branch}, {str(self.compare_model['branch']).strip()}")
+    #             git.clone(
+    #                 self,
+    #                 self.compare_model["git"],
+    #                 compare_model_path,
+    #                 branch=self.compare_model["branch"],
+    #                 recursive=True,
+    #                 ignore_failure=True,
+    #                 commit_id=git.get_previous_commit_hash(self.root) if self.git_branch == self.compare_model[
+    #                     "branch"].strip() else None,
+    #                 shallow=2
+    #             )
+    #             if self.git_rev == git.revision(compare_model_path):
+    #                 git.checkout(git.get_previous_commit_hash(compare_model_path), compare_model_path)
+    #             log.info(f"Comparing with compare model at commit {git.revision(compare_model_path)}")
+    #             if "ignore_failing_tests_for" not in self.compare_model.keys():
+    #                 self.compare_model["ignore_failing_tests_for"] = "None"
+    #             if os.path.exists(os.path.join(compare_model_path, self.compare_model["model_in_repo"])):
+    #                 commit_hash = git.revision(compare_model_path)
+    #                 self.compare_model["commit"] = commit_hash[:8]
+    #                 if commit_hash.startswith(str(self.compare_model["ignore_failing_tests_for"])):
+    #                     failures_ignored_for += [self.model.modelname]
+    #                 log.info(f"Loading compare model: {self.relpath(os.path.join(compare_model_path, self.compare_model['model_in_repo']))}")
+    #                 compare_model = CompareModel(
+    #                     name=self.model.modelname,
+    #                     directory=compare_model_path,
+    #                     robotfile=os.path.join(compare_model_path, self.compare_model["model_in_repo"]),
+    #                     submechanisms_file=os.path.join(
+    #                         compare_model_path,
+    #                         self.compare_model["submechanisms_path"]
+    #                         if "submechanisms_path" in self.compare_model
+    #                         else "submechanisms/submechanisms.yml"
+    #                     ) if hasattr(self.model,
+    #                                  "submechanisms_file") and self.model.submechanisms_file is not None else None
+    #                 )
+    #             else:
+    #                 log.warning("Compare model not found!")
+    #
+    #         model_test = ModelTest(self.model, compare_model)
+    #         log.info("\nRunning info procedures:")
+    #         for p in dir(model_test):
+    #             if p.startswith("info_"):
+    #                 getattr(model_test, p)()
+    #         log.info("\nRunning test procedures:")
+    #         self.test_results[self.model.modelname] = {
+    #             "ignore_failure": commit_hash.startswith(
+    #                 str(self.compare_model["ignore_failing_tests_for"])) if compare_model is not None else False,
+    #             "compare_model_present": model_test.old is not None,
+    #             "compare_model": self.compare_model,
+    #         }
+    #
+    #         def add_test_result(model_name, test_name, value):
+    #             i = 2
+    #             if test_name in self.test_results[self.model.modelname].keys():
+    #                 while test_name + " " + str(i) in self.test_results[self.model.modelname].keys():
+    #                     i += 1
+    #                 test_name += " " + str(i)
+    #             self.test_results[model_name][test_name] = value
+    #             return value
+    #
+    #         # these tests will be run always
+    #         obligatory_tests = ["topological_self_consistency"]
+    #         for otest in obligatory_tests:
+    #             if otest not in self.tests:
+    #                 self.tests += [otest]
+    #         # let's go testing
+    #         for test in self.tests:
+    #             if type(test) is str:
+    #                 log.info("  -> {test}")
+    #                 if not add_test_result(self.model.modelname, test, getattr(model_test, "test_" + test)()):
+    #                     log.error(f"Test {test} failed for {self.model.modelname}")
+    #             elif type(test) is dict and list(test.keys())[0] == "hyrodynChecks":
+    #                 if not HYRODYN_AVAILABLE:
+    #                     log.warning("Hyrodyn checks not possible, as Hyrodyn couldn't be loaded")
+    #                 for htest in test["hyrodynChecks"]:
+    #                     if type(htest) is str:
+    #                         log.info(f"  -> {htest}")
+    #                         if not add_test_result(self.model.modelname, htest,
+    #                                                getattr(model_test, "test_hyrodyn_" + htest)()):
+    #                             log.error(f"Hyrodyn-Test {htest} failed for {self.model.modelname}")
+    #                     elif type(htest) is dict and "move_hyrodyn_model" in htest.keys():
+    #                         k, v = list(htest.items())[0]
+    #                         getattr(model_test, k)(v)
+    #                         log.info(f"  -> {k}")
+    #                     elif type(htest) is dict:
+    #                         k, v = list(htest.items())[0]
+    #                         log.info(f"  -> {k}")
+    #                         if not add_test_result(self.model.modelname, k,
+    #                                                getattr(model_test, "test_hyrodyn_" + k)(v)):
+    #                             log.error(f"Hyrodyn-Test {k} failed for {self.model.modelname}")
+    #                     else:
+    #                         log.error(f"Couldn't process test definition {htest}")
+    #             elif type(test) is dict:
+    #                 k, v = list(test.items())[0]
+    #                 log.info(f"  -> {test}")
+    #                 if not add_test_result(self.model.modelname, k, getattr(model_test, "test_hyrodyn_" + k)(v)):
+    #                     log.error(f"Hyrodyn-Test {test} failed for {self.model.modelname}")
+    #         self.processing_failed[self.model.modelname]["test"] = "Good"
+    #     except Exception as e:
+    #         log.error(f"\nFailed testing {self.model.modelname} model with the following error and skipped to next:\n {e}")
+    #         self.processing_failed[self.model.modelname]["test"] = ''.join(
+    #             traceback.format_exception(None, e, e.__traceback__)) + "\n"
+    #         traceback.print_exc()
+    #     test_protocol = {"all": ""}
+    #     test_protocol["all"] = misc.append_string(test_protocol["all"], "----------\nTest protocol:", print=True,
+    #                                               flush=True)
+    #     success = True
+    #     for modelname, test in self.test_results.items():
+    #         test_protocol[modelname] = ""
+    #         test_protocol[modelname] = misc.append_string(test_protocol[modelname],
+    #                                                       "  " + modelname + " Commit: " + self.git_rev[:8], end="",
+    #                                                       print=True)
+    #         if test["ignore_failure"]:
+    #             test_protocol[modelname] = misc.append_string(test_protocol[modelname], " (Ignoring failures)", end="",
+    #                                                           print=True)
+    #         if not test["compare_model_present"]:
+    #             test_protocol[modelname] = misc.append_string(test_protocol[modelname], " (Compare model not present):",
+    #                                                           end="", print=True)
+    #         test_protocol[modelname] = misc.append_string(test_protocol[modelname], "\n    " + dump_yaml(
+    #             {"Compare Model": test["compare_model"]}, default_flow_style=False, indent=6) + "    Test Results:",
+    #                                                       flush=True, print=True)
+    #         for testname, result in test.items():
+    #             if testname in ["ignore_failure", "compare_model_present", "compare_model", "commit_hash"]:
+    #                 continue
+    #             else:
+    #                 sign = "+"
+    #                 if type(result) is str:
+    #                     sign = "o"
+    #                 elif not result:
+    #                     sign = "-"
+    #                 self.n_done_tests += 1
+    #                 test_protocol[modelname] = misc.append_string(test_protocol[modelname], "    ", sign,
+    #                                                               testname + ":",
+    #                                                               str(result) if type(result) is bool else result,
+    #                                                               print=True)
+    #                 if not result and not test["ignore_failure"]:
+    #                     self.n_failed_tests += 1
+    #                     success = False
+    #                     if self.processing_failed[modelname]["test"].upper().startswith("GOOD") or \
+    #                             self.processing_failed[modelname]["test"].upper().startswith("N/A"):
+    #                         self.processing_failed[modelname]["test"] = ""
+    #                     self.processing_failed[modelname][
+    #                         "test"] += "Test " + testname + " failed (and was not ignored)!\n"
+    #                 #     print(" !!! Causes Failure !!!")
+    #                 # else:
+    #                 #     print(flush=True)
+    #     print("The test routine", "succeeded!" if success and self.n_done_tests > 0 else "failed!")
+    #     with open(self.test_protocol, "w") as f:
+    #         f.write(dump_json(test_protocol, default_flow_style=False))
+    #     return success
 
-            model_test = ModelTest(self.model, compare_model)
-            log.info("\nRunning info procedures:")
-            for p in dir(model_test):
-                if p.startswith("info_"):
-                    getattr(model_test, p)()
-            log.info("\nRunning test procedures:")
-            self.test_results[self.model.modelname] = {
-                "ignore_failure": commit_hash.startswith(
-                    str(self.compare_model["ignore_failing_tests_for"])) if compare_model is not None else False,
-                "compare_model_present": model_test.old is not None,
-                "compare_model": self.compare_model,
-            }
-
-            def add_test_result(model_name, test_name, value):
-                i = 2
-                if test_name in self.test_results[self.model.modelname].keys():
-                    while test_name + " " + str(i) in self.test_results[self.model.modelname].keys():
-                        i += 1
-                    test_name += " " + str(i)
-                self.test_results[model_name][test_name] = value
-                return value
-
-            # these tests will be run always
-            obligatory_tests = ["topological_self_consistency"]
-            for otest in obligatory_tests:
-                if otest not in self.tests:
-                    self.tests += [otest]
-            # let's go testing
-            for test in self.tests:
-                if type(test) is str:
-                    log.info("  -> {test}")
-                    if not add_test_result(self.model.modelname, test, getattr(model_test, "test_" + test)()):
-                        log.error(f"Test {test} failed for {self.model.modelname}")
-                elif type(test) is dict and list(test.keys())[0] == "hyrodynChecks":
-                    if not HYRODYN_AVAILABLE:
-                        log.warning("Hyrodyn checks not possible, as Hyrodyn couldn't be loaded")
-                    for htest in test["hyrodynChecks"]:
-                        if type(htest) is str:
-                            log.info(f"  -> {htest}")
-                            if not add_test_result(self.model.modelname, htest,
-                                                   getattr(model_test, "test_hyrodyn_" + htest)()):
-                                log.error(f"Hyrodyn-Test {htest} failed for {self.model.modelname}")
-                        elif type(htest) is dict and "move_hyrodyn_model" in htest.keys():
-                            k, v = list(htest.items())[0]
-                            getattr(model_test, k)(v)
-                            log.info(f"  -> {k}")
-                        elif type(htest) is dict:
-                            k, v = list(htest.items())[0]
-                            log.info(f"  -> {k}")
-                            if not add_test_result(self.model.modelname, k,
-                                                   getattr(model_test, "test_hyrodyn_" + k)(v)):
-                                log.error(f"Hyrodyn-Test {k} failed for {self.model.modelname}")
-                        else:
-                            log.error(f"Couldn't process test definition {htest}")
-                elif type(test) is dict:
-                    k, v = list(test.items())[0]
-                    log.info(f"  -> {test}")
-                    if not add_test_result(self.model.modelname, k, getattr(model_test, "test_hyrodyn_" + k)(v)):
-                        log.error(f"Hyrodyn-Test {test} failed for {self.model.modelname}")
-            self.processing_failed[self.model.modelname]["test"] = "Good"
-        except Exception as e:
-            log.error("\nFailed testing", self.model.modelname, "model with the following error and skipped to next:\n", e,
-                  file=sys.stderr)
-            self.processing_failed[self.model.modelname]["test"] = ''.join(
-                traceback.format_exception(None, e, e.__traceback__)) + "\n"
-            traceback.print_exc()
-        test_protocol = {"all": ""}
-        test_protocol["all"] = misc.append_string(test_protocol["all"], "----------\nTest protocol:", print=True,
-                                                  flush=True)
-        success = True
-        for modelname, test in self.test_results.items():
-            test_protocol[modelname] = ""
-            test_protocol[modelname] = misc.append_string(test_protocol[modelname],
-                                                          "  " + modelname + " Commit: " + self.git_rev[:8], end="",
-                                                          print=True)
-            if test["ignore_failure"]:
-                test_protocol[modelname] = misc.append_string(test_protocol[modelname], " (Ignoring failures)", end="",
-                                                              print=True)
-            if not test["compare_model_present"]:
-                test_protocol[modelname] = misc.append_string(test_protocol[modelname], " (Compare model not present):",
-                                                              end="", print=True)
-            test_protocol[modelname] = misc.append_string(test_protocol[modelname], "\n    " + dump_yaml(
-                {"Compare Model": test["compare_model"]}, default_flow_style=False, indent=6) + "    Test Results:",
-                                                          flush=True, print=True)
-            for testname, result in test.items():
-                if testname in ["ignore_failure", "compare_model_present", "compare_model", "commit_hash"]:
-                    continue
-                else:
-                    sign = "+"
-                    if type(result) is str:
-                        sign = "o"
-                    elif not result:
-                        sign = "-"
-                    self.n_done_tests += 1
-                    test_protocol[modelname] = misc.append_string(test_protocol[modelname], "    ", sign,
-                                                                  testname + ":",
-                                                                  str(result) if type(result) is bool else result,
-                                                                  print=True)
-                    if not result and not test["ignore_failure"]:
-                        self.n_failed_tests += 1
-                        success = False
-                        if self.processing_failed[modelname]["test"].upper().startswith("GOOD") or \
-                                self.processing_failed[modelname]["test"].upper().startswith("N/A"):
-                            self.processing_failed[modelname]["test"] = ""
-                        self.processing_failed[modelname][
-                            "test"] += "Test " + testname + " failed (and was not ignored)!\n"
-                    #     print(" !!! Causes Failure !!!")
-                    # else:
-                    #     print(flush=True)
-        print("The test routine", "succeeded!" if success else "failed!")
-        with open(self.test_protocol, "w") as f:
-            f.write(dump_json(test_protocol, default_flow_style=False))
-        return success
+    def _get_model_failure_state(self, modelname):
+        state = 0
+        if modelname not in self.processing_failed:
+            return state
+        if not self.processing_failed[modelname]["load"].upper().startswith("GOOD") and not \
+                self.processing_failed[modelname]["load"].upper().startswith("N/A"):
+            state += F_LOAD
+        if not self.processing_failed[modelname]["test"].upper().startswith("GOOD") and not \
+                self.processing_failed[modelname]["test"].upper().startswith("N/A"):
+            state += F_TEST
+        if self.processing_failed[modelname]["load"].upper().startswith("N/A"):
+            state += NA_LOAD
+        if self.processing_failed[modelname]["test"].upper().startswith("N/A"):
+            state += NA_TEST
+        return state
 
 
 # [TODO v2.1.0] use inheritance to remove redundant code

@@ -37,7 +37,7 @@ def main(args):
         sys.exit(test_failed)
     else:
         parser.print_help()
-        raise Exception("Config file not found!")
+        raise Exception(f"Config file '{args.config_file}' not found!")
 
 
 if __name__ == '__main__':

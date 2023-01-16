@@ -39,9 +39,11 @@ def clone(pipeline, repo, target, branch=None, cwd=None, recursive=False, ignore
     if branch is not None:
         cmd += " -b " + branch
     if recursive:
-        cmd += " --recurse-submodules --shallow-submodules"
+        cmd += " --recurse-submodules "
     if (commit_id is None or shallow > 1) and shallow is not False and shallow is not None and shallow != 0:
         cmd += " --depth " + str(shallow) + " "
+        if recursive:
+            cmd += " --shallow-submodules "
     cmd += " " + repo + " " + target  # not loading with --recursive as we don't need the meshes submodule
     if cwd is None:
         cwd = pipeline.root
@@ -49,12 +51,13 @@ def clone(pipeline, repo, target, branch=None, cwd=None, recursive=False, ignore
         cmd += " || true"
     execute_shell_command(cmd, cwd)
     if commit_id is not None:
-        checkout(commit_id, target)
+        checkout(commit_id, target, force=True)
 
 
-def checkout(commit_id, repo):
+def checkout(commit_id, repo, force=False):
     execute_shell_command("git stash", repo)
-    execute_shell_command("git checkout " + commit_id, repo)
+    execute_shell_command("git checkout " + ("-f " if force else "") + commit_id, repo)
+    execute_shell_command("git submodule update --init --recursive ", repo)
 
 
 def update(repo, update_remote="autobuild", update_target_branch="$CI_UPDATE_TARGET_BRANCH"):

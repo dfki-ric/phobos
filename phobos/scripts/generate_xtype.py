@@ -52,10 +52,12 @@ def main(args):
     import xdbi_py
     import datetime
     import os
+    import sys
     import os.path as path
-    from ..utils.git import get_repo_data
+    from ..utils import git
     from ..core import Robot
     from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
+    from ..utils.misc import execute_shell_command
 
     cm = xtypes_py.ComponentModel()
 
@@ -105,13 +107,23 @@ def main(args):
     else:
         raise AssertionError("Directory doesn't contain a smurf robot file!")
 
+    current_branch = git.get_branch(args.model_directory)
+
+    if not (current_branch.startswith("v") and "." in current_branch):
+        log.error("Please create a proper branch for this version. Name style: v0.0.0")
+        sys.exit(2)
+    git_diff = execute_shell_command("git diff", cwd=args.model_directory, silent=True)
+    if not (len(git_diff[0] + git_diff[1]) == 0):
+        log.error("Please make sure all your changes are committed and pushed or the unwanted ones stashed.")
+        sys.exit(3)
+
     _default["name"] = robot.name
-    _default["version"] = "0.0.0"
+    _default["version"] = current_branch[1:] if current_branch.startswith("v") and "." in current_branch else "0.0.1"
     _default["date"] = datetime.date.today().isoformat()
     _default["projectName"] = cm.projectName
     _default["domain"] = "MECHANICS"
     _default["maturity"] = cm.maturity
-    _author, _maintainer, _default["repository"] = get_repo_data(args.model_directory)
+    _author, _maintainer, _default["repository"] = git.get_repo_data(args.model_directory)
     if _default["repository"].startswith("git@"):
         _default["repository"] = _default["repository"].replace(":", "/").replace("//", "/").replace("git@", "https://")
     _default["designedBy"] = ", ".join({_author, _maintainer}).replace("[", "").replace("]", "")
@@ -153,7 +165,13 @@ def main(args):
         else:
             raise AssertionError(f"Can't connect to db with interface {args.db_interface.upper()}")
         xdbi.setWorkingGraph(args.db_graph)
-        assert xdbi.isConnected()
+        if not xdbi.isConnected():
+            log.error("Couldn't connect to the database!")
+            sys.exit(4)
+
+    if _default["version"] != current_branch[1:]:
+        log.error("Please go to the branch of this version")
+        sys.exit(5)
 
     # create xtype
     cm.set_properties({

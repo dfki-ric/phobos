@@ -43,7 +43,7 @@ class Robot(SMURFRobot):
 
         if name is not None:
             self.name = name
-        self._submodels = {}
+        self.submodel_defs = {}
 
     def get_blender_model_dictionary(self):
         from phobos.blender import defs
@@ -504,11 +504,11 @@ class Robot(SMURFRobot):
                 if no_format_dir else os.path.join(outputdir, format, f"{self.name if filename is None else filename}.pdf")
             )
 
-        if self._submodels and export_submodels:
+        if self.submodel_defs and export_submodels:
             submodel_folder = os.path.join(outputdir, "submodels")
             if not os.path.exists(submodel_folder):
                 os.mkdir(submodel_folder)
-            for sub_mod in self._submodels.keys():
+            for sub_mod in self.submodel_defs.keys():
                 if sub_mod.startswith("#sub_mech#"):
                     continue
                 self.export_submodel(sub_mod,
@@ -850,12 +850,12 @@ class Robot(SMURFRobot):
             return
         for format in formats:
             format = format.lower()
-            if only_urdf is None and "only_urdf" in self._submodels[name].keys():
-                only_urdf = self._submodels[name]["only_urdf"]
+            if only_urdf is None and "only_urdf" in self.submodel_defs[name].keys():
+                only_urdf = self.submodel_defs[name]["only_urdf"]
             elif only_urdf is None:
                 only_urdf = True if name.startswith("#sub_mech#") else False
 
-            if name in self._submodels.keys():
+            if name in self.submodel_defs.keys():
                 _submodel = self.instantiate_submodel(name)
                 assert _submodel.autogenerate_submechanisms == self.autogenerate_submechanisms
                 _sm_xmlfile = filename if filename is not None else (f"{name}.{format}")
@@ -1089,8 +1089,8 @@ class Robot(SMURFRobot):
     def get_submodel(self, name):
         """ Return the submodel with the given name.
         """
-        if name in self._submodels.keys():
-            return self._submodels[name]
+        if name in self.submodel_defs.keys():
+            return self.submodel_defs[name]
         else:
             log.warning("No submodel named {}".format(name))
         return
@@ -1232,10 +1232,10 @@ class Robot(SMURFRobot):
         if only_return:
             return self.instantiate_submodel(definition=definition, no_submechanisms=no_submechanisms,
                                              include_unstopped_branches=include_unstopped_branches)
-        if name in self._submodels.keys() and not overwrite:
+        if name in self.submodel_defs.keys() and not overwrite:
             raise NameError("A submodel with the given name is already defined")
         else:
-            self._submodels[name] = definition
+            self.submodel_defs[name] = definition
         return self.instantiate_submodel(name, no_submechanisms=no_submechanisms,
                                          include_unstopped_branches=include_unstopped_branches)
 
@@ -1274,11 +1274,11 @@ class Robot(SMURFRobot):
         """
         assert name is not None or definition is not None
         if name is not None and definition is None:
-            definition = self._submodels[name]
+            definition = self.submodel_defs[name]
             if include_unstopped_branches is None:
                 include_unstopped_branches = definition["include_unstopped_branches"]
         elif name is not None and definition is not None:
-            assert definition["name"] not in self._submodels.keys()
+            assert definition["name"] not in self.submodel_defs.keys()
             if name != definition["name"]:
                 self.remove_submodel(name)
             self.define_submodel(**definition)
@@ -1379,7 +1379,7 @@ class Robot(SMURFRobot):
 
     def remove_submodel(self, name):
         """Remove the submodel with the given name"""
-        self._submodels.pop(name)
+        self.submodel_defs.pop(name)
 
     def intersection(self, other, name=None, submodel=True, useother=False, keep=None):
         """ Gives the intersection of the spanning tree of two robots. Uses information stored in this robot, if not
@@ -1411,7 +1411,7 @@ class Robot(SMURFRobot):
             new_robot.name = name
 
         if submodel:
-            self._submodels.update(
+            self.submodel_defs.update(
                 {new_robot.name: new_robot}
             )
         return new_robot
@@ -2050,11 +2050,11 @@ class Robot(SMURFRobot):
         renamed_entities.update(self._rename(targettype, target, new_name))
 
         if targettype in ['link', "links"]:
-            for k, v in self._submodels.items():
+            for k, v in self.submodel_defs.items():
                 if target == v["start"]:
-                    self._submodels[k]["start"] = new_name
+                    self.submodel_defs[k]["start"] = new_name
                 if target in v["stop"]:
-                    self._submodels[k]["stop"] = [link if link != target else new_name for link in v]
+                    self.submodel_defs[k]["stop"] = [link if link != target else new_name for link in v]
 
         return renamed_entities
 
