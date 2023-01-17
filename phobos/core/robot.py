@@ -904,6 +904,7 @@ class Robot(SMURFRobot):
             _out = f"\"{joint.parent}\" -> \"{joint.name}\" [label="
             _out += f"\"xyz: {joint.origin.xyz[0]} {joint.origin.xyz[1]} {joint.origin.xyz[2]} "
             _out += f"\\nrpy: {joint.origin.rpy[0]} {joint.origin.rpy[1]} {joint.origin.rpy[2]} "
+            # _out += f"\\nindex: {self.get_joints_ordered_df().index(joint)} "
             if joint.axis is not None:
                 _out += f"\\naxis: {joint.axis[0]} {joint.axis[1]} {joint.axis[2]} "
             _out += f"\\ntype: {joint.joint_type} "

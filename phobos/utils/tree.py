@@ -6,17 +6,16 @@ def skip_upwards_over_fixed(robot, link_name, only_single_parents=True):
     From the given link upwards gets the rootest joint while skipping any fixed joint that is not yet in a submechanism
     """
     j = robot.get_joint(robot.get_parent(link_name))
-    if j is not None and j.joint_type == 'fixed' and not any([str(j) in [str(sj) for sj in sm.get_joints()] for sm in robot.submechanisms])\
+    if j is not None and j.joint_type == 'fixed' and\
+            not any([str(j) in [str(sj) for sj in sm.get_joints()]
+                     for sm in robot.submechanisms])\
             and (not only_single_parents or len(robot.get_children(j.parent)) == 1):
         return skip_upwards_over_fixed(robot, j.parent, only_single_parents)
     elif j is not None and j.joint_type == 'fixed' and\
-            not any([str(j) in [str(sj) for sj in sm.get_joints()] or str(robot.get_parent(j.parent)) in [str(sj) for sj in sm.get_joints()] for sm in robot.submechanisms])\
-            and (not only_single_parents or len(robot.get_children(j.parent)) > 1):
-        out = robot.get_parent(j.parent, targettype="link")
-        if out is not None:
-            return out
-        else:
-            return j.parent
+            not any([str(j) in [str(sj) for sj in sm.get_joints()]
+                     for sm in robot.submechanisms])\
+            and (only_single_parents and len(robot.get_children(j.parent)) > 1):
+        return j.parent
     else:
         return link_name
 

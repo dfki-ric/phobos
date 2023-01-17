@@ -123,6 +123,9 @@ class HyrodynAnnotation(SmurfBase):
     def is_empty(self):
         return len(self.get_joints()) == 0
 
+    def is_only_fixed(self):
+        return self.jointnames is not None and len(self.jointnames) > 0 and len(self.get_joints()) == len(self.jointnames)
+
     def is_valid(self, robot):
         joints = self.get_joints()
         out = all([robot.get_joint(j) is not None for j in joints])
@@ -139,11 +142,16 @@ class HyrodynAnnotation(SmurfBase):
     def get_root_joints(self, robot):
         "Returns the joints that are connected to the root link of this submechanism"
         root_joints = [jn for jn in self.get_joints() if jn in robot.get_children(self.get_root(robot))]
-        assert len(root_joints) > 0, self.to_yaml()
         return root_joints
 
     def get_leaves(self, robot):
         return tree.find_leaves(robot, self.get_joints())
+
+    def get_children(self, robot):
+        children = set()
+        for joint in self.get_joints():
+            children.update(robot.get_children(robot.get_joint(joint).child))
+        return children.difference([str(j) for j in self.get_joints()])
 
     def get_relative_links(self, robot):
         links = []
@@ -151,6 +159,9 @@ class HyrodynAnnotation(SmurfBase):
             joint = robot.get_joint(jointname)
             links += [joint.child, joint.parent]
         return list(set(links))
+
+    def get_internal_links(self, robot):
+        return [link for link in self.get_relative_links(robot) if link != self.get_root(robot) and link not in self.get_leaves(robot)]
 
     def link_with_robot(self, robot, check_linkage_later=False):
         super(HyrodynAnnotation, self).link_with_robot(robot)
@@ -164,6 +175,10 @@ class HyrodynAnnotation(SmurfBase):
 
     def regenerate(self, robot, absorb_fixed_upwards=False, absorb_fixed_downwards=False):
         raise NotImplementedError
+
+    def get_index(self, robot):
+        indices = [[str(j) for j in robot.get_joints_ordered_df()].index(str(smj)) for smj in self.get_joints()]
+        return min(indices)
 
     def get_rotation_convention(self):
         """For a linked submechanism this returns the frame convention of this submechanism relative to the root"""

@@ -428,7 +428,7 @@ class SMURFRobot(XMLRobot):
         """
         sorted_joints = [jn.name for jn in self.get_joints_ordered_df()]
         # sorted_links = [jn.name for jn in self.get_links_ordered_df()]
-        self.submechanisms = sorted([sm for sm in self.submechanisms if not sm.is_empty()], key=lambda submech: sorted_joints.index(submech.get_root_joints(self)[0]))
+        self.submechanisms = sorted([sm for sm in self.submechanisms if not sm.is_empty()], key=lambda submech: submech.get_index(self))
         for sm in self.submechanisms + self.exoskeletons:
             for key in ["jointnames", "jointnames_spanningtree", "jointnames_active", "jointnames_independent", "jointnames_dependent"]:
                 if hasattr(sm, key) and getattr(sm, key) is not None:
@@ -510,37 +510,62 @@ class SMURFRobot(XMLRobot):
         for jointname in self._get_joints_not_included_in_submechanisms():
             joint = self.get_joint(jointname)
             if joint._child.is_human is not True:
+                assert joint.joint_type == "fixed"
                 self.add_aggregate("submechanisms", Submechanism(
-                    name="serial",
+                    name="fixed",
                     contextual_name="serial",
                     type="serial",
-                    jointnames_active=[] if joint.joint_type == "fixed" else [jointname],
-                    jointnames_independent=[] if joint.joint_type == "fixed" else [jointname],
-                    jointnames_spanningtree=[] if joint.joint_type == "fixed" else [jointname],
+                    jointnames_active=[],
+                    jointnames_independent=[],
+                    jointnames_spanningtree=[],
                     jointnames=[jointname],
                     auto_gen=True
                 ), silent=True)
         self.sort_submechanisms()
         # Now we merge all serial mechanisms to reduce the number of mechanisms
-        new_submechanisms = []
-        for sm in self.submechanisms:
-            if sm.auto_gen and len(new_submechanisms) > 0 and new_submechanisms[-1].auto_gen and self.get_parent(
-                    sm.get_root(self), targettype="joint") in new_submechanisms[-1].get_joints():
-                new_submechanisms[-1].jointnames = list(set(new_submechanisms[-1].jointnames + sm.jointnames))
-                new_submechanisms[-1].jointnames_active = list(
-                    set(new_submechanisms[-1].jointnames_active + sm.jointnames_active))
-                new_submechanisms[-1].jointnames_independent = list(
-                    set(new_submechanisms[-1].jointnames_independent + sm.jointnames_independent))
-                new_submechanisms[-1].jointnames_spanningtree = list(
-                    set(new_submechanisms[-1].jointnames_spanningtree + sm.jointnames_spanningtree))
-            else:
-                new_submechanisms.append(sm)
-        self.submechanisms = new_submechanisms
+        # we do it twice to check whether the branches might be joined to another branch
+        for _ in range(2):
+            new_submechanisms = [self.submechanisms[0]]
+            for sm in self.submechanisms[1:]:
+                this_joint_indices = sorted([sorted_joints.index(str(j)) for j in sm.get_joints()])
+                prev_joint_indices = sorted([sorted_joints.index(str(j)) for j in new_submechanisms[-1].get_joints()])
+                if sm.auto_gen and new_submechanisms[-1].auto_gen and (
+                        self.get_parent(sm.get_root(self), targettype="joint") in new_submechanisms[-1].get_joints() or
+                        (self.get_parent(sm.get_root(self), targettype="joint") is None and
+                         self.get_parent(new_submechanisms[-1].get_root(self), targettype="joint") is None)):
+                    new_submechanisms[-1].jointnames = list(set(new_submechanisms[-1].jointnames + sm.jointnames))
+                    new_submechanisms[-1].jointnames_active = list(
+                        set(new_submechanisms[-1].jointnames_active + sm.jointnames_active))
+                    new_submechanisms[-1].jointnames_independent = list(
+                        set(new_submechanisms[-1].jointnames_independent + sm.jointnames_independent))
+                    new_submechanisms[-1].jointnames_spanningtree = list(
+                        set(new_submechanisms[-1].jointnames_spanningtree + sm.jointnames_spanningtree))
+                elif sm.auto_gen and sm.is_only_fixed() and \
+                        len(sm.get_children(self)) == 0 and sm.get_root(self) in new_submechanisms[-1].get_internal_links(self) and \
+                        all([this_joint_indices[i+1] - this_joint_indices[i] == 1 for i in range(len(this_joint_indices)-1)]):
+                    # if this is a continuous series of joint indices has no children and the parent is part of the other submechanism we can merge them
+                    new_submechanisms[-1].jointnames = list(set(new_submechanisms[-1].jointnames + sm.jointnames))
+                elif new_submechanisms[-1].auto_gen and new_submechanisms[-1].is_only_fixed() and\
+                        len(new_submechanisms[-1].get_children(self)) == 0 and new_submechanisms[-1].get_root(self) in sm.get_internal_links(self) and \
+                        all([prev_joint_indices[i+1] - prev_joint_indices[i] == 1 for i in range(len(prev_joint_indices)-1)]):
+                    # same as previous but the other way around
+                    new_submechanisms[-1].jointnames = list(set(new_submechanisms[-1].jointnames + sm.jointnames))
+                    new_submechanisms[-1].jointnames_active = list(
+                        set(new_submechanisms[-1].jointnames_active + sm.jointnames_active))
+                    new_submechanisms[-1].jointnames_independent = list(
+                        set(new_submechanisms[-1].jointnames_independent + sm.jointnames_independent))
+                    new_submechanisms[-1].jointnames_spanningtree = list(
+                        set(new_submechanisms[-1].jointnames_spanningtree + sm.jointnames_spanningtree))
+                    new_submechanisms[-1].name = sm.name
+                    new_submechanisms[-1].contextual_name = sm.contextual_name
+                else:
+                    new_submechanisms.append(sm)
+            self.submechanisms = new_submechanisms
         self.sort_submechanisms()
         counter = 0
         for sm in self.submechanisms:
            if sm.auto_gen:
-               sm.name = "serial_chain"
+               sm.name = "serial_chain" if not sm.is_only_fixed() else "fixed_chain"
                sm.contextual_name = "serial_chain" + str(counter)
                counter += 1
         assert len(self._get_joints_included_twice_in_submechanisms()) == 0, self._get_joints_included_twice_in_submechanisms()
