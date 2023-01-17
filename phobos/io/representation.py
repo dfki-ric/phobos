@@ -764,17 +764,20 @@ class Joint(Representation, SmurfBase):
     def mimic(self):
         if self.joint_dependencies is not None and len(self.joint_dependencies) == 1:
             return self.joint_dependencies[0]
+        elif self.joint_dependencies is not None and len(self.joint_dependencies) > 1:
+            log.error("Calling mimic on a joint that has more than one dependency, use joint_dependencies instead of mimic")
+            return None
         else:
             return None
 
     @mimic.setter
     def mimic(self, value):
         assert value is None or isinstance(value, JointMimic)
-        if value is None or (self.joint_dependencies is not None and len(self._joint_dependencies) == 1):
+        if value is None and self._joint_dependencies is not None and len(self._joint_dependencies) <= 1:
             self._joint_dependencies = []
-        elif self._joint_dependencies is not None and len(self._joint_dependencies) == 1:
+        elif isinstance(value, JointMimic) and self._joint_dependencies is not None and len(self._joint_dependencies) == 1:
             self._joint_dependencies[0] = value
-        elif self._joint_dependencies is not None and len(self._joint_dependencies) == 0:
+        elif isinstance(value, JointMimic) and (self._joint_dependencies is None or len(self._joint_dependencies) == 0):
             self._joint_dependencies = [value]
         else:
             raise ValueError(f"Can not set mimic for joint {str(self)} that depends on multiple joints. "

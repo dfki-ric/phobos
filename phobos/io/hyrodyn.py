@@ -354,9 +354,11 @@ class Exoskeleton(HyrodynAnnotation):
             jointnames=jointnames, file_path=file_path,
             around=around, auto_gen=auto_gen, type=None
         )
+        self.returns += ["jointnames_dependent", "jointnames", "jointnames_spanningtree"]
 
     def regenerate(self, robot, absorb_fixed_upwards=False, absorb_fixed_downwards=False):
         joints_df = robot.get_joints_ordered_df()
         self.jointnames = [str(j) for j in joints_df if j._child.is_human]
         self.jointnames_spanningtree = [str(j) for j in joints_df if j._child.is_human and j.joint_type != "fixed"]
         self.jointnames_dependent = [str(j.mimic.joint) for j in joints_df if j._child.is_human and j.joint_type != "fixed"]
+        print("!!!", self.jointnames_dependent, self.returns)

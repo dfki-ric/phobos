@@ -31,6 +31,9 @@ def main(args):
     args = parser.parse_args(args)
     log = setup_logger_level(log_level=args.loglevel)
 
+    if args.input_file == args.output_file:
+        sys.exit(0)
+
     robot = Robot(inputfile=args.input_file)
     if args.output_file.lower().endswith("sdf"):
         log.info("Converting to SDF")

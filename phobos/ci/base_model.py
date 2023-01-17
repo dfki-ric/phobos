@@ -522,6 +522,10 @@ class BaseModel(yaml.YAMLObject):
                                 joint.joint_dependencies.append(representation.JointMimic(joint=jd["joint_name"],
                                                                                           offset=jd["offset"],
                                                                                           multiplier=jd["multiplier"]))
+                        elif k == "mimic":
+                            if "joint_name" in v:
+                                v["joint"] = v.pop("joint_name")
+                            joint.mimic = representation.JointMimic(**v)
                         elif k == "active":
                             v = misc.merge_default(v, defaults.get_default_motor())
                             if type(v) == dict:
@@ -536,10 +540,6 @@ class BaseModel(yaml.YAMLObject):
                             elif v is True:
                                 _motor = representation.Motor(name=jointname+"_motor", joint=jointname)
                                 self.robot.add_motor(_motor)
-                        elif k == "mimic":
-                            if "joint_name" in v:
-                                v["joint"] = v.pop("joint_name")
-                            joint.mimic = representation.JointMimic(**v)
                         else:  # axis
                             joint.add_annotation(k, v, overwrite=True)
                 elif "$default" in self.joints:
