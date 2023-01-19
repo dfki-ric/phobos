@@ -3,10 +3,10 @@ phobos ci module
 
 This module enables the usage of phobos in a CI-pipeline like GitLab-CI.
 
+For further usage information see the [phobos wiki](https://github.com/dfki-ric/phobos/wiki)
 
 Submodules
 ----------
-
 
 phobos.ci.pipeline module
 `````````````````````````
@@ -18,27 +18,6 @@ phobos.ci.pipeline module
 phobos.ci.base_model module
 ```````````````````````````
 .. automodule:: phobos.ci.base_model
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-phobos.ci.model module
-``````````````````````
-.. automodule:: phobos.ci.model
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-phobos.ci.combined_model module
-```````````````````````````````
-.. automodule:: phobos.ci.combined_model
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-phobos.ci.xtype_model module
-````````````````````````````
-.. automodule:: phobos.ci.xtype_model
     :members:
     :undoc-members:
     :show-inheritance:
@@ -63,7 +42,3 @@ phobos.ci.model_testing module
     :members:
     :undoc-members:
     :show-inheritance:
-
-
-
-

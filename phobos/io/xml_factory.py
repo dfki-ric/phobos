@@ -322,18 +322,36 @@ def class_factory(cls, only=None):
 
 
 def singular(prop):
+    """
+    Makes sure the prop is single and not a list
+    Args:
+        prop: The property to check
+
+    Returns:
+        prop as a single element
+    Raises:
+        Assertion error if prop is a list with more than one element
+    """
     if type(prop) == list:
         if len(prop) == 1:
             return prop[0]
         elif len(prop) == 0:
             return None
         else:
-            raise AssertionError(f"Got list with contetn {prop} where max 1 element is allowed")
+            raise AssertionError(f"Got list with content {prop} where only a single element is allowed.")
     else:
         return prop
 
 
 def plural(prop):
+    """
+    Makes sure prop is a list
+    Args:
+        prop: The property to check
+
+    Returns:
+        prop as list
+    """
     if type(prop) == list:
         return prop
     elif prop is None:

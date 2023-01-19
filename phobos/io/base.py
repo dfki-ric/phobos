@@ -5,7 +5,7 @@ log = get_logger(__name__)
 
 
 class Linkable(object):
-    _type_dict = {
+    _type_dict = {  # map from variable name to the robot's instance list
         "link": "links",
         "joint": "joints",
         "frame": "links",
@@ -19,6 +19,10 @@ class Linkable(object):
         self._class_linkables = [var for var in self._class_variables if var in self.type_dict.keys() and not var.startswith("_")]
 
     def set_unique_name(self, value):
+        """
+        Set's the unique name to the given value.
+        If this class can be referenced by unique name (see stringable) this needs to be implemented
+        """
         raise NotImplementedError("Not implemented for "+str(type(self)))
 
     def __str__(self):
@@ -26,10 +30,26 @@ class Linkable(object):
         Get's the unique name.
         By using __str__ we can call this on the Linkable instance and
         when the variable already holds the unique string.
+        If this class can be referenced by unique name (see stringable) this needs to be implemented.
         """
         raise NotImplementedError("__str__ not implemented for "+str(type(self)))
 
+    def stringable(self):
+        """
+        Whether this class has a unique_name and can be referenced by it
+        """
+        return True
+
     def _converter(self, varname, new_value):
+        """
+        Converts the string reference to a python-reference
+        Args:
+            varname: The variable name to be set
+            new_value: the new value either a string or an object
+
+        Returns:
+            The corresponding object
+        """
         if self._related_robot_instance is None or isinstance(new_value, Representation):
             return new_value
         vtype = self.type_dict[varname].lower()
@@ -127,6 +147,14 @@ class Linkable(object):
             assert self.check_unlinkage()
 
     def check_linkage(self, attribute=None):
+        """
+        Checks whether all string-references have been replaced by python-references
+        Args:
+            attribute: If not None will check the linkage only for this attribute
+
+        Returns:
+            True if all references are python-references
+        """
         linked = self._related_robot_instance is not None
         assert linked, type(self)
         _class_attributes = self._class_linkables
@@ -160,6 +188,14 @@ class Linkable(object):
         return linked
 
     def check_unlinkage(self, attribute=None):
+        """
+        Checks whether all references have been replaced by string-references
+        Args:
+            attribute: If not None will check the unlinkage only for this attribute
+
+        Returns:
+            True if all references are string-references
+        """
         unlinked = self._related_robot_instance is None
         assert unlinked, type(self)
         _class_attributes = self._class_linkables
@@ -184,6 +220,16 @@ class Linkable(object):
         return unlinked
 
     def is_related_to(self, entity, pure=False):
+        """
+        Checks whether this instance holds a reference to any of the entities given.
+        Args:
+            entity: One or a list of many instances
+            pure: if true, considers this as related to other if it all it's internal references are included in the entity list given
+                  if false, a single relation is sufficient
+
+        Returns:
+            boolean
+        """
         if type(entity) not in [list, tuple, set]:
             entity = [entity]
         entity = [str(e) for e in entity]
@@ -202,6 +248,14 @@ class Linkable(object):
             return any(out)
 
     def duplicate(self, to_robot=None):
+        """
+        Duplicates the current instance, like a deepcopy, but takes care of the linkage
+        Args:
+            to_robot: if not None the duplicate will be linked to that robot, if None the instance will be unlinked.
+
+        Returns:
+            A duplicate of this instance, unlinked if to_robot is None else linked to the specified robot
+        """
         _robot = self._related_robot_instance
         self.unlink_from_robot()
         out = deepcopy(self)
@@ -212,16 +266,32 @@ class Linkable(object):
         return out
 
     def equivalent(self, other):
+        """
+        Checks whether this instance is equivalent to the other instance.
+        Should be reimplemented matching to the specific class.
+        Args:
+            other: The other instance
+
+        Returns:
+            boolean
+        """
         return id(self) == id(other)
 
-    def stringable(self):
-        return True
-
     def is_empty(self):
+        """
+        Should be reimplented for each class. And check whether it is an unfilled instance
+        Returns:
+            boolean
+        """
         return False
 
 
 class Representation(Linkable):
+    """
+    Base class for all entity representations which makes them Linkable and provides basic access to the XML-serialization.
+    The detailed access is then done by class_factory() See phobos.io documentation for conceptual details.
+    """
+
     factory = {}
 
     def __init__(self):
