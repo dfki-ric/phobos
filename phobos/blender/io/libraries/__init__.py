@@ -13,16 +13,14 @@
 Registers the :mod:`models` and :mod:`mechanisms` submodules to Blender.
 """
 
-from . import models, mechanisms
+from . import mechanisms
 
 
 def register():
     """TODO Missing documentation"""
-    models.register()
     mechanisms.register()
 
 
 def unregister():
     """TODO Missing documentation"""
-    models.unregister()
     mechanisms.unregister()

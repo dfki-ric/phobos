@@ -468,21 +468,6 @@ def getCombinedDimensions(objects):
     return [abs(maxdims[i] - mindims[i]) for i in (0, 1, 2)]
 
 
-def getPhobosConfigPath():
-    """Returns the user-defined config path if set or the default-path
-    
-    Returns(str): (user-defined) config path
-
-    Args:
-
-    Returns:
-
-    """
-    if bpy.context.preferences.addons["phobos"].preferences.configfolder != '':
-        return bpy.context.preferences.addons["phobos"].preferences.configfolder
-    else:  # the following if copied from setup.py, may be imported somehow in the future
-        return getConfigPath()
-
 def sortObjectToCollection(obj, cname="Collection"):
     set_active = False
     if bpy.context.active_object == obj:
@@ -500,10 +485,12 @@ def sortObjectToCollection(obj, cname="Collection"):
     if set_active:
         bpy.context.view_layer.objects.active = obj
 
+
 def craeteCollectionIfNotExists(cname="Collection"):
     if not cname in bpy.context.scene.collection.children.keys():
         newcollection = bpy.data.collections.new(cname)
         bpy.context.scene.collection.children.link(newcollection)
+
 
 def activateObjectCollection(obj):
     for cname,coll in bpy.context.scene.collection.children.items():

@@ -24,9 +24,10 @@ from phobos.blender.io.scenes import scene_types
 from phobos.blender.utils import selection as sUtils
 from phobos.blender.utils import naming as nUtils
 from phobos.blender.utils import blender as bUtils
+from phobos.utils.resources import get_blender_resources_path
 from phobos.core import Robot
 
-from phobos.defs import EXPORT_TYPES, IMPORT_TYPES
+from phobos.defs import EXPORT_TYPES, IMPORT_TYPES, KINEMATIC_TYPES
 
 indent = '  '
 xmlHeader = '<?xml version="1.0"?>\n<!-- created with Phobos ' + defs.version + ' -->\n'
@@ -187,13 +188,16 @@ def getOutputMeshtype():
     """Returns the mesh type to be used in exported files as specified in the GUI"""
     return str(getExpSettings().outputMeshtype)
 
+
 def getOutputPathtype():
     """Returns the path type to be used in exported files as specified in the GUI"""
     return str(getExpSettings().outputPathtype)
 
+
 def getRosPackageName():
     """Returns the ros package name used for ros path definitions"""
     return str(getExpSettings().rosPackageName)
+
 
 def getOutputMeshpath(path, meshtype=None, pathType="relative"):
     """Returns the folder path for mesh file export as specified in the GUI.
@@ -212,11 +216,6 @@ def getOutputMeshpath(path, meshtype=None, pathType="relative"):
     """
     # pathType relative is default
     rpath = os.path.join(path, 'meshes', meshtype if meshtype else getOutputMeshtype()) + "/"
-
-    if not pathType:
-        pathType = getOutputPathtype()
-    if pathType == "ros_package":
-        rpath = "package://"+getRosPackageName()+"/"+os.path.join('meshes', meshtype if meshtype else getOutputMeshtype()) + "/"
 
     return rpath
 
@@ -386,7 +385,7 @@ def importResources(restuple, filepath=None):
 
     # if no filepath is provided, use the path from the preferences
     if not filepath:
-        filepath = os.path.join(bUtils.getPhobosConfigPath(), 'resources', 'resources.blend')
+        filepath = get_blender_resources_path('resources.blend')
         print(filepath)
 
     # import new objects from resources.blend
@@ -534,10 +533,12 @@ def exportModel(model, exportpath='.', entitytypes=None):
     mt = len([m for m in mesh_types if getattr(bpy.context.scene, "export_mesh_" + m, False)])
     mc = len(model['meshes'])
     n = mt * mc
+    rel_mesh_pathes = {}
     for meshtype in mesh_types:
         try:
             if getattr(bpy.context.scene, "export_mesh_" + meshtype, False):
                 mesh_path = getOutputMeshpath(exportpath, meshtype, "relative")
+                rel_mesh_pathes["meshtype"] = os.path.relpath(mesh_path, exportpath)
                 securepath(mesh_path)
                 for meshname in model['meshes']:
                     mesh_filepath = os.path.join(mesh_path, meshname+"."+mesh_types[meshtype]['extension'])
@@ -549,23 +550,47 @@ def exportModel(model, exportpath='.', entitytypes=None):
     display.endProgress()
 
     robot = Robot.get_robot_from_blender_dict(blender_model=model)
-    export_args = {
-        "outputdir": exportpath,
-        "formats": [format for format in entitytypes
-                    if format in ["urdf", "sdf"] and getattr(bpy.context.scene, 'export_entity_'+format, False)
-                    ],
-        "ros_pkg": getattr(getExpSettings(), 'outputPathtype', "relative") == "ros_package",
-        "ros_pkg_name": None if len(getRosPackageName()) == 0 else getRosPackageName(),
-        "export_joint_limits": "joint_limits" in entitytypes,
-        "create_pdf": "pdf" in entitytypes
-    }
-    if "smurf" in entitytypes:
-        robot.full_export(**export_args)
-    elif len(export_args["formats"]) > 0:
-        robot.export_xml_with_meshes(**export_args)
-    else:
-        raise ValueError(f"Can't export for given entitytypes: {entitytypes}")
-
+    export_config = []
+    # go through export settings
+    for fmt in entitytypes:
+        if fmt in KINEMATIC_TYPES:
+            export_config.append({
+                "type": fmt.lower(),
+                "mesh_format": getattr(getExpSettings(), f'export_{fmt}_mesh_type'),
+                "link_in_smurf": getattr(getExpSettings(), 'export_smurf_xml_type') == fmt,
+                "ros_pathes": getattr(getExpSettings(), f'{fmt}OutputPathtype').startswith("ros_package"),
+                "enforce_zero": getattr(getExpSettings(), 'enforceZero'),
+                "copy_with_other_pathes": "+" in getattr(getExpSettings(), f'{fmt}OutputPathtype')
+            })
+        elif fmt == "joint_limits":
+            export_config.append({
+                "type": "joint_limits",
+                "joints": "ALL",  # TODO as soon as submechanisms are working
+                "file_name": "joint_limits.yml"
+            })
+        elif fmt == "pdf":
+            export_config.append({
+                "type": "pdf"
+            })
+        # elif fmt == "submodels":
+        #     for sm in submodels:
+        #         export_config.append({
+        #             "type": "submodel",
+        #             "name": sm["name"],
+        #             "start": sm["start"],
+        #             "stop": sm["stop"]
+        #         })
+        elif fmt == "smurf":
+            # will be exported anyways
+            pass
+        else:
+            raise ValueError(f"Can't export for given format: {fmt}")
+    robot.export(
+        outputdir=exportpath,
+        rel_mesh_pathes=rel_mesh_pathes,
+        export_config=export_config,
+        ros_pkg_name=None if len(getRosPackageName()) == 0 else getRosPackageName()
+    )
 
 def exportScene(
     scenedict, exportpath='.', scenetypes=None, export_entity_models=False, entitytypes=None

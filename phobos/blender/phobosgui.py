@@ -11,6 +11,7 @@
 
 import sys
 import inspect
+import os
 
 import bpy
 
@@ -41,7 +42,8 @@ from phobos import defs as phobos_defs
 from phobos.blender import defs
 from phobos.blender import display
 
-from phobos.geometry.io import mesh_types
+from phobos.geometry.io import MESH_TYPES
+from phobos.utils.resources import get_blender_resources_path
 
 
 class ModelPoseProp(bpy.types.PropertyGroup):
@@ -71,32 +73,9 @@ class PhobosPrefs(AddonPreferences):
 
     bl_idname = "phobos"
 
-    # folder for robot/scene models (used for previews and imports)
-    modelsfolder : StringProperty(name="modelsfolder", subtype="DIR_PATH", default='')
-
-    # user config folder for Phobos
-    configfolder : StringProperty(
-        name="configfolder",
-        subtype="DIR_PATH",
-        description="Path to the system-dependent config folder of Phobos.",
-        default='',
-    )
-
-    # gazebo model folder
-    gazebomodelfolder : StringProperty(
-        name="Gazebo Model Folder",
-        subtype="DIR_PATH",
-        description="Path to the Gazebo model folder.",
-        default='',
-    )
-
-    exportpluginsfolder : StringProperty(
-        name='exportpluginsfolder', subtype='DIR_PATH', default='.'
-    )
-
     username : StringProperty(
         name='username',
-        default='Anonymous',
+        default=os.getlogin(),
         description="Name of the user/company (used for export information etc.)",
     )
 
@@ -130,12 +109,6 @@ class PhobosPrefs(AddonPreferences):
 
         """
         layout = self.layout
-        box = layout.box()
-        box.label(text="Folders")
-        box.prop(self, "modelsfolder", text="models folder")
-        box.prop(self, "configfolder", text="config folder")
-        box.prop(self, "gazebomodelfolder", text="Gazebo model folder")
-        layout.separator()
 
         box = layout.box()
         box.label(text="User information")
@@ -174,6 +147,20 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         if not bpy.context.scene.phobosexportsettings.path.endswith('/'):
             bpy.context.scene.phobosexportsettings.path += '/'
 
+    def getXMLTypeListForEnumProp(self, context):
+        """
+
+        Args:
+          context:
+
+        Returns:
+
+        """
+        # DOCU missing description
+        return [(mt,) * 3 for mt in phobos_defs.KINEMATIC_TYPES]
+        # As soon smurf will hold this information
+        # return [(mt,) * 3 for mt in ["None"] + phobos_defs.KINEMATIC_TYPES]
+
     def getMeshTypeListForEnumProp(self, context):
         """
 
@@ -184,7 +171,7 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
         """
         # DOCU missing description
-        return sorted([(mt,) * 3 for mt in mesh_types])
+        return [(mt,) * 3 for mt in MESH_TYPES]
 
     path : StringProperty(name='path', subtype='DIR_PATH', default='../', update=updateExportPath)
 
@@ -195,14 +182,27 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
     decimalPlaces : IntProperty(
         name="decimals", description="Number of " + "decimal places to export", default=5, min=3
     )
+    enforceZero: BoolProperty(
+        name="Force almost zero to zero",
+        description="Depending on the decimal places values that are close to zero will be set to zero",
+        default=False
+    )
+
     exportTextures : BoolProperty(name='Export textures', default=True)
     # outputMeshtype : EnumProperty(
     #     items=getMeshTypeListForEnumProp,
     #     name='link',
     #     description="Mesh type to use in exported " + "entity/scene files.",
     # )
-    outputPathtype : EnumProperty(
-        items=tuple(((l,) * 3 for l in ["relative", "ros_package"])),
+    ros_rel_choices = ["relative", "ros_package", "relative + ros_style", "ros_package + relative"]
+    urdfOutputPathtype : EnumProperty(
+        items=tuple(((l,) * 3 for l in ros_rel_choices)),
+        name='file path',
+        description="Defines how pathes are generated in " + "entity/scene files.",
+    )
+
+    sdfOutputPathtype: EnumProperty(
+        items=tuple(((l,) * 3 for l in ros_rel_choices)),
         name='file path',
         description="Defines how pathes are generated in " + "entity/scene files.",
     )
@@ -212,8 +212,8 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
     #     description="Use the given string to prefix all items (links, visuals, collisions, etc.)",
     # )
 
+    # TODO make this default to the model name
     rosPackageName : StringProperty(name='ROS package name', default='robot_name_model')
-
 
     # obj optional information
     axis_forward_items = (
@@ -228,6 +228,12 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
     )
     obj_axis_up : EnumProperty(
         items=axis_up_items, name='Up', description="Up axis of the obj export.", default='Y'
+    )
+
+    export_smurf_xml_type : EnumProperty(
+        items=getXMLTypeListForEnumProp,
+        name='URDF mesh type',
+        description="Mesh type to use in exported URDF files.",
     )
 
     export_urdf_mesh_type : EnumProperty(
@@ -255,122 +261,122 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
     )
 
 
-class Mesh_Export_UIList(bpy.types.UIList):
-    """TODO Missing documentation"""
+# class Mesh_Export_UIList(bpy.types.UIList):
+#     """TODO Missing documentation"""
+#
+#     # DOCU missing class description
+#     # CHECK is this class in use? -> no, therefore commented
+#
+#     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+#         """
+#
+#         Args:
+#           context:
+#           layout:
+#           data:
+#           item:
+#           icon:
+#           active_data:
+#           active_propname:
+#           index:
+#
+#         Returns:
+#
+#         """
+#         # TODO remove this code?
+#         # assert(isinstance(item, bpy.types.MaterialTextureSlot)
+#         ma = data
+#         slot = item
+#         tex = slot.texture if slot else None
+#         if self.layout_type in {'DEFAULT', 'COMPACT'}:
+#             if tex:
+#                 layout.prop(tex, "name", text="", emboss=False, icon_value=icon)
+#             else:
+#                 layout.label(text="", icon_value=icon)
+#             if tex and isinstance(item, bpy.types.MaterialTextureSlot):
+#                 layout.prop(ma, "use_textures", text="", index=index)
+#         elif self.layout_type == 'GRID':
+#             layout.alignment = 'CENTER'
+#             layout.label(text="", icon_value=icon)
 
-    # DOCU missing class description
-    # CHECK is this class in use
 
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        """
-
-        Args:
-          context:
-          layout:
-          data:
-          item:
-          icon:
-          active_data:
-          active_propname:
-          index:
-
-        Returns:
-
-        """
-        # TODO remove this code?
-        # assert(isinstance(item, bpy.types.MaterialTextureSlot)
-        ma = data
-        slot = item
-        tex = slot.texture if slot else None
-        if self.layout_type in {'DEFAULT', 'COMPACT'}:
-            if tex:
-                layout.prop(tex, "name", text="", emboss=False, icon_value=icon)
-            else:
-                layout.label(text="", icon_value=icon)
-            if tex and isinstance(item, bpy.types.MaterialTextureSlot):
-                layout.prop(ma, "use_textures", text="", index=index)
-        elif self.layout_type == 'GRID':
-            layout.alignment = 'CENTER'
-            layout.label(text="", icon_value=icon)
-
-
-class Models_Poses_UIList(bpy.types.UIList):
-    """TODO Missing documentation"""
-
-    # DOCU missing class description
-    # CHECK is this class in use?
-
-    def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
-        """
-
-        Args:
-          context:
-          layout:
-          data:
-          item:
-          icon:
-          active_data:
-          active_propname:
-          index:
-
-        Returns:
-
-        """
-        self.use_filter_show = False
-        im = item
-        modelsPosesColl = bpy.context.preferences.addons["phobos"].preferences.models_poses
-        if im.name in modelsPosesColl.keys():
-            coll_item = modelsPosesColl[im.name]
-            if coll_item.type == "robot_name":
-                layout.label(text=coll_item.label, translate=False, icon=coll_item.icon)
-            else:
-                sLayout = layout.split(0.1)
-                sLayout.label(text="")
-                if im.filepath != '':
-                    sLayout.label(text=coll_item.label, translate=False, icon_value=icon)
-                else:
-                    sLayout.label(text=coll_item.label, translate=False, icon=coll_item.icon)
-
-    def filter_items(self, context, data, propname):
-        """
-
-        Args:
-          context:
-          data:
-          propname:
-
-        Returns:
-
-        """
-        images = getattr(data, propname)
-        flt_flags = [self.bitflag_filter_item] * len(images)
-
-        modelsPosesColl = bpy.context.preferences.addons["phobos"].preferences.models_poses
-
-        # Filter items. Only show robots. Hide all other images
-        for idx, im in enumerate(images):
-            if im.name in modelsPosesColl.keys():
-                curr_model = modelsPosesColl[im.name]
-                if curr_model.hide and not (curr_model.type == "robot_name"):
-                    flt_flags[idx] &= ~self.bitflag_filter_item
-            else:
-                flt_flags[idx] &= ~self.bitflag_filter_item
-
-        # FIXME remove this (never used)
-        helper_funcs = bpy.types.UI_UL_list
-        # Reorder by name
-        flt_neworder = []
-        noPreviewIndex = 0
-        for im in images:
-            newIndex = 0
-            if im.name in modelsPosesColl.keys():
-                newIndex = modelsPosesColl.keys().index(im.name)
-            else:
-                newIndex = len(modelsPosesColl) + noPreviewIndex
-                noPreviewIndex += 1
-            flt_neworder.append(newIndex)
-
-        return flt_flags, flt_neworder
+# class Models_Poses_UIList(bpy.types.UIList):
+#     """TODO Missing documentation"""
+#
+#     # DOCU missing class description
+#     # CHECK is this class in use? -> no, therefore commented
+#
+#     def draw_item(self, context, layout, data, item, icon, active_data, active_propname, index):
+#         """
+#
+#         Args:
+#           context:
+#           layout:
+#           data:
+#           item:
+#           icon:
+#           active_data:
+#           active_propname:
+#           index:
+#
+#         Returns:
+#
+#         """
+#         self.use_filter_show = False
+#         im = item
+#         modelsPosesColl = bpy.context.preferences.addons["phobos"].preferences.models_poses
+#         if im.name in modelsPosesColl.keys():
+#             coll_item = modelsPosesColl[im.name]
+#             if coll_item.type == "robot_name":
+#                 layout.label(text=coll_item.label, translate=False, icon=coll_item.icon)
+#             else:
+#                 sLayout = layout.split(0.1)
+#                 sLayout.label(text="")
+#                 if im.filepath != '':
+#                     sLayout.label(text=coll_item.label, translate=False, icon_value=icon)
+#                 else:
+#                     sLayout.label(text=coll_item.label, translate=False, icon=coll_item.icon)
+#
+#     def filter_items(self, context, data, propname):
+#         """
+#
+#         Args:
+#           context:
+#           data:
+#           propname:
+#
+#         Returns:
+#
+#         """
+#         images = getattr(data, propname)
+#         flt_flags = [self.bitflag_filter_item] * len(images)
+#
+#         modelsPosesColl = bpy.context.preferences.addons["phobos"].preferences.models_poses
+#
+#         # Filter items. Only show robots. Hide all other images
+#         for idx, im in enumerate(images):
+#             if im.name in modelsPosesColl.keys():
+#                 curr_model = modelsPosesColl[im.name]
+#                 if curr_model.hide and not (curr_model.type == "robot_name"):
+#                     flt_flags[idx] &= ~self.bitflag_filter_item
+#             else:
+#                 flt_flags[idx] &= ~self.bitflag_filter_item
+#
+#         # FIXME remove this (never used)
+#         helper_funcs = bpy.types.UI_UL_list
+#         # Reorder by name
+#         flt_neworder = []
+#         noPreviewIndex = 0
+#         for im in images:
+#             newIndex = 0
+#             if im.name in modelsPosesColl.keys():
+#                 newIndex = modelsPosesColl.keys().index(im.name)
+#             else:
+#                 newIndex = len(modelsPosesColl) + noPreviewIndex
+#                 noPreviewIndex += 1
+#             flt_neworder.append(newIndex)
+#
+#         return flt_flags, flt_neworder
 
 
 def showPreview(self, value):
@@ -434,7 +440,7 @@ class PhobosToolsPanel(bpy.types.Panel):
         tsc2.operator('phobos.validate')
 
 
-# TODO move this to a better place (utils)
+# TODO-REFACTOR move this to utils.misc
 def getMatrixData(coord, space):
     """
 
@@ -1214,6 +1220,7 @@ class PhobosExportPanel(bpy.types.Panel):
         g1.prop(expsets, "selectedOnly")
         g2 = ginlayout.column(align=True)
         g2.prop(expsets, "decimalPlaces")
+        g2.prop(expsets, "enforceZero")
 
         layout.separator()
 
@@ -1223,29 +1230,21 @@ class PhobosExportPanel(bpy.types.Panel):
         cmodel = inlayout.column(align=True)
         cmodel.label(text="Models")
         for entitytype in phobos_defs.EXPORT_TYPES:
-            cmodel.prop(bpy.context.scene, "export_entity_"+entitytype)
+            cmodel.prop(bpy.context.scene, "export_entity_"+entitytype, toggle=0 if entitytype == "smurf" else -1)
 
         cmesh = inlayout.column(align=True)
         cmesh.label(text="Meshes")
-        for meshtype in mesh_types:
+        for meshtype in MESH_TYPES:
             typename = "export_mesh_" + meshtype
             cmesh.prop(bpy.context.scene, typename)
-        # cmesh.prop(bpy.context.scene.phobosexportsettings, 'outputMeshtype') # is now done by export_urdf_mesh_type
-        cmesh.prop(bpy.context.scene.phobosexportsettings, 'outputPathtype')
-        # cmesh.prop(bpy.context.scene.phobosexportsettings, 'prefixExport')
 
-        cscene = inlayout.column(align=True)
-        cscene.label(text="Scenes")
-        for scenetype in ioUtils.getSceneTypesForExport():
-            typename = "export_scene_" + scenetype
-            cscene.prop(bpy.context.scene, typename)
+        # TODO make this work again
+        # cscene = inlayout.column(align=True)
+        # cscene.label(text="Scenes")
+        # for scenetype in ioUtils.getSceneTypesForExport():
+        #     typename = "export_scene_" + scenetype
+        #     cscene.prop(bpy.context.scene, typename)
 
-        # additional ros guiparams
-        if getattr(bpy.context.scene.phobosexportsettings, 'outputPathtype', "relative") == "ros_package":
-            layout.separator()
-            box = layout.box()
-            box.label(text='ROS')
-            box.prop(expsets, "rosPackageName")
 
         # additional obj guiparams
         if getattr(bpy.context.scene, 'export_mesh_obj', False):
@@ -1254,19 +1253,33 @@ class PhobosExportPanel(bpy.types.Panel):
             box.label(text='OBJ axis')
             box.prop(ioUtils.getExpSettings(), 'obj_axis_forward')
             box.prop(ioUtils.getExpSettings(), 'obj_axis_up')
+
+        if getattr(bpy.context.scene, 'export_entity_smurf', False):
+            layout.separator()
+            box = layout.box()
+            box.label(text='SMURF export')
+            box.prop(ioUtils.getExpSettings(), 'export_smurf_xml_type')
         if getattr(bpy.context.scene, 'export_entity_urdf', False):
             layout.separator()
             box = layout.box()
             box.label(text='URDF export')
             box.prop(ioUtils.getExpSettings(), 'export_urdf_mesh_type')
+            box.prop(bpy.context.scene.phobosexportsettings, 'urdfOutputPathtype')
         if getattr(bpy.context.scene, 'export_entity_sdf', False):
             layout.separator()
             box = layout.box()
             box.label(text='SDF export')
             box.prop(ioUtils.getExpSettings(), 'export_sdf_mesh_type')
+            box.prop(bpy.context.scene.phobosexportsettings, 'sdfOutputPathtype')
             # doesn't work properly therefore excluded
             # box.prop(ioUtils.getExpSettings(), 'export_sdf_model_config', icon='RENDERLAYERS')
             # box.prop(ioUtils.getExpSettings(), 'export_sdf_to_gazebo_models', icon='EXPORT')
+
+        if getattr(bpy.context.scene.phobosexportsettings, 'urdfOutputPathtype', "relative").startswith("ros_package") or \
+                getattr(bpy.context.scene.phobosexportsettings, 'sdfOutputPathtype', "relative").startswith("ros_package"):
+            layout.separator()
+            box = layout.box()
+            box.prop(expsets, "rosPackageName")
 
         # TODO delete me?
         # c2.prop(expsets, "exportCustomData", text="Export custom data")
@@ -1337,7 +1350,7 @@ class PhobosImportPanel(bpy.types.Panel):
         """
         self.layout.operator("phobos.import_robot_model", text="Import Robot Model", icon="IMPORT")
 
-
+# TODO-REFACTOR this completely according to submodels in core or delete
 # class PhobosSubmodelsPanel(bpy.types.Panel):
 #     """TODO Missing documentation"""
 #
@@ -1561,13 +1574,16 @@ def register():
     )
 
     # add i/o settings to scene to preserve settings for every model
-    for meshtype in mesh_types:
+    for meshtype in MESH_TYPES:
         typename = "export_mesh_" + meshtype
         setattr(bpy.types.Scene, typename, BoolProperty(name=meshtype, default=False))
 
     for entitytype in phobos_defs.EXPORT_TYPES:
         typename = "export_entity_" + entitytype
-        setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, default=False))
+        if entitytype == "smurf":
+            setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, get=lambda self: True))
+        else:
+            setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, default=False))
 
     for scenetype in scenes.scene_types:
         if 'export' in scenes.scene_types[scenetype]:
@@ -1580,7 +1596,7 @@ def register():
     pcoll = bpy.utils.previews.new()
 
     # load a preview thumbnail of a file and store in the previews collection
-    pcoll.load("phobosIcon", os.path.join(os.path.dirname(__file__), "phobosIcon.png"), 'IMAGE')
+    pcoll.load("phobosIcon", get_blender_resources_path("images", "phobosIcon.png"), 'IMAGE')
     prev_collections["phobos"] = pcoll
 
     global phobosIcon

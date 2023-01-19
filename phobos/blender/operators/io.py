@@ -35,10 +35,8 @@ import phobos.blender.utils.io as ioUtils
 import phobos.blender.utils.blender as bUtils
 import phobos.blender.utils.naming as nUtils
 from phobos.blender.utils.io import securepath
-from phobos.blender.io.entities import entity_types
-from phobos.blender.io.entities.entities import deriveGenericEntity
 
-from phobos.defs import IMPORT_TYPES
+from phobos.defs import IMPORT_TYPES, EXPORT_TYPES
 
 
 # [TODO pre_v2.0.0] let this use the phobos API as well
@@ -81,40 +79,39 @@ class ExportSceneOperator(Operator):
 
         # derive entities and export if necessary
         models = set()
-        for root in entities:
-            log("Adding entity '" + str(root["entity/name"]) + "' to scene.", "INFO")
-            if root["entity/type"] in entity_types:
-                # TODO delete me?
-                # try:
-                if (
-                    self.exportModels
-                    and 'export' in entity_types[root['entity/type']]
-                    and root['model/name'] not in models
-                ):
-                    modelpath = os.path.join(
-                        ioUtils.getExportPath(), self.sceneName, root['model/name']
-                    )
-                    exportModel(models.deriveModelDictionary(root), modelpath)
-                    models.add(root['model/name'])
-                # known entity export
-                entity = entity_types[root["entity/type"]]['derive'](
-                    root, os.path.join(ioUtils.getExportPath(), self.sceneName)
-                )
-                # TODO delete me?
-                # except KeyError:
-                #    log("Required method ""deriveEntity"" not implemented for type " + entity["entity/type"], "ERROR")
-                #    continue
-            # generic entity export
-            else:
-                entity = deriveGenericEntity(root)
-            exportlist.append(entity)
-        for scenetype in scene_types:
-            typename = "export_scene_" + scenetype
-            # check if format exists and should be exported
-            if getattr(bpy.context.scene, typename):
-                scene_types[scenetype]['export'](
-                    exportlist, os.path.join(ioUtils.getExportPath(), self.sceneName)
-                )
+        # TODO This has to be reworked
+        # for root in entities:
+        #     log("Adding entity '" + str(root["entity/name"]) + "' to scene.", "INFO")
+        #     if root["entity/type"] in EXPORT_TYPES:
+        #         # TODO delete me?
+        #         # try:
+        #         if (
+        #             self.exportModels
+        #             and root['model/name'] not in models
+        #         ):
+        #             modelpath = os.path.join(
+        #                 ioUtils.getExportPath(), self.sceneName, root['model/name']
+        #             )
+        #             exportModel(models.deriveModelDictionary(root), modelpath)
+        #             models.add(root['model/name'])
+        #         # known entity export
+        #         entity = entity_types[root["entity/type"]]['derive'](
+        #             root, os.path.join(ioUtils.getExportPath(), self.sceneName)
+        #         )
+        #         # TODO delete me?
+        #         # except KeyError:
+        #         #    log("Required method ""deriveEntity"" not implemented for type " + entity["entity/type"], "ERROR")
+        #         #    continue
+        #     else:
+        #         log(f"Can't export {str(root['entity/name'])} as the type is not known!", 'ERROR')
+        #     exportlist.append(entity)
+        # for scenetype in scene_types:
+        #     typename = "export_scene_" + scenetype
+        #     # check if format exists and should be exported
+        #     if getattr(bpy.context.scene, typename):
+        #         scene_types[scenetype]['export'](
+        #             exportlist, os.path.join(ioUtils.getExportPath(), self.sceneName)
+        #         )
         return {'FINISHED'}
 
 
