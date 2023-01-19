@@ -45,6 +45,8 @@ from phobos.blender import display
 from phobos.geometry.io import MESH_TYPES
 from phobos.utils.resources import get_blender_resources_path
 
+from phobos.commandline_logging import setup_logger_level
+
 
 class ModelPoseProp(bpy.types.PropertyGroup):
     """TODO Missing documentation"""
@@ -59,6 +61,11 @@ class ModelPoseProp(bpy.types.PropertyGroup):
     path : StringProperty()
     model_file : StringProperty()
     preview : StringProperty()
+
+
+def set_loglevel(self, level):
+    setup_logger_level(LOGLEVELS[level] if level != LOGLEVELS.index("NONE") else 1)
+    self["loglevel"] = level
 
 
 class PhobosPrefs(AddonPreferences):
@@ -90,7 +97,8 @@ class PhobosPrefs(AddonPreferences):
     logfile : StringProperty(name="logfile", subtype="FILE_PATH", default=".")
 
     loglevel : EnumProperty(
-        name="loglevel", items=tuple(((l,) * 3 for l in LOGLEVELS)), default="ERROR"
+        name="loglevel", items=tuple(((l,) * 3 for l in LOGLEVELS)), default="ERROR",
+        set=set_loglevel, get=lambda self: self["loglevel"] if "loglevel" in self else LOGLEVELS.index("ERROR")
     )
 
     logtofile : BoolProperty(name="logtofile", default=False)
@@ -173,7 +181,12 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         # DOCU missing description
         return [(mt,) * 3 for mt in MESH_TYPES]
 
-    path : StringProperty(name='path', subtype='DIR_PATH', default='../', update=updateExportPath)
+    path : StringProperty(
+        name='path',
+        subtype='DIR_PATH',
+        default=os.path.expanduser("~"),
+        update=updateExportPath
+    )
 
     # TODO: CHECK which props are visible in GUI?
     selectedOnly : BoolProperty(
