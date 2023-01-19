@@ -365,7 +365,7 @@ class Robot(SMURFRobot):
 
     # export methods
     def export_urdf(self, outputfile=None, export_visuals=True, export_collisions=True,
-                    ros_pkg=False, export_with_ros_pathes=None, float_fmt_dict=None):
+                    ros_pkg=False, copy_with_other_pathes=False, float_fmt_dict=None):
         """Export the mechanism to the given output file.
         If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
         If export_collisions is set to to True, all collisions will be exported. Otherwise no collision get exported.
@@ -397,23 +397,22 @@ class Robot(SMURFRobot):
             f.write(xml_string)
             f.close()
 
-        if export_with_ros_pathes is not None:
-            if export_with_ros_pathes and not ros_pkg:
-                xml_string = regex_replace(xml_string, {'filename="../': 'filename="package://'})
-                f = open(outputfile[:-5] + "_ros.urdf", "w")
-                f.write(xml_string)
-                f.close()
-            elif not export_with_ros_pathes and ros_pkg:
-                xml_string = regex_replace(xml_string, {'filename="package://': 'filename="../'})
-                f = open(outputfile[:-5] + "_relpath.urdf", "w")
-                f.write(xml_string)
-                f.close()
+        if copy_with_other_pathes and not ros_pkg:
+            xml_string = regex_replace(xml_string, {'filename="../': 'filename="package://'})
+            f = open(outputfile[:-5] + "_ros.urdf", "w")
+            f.write(xml_string)
+            f.close()
+        elif copy_with_other_pathes and ros_pkg:
+            xml_string = regex_replace(xml_string, {'filename="package://': 'filename="../'})
+            f = open(outputfile[:-5] + "_relpath.urdf", "w")
+            f.write(xml_string)
+            f.close()
 
         log.info("URDF written to {}".format(outputfile))
         return
 
     def export_sdf(self, outputfile=None, export_visuals=True, export_collisions=True,
-                   ros_pkg=False, export_with_ros_pathes=None, float_fmt_dict=None):
+                   ros_pkg=False, copy_with_other_pathes=None, float_fmt_dict=None):
         """Export the mechanism to the given output file.
         If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
         If export_collisions is set to to True, all collisions will be exported. Otherwise no collision get exported.
@@ -436,7 +435,7 @@ class Robot(SMURFRobot):
         xml_string = "<sdf>\n"+export_robot.to_sdf_string(float_fmt_dict=float_fmt_dict)+"\n</sdf>"
 
         if ros_pkg is True:
-            xml_string = regex_replace(xml_string, {'<uri>"../': '<uri>"package://'})
+            xml_string = regex_replace(xml_string, {'<uri>../': '<uri>package://'})
 
         if not os.path.exists(os.path.dirname(os.path.abspath(outputfile))):
             os.makedirs(os.path.dirname(outputfile))
@@ -444,23 +443,22 @@ class Robot(SMURFRobot):
             f.write(xml_string)
             f.close()
 
-        if export_with_ros_pathes is not None:
-            if export_with_ros_pathes and not ros_pkg:
-                xml_string = regex_replace(xml_string, {'<uri>"../': '<uri>"package://'})
-                f = open(outputfile[:-5] + "_ros.urdf", "w")
-                f.write(xml_string)
-                f.close()
-            elif not export_with_ros_pathes and ros_pkg:
-                xml_string = regex_replace(xml_string, {'<uri>"package://': '<uri>"../'})
-                f = open(outputfile[:-5] + "_relpath.urdf", "w")
-                f.write(xml_string)
-                f.close()
+        if copy_with_other_pathes and not ros_pkg:
+            xml_string = regex_replace(xml_string, {'<uri>../': '<uri>package://'})
+            f = open(outputfile[:-4] + "_ros.sdf", "w")
+            f.write(xml_string)
+            f.close()
+        elif copy_with_other_pathes and ros_pkg:
+            xml_string = regex_replace(xml_string, {'<uri>package://': '<uri>../'})
+            f = open(outputfile[:-4] + "_relpath.sdf", "w")
+            f.write(xml_string)
+            f.close()
 
         log.info("SDF written to {}".format(outputfile))
         return
 
     def export_xml(self, outputdir=None, export_visuals=True, export_collisions=True,
-                   create_pdf=False, ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None,
+                   create_pdf=False, ros_pkg=False, copy_with_other_pathes=None, ros_pkg_name=None,
                    export_joint_limits=False, export_submodels=False, format="urdf", filename=None,
                    float_fmt_dict=None, no_format_dir=False):
         """ Exports all model information stored inside this instance.
@@ -477,7 +475,7 @@ class Robot(SMURFRobot):
             model_file += "." + format
         if not os.path.exists(os.path.dirname(model_file)):
             os.makedirs(os.path.dirname(model_file))
-        if ros_pkg_name is None and (export_with_ros_pathes or ros_pkg):
+        if ros_pkg_name is None:
             ros_pkg_name = os.path.basename(outputdir)
         self.relink_entities()
         self.xmlfile = model_file
@@ -486,11 +484,11 @@ class Robot(SMURFRobot):
         if format == "urdf":
             self.export_urdf(outputfile=model_file, export_visuals=export_visuals,
                              export_collisions=export_collisions,
-                             ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes, float_fmt_dict=float_fmt_dict)
+                             ros_pkg=ros_pkg, copy_with_other_pathes=copy_with_other_pathes, float_fmt_dict=float_fmt_dict)
         elif format == "sdf":
             self.export_sdf(outputfile=model_file, export_visuals=export_visuals,
                             export_collisions=export_collisions,
-                            ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes, float_fmt_dict=float_fmt_dict)
+                            ros_pkg=ros_pkg, copy_with_other_pathes=copy_with_other_pathes, float_fmt_dict=float_fmt_dict)
         else:
             raise IOError("Unknown export format:" + format)
 
@@ -516,16 +514,16 @@ class Robot(SMURFRobot):
                                      export_visuals=export_visuals,
                                      export_collisions=export_collisions,
                                      create_pdf=create_pdf,
-                                     ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes,
+                                     ros_pkg=ros_pkg, export_with_ros_pathes=copy_with_other_pathes,
                                      ros_pkg_name=ros_pkg_name, format=format)
         return model_file
 
     def export_xml_with_meshes(self, outputdir=None, export_visuals=True, export_collisions=True, create_pdf=False,
-                               ros_pkg=False, export_with_ros_pathes=None, ros_pkg_name=None, export_joint_limits=False,
+                               ros_pkg=False, copy_with_other_pathes=None, ros_pkg_name=None, export_joint_limits=False,
                                export_submodels=True, format="urdf", filename=None, float_fmt_dict=None):
         # [TODO pre_v2.0.0] export meshes
         return self.export_xml(outputdir=outputdir, export_visuals=export_visuals, export_collisions=export_collisions,
-                               create_pdf=create_pdf, ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes,
+                               create_pdf=create_pdf, ros_pkg=ros_pkg, copy_with_other_pathes=copy_with_other_pathes,
                                ros_pkg_name=ros_pkg_name, export_joint_limits=export_joint_limits,
                                export_submodels=export_submodels, format=format, filename=filename,
                                float_fmt_dict=float_fmt_dict)
@@ -865,7 +863,7 @@ class Robot(SMURFRobot):
                 if only_urdf or format != formats[0]:
                     _submodel.export_xml(outputdir=outputdir, filename=_sm_xmlfile, export_visuals=export_visuals,
                                          export_collisions=export_collisions, create_pdf=create_pdf, ros_pkg=ros_pkg,
-                                         export_with_ros_pathes=export_with_ros_pathes, format=format,
+                                         copy_with_other_pathes=export_with_ros_pathes, format=format,
                                          float_fmt_dict=float_fmt_dict, no_format_dir=no_format_dir)
 
                 else:
@@ -887,7 +885,7 @@ class Robot(SMURFRobot):
         for format in formats:
             xml_file = self.export_xml(
                 outputdir=outputdir, export_visuals=export_visuals, export_collisions=export_collisions,
-                create_pdf=create_pdf, ros_pkg=ros_pkg, export_with_ros_pathes=export_with_ros_pathes, ros_pkg_name=ros_pkg_name,
+                create_pdf=create_pdf, ros_pkg=ros_pkg, copy_with_other_pathes=export_with_ros_pathes, ros_pkg_name=ros_pkg_name,
                 export_joint_limits=export_joint_limits, export_submodels=export_submodels, format=format, filename=filename,
                 float_fmt_dict=float_fmt_dict, no_format_dir=False,
             )
@@ -981,17 +979,17 @@ class Robot(SMURFRobot):
                 export_robot_instance.generate_submechanisms()
                 export_robot_instance.autogenerate_submechanisms = False  # because it's already done here
             if export["type"] in KINEMATIC_TYPES:
-                if export["enforce_zero"]:
+                if "enforce_zero" in export and export["enforce_zero"]:
                     export_robot_instance.enforce_zero()
-                if export["ros_pathes"]:
-                    ros_pkg |= export["ros_pathes"]
                 xml_file = export_robot_instance.export_xml(
                     outputdir=outputdir,
                     format=export["type"],
-                    ros_pkg=export["ros_pkg"] if "ros_pkg" in export else None,
+                    ros_pkg=export["ros_pathes"] if "ros_pathes" in export else None,
+                    copy_with_other_pathes=export["copy_with_other_pathes"] if "copy_with_other_pathes" in export else None,
                     ros_pkg_name=ros_pkg_name,
                     float_fmt_dict=export["float_format_dict"] if "float_format_dict" in export else None
                 )
+                ros_pkg |= export["ros_pathes"] if "ros_pathes" in export else None
                 if export["link_in_smurf"]:
                     assert xml_file_in_smurf is None, "Only one xml file can be linked in the SMURF"
                     xml_file_in_smurf = xml_file

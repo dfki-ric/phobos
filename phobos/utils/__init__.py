@@ -4,4 +4,4 @@ from . import transform
 from . import tree
 from . import xml
 from . import inertia
-from . import defaults
+from . import resources
