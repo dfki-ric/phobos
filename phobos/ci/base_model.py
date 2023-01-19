@@ -13,7 +13,7 @@ from ..core import Robot
 from ..geometry import replace_collision, join_collisions, remove_collision, import_mesh, import_mars_mesh, \
     export_mesh, export_mars_mesh, export_bobj_mesh
 from ..io.hyrodyn import ConstraintAxis
-from ..utils import misc, git, xml, transform, tree, defaults
+from ..utils import misc, git, xml, transform, tree, resources
 from ..io import representation, sensor_representations, poses
 from ..commandline_logging import get_logger
 log = get_logger(__name__)
@@ -53,7 +53,7 @@ class BaseModel(yaml.YAMLObject):
         assert hasattr(self, "test") and len(self.test) >= 1
         self.test = misc.merge_default(
           self.test,
-          self.pipeline.default_test if hasattr(pipeline, "default_test") else defaults.get_default_ci_test_definition()
+          self.pipeline.default_test if hasattr(pipeline, "default_test") else resources.get_default_ci_test_definition()
         )
 
         # get directories for this model
@@ -429,7 +429,7 @@ class BaseModel(yaml.YAMLObject):
                     assert "transform_frame" not in config and "transform_link" not in config
                     assert "joint" in config
                     _joint_def = config.pop("joint")
-                    _joint_def = misc.merge_default(_joint_def, defaults.get_default_joint(_joint_def["type"]))
+                    _joint_def = misc.merge_default(_joint_def, resources.get_default_joint(_joint_def["type"]))
                     _joint = representation.Joint(
                         child=linkname,
                         parent=_joint_def.pop("parent"),
@@ -527,7 +527,7 @@ class BaseModel(yaml.YAMLObject):
                                 v["joint"] = v.pop("joint_name")
                             joint.mimic = representation.JointMimic(**v)
                         elif k == "active":
-                            v = misc.merge_default(v, defaults.get_default_motor())
+                            v = misc.merge_default(v, resources.get_default_motor())
                             if type(v) == dict:
                                 if "name" not in v:
                                     v["name"] = jointname+"_motor"
