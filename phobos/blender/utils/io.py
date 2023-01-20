@@ -552,7 +552,7 @@ def exportModel(model, exportpath='.', entitytypes=None):
     robot = Robot.get_robot_from_blender_dict(blender_model=model)
     export_config = []
     # go through export settings
-    for fmt in entitytypes:
+    for fmt in [et for et in entitytypes if getattr(bpy.context.scene, f'export_entity_{et}', False)]:
         if fmt in KINEMATIC_TYPES:
             export_config.append({
                 "type": fmt.lower(),
