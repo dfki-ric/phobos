@@ -22,6 +22,7 @@ from datetime import datetime
 
 import bpy
 import mathutils
+import numpy as np
 from bpy.types import Operator
 from bpy.props import (
     BoolProperty,
@@ -1504,6 +1505,10 @@ class DefineJointConstraintsOperator(Operator):
         name="Damping Constant", default=0.0, description="Damping constant of the joint"
     )
 
+    axis: FloatVectorProperty(
+        name="Joint Axis", default=[0.0, 0.0, 1], description="Damping constant of the joint", size=3
+    )
+
     def draw(self, context):
         """
 
@@ -1519,7 +1524,10 @@ class DefineJointConstraintsOperator(Operator):
         # enable/disable optional parameters
         if not self.joint_type == 'fixed':
             layout.prop(self, "passive", text="makes the joint passive (no actuation)")
-            layout.prop(self, "useRadian", text="use radian")
+            if self.joint_type != "sphere":
+                layout.prop(self, "axis", text="Sets the joint axis")
+            if self.joint_type == "revolute":
+                layout.prop(self, "useRadian", text="use radian")
             if self.joint_type != 'fixed':
                 layout.prop(
                     self,
@@ -1535,9 +1543,14 @@ class DefineJointConstraintsOperator(Operator):
                     )
                 else:
                     layout.prop(self, "maxvelocity", text="max velocity [m/s]")
-            if self.joint_type in ('revolute', 'prismatic'):
+            if self.joint_type == 'revolute':
                 layout.prop(self, "lower", text="lower [rad]" if self.useRadian else "lower [°]")
                 layout.prop(self, "upper", text="upper [rad]" if self.useRadian else "upper [°]")
+                layout.prop(self, "spring", text="spring constant [N/m]")
+                layout.prop(self, "damping", text="damping constant")
+            elif self.joint_type == 'prismatic':
+                layout.prop(self, "lower", text="lower [m]")
+                layout.prop(self, "upper", text="upper [m]")
                 layout.prop(self, "spring", text="spring constant [N/m]")
                 layout.prop(self, "damping", text="damping constant")
 
@@ -1569,27 +1582,32 @@ class DefineJointConstraintsOperator(Operator):
         log('Defining joint constraints for joint: ', 'INFO')
         lower = 0
         upper = 0
+        velocity = self.maxvelocity
 
         # lower and upper limits
-        if self.joint_type in ('revolute', 'prismatic'):
+        if self.joint_type in ["revolute", "continuous", "sphere"]:
+            # velocity calculation
+            if not self.useRadian:
+                velocity = self.maxvelocity * ((2 * math.pi) / 360)  # from °/s to rad/s
+            else:
+                velocity = self.maxvelocity
+        if self.joint_type == 'revolute':
             if not self.useRadian:
                 lower = math.radians(self.lower)
                 upper = math.radians(self.upper)
             else:
                 lower = self.lower
                 upper = self.upper
-
-        # velocity calculation
-        if not self.useRadian:
-            velocity = self.maxvelocity * ((2 * math.pi) / 360)  # from °/s to rad/s
-        else:
-            velocity = self.maxvelocity
+        elif self.joint_type == "prismatic":
+            lower = self.lower
+            upper = self.upper
 
         # set properties for each joint
         for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
             context.view_layer.objects.active = joint
             jUtils.setJointConstraints(
-                joint, self.joint_type, lower, upper, self.spring, self.damping
+                joint, self.joint_type, lower, upper, self.spring, self.damping,
+                axis=(np.array(self.axis) / np.linalg.norm(self.axis)).tolist()
             )
 
             # TODO is this still needed? Or better move it to the utility function

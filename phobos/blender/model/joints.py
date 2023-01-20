@@ -15,6 +15,7 @@ Contains the functions required to model a joint within Blender.
 
 import bpy
 import mathutils
+import numpy as np
 from phobos.blender.phoboslog import log
 import phobos.blender.utils.naming as nUtils
 import phobos.blender.utils.selection as sUtils
@@ -231,6 +232,7 @@ def setJointConstraints(
     damping=0.0,
     maxeffort_approximation=None,
     maxspeed_approximation=None,
+    axis = None
 ):
     """Sets the constraints for a given joint and jointtype.
     
@@ -264,6 +266,16 @@ def setJointConstraints(
     # remove existing constraints from bone
     for cons in joint.pose.bones[0].constraints:
         joint.pose.bones[0].constraints.remove(cons)
+
+    if axis is not None:
+        axis = (np.array(axis) / np.linalg.norm(axis)).tolist()
+        if np.linalg.norm(axis) != 0:
+            bpy.ops.object.mode_set(mode='EDIT')
+            editbone = joint.data.edit_bones[0]
+            length = editbone.length
+            axis = mathutils.Vector(tuple(axis))
+            editbone.tail = editbone.head + axis.normalized() * length
+            bpy.ops.object.mode_set(mode='POSE')
 
     # add spring & damping
     if jointtype in ['revolute', 'prismatic'] and (spring or damping):
