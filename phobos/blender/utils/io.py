@@ -277,10 +277,10 @@ def getExportPath():
     Returns:
 
     """
-    if os.path.isabs(getExpSettings().path):
-        return getExpSettings().path
-    else:
-        return os.path.normpath(os.path.join(bpy.path.abspath('//'), getExpSettings().path))
+    if not bpy.context.scene.phobosexportsettings.path.endswith('/'):
+        bpy.context.scene.phobosexportsettings.path += '/'
+    assert os.path.isabs(getExpSettings().path)
+    return getExpSettings().path
 
 
 def getAbsolutePath(path):
@@ -482,7 +482,7 @@ def exportModel(model, exportpath='.', entitytypes=None):
     if not entitytypes:
         entitytypes = getEntityTypesForExport()
     if not exportpath.endswith(model["name"]) and not exportpath.endswith(model["name"]+"/"):
-        exportpath += model['name']
+        exportpath = os.path.join(exportpath, model['name'])
 
     # TODO: Move texture export to individual formats? This is practically SMURF
     # TODO: Also, this does not properly take care of textures embedded in a .blend file

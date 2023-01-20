@@ -80,6 +80,9 @@ class PhobosPrefs(AddonPreferences):
 
     bl_idname = "phobos"
 
+    modelsfolder: StringProperty(name="modelsfolder", subtype="DIR_PATH",
+                                 default=os.path.expanduser(os.path.join("~", "phobos-models")))
+
     username : StringProperty(
         name='username',
         default=os.getlogin(),
@@ -119,6 +122,11 @@ class PhobosPrefs(AddonPreferences):
         layout = self.layout
 
         box = layout.box()
+        box.label(text="Folders")
+        box.prop(self, "modelsfolder", text="models folder")
+        layout.separator()
+
+        box = layout.box()
         box.label(text="User information")
         box.prop(self, "username", text="user name")
         box.prop(self, "useremail", text="user email")
@@ -152,6 +160,15 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
         """
         # DOCU missing description
+        if not os.path.isabs(bpy.context.scene.phobosexportsettings.path):
+            if bpy.data.filepath == "":
+                bpy.context.scene.phobosexportsettings.path = os.path.join(
+                    bpy.context.preferences.addons["phobos"].preferences.modelsfolder,
+                    bpy.context.scene.phobosexportsettings.path)
+            else:
+                bpy.context.scene.phobosexportsettings.path = os.path.join(
+                    os.path.dirname(bpy.data.filepath),
+                    bpy.context.scene.phobosexportsettings.path)
         if not bpy.context.scene.phobosexportsettings.path.endswith('/'):
             bpy.context.scene.phobosexportsettings.path += '/'
 
