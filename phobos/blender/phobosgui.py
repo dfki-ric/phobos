@@ -169,8 +169,10 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
                 bpy.context.scene.phobosexportsettings.path = os.path.join(
                     os.path.dirname(bpy.data.filepath),
                     bpy.context.scene.phobosexportsettings.path)
+        bpy.context.scene.phobosexportsettings.path = os.path.normpath(bpy.context.scene.phobosexportsettings.path)
         if not bpy.context.scene.phobosexportsettings.path.endswith('/'):
             bpy.context.scene.phobosexportsettings.path += '/'
+
 
     def getXMLTypeListForEnumProp(self, context):
         """

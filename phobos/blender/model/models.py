@@ -131,34 +131,14 @@ def deriveMaterial(mat, logging=False, errors=None):
     if mat.diffuse_color[3] != 1.0:
         material['transparency'] = 1.0 - mat.diffuse_color[3]
 
-    # return material without texture information if there are validation errors
-    if errors:
-        return material
-
     if mat.node_tree:
         textures = [x for x in mat.node_tree.nodes if x.type == 'TEX_IMAGE']
-        print(textures[0])
-    # there are always 18 slots, regardless of whether they are filled or not
-    for tex in mat.texture_slots:
-        if tex is not None:
-            # regular diffuse color texture
-            if tex.use_map_color_diffuse:
-                # grab the first texture
-                material['diffuseTexture'] = mat.texture_slots[0].texture.image.filepath.replace(
-                    '//', ''
-                )
-            # normal map
-            if tex.use_map_normal:
-                # grab the first texture
-                material['normalTexture'] = mat.texture_slots[0].texture.image.filepath.replace(
-                    '//', ''
-                )
-            # displacement map
-            if tex.use_map_displacement:
-                # grab the first texture
-                material['displacementTexture'] = mat.texture_slots[
-                    0
-                ].texture.image.filepath.replace('//', '')
+        if len(textures) == 1:
+            if textures[0].outputs["Color"].links[0].to_socket.name == "Base Color":
+                material["diffuseTexture"] = os.path.normpath(bpy.path.abspath(textures[0].image.filepath))
+            elif textures[0].outputs["Color"].links[0].to_socket.name == "Normal":
+                material['normalTexture'] = os.path.normpath(bpy.path.abspath(textures[0].image.filepath))
+
     return material
 
 
@@ -1126,7 +1106,6 @@ def deriveModelDictionary(root, name='', objectlist=[]):
             mat = obj.active_material
             if mat:
                 if mat.name not in model['materials']:
-                    model['materials'][mat.name] = deriveMaterial(mat)
                     linkname = nUtils.getObjectName(
                         sUtils.getEffectiveParent(obj, ignore_selection=bool(objectlist))
                     )

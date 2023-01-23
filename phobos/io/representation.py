@@ -142,34 +142,37 @@ class Pose(Representation, SmurfBase):
 
 
 class Material(Representation, SmurfBase):
-    _class_variables = ["name", "diffuse", "ambient", "emissive", "specular", "texture"]
+    _class_variables = ["name", "diffuse", "ambient", "emissive", "specular", "diffuseTexture", "normalTexture"]
 
-    def __init__(self, name=None, diffuse=None, ambient=None, specular=None, emissive=None, texture=None, **kwargs):
+    def __init__(self, name=None, diffuse=None, ambient=None, specular=None, emissive=None,
+                 diffuseTexture=None, normalTexture=None, **kwargs):
         self.diffuse = color_parser(rgba=diffuse)
         self.ambient = color_parser(rgba=ambient)
         self.specular = color_parser(rgba=specular)
         self.emissive = color_parser(rgba=emissive)
-        self.texture = texture
+        print("M", diffuseTexture)
+        self.diffuseTexture = diffuseTexture
+        self.normalTexture = normalTexture
         self.original_name = name
-        SmurfBase.__init__(self, returns=["name", "diffuseColor", "ambientColor", "specularColor", "emissionColor"],
-                           **kwargs)
+        SmurfBase.__init__(self, returns=["name", "diffuseColor", "ambientColor", "specularColor", "emissionColor",
+                                          "diffuseTexture", "normalTexture"], **kwargs)
         if name is None or len(name) == 0:
-            name = to_hex_color(self.diffuse) + (os.path.basename(self.texture) if texture is not None else "")
+            name = to_hex_color(self.diffuse) + (os.path.basename(self.diffuseTexture) if diffuseTexture is not None else "")
         self.name = name
         self.excludes += ["diffuse", "ambient", "specular", "emissive", "original_name", "users"]
 
     def check_valid(self):
         # [TODO pre_v2.0.0] REVIEW add other colors here
-        if self.diffuse is None and self.texture is None:
+        if self.diffuse is None and self.diffuseTexture is None:
             raise Exception("Material has neither a color nor texture.")
 
     def equivalent(self, other):
         # [TODO pre_v2.0.0] REVIEW add other colors here
-        return other.texture == self.texture and other.diffuse == self.diffuse
+        return other.diffuseTexture == self.diffuseTexture and other.diffuse == self.diffuse
 
     def is_delegate(self):
         # [TODO pre_v2.0.0] REVIEW add other colors here
-        return self.diffuse is None and self.texture is None
+        return self.diffuse is None and self.diffuseTexture is None
 
     @property
     def diffuseColor(self):

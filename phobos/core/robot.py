@@ -290,7 +290,6 @@ class Robot(SMURFRobot):
             mats = []
             for key, value in blender_model['materials'].items():
                 mats.append(representation.Material(name=value.pop('name'),
-                                                    texture=None,
                                                     **value))
             if blender_model['version'] != '1.0':
                 log.info(f"Versionscheck übersprungen. Version ist : {blender_model['version']}")

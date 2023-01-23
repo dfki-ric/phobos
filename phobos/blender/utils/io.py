@@ -516,7 +516,7 @@ def exportModel(model, exportpath='.', entitytypes=None):
                         )
 
                     # update the texture path in the model
-                    mat[texturetype] = 'textures/' + path.basename(mat[texturetype])
+                    mat[texturetype] = '../textures/' + path.basename(mat[texturetype])
 
     for meshname in model['meshes']:
         mesh_path = getOutputMeshpath(exportpath, getExpSettings().export_urdf_mesh_type, "relative")
