@@ -290,10 +290,6 @@ def setJointConstraints(
         # if the values below are changed manually by the user
         joint['joint/dynamics/springStiffness'] = spring
         joint['joint/dynamics/springDamping'] = damping
-        joint['joint/dynamics/spring_const_constraint_axis1'] = spring  # FIXME: this is a hack
-        joint[
-            'joint/dynamics/damping_const_constraint_axis1'
-        ] = damping  # FIXME: this is a hack, too
 
     # set constraints accordingly
     if jointtype == 'revolute':
