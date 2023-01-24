@@ -19,6 +19,11 @@ log = get_logger(__name__)
 class SMURFRobot(XMLRobot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
                  inputfile=None, description=None, autogenerate_submechanisms=None, is_human=False):
+        self.smurf_annotation_keys = [
+            'motors', 'sensors', 'materials', "joints", "links", 'collisions', 'poses',
+            "submechanisms", "exoskeletons", "interfaces"
+        ]
+
         self.name = name
         self.smurffile = None
         self.submechanisms_file = None

@@ -687,7 +687,7 @@ class ConstraintAxis(SmurfBase):
 
 
 class Joint(Representation, SmurfBase):
-    TYPES = ['unknown', 'revolute', 'continuous', 'prismatic', 'floating', 'planar', 'fixed']
+    TYPES = ['revolute', 'continuous', 'prismatic', 'floating', 'planar', 'fixed']
 
     type_dict = {
         "parent": "links",
@@ -859,6 +859,7 @@ class Joint(Representation, SmurfBase):
         if self._related_robot_instance is not None:
             for jd in self._joint_dependencies:
                 jd.link_with_robot(self._related_robot_instance)
+
 
 class Interface(Representation, SmurfBase):
     _class_variables = ["name", "origin", "parent"]

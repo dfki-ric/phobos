@@ -553,10 +553,6 @@ class Robot(SMURFRobot):
         if not os.path.exists(smurf_dir):
             os.mkdir(smurf_dir)
         # Export attr
-        smurf_annotations = [
-            'motors', 'sensors', 'materials', "joints", "links", 'collisions', 'poses',
-            "submechanisms", "exoskeletons", "interfaces"
-        ]
         export_files = [os.path.relpath(robotfile, outputdir + "/smurf")] if robotfile is not None else []
         submechanisms = {}
         if self.autogenerate_submechanisms is None or self.autogenerate_submechanisms is True:
@@ -583,7 +579,7 @@ class Robot(SMURFRobot):
                 else:
                     log.warning(f"File {sm.file_path} does already exist. Not exported submechanism urdf.")
                 self.remove_submodel(name="#sub_mech#")
-        for annotation in smurf_annotations:
+        for annotation in self.smurf_annotation_keys:
             # Check if exists and not empty
             if hasattr(self, annotation) and getattr(self, annotation):
                 annotation_dict = {annotation: []}
@@ -606,7 +602,7 @@ class Robot(SMURFRobot):
 
         # further annotations
         for k, v in self.annotations.items():
-            if k not in smurf_annotations:
+            if k not in self.smurf_annotation_keys:
                 with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w+") as stream:
                     stream.write(dump_json({k: v}, default_style=False))
                     export_files.append(os.path.split(stream.name)[-1])
@@ -617,7 +613,7 @@ class Robot(SMURFRobot):
             #                     os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)) +
             #                     "\nPlease choose another name for you annotation")
             # else:
-            if len(v) > 0:
+            if len(v) > 0 and k not in self.smurf_annotation_keys:
                 with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w") as stream:
                     stream.write(dump_json({k: v}, default_style=False))
                     export_files.append(os.path.split(stream.name)[-1])
