@@ -688,6 +688,7 @@ class ConstraintAxis(SmurfBase):
 
 class Joint(Representation, SmurfBase):
     TYPES = ['revolute', 'continuous', 'prismatic', 'floating', 'planar', 'fixed']
+    ADVANCED_TYPES = ['unknown', "revolute2", "screw", "ball", "universal"]
 
     type_dict = {
         "parent": "links",
@@ -748,7 +749,7 @@ class Joint(Representation, SmurfBase):
             self.check_linkage()
 
     def check_valid(self):
-        return (self.joint_type in self.TYPES, "Invalid joint type: {}".format(self.joint_type) and  # noqa
+        return (self.joint_type in self.TYPES + self.ADVANCED_TYPES, "Invalid joint type: {}".format(self.joint_type) and  # noqa
                 (self._related_robot_instance is None or
                  (self._related_robot_instance.get_link(self.parent) is not None and
                   self._related_robot_instance.get_link(self.child) is not None)))

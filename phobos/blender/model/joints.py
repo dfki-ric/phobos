@@ -606,3 +606,31 @@ def set_planar(joint):
     crot.min_z = 0
     crot.max_z = 0
     crot.owner_space = 'LOCAL'
+
+
+def set_ball(joint):
+    """
+
+    Args:
+      joint:
+      lower:
+      upper:
+
+    Returns:
+
+    """
+    # fix location
+    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+    cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
+    cloc.use_min_x = True
+    cloc.use_min_y = True
+    cloc.use_min_z = True
+    cloc.use_max_x = True
+    cloc.use_max_y = True
+    cloc.use_max_z = True
+    cloc.owner_space = 'LOCAL'
+    # fix rotation x, z
+    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+    crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.owner_space = 'LOCAL'
+
