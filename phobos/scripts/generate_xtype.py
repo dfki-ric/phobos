@@ -115,7 +115,7 @@ def main(args):
     # detect default values
     _default_db_interface = "CLIENT"
     _default_db_path = "0.0.0.0:8183"
-    _default_db_graph = None
+    _default_db_graph = "hardware"
 
     robot_file = None
     for root, dirs, files in os.walk(args.model_directory):
@@ -146,17 +146,19 @@ def main(args):
     _default_cm["version"] = current_branch[1:] if current_branch.startswith("v") and "." in current_branch else "0.0.1"
     _default_cm["date"] = datetime.date.today().isoformat()
     _default_cm["projectName"] = cm.projectName
-    _default_cm["domain"] = "MECHANICS"
+    _default_cm["domain"] = "ASSEMBLY"
     _default_cm["maturity"] = cm.maturity
     _default_cm["atomic"] = True
     _author, _maintainer, _default_er["remote_url"] = git.get_repo_data(args.model_directory)
     _default_cm["designedBy"] = ", ".join({_author, _maintainer}).replace("[", "").replace("]", "")
-    _default_cm["designedBy"] = _default_cm["designedBy"] if len(_default_cm["designedBy"]) > 0 or _default_cm["designedBy"] is not None else cm.designedBy
+    _default_cm["designedBy"] = _default_cm["designedBy"]\
+        if len(_default_cm["designedBy"]) > 0 or _default_cm["designedBy"] is not None else cm.designedBy
 
     _default_er["revision_type"] = "BRANCH"
     _default_er["revision_name"] = git.get_branch(args.model_directory)
     if _default_er["remote_url"].startswith("git@"):
-        _default_er["remote_url"] = _default_er["remote_url"].replace(":", "/").replace("//", "/").replace("git@", "https://")
+        _default_er["remote_url"] = _default_er["remote_url"].replace(":", "/").replace("//", "/")\
+            .replace("git@", "https://")
     _default_er["name"] = "model_repository"
     _default_er["description"] = "This repository contains the SMURF (etc.) simulation and control models."
     _default_er["vcs_type"] = "GIT"
@@ -167,9 +169,10 @@ def main(args):
         print("How to connect to the database:")
         while xdbi is None:
             if args.db_interface is None:
-                args.db_interface = query_var("  db_interface", _default_db_interface, choices=["CLIENT", "SERVERLESS"]).upper()
+                args.db_interface = query_var("  db_interface", _default_db_interface,
+                                              choices=["CLIENT", "SERVERLESS"]).upper()
             if args.db_path is None:
-                args.db_path = query_var("  db_path", _default_db_path )
+                args.db_path = query_var("  db_path", _default_db_path)
             if args.db_interface.upper() == "CLIENT":
                 xdbi = xdbi_py.Client(xtypes_py.ProjectRegistry(), args.db_path)
                 if not xdbi.isConnected():
@@ -187,11 +190,13 @@ def main(args):
         print("Define the ComponentModel properties:")
         for k, v in sorted(_default_cm.items(), key=lambda x: order_component_model_properties(x[0])):
             if getattr(args, "cm_"+k) is None:
-                setattr(args, "cm_"+k, query_var("  "+k, v, allow_none=v is None, choices=cm.get_allowed_property_values(k)))
+                setattr(args, "cm_"+k, query_var("  "+k, v, allow_none=v is None,
+                                                 choices=cm.get_allowed_property_values(k)))
         print("Define the ExternaleReference properties:")
         for k, v in sorted(_default_er.items(), key=lambda x: order_external_reference_properties(x[0])):
             if getattr(args, "er_"+k) is None:
-                setattr(args, "er_"+k, query_var("  "+k, v, allow_none=v is None, choices=er.get_allowed_property_values(k)))
+                setattr(args, "er_"+k, query_var("  "+k, v, allow_none=v is None,
+                                                 choices=er.get_allowed_property_values(k)))
     else:
         if args.db_interface.upper() == "CLIENT":
             xdbi = xdbi_py.Client(xtypes_py.ProjectRegistry(), args.db_path)
