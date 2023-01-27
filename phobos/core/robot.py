@@ -270,16 +270,22 @@ class Robot(SMURFRobot):
                     inert = None
                 colls = []
                 for key2, entry in values["collision"].items():
-                    colls.append(representation.Collision(
-                        geometry=representation.GeometryFactory.create(**entry["geometry"]),
-                        origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
-                        name=entry["name"]))
+                    try:
+                        colls.append(representation.Collision(
+                            geometry=representation.GeometryFactory.create(**entry["geometry"]),
+                            origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
+                            name=entry["name"]))
+                    except TypeError:
+                        raise TypeError("You have probably not defined the geometry type for all collisions!")
                 vis = []
                 for key2, entry in values["visual"].items():
-                    vis.append(representation.Visual(geometry=representation.GeometryFactory.create(**entry["geometry"]),
-                                                     material=entry.get("material"),
-                                                     origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
-                                                     name=entry["name"]))
+                    try:
+                        vis.append(representation.Visual(geometry=representation.GeometryFactory.create(**entry["geometry"]),
+                                                         material=entry.get("material"),
+                                                         origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
+                                                         name=entry["name"]))
+                    except TypeError:
+                        raise TypeError("You have probably not defined the geometry type for all visuals!")
 
                 cli_links.append(representation.Link(
                     name=values['name'],
