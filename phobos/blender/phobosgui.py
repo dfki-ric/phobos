@@ -173,7 +173,6 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         if not bpy.context.scene.phobosexportsettings.path.endswith('/'):
             bpy.context.scene.phobosexportsettings.path += '/'
 
-
     def getXMLTypeListForEnumProp(self, context):
         """
 
