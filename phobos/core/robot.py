@@ -15,6 +15,7 @@ from .. import geometry as pgu, utils
 from ..geometry import get_reflection_matrix
 from ..io import representation, sensor_representations
 from ..io.hyrodyn import Submechanism, Exoskeleton
+from ..io.poses import JointPoseSet
 from ..io.xmlrobot import XMLRobot
 from ..io.smurfrobot import SMURFRobot
 from ..utils import transform, xml, misc, git
@@ -2200,7 +2201,7 @@ class Robot(SMURFRobot):
         psubmechanisms = set([str(m) for m in self.submechanisms])
         pexoskeletons = set([str(m) for m in self.exoskeletons])
         pinterfaces = set([str(m) for m in self.interfaces])
-        # pposes = set([m.name for m in self.poses])
+        pposes = set([m.name for m in self.poses])
 
         clink = set([str(link) for link in other.links])
         cjoints = set([str(j) for j in other.joints])
@@ -2213,7 +2214,7 @@ class Robot(SMURFRobot):
         csubmechanisms = set([str(m) for m in other.submechanisms])
         cexoskeletons = set([str(m) for m in other.exoskeletons])
         cinterfaces = set([str(m) for m in other.interfaces])
-        # cposes = set([m.name for m in other.poses])
+        cposes = set([m.name for m in other.poses])
 
         renamed_entities = {}
         joint.unlink_from_robot()
@@ -2319,6 +2320,23 @@ class Robot(SMURFRobot):
             else:
                 raise NameError("There are duplicates in interface names", repr(pinterfaces & cinterfaces))
 
+        new_poses = [p for p in pposes if p.name not in pposes & cposes] + [p for p in cposes if p.name not in pposes & cposes]
+        conflicting_poses = []
+        for pose_name in pposes & cposes:
+            ppose = [pp for pp in self.poses if pp.name == pose_name][0]
+            cpose = [cp for cp in other.poses if cp.name == pose_name][0]
+            if not ppose.conflicts_with(cpose):
+                new_poses.append(JointPoseSet.merge(ppose, cpose))
+            else:
+                conflicting_poses.append(pose_name)
+        if len(conflicting_poses) > 0:
+            if not do_not_rename:
+                log.warning(f"Pose names are duplicates a {name_suffix} will be appended! {conflicting_poses}")
+                renamed_entities.update(
+                    other.rename(targettype="pose", target=list(conflicting_poses), prefix=name_prefix, suffix=name_suffix))
+            else:
+                raise NameError("There are duplicates in pose names", repr(conflicting_poses))
+
         if renamed_entities != {}:
             return self.attach(other, joint, do_not_rename=do_not_rename,
                                link_other=True)  # this has been copied here already if link_other false
@@ -2340,9 +2358,9 @@ class Robot(SMURFRobot):
         self.add_aggregate('exoskeleton', other.exoskeletons)
         self.add_aggregate('interface', other.interfaces)
 
-        # [TODO pre_v2.0.0] check on poses
-        # for cPose in other.poses:
-        #     self.add_aggregate('pose', cPose)
+        self.poses = []
+        for cPose in new_poses:
+            self.add_aggregate('pose', cPose)
 
         joint.link_with_robot(self)
         self.add_aggregate('joint', joint)
