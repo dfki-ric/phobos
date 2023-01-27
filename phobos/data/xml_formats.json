@@ -59,7 +59,7 @@
           "rgba": "diffuse"
         },
         "texture": {
-          "filename": "texture"
+          "filename": "diffuseTexture"
         }
       }
     },

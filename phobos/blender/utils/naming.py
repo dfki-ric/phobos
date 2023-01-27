@@ -47,10 +47,6 @@ def safelyName(obj, name, phobostype=None):
      object is renamed, generating a name that no other object in Blender has, using Blender's own
      naming scheme. This prevents Blender to assign the name and change another object's name that
      previously held that name.
-    
-     If the ``name`` provided cannot be assigned to the object, it is stored in a
-     custom variable ``phobostype/name``. Note that other ``*/name`` variables in
-     the object are not updated.
 
     Args:
       obj(bpy.types.Object): object to rename
@@ -73,12 +69,6 @@ def safelyName(obj, name, phobostype=None):
         log("Acquired unique name for Blender object: " + objectname, 'DEBUG')
         obj.name = objectname
 
-    # use custom property if the object.name can not be set properly
-    if objectname != name:
-        obj[phobostype + '/name'] = name
-    #elif phobostype + '/name' in obj:
-    #    del obj[phobostype + '/name']
-
     return obj.name
 
 
@@ -87,8 +77,7 @@ def getObjectName(obj, phobostype=None):
     An optional *phobostype* parameter can be provided for objects with multiple
     uses, such as link objects (which also contain joint and motor information).
     If no *phobostype* is provided, the phobostype of the object is used.
-    The contents of the custom property *phobostype*/name are returned, if present,
-    else the object name itself is returned, stripped of namespaces.
+    The object name itself is returned, stripped of namespaces.
 
     Args:
       obj(bpy.types.Object): object for which the name is requested
@@ -101,10 +90,7 @@ def getObjectName(obj, phobostype=None):
     if obj is None:
         return None
     nametype = phobostype if phobostype else obj.phobostype
-    try:
-        return obj[nametype + "/name"]
-    except KeyError:
-        return stripNamespaceFromName(obj.name)
+    return stripNamespaceFromName(obj.name)
 
 
 def isValidModelname(name):

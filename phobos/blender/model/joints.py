@@ -15,6 +15,7 @@ Contains the functions required to model a joint within Blender.
 
 import bpy
 import mathutils
+import numpy as np
 from phobos.blender.phoboslog import log
 import phobos.blender.utils.naming as nUtils
 import phobos.blender.utils.selection as sUtils
@@ -231,6 +232,7 @@ def setJointConstraints(
     damping=0.0,
     maxeffort_approximation=None,
     maxspeed_approximation=None,
+    axis = None
 ):
     """Sets the constraints for a given joint and jointtype.
     
@@ -265,6 +267,16 @@ def setJointConstraints(
     for cons in joint.pose.bones[0].constraints:
         joint.pose.bones[0].constraints.remove(cons)
 
+    if axis is not None:
+        axis = (np.array(axis) / np.linalg.norm(axis)).tolist()
+        if np.linalg.norm(axis) != 0:
+            bpy.ops.object.mode_set(mode='EDIT')
+            editbone = joint.data.edit_bones[0]
+            length = editbone.length
+            axis = mathutils.Vector(tuple(axis))
+            editbone.tail = editbone.head + axis.normalized() * length
+            bpy.ops.object.mode_set(mode='POSE')
+
     # add spring & damping
     if jointtype in ['revolute', 'prismatic'] and (spring or damping):
         try:
@@ -278,10 +290,6 @@ def setJointConstraints(
         # if the values below are changed manually by the user
         joint['joint/dynamics/springStiffness'] = spring
         joint['joint/dynamics/springDamping'] = damping
-        joint['joint/dynamics/spring_const_constraint_axis1'] = spring  # FIXME: this is a hack
-        joint[
-            'joint/dynamics/damping_const_constraint_axis1'
-        ] = damping  # FIXME: this is a hack, too
 
     # set constraints accordingly
     if jointtype == 'revolute':
@@ -598,3 +606,31 @@ def set_planar(joint):
     crot.min_z = 0
     crot.max_z = 0
     crot.owner_space = 'LOCAL'
+
+
+def set_ball(joint):
+    """
+
+    Args:
+      joint:
+      lower:
+      upper:
+
+    Returns:
+
+    """
+    # fix location
+    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+    cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
+    cloc.use_min_x = True
+    cloc.use_min_y = True
+    cloc.use_min_z = True
+    cloc.use_max_x = True
+    cloc.use_max_y = True
+    cloc.use_max_z = True
+    cloc.owner_space = 'LOCAL'
+    # fix rotation x, z
+    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+    crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.owner_space = 'LOCAL'
+

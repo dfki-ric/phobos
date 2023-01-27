@@ -15,6 +15,7 @@ from .. import geometry as pgu, utils
 from ..geometry import get_reflection_matrix
 from ..io import representation, sensor_representations
 from ..io.hyrodyn import Submechanism, Exoskeleton
+from ..io.poses import JointPoseSet
 from ..io.xmlrobot import XMLRobot
 from ..io.smurfrobot import SMURFRobot
 from ..utils import transform, xml, misc, git
@@ -137,7 +138,6 @@ class Robot(SMURFRobot):
             if joint.mimic is not None:
                 for k, v in joint.mimic.to_yaml().items():
                     model["joints"][joint.name]["mimic_"+k] = v
-            # [TODO pre_v2.0.0] dynamics, etc.
             model["links"][joint.child]["pose"] = {'translation': joint.origin.xyz,
                                                    'rotation_euler': joint.origin.rpy,
                                                   }
@@ -247,8 +247,8 @@ class Robot(SMURFRobot):
                     axis=values.get('axis'),
                     origin=representation.Pose.from_matrix(np.array(values['pose']['rawmatrix'])),
                     limit=cli_limit,
-                    springStiffness=values["dynamics"]["spring_const_constraint_axis1"] if "dynamics" in values else None,
-                    damping=values["dynamics"]["damping_const_constraint_axis1"] if "dynamics" in values else None,
+                    springStiffness=values["dynamics"]["springStiffness"] if "dynamics" in values else None,
+                    damping=values["dynamics"]["springDamping"] if "dynamics" in values else None,
                     safety_controller=None,
                     calibration=None,
                     mimic=representation.JointMimic(**mimic_dict) if len(mimic_dict) > 0 else None,
@@ -270,16 +270,22 @@ class Robot(SMURFRobot):
                     inert = None
                 colls = []
                 for key2, entry in values["collision"].items():
-                    colls.append(representation.Collision(
-                        geometry=representation.GeometryFactory.create(**entry["geometry"]),
-                        origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
-                        name=entry["name"]))
+                    try:
+                        colls.append(representation.Collision(
+                            geometry=representation.GeometryFactory.create(**entry["geometry"]),
+                            origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
+                            name=entry["name"]))
+                    except TypeError:
+                        raise TypeError("You have probably not defined the geometry type for all collisions!")
                 vis = []
                 for key2, entry in values["visual"].items():
-                    vis.append(representation.Visual(geometry=representation.GeometryFactory.create(**entry["geometry"]),
-                                                     material=entry.get("material"),
-                                                     origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
-                                                     name=entry["name"]))
+                    try:
+                        vis.append(representation.Visual(geometry=representation.GeometryFactory.create(**entry["geometry"]),
+                                                         material=entry.get("material"),
+                                                         origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
+                                                         name=entry["name"]))
+                    except TypeError:
+                        raise TypeError("You have probably not defined the geometry type for all visuals!")
 
                 cli_links.append(representation.Link(
                     name=values['name'],
@@ -290,7 +296,6 @@ class Robot(SMURFRobot):
             mats = []
             for key, value in blender_model['materials'].items():
                 mats.append(representation.Material(name=value.pop('name'),
-                                                    texture=None,
                                                     **value))
             if blender_model['version'] != '1.0':
                 log.info(f"Versionscheck übersprungen. Version ist : {blender_model['version']}")
@@ -370,6 +375,9 @@ class Robot(SMURFRobot):
         If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
         If export_collisions is set to to True, all collisions will be exported. Otherwise no collision get exported.
         """
+        if any([j.joint_type in j.ADVANCED_TYPES for j in self.joints]):
+            raise AssertionError(f"Can't export joints with a type in {representation.Joint.ADVANCED_TYPES} to a URDF")
+
         if float_fmt_dict is None:
             float_fmt_dict = {}
         self.joints = self.get_joints_ordered_df()
@@ -554,10 +562,6 @@ class Robot(SMURFRobot):
         if not os.path.exists(smurf_dir):
             os.mkdir(smurf_dir)
         # Export attr
-        smurf_annotations = [
-            'motors', 'sensors', 'materials', "joints", "links", 'collisions', 'poses',
-            "submechanisms", "exoskeletons", "interfaces"
-        ]
         export_files = [os.path.relpath(robotfile, outputdir + "/smurf")] if robotfile is not None else []
         submechanisms = {}
         if self.autogenerate_submechanisms is None or self.autogenerate_submechanisms is True:
@@ -584,7 +588,7 @@ class Robot(SMURFRobot):
                 else:
                     log.warning(f"File {sm.file_path} does already exist. Not exported submechanism urdf.")
                 self.remove_submodel(name="#sub_mech#")
-        for annotation in smurf_annotations:
+        for annotation in self.smurf_annotation_keys:
             # Check if exists and not empty
             if hasattr(self, annotation) and getattr(self, annotation):
                 annotation_dict = {annotation: []}
@@ -607,7 +611,7 @@ class Robot(SMURFRobot):
 
         # further annotations
         for k, v in self.annotations.items():
-            if k not in smurf_annotations:
+            if k not in self.smurf_annotation_keys:
                 with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w+") as stream:
                     stream.write(dump_json({k: v}, default_style=False))
                     export_files.append(os.path.split(stream.name)[-1])
@@ -618,7 +622,7 @@ class Robot(SMURFRobot):
             #                     os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)) +
             #                     "\nPlease choose another name for you annotation")
             # else:
-            if len(v) > 0:
+            if len(v) > 0 and k not in self.smurf_annotation_keys:
                 with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w") as stream:
                     stream.write(dump_json({k: v}, default_style=False))
                     export_files.append(os.path.split(stream.name)[-1])
@@ -2192,7 +2196,6 @@ class Robot(SMURFRobot):
             raise Exception("Provide valid joint type.")
 
         # Check for naming and rename if necessary
-        # [TODO pre_v2.0.0] attach the rest
         plink = set([str(link) for link in self.links])
         pjoints = set([str(j) for j in self.joints])
         pcollisions = set([str(c) for c in self.get_all_collisions()])
@@ -2204,7 +2207,7 @@ class Robot(SMURFRobot):
         psubmechanisms = set([str(m) for m in self.submechanisms])
         pexoskeletons = set([str(m) for m in self.exoskeletons])
         pinterfaces = set([str(m) for m in self.interfaces])
-        # pposes = set([m.name for m in self.poses])
+        pposes = set([m.name for m in self.poses])
 
         clink = set([str(link) for link in other.links])
         cjoints = set([str(j) for j in other.joints])
@@ -2217,7 +2220,7 @@ class Robot(SMURFRobot):
         csubmechanisms = set([str(m) for m in other.submechanisms])
         cexoskeletons = set([str(m) for m in other.exoskeletons])
         cinterfaces = set([str(m) for m in other.interfaces])
-        # cposes = set([m.name for m in other.poses])
+        cposes = set([m.name for m in other.poses])
 
         renamed_entities = {}
         joint.unlink_from_robot()
@@ -2235,7 +2238,7 @@ class Robot(SMURFRobot):
 
         if pjoints & cjoints:
             if not do_not_rename:
-                log.warning(f"Joint names are duplicates a _2 will be appended! {pjoints & cjoints}")
+                log.warning(f"Joint names are duplicates a {name_suffix} will be appended! {pjoints & cjoints}")
                 renamed_entities.update(other.rename(targettype="joint", target=list(pjoints & cjoints), prefix=name_prefix, suffix=name_suffix))
                 if joint.name in list(pjoints & cjoints):
                     joint.name = joint.name + "_2"
@@ -2244,7 +2247,7 @@ class Robot(SMURFRobot):
 
         if pcollisions & ccollisions:
             if not do_not_rename:
-                log.warning(f"Collision names are duplicates a _2 will be appended! {pcollisions & ccollisions}")
+                log.warning(f"Collision names are duplicates a {name_suffix} will be appended! {pcollisions & ccollisions}")
                 renamed_entities.update(
                     other.rename(targettype="collision", target=list(pcollisions & ccollisions), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2252,7 +2255,7 @@ class Robot(SMURFRobot):
 
         if pvisuals & cvisuals:
             if not do_not_rename:
-                log.warning(f"Visual names are duplicates a _2 will be appended! {pvisuals & cvisuals}")
+                log.warning(f"Visual names are duplicates a {name_suffix} will be appended! {pvisuals & cvisuals}")
                 renamed_entities.update(
                     other.rename(targettype="visual", target=list(pvisuals & cvisuals), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2263,7 +2266,7 @@ class Robot(SMURFRobot):
                 cmaterials.remove(mat_name)
         if pmaterials & cmaterials:
             if not do_not_rename:
-                log.warning(f"Material names are duplicates a _2 will be appended! {pmaterials & cmaterials}")
+                log.warning(f"Material names are duplicates a {name_suffix} will be appended! {pmaterials & cmaterials}")
                 renamed_entities.update(
                     other.rename(targettype="material", target=list(pmaterials & cmaterials), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2277,7 +2280,7 @@ class Robot(SMURFRobot):
                 conflicting_sensors.remove(sname)
         if conflicting_sensors:
             if not do_not_rename:
-                log.warning(f"Sensor names are duplicates a _2 will be appended! {conflicting_sensors}")
+                log.warning(f"Sensor names are duplicates a {name_suffix} will be appended! {conflicting_sensors}")
                 renamed_entities.update(
                     other.rename(targettype="sensor", target=list(conflicting_sensors), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2285,7 +2288,7 @@ class Robot(SMURFRobot):
         
         if ptransmissions & ctransmissions:
             if not do_not_rename:
-                log.warning(f"Transmission names are duplicates a _2 will be appended! {ptransmissions & ctransmissions}")
+                log.warning(f"Transmission names are duplicates a {name_suffix} will be appended! {ptransmissions & ctransmissions}")
                 renamed_entities.update(
                     other.rename(targettype="transmission", target=list(ptransmissions & ctransmissions), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2293,7 +2296,7 @@ class Robot(SMURFRobot):
             
         if pmotors & cmotors:
             if not do_not_rename:
-                log.warning(f"Motor names are duplicates a _2 will be appended! {pmotors & cmotors}")
+                log.warning(f"Motor names are duplicates a {name_suffix} will be appended! {pmotors & cmotors}")
                 renamed_entities.update(
                     other.rename(targettype="motor", target=list(pmotors & cmotors), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2301,7 +2304,7 @@ class Robot(SMURFRobot):
             
         if pexoskeletons & cexoskeletons:
             if not do_not_rename:
-                log.warning(f"Exoskeleton names are duplicates a _2 will be appended! {pexoskeletons & cexoskeletons}")
+                log.warning(f"Exoskeleton names are duplicates a {name_suffix} will be appended! {pexoskeletons & cexoskeletons}")
                 renamed_entities.update(
                     other.rename(targettype="exoskeleton", target=list(pexoskeletons & cexoskeletons), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2309,7 +2312,7 @@ class Robot(SMURFRobot):
             
         if psubmechanisms & csubmechanisms:
             if not do_not_rename:
-                log.warning(f"Submechanism names are duplicates a _2 will be appended! {psubmechanisms & csubmechanisms}")
+                log.warning(f"Submechanism names are duplicates a {name_suffix} will be appended! {psubmechanisms & csubmechanisms}")
                 renamed_entities.update(
                     other.rename(targettype="submechanism", target=list(psubmechanisms & csubmechanisms), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2317,11 +2320,28 @@ class Robot(SMURFRobot):
 
         if pinterfaces & cinterfaces:
             if not do_not_rename:
-                log.warning(f"Interface names are duplicates a _2 will be appended! {pinterfaces & cinterfaces}")
+                log.warning(f"Interface names are duplicates a {name_suffix} will be appended! {pinterfaces & cinterfaces}")
                 renamed_entities.update(
                     other.rename(targettype="interface", target=list(pinterfaces & cinterfaces), prefix=name_prefix, suffix=name_suffix))
             else:
                 raise NameError("There are duplicates in interface names", repr(pinterfaces & cinterfaces))
+
+        new_poses = [p for p in pposes if p.name not in pposes & cposes] + [p for p in cposes if p.name not in pposes & cposes]
+        conflicting_poses = []
+        for pose_name in pposes & cposes:
+            ppose = [pp for pp in self.poses if pp.name == pose_name][0]
+            cpose = [cp for cp in other.poses if cp.name == pose_name][0]
+            if not ppose.conflicts_with(cpose):
+                new_poses.append(JointPoseSet.merge(ppose, cpose))
+            else:
+                conflicting_poses.append(pose_name)
+        if len(conflicting_poses) > 0:
+            if not do_not_rename:
+                log.warning(f"Pose names are duplicates a {name_suffix} will be appended! {conflicting_poses}")
+                renamed_entities.update(
+                    other.rename(targettype="pose", target=list(conflicting_poses), prefix=name_prefix, suffix=name_suffix))
+            else:
+                raise NameError("There are duplicates in pose names", repr(conflicting_poses))
 
         if renamed_entities != {}:
             return self.attach(other, joint, do_not_rename=do_not_rename,
@@ -2344,9 +2364,9 @@ class Robot(SMURFRobot):
         self.add_aggregate('exoskeleton', other.exoskeletons)
         self.add_aggregate('interface', other.interfaces)
 
-        # [TODO pre_v2.0.0] check on poses
-        # for cPose in other.poses:
-        #     self.add_aggregate('pose', cPose)
+        self.poses = []
+        for cPose in new_poses:
+            self.add_aggregate('pose', cPose)
 
         joint.link_with_robot(self)
         self.add_aggregate('joint', joint)
@@ -2358,14 +2378,6 @@ class Robot(SMURFRobot):
         assert len(self.joints) == len(self.links) - 1
         assert len(self.joints) == len(self.get_joints_ordered_df()), f"{sorted([str(x) for x in self.joints])}\n{sorted([str(x) for x in self.get_joints_ordered_df()])}"
         assert self.get_root()
-
-        # this will be done by fill_submechanisms we are delaying this to the export to give the user the opportunity to define something thereselves
-        # # Add the connection joint to the submechanism tree
-        # self.submechanisms += [Submechanism(self, name=joint.name, type="serial", contextual_name="ConnectionJoint",
-        #                                     jointnames_independent=[] if joint.type == "fixed" else [joint.name],
-        #                                     jointnames_spanningtree=[] if joint.type == "fixed" else [joint.name],
-        #                                     jointnames_active=[] if joint.type == "fixed" else [joint.name],
-        #                                     jointnames=[joint.name])]
 
         self.relink_entities()
         return renamed_entities

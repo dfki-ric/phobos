@@ -85,7 +85,7 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
     Returns:
 
     """
-    if bpy.context.scene.phobosexportsettings.relativePath:
+    if not os.path.isabs(bpy.context.scene.phobosexportsettings.path):
         # CHECK careful with path consistency (Windows)
         outpath = securepath(
             os.path.expanduser(

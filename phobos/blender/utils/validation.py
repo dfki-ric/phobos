@@ -515,7 +515,7 @@ def validateMaterial(material, adjust=False):
                         )
                     )
     else:
-        if 'name' not in material:
+        if not hasattr(material, "name"):
             if adjust:
                 material = {'name': 'phobos_error'}
                 loglevel = 'WARNING'

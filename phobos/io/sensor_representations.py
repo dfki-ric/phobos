@@ -121,7 +121,7 @@ class RotatingRaySensor(Sensor):
             if opening_height is None and "opening_height" not in kwargs:
                 kwargs["opening_height"] = kwargs["vertical_resolution"] * lasers
             kwargs.pop("vertical_resolution")
-        super().__init__(name=name, joint=None, link=link, sensortype='RotatingRaySensor', _sdf_type="lidar", _blender_type="Rotating_ray_sensor"**kwargs)
+        super().__init__(name=name, joint=None, link=link, sensortype='RotatingRaySensor', _sdf_type="lidar", _blender_type="Rotating_ray_sensor", **kwargs)
         self.bands = bands
         self.draw_rays = draw_rays
         self.horizontal_offset = horizontal_offset

@@ -21,7 +21,6 @@ log = get_logger(__name__)
 SUBMECHS_VIA_ASSEMBLIES = False
 
 
-# [TODO pre_v2.0.0] simplify config files
 class BaseModel(yaml.YAMLObject):
     def __init__subclass__(self, configfile, pipeline, processed_model_exists=True):
         self.processed_model_exists = processed_model_exists

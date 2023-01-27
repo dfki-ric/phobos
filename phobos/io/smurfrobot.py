@@ -19,6 +19,11 @@ log = get_logger(__name__)
 class SMURFRobot(XMLRobot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
                  inputfile=None, description=None, autogenerate_submechanisms=None, is_human=False):
+        self.smurf_annotation_keys = [
+            'motors', 'sensors', 'materials', "joints", "links", 'collisions', 'poses',
+            "submechanisms", "exoskeletons", "interfaces"
+        ]
+
         self.name = name
         self.smurffile = None
         self.submechanisms_file = None
@@ -421,7 +426,7 @@ class SMURFRobot(XMLRobot):
                         self.exoskeletons.remove(existing)
             self.add_aggregate("exoskeletons", _ex)
 
-    def sort_submechanisms(self):  # [TODO pre_v2.0.0] The submechanisms are not ordered correctly
+    def sort_submechanisms(self):
         """
         Sorts the submechanisms as well as there jointname lists
         :return: None
@@ -457,7 +462,7 @@ class SMURFRobot(XMLRobot):
             sm_joints += sm.get_joints()
         return twice
 
-    def generate_submechanisms(self):  # [TODO pre_v2.0.0] The fixed joints are not sorted correctly
+    def generate_submechanisms(self):
         """
         Scans the defined submechanisms and creates the entries for missing joints
         :return: None

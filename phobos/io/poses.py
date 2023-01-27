@@ -81,3 +81,16 @@ class JointPoseSet(SmurfBase):
                     self.configuration.append(
                         JointPose(joint=c_joint, position=position)
                     )
+
+    def conflicts_with(self, other):
+        for tc in self.configuration:
+            for oc in other.configuration:
+                if tc.joint == oc.joint and tc.position != oc.position:
+                    return True
+        return False
+
+    @classmethod
+    def merge(cls, first, second):
+        assert not first.conflicts_with(second)
+        first_joints = [str(p.joint) for p in first.configuration]
+        return first.configuration + [jp for jp in second.configuration if str(jp.joint) not in first_joints]

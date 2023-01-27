@@ -408,6 +408,8 @@ classes = (
     FixObjectNames,
     ChangeObjectName,
 )
+
+
 def register():
     """TODO Missing documentation"""
     print("Registering operators.naming...")

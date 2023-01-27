@@ -17,7 +17,7 @@ import os
 import bpy
 import bpy.utils.previews
 import phobos.blender.defs as defs
-import phobos.blender.utils.blender as bUtils
+from phobos.utils.resources import get_blender_resources_path
 from phobos.blender.phoboslog import log
 
 
@@ -51,13 +51,7 @@ def compileMechanismList():
 
     log("Compiling mechanism list from local library...", "INFO")
 
-    try:
-        phobosconfig = bUtils.getPhobosConfigPath()
-    except KeyError:
-        log('Can not create mechanism preview. Phobos not registered.', 'DEBUG')
-        return
-
-    imagefolderpath = os.path.join(phobosconfig, 'images', 'mechanisms')
+    imagefolderpath = get_blender_resources_path('images', 'mechanisms')
     if imagefolderpath == '' or not os.path.exists(imagefolderpath):
         log('Visual mechanism representations could not be found.')
         return
