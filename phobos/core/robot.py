@@ -137,7 +137,6 @@ class Robot(SMURFRobot):
             if joint.mimic is not None:
                 for k, v in joint.mimic.to_yaml().items():
                     model["joints"][joint.name]["mimic_"+k] = v
-            # [TODO pre_v2.0.0] dynamics, etc.
             model["links"][joint.child]["pose"] = {'translation': joint.origin.xyz,
                                                    'rotation_euler': joint.origin.rpy,
                                                   }
@@ -2190,7 +2189,6 @@ class Robot(SMURFRobot):
             raise Exception("Provide valid joint type.")
 
         # Check for naming and rename if necessary
-        # [TODO pre_v2.0.0] attach the rest
         plink = set([str(link) for link in self.links])
         pjoints = set([str(j) for j in self.joints])
         pcollisions = set([str(c) for c in self.get_all_collisions()])
@@ -2233,7 +2231,7 @@ class Robot(SMURFRobot):
 
         if pjoints & cjoints:
             if not do_not_rename:
-                log.warning(f"Joint names are duplicates a _2 will be appended! {pjoints & cjoints}")
+                log.warning(f"Joint names are duplicates a {name_suffix} will be appended! {pjoints & cjoints}")
                 renamed_entities.update(other.rename(targettype="joint", target=list(pjoints & cjoints), prefix=name_prefix, suffix=name_suffix))
                 if joint.name in list(pjoints & cjoints):
                     joint.name = joint.name + "_2"
@@ -2242,7 +2240,7 @@ class Robot(SMURFRobot):
 
         if pcollisions & ccollisions:
             if not do_not_rename:
-                log.warning(f"Collision names are duplicates a _2 will be appended! {pcollisions & ccollisions}")
+                log.warning(f"Collision names are duplicates a {name_suffix} will be appended! {pcollisions & ccollisions}")
                 renamed_entities.update(
                     other.rename(targettype="collision", target=list(pcollisions & ccollisions), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2250,7 +2248,7 @@ class Robot(SMURFRobot):
 
         if pvisuals & cvisuals:
             if not do_not_rename:
-                log.warning(f"Visual names are duplicates a _2 will be appended! {pvisuals & cvisuals}")
+                log.warning(f"Visual names are duplicates a {name_suffix} will be appended! {pvisuals & cvisuals}")
                 renamed_entities.update(
                     other.rename(targettype="visual", target=list(pvisuals & cvisuals), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2261,7 +2259,7 @@ class Robot(SMURFRobot):
                 cmaterials.remove(mat_name)
         if pmaterials & cmaterials:
             if not do_not_rename:
-                log.warning(f"Material names are duplicates a _2 will be appended! {pmaterials & cmaterials}")
+                log.warning(f"Material names are duplicates a {name_suffix} will be appended! {pmaterials & cmaterials}")
                 renamed_entities.update(
                     other.rename(targettype="material", target=list(pmaterials & cmaterials), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2275,7 +2273,7 @@ class Robot(SMURFRobot):
                 conflicting_sensors.remove(sname)
         if conflicting_sensors:
             if not do_not_rename:
-                log.warning(f"Sensor names are duplicates a _2 will be appended! {conflicting_sensors}")
+                log.warning(f"Sensor names are duplicates a {name_suffix} will be appended! {conflicting_sensors}")
                 renamed_entities.update(
                     other.rename(targettype="sensor", target=list(conflicting_sensors), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2283,7 +2281,7 @@ class Robot(SMURFRobot):
         
         if ptransmissions & ctransmissions:
             if not do_not_rename:
-                log.warning(f"Transmission names are duplicates a _2 will be appended! {ptransmissions & ctransmissions}")
+                log.warning(f"Transmission names are duplicates a {name_suffix} will be appended! {ptransmissions & ctransmissions}")
                 renamed_entities.update(
                     other.rename(targettype="transmission", target=list(ptransmissions & ctransmissions), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2291,7 +2289,7 @@ class Robot(SMURFRobot):
             
         if pmotors & cmotors:
             if not do_not_rename:
-                log.warning(f"Motor names are duplicates a _2 will be appended! {pmotors & cmotors}")
+                log.warning(f"Motor names are duplicates a {name_suffix} will be appended! {pmotors & cmotors}")
                 renamed_entities.update(
                     other.rename(targettype="motor", target=list(pmotors & cmotors), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2299,7 +2297,7 @@ class Robot(SMURFRobot):
             
         if pexoskeletons & cexoskeletons:
             if not do_not_rename:
-                log.warning(f"Exoskeleton names are duplicates a _2 will be appended! {pexoskeletons & cexoskeletons}")
+                log.warning(f"Exoskeleton names are duplicates a {name_suffix} will be appended! {pexoskeletons & cexoskeletons}")
                 renamed_entities.update(
                     other.rename(targettype="exoskeleton", target=list(pexoskeletons & cexoskeletons), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2307,7 +2305,7 @@ class Robot(SMURFRobot):
             
         if psubmechanisms & csubmechanisms:
             if not do_not_rename:
-                log.warning(f"Submechanism names are duplicates a _2 will be appended! {psubmechanisms & csubmechanisms}")
+                log.warning(f"Submechanism names are duplicates a {name_suffix} will be appended! {psubmechanisms & csubmechanisms}")
                 renamed_entities.update(
                     other.rename(targettype="submechanism", target=list(psubmechanisms & csubmechanisms), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2315,7 +2313,7 @@ class Robot(SMURFRobot):
 
         if pinterfaces & cinterfaces:
             if not do_not_rename:
-                log.warning(f"Interface names are duplicates a _2 will be appended! {pinterfaces & cinterfaces}")
+                log.warning(f"Interface names are duplicates a {name_suffix} will be appended! {pinterfaces & cinterfaces}")
                 renamed_entities.update(
                     other.rename(targettype="interface", target=list(pinterfaces & cinterfaces), prefix=name_prefix, suffix=name_suffix))
             else:
@@ -2356,14 +2354,6 @@ class Robot(SMURFRobot):
         assert len(self.joints) == len(self.links) - 1
         assert len(self.joints) == len(self.get_joints_ordered_df()), f"{sorted([str(x) for x in self.joints])}\n{sorted([str(x) for x in self.get_joints_ordered_df()])}"
         assert self.get_root()
-
-        # this will be done by fill_submechanisms we are delaying this to the export to give the user the opportunity to define something thereselves
-        # # Add the connection joint to the submechanism tree
-        # self.submechanisms += [Submechanism(self, name=joint.name, type="serial", contextual_name="ConnectionJoint",
-        #                                     jointnames_independent=[] if joint.type == "fixed" else [joint.name],
-        #                                     jointnames_spanningtree=[] if joint.type == "fixed" else [joint.name],
-        #                                     jointnames_active=[] if joint.type == "fixed" else [joint.name],
-        #                                     jointnames=[joint.name])]
 
         self.relink_entities()
         return renamed_entities

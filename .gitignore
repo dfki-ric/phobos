@@ -11,3 +11,5 @@ doc/_build
 *.egg-info
 *.egg
 *_wip**
+tests/api/test_data/.temp**
+*.zip

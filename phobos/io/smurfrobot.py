@@ -426,7 +426,7 @@ class SMURFRobot(XMLRobot):
                         self.exoskeletons.remove(existing)
             self.add_aggregate("exoskeletons", _ex)
 
-    def sort_submechanisms(self):  # [TODO pre_v2.0.0] The submechanisms are not ordered correctly
+    def sort_submechanisms(self):
         """
         Sorts the submechanisms as well as there jointname lists
         :return: None
@@ -462,7 +462,7 @@ class SMURFRobot(XMLRobot):
             sm_joints += sm.get_joints()
         return twice
 
-    def generate_submechanisms(self):  # [TODO pre_v2.0.0] The fixed joints are not sorted correctly
+    def generate_submechanisms(self):
         """
         Scans the defined submechanisms and creates the entries for missing joints
         :return: None
