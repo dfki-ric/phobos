@@ -75,43 +75,50 @@ def export_bobj(outname, mesh):
     if not outname.endswith(".bobj"):
         outname += ".bobj"
 
-    out = open(outname, "wb")
-    for v in mesh.vertices:
-        out.write(struct.pack('ifff', 1, v[0], v[1], v[2]))
+    with open(outname, "wb") as out:
+        # vertices
+        N = len(mesh.vertices)
+        assert N > 0
+        A = np.array(mesh.vertices, dtype=np.single)
+        key = struct.unpack("f", struct.pack("i", 1))
+        out.write(np.c_[np.array([key]*N, dtype=np.single), A].tobytes())
 
-    # uv_face_mapping = {}
-    # if write_uv:
-    #     for tri in mesh.triangles:
-    #         uv_face_mapping[tri] = {}
-    #         for loop_index in tri.loops:
-    #             uv_face_mapping[tri][loop_index] = numUVs
-    #             numUVs += 1
-    #             out.write(struct.pack('iff', 2, uv_layer.data[loop_index].uv[0], uv_layer.data[loop_index].uv[1]))
+        # uv_face_mapping = {}
+        # if write_uv:
+        #     for tri in mesh.triangles:
+        #         uv_face_mapping[tri] = {}
+        #         for loop_index in tri.loops:
+        #             uv_face_mapping[tri][loop_index] = numUVs
+        #             numUVs += 1
+        #             out.write(struct.pack('iff', 2, uv_layer.data[loop_index].uv[0], uv_layer.data[loop_index].uv[1]))
 
-    for tri in mesh.triangles:
-        for v in tri:
-            n = geometry.round_vector(mesh.vertex_normals[geometry.get_vertex_id(v, mesh)])
-            if n not in global_normals:
-                global_normals[n] = num_normals
-                num_normals += 1
-                out.write(struct.pack('ifff', 3, n[0], n[1], n[2]))
+        # vertex_normals
+        assert len(mesh.vertex_normals) == len(mesh.vertices)
+        N = len(mesh.vertex_normals)
+        assert N > 0
+        A = np.array(mesh.vertex_normals, dtype=np.single)
+        key = struct.unpack("f", struct.pack("i", 3))
+        out.write(np.c_[np.array([key]*N, dtype=np.single), A].tobytes())
 
-    for tri in mesh.triangles:
-        da = struct.pack('i', 4)
-        out.write(da)
-        for v in tri:
-            v_index = geometry.get_vertex_id(v, mesh)
-            # if write_uv:
-            #     uvIndex = tri.loops[i]
-            #     #print(uv_face_mapping[tri])
-            #     uvFace = uv_face_mapping[tri][uvIndex]
-            #     da = struct.pack('iii', v_index + 1, uvFace, global_normals[roundV(v.normal)])
-            #     out.write(da)  # vert, uv, normal
-            # else:
-            da = struct.pack('iii', v_index + 1, 0, global_normals[geometry.round_vector(mesh.vertex_normals[v_index])])
-            out.write(da)  # vert, uv, normal
+        values = []
+        for tri in mesh.triangles:
+            values2 = [4]
+            assert len(tri) == 3
+            for v in tri:
+                v_index = geometry.get_vertex_id(v, mesh)
+                assert v_index >= 0
+                assert v_index < N
+                uvFace = 0
+                # if write_uv:
+                #     uvIndex = tri.loops[i]
+                #     #print(uv_face_mapping[tri])
+                #     uvFace = uv_face_mapping[tri][uvIndex]
+                values2 += [v_index + 1, uvFace, v_index + 1]
+            values.append(values2)
+            assert len(values2) == 10
+        A = np.array(values, dtype=np.intc)
+        out.write(A.tobytes())
 
-    out.close()
     # print("Exported", outname)
 
 
