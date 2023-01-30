@@ -382,7 +382,8 @@ class BaseModel(yaml.YAMLObject):
         # 3. save combined_model to the temp directory
         assert len(combined_model.links) == len(combined_model.joints) + 1
         combined_model.name = "combined_model"
-        combined_model.full_export(self.basedir, check_submechs=False)
+        combined_model.export(outputdir=self.basedir, export_config=resources.get_default_export_config("minimal"),
+                              check_submechs=False)
 
     def recreate_sym_links(self):
         for mt, mp in self.export_meshes.items():
@@ -741,8 +742,8 @@ class BaseModel(yaml.YAMLObject):
         return True
 
     def export(self):
-        ros_pkg_name = self.robot.export(self.exportdir, self.export_meshes, self.export_config,
-                                         ros_pkg_later=True)
+        ros_pkg_name = self.robot.export(outputdir=self.exportdir, export_config=self.export_config,
+                                         rel_mesh_pathes=self.export_meshes, ros_pkg_later=True)
 
         if hasattr(self, "deployment") and "keep_files" in self.deployment:
             git.reset(self.targetdir, "autobuild", "master")

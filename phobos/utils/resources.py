@@ -37,5 +37,9 @@ def get_default_export_config(version="default"):
     return DEFAULTS["export_config"][version]
 
 
+def get_default_rel_mesh_pathes():
+    return DEFAULTS["rel_mesh_pathes"]
+
+
 def get_blender_resources_path(*filepath):
     return get_resources_path("blender", *filepath)

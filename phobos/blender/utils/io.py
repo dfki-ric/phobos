@@ -587,8 +587,8 @@ def exportModel(model, exportpath='.', entitytypes=None):
             raise ValueError(f"Can't export for given format: {fmt}")
     robot.export(
         outputdir=exportpath,
-        rel_mesh_pathes=rel_mesh_pathes,
         export_config=export_config,
+        rel_mesh_pathes=rel_mesh_pathes,
         ros_pkg_name=None if len(getRosPackageName()) == 0 else getRosPackageName()
     )
 

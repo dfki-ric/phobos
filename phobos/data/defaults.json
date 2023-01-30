@@ -181,7 +181,7 @@
       }
     ]
   },
-  "export": {
+  "export_config": {
     "default": [
       {
         "type": "urdf",
@@ -203,7 +203,6 @@
         ],
         "link_in_smurf": false,
         "include_cut_joints": false,
-        "filename_suffix": "",
         "ros_pathes": false,
         "enforce_zero": false
       },
@@ -214,6 +213,17 @@
       },
       {
         "type": "pdf"
+      }
+    ],
+    "minimal": [
+      {
+        "type": "urdf",
+        "mesh_format": "stl",
+        "additional_meshes": [],
+        "link_in_smurf": true,
+        "include_cut_joints": false,
+        "ros_pathes": false,
+        "enforce_zero": false
       }
     ],
     "ros": [
@@ -237,7 +247,6 @@
         ],
         "link_in_smurf": false,
         "include_cut_joints": false,
-        "filename_suffix": "",
         "ros_pathes": true,
         "enforce_zero": false
       },
@@ -250,5 +259,13 @@
         "type": "pdf"
       }
     ]
+  },
+  "rel_mesh_pathes": {
+    "iv": "meshes/iv",
+    "stl": "meshes/stl",
+    "obj": "meshes/obj",
+    "dae": "meshes/dae",
+    "bobj": "meshes/bobj",
+    "mars_obj": "meshes/mars_obj"
   }
 }

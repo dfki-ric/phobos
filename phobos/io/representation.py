@@ -150,7 +150,6 @@ class Material(Representation, SmurfBase):
         self.ambient = color_parser(rgba=ambient)
         self.specular = color_parser(rgba=specular)
         self.emissive = color_parser(rgba=emissive)
-        print("M", diffuseTexture)
         self.diffuseTexture = diffuseTexture
         self.normalTexture = normalTexture
         self.original_name = name
