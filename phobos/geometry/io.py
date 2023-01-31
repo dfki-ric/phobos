@@ -24,6 +24,7 @@ def as_mesh(scene_or_mesh, scale=None):
     if hasattr(scene_or_mesh, "bounds") and scene_or_mesh.bounds is None:
         return None
     if isinstance(scene_or_mesh, trimesh.Scene):
+        log.error("Received a mesh with multiple materials, material information especially textures may be lost.")
         mesh = trimesh.util.concatenate([
             trimesh.Trimesh(vertices=m.vertices, faces=m.faces)
             for m in scene_or_mesh.geometry.values()])
@@ -39,6 +40,8 @@ def as_mesh(scene_or_mesh, scale=None):
             bm.free()
         vertices = np.asarray([np.asarray(scale * v.co) for v in blender_mesh.vertices])
         faces = np.array([[v for v in p.vertices] for p in blender_mesh.polygons], dtype=np.int64)
+        # [TODO pre_v2.0.0] Resolve the following error
+        log.error("Received a blender mesh, porting uv maps to trimesh representation are not yet supported and thus will be lost.")
         mesh = trimesh.Trimesh(vertices=vertices, faces=trimesh.geometry.triangulate_quads(faces))
     else:
         mesh = scene_or_mesh
@@ -51,9 +54,6 @@ def export_bobj(outname, mesh):
     Exports the mesh as bobj.
     [TODO v2.1.0] Export UVs, too
     """
-    num_normals = 1
-    # numUVs = 1
-    global_normals = {}
 
     # if hasattr(mesh.visual, "uv"):
     #     write_uv = True
@@ -80,7 +80,7 @@ def export_bobj(outname, mesh):
         N = len(mesh.vertices)
         assert N > 0
         A = np.array(mesh.vertices, dtype=np.single)
-        key = struct.unpack("f", struct.pack("i", 1))
+        key = struct.unpack("f", struct.pack("i", 1))  # data type trick for writing an int in a float array
         out.write(np.c_[np.array([key]*N, dtype=np.single), A].tobytes())
 
         # uv_face_mapping = {}
@@ -97,9 +97,10 @@ def export_bobj(outname, mesh):
         N = len(mesh.vertex_normals)
         assert N > 0
         A = np.array(mesh.vertex_normals, dtype=np.single)
-        key = struct.unpack("f", struct.pack("i", 3))
+        key = struct.unpack("f", struct.pack("i", 3))  # data type trick for writing an int in a float array
         out.write(np.c_[np.array([key]*N, dtype=np.single), A].tobytes())
 
+        # linking information for each triangle: vertex, uv, normal
         values = []
         for tri in mesh.triangles:
             values2 = [4]
