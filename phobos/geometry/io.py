@@ -17,6 +17,7 @@ from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 
+# ToDo have a mesh representation that deals with either blender or trimesh depending on whats available
 def as_mesh(scene_or_mesh, scale=None):
     if scale is None:
         scale = [1.0, 1.0, 1.0]
@@ -55,11 +56,10 @@ def export_bobj(outname, mesh):
     [TODO v2.1.0] Export UVs, too
     """
 
-    # if hasattr(mesh.visual, "uv"):
-    #     write_uv = True
-    #     uv_layer = mesh.visual.uv
-    # else:
-    #     write_uv = False
+    if hasattr(mesh.visual, "uv"):
+        write_uv = True
+    else:
+        write_uv = False
 
     if os.path.isfile(outname):
         # [TODO v2.1.0] load bobj mesh
@@ -83,19 +83,17 @@ def export_bobj(outname, mesh):
         key = struct.unpack("f", struct.pack("i", 1))  # data type trick for writing an int in a float array
         out.write(np.c_[np.array([key]*N, dtype=np.single), A].tobytes())
 
-        # uv_face_mapping = {}
-        # if write_uv:
-        #     for tri in mesh.triangles:
-        #         uv_face_mapping[tri] = {}
-        #         for loop_index in tri.loops:
-        #             uv_face_mapping[tri][loop_index] = numUVs
-        #             numUVs += 1
-        #             out.write(struct.pack('iff', 2, uv_layer.data[loop_index].uv[0], uv_layer.data[loop_index].uv[1]))
+        if write_uv:
+            # uv maps
+            assert len(mesh.visual.uv) == len(mesh.vertices)
+            N = len(mesh.visual.uv)
+            A = np.array(mesh.visual.uv, dtype=np.single)
+            key = struct.unpack("f", struct.pack("i", 2))  # data type trick for writing an int in a float array
+            out.write(np.c_[np.array([key]*N, dtype=np.single), A].tobytes())
 
         # vertex_normals
         assert len(mesh.vertex_normals) == len(mesh.vertices)
         N = len(mesh.vertex_normals)
-        assert N > 0
         A = np.array(mesh.vertex_normals, dtype=np.single)
         key = struct.unpack("f", struct.pack("i", 3))  # data type trick for writing an int in a float array
         out.write(np.c_[np.array([key]*N, dtype=np.single), A].tobytes())
@@ -109,12 +107,7 @@ def export_bobj(outname, mesh):
                 v_index = geometry.get_vertex_id(v, mesh)
                 assert v_index >= 0
                 assert v_index < N
-                uvFace = 0
-                # if write_uv:
-                #     uvIndex = tri.loops[i]
-                #     #print(uv_face_mapping[tri])
-                #     uvFace = uv_face_mapping[tri][uvIndex]
-                values2 += [v_index + 1, uvFace, v_index + 1]
+                values2 += [v_index + 1]*3 if write_uv else [v_index + 1, 0, v_index + 1]
             values.append(values2)
             assert len(values2) == 10
         A = np.array(values, dtype=np.intc)
@@ -231,7 +224,7 @@ def import_mesh(filepath, urdf_path=None):
 
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"Mesh file {filepath} does not exist!")
-    out = as_mesh(trimesh.load_mesh(filepath))
+    out = as_mesh(trimesh.load_mesh(filepath, maintain_order=True))
     if out is None:
         log.info(f"{filepath} contains empty mesh!")
     return out
