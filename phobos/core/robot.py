@@ -23,7 +23,7 @@ from ..utils.misc import read_number_from_config, regex_replace, create_dir, edi
     duplicate, color_parser
 from ..utils.transform import create_transformation, inv, get_adjoint, round_array
 from ..utils.tree import find_close_ancestor_links, get_joints
-from ..utils.xml import read_urdf_filename, transform_object, get_joint_info_dict
+from ..utils.xml import read_relative_filename, transform_object, get_joint_info_dict
 
 from ..commandline_logging import get_logger
 log = get_logger(__name__)

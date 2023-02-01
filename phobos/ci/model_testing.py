@@ -133,7 +133,7 @@ class ModelTest(object):
         for link in self.new.robot.links:
             for mesh in [c.geometry.filename for c in link.collisions if hasattr(c.geometry, "filename")] +\
                         [c.geometry.filename for c in link.visuals if hasattr(c.geometry, "filename")]:
-                mesh_path = xml.read_urdf_filename(mesh, self.new.robot.xmlfile)
+                mesh_path = xml.read_relative_filename(mesh, self.new.robot.xmlfile)
                 if os.path.isfile(mesh_path):
                     success &= True
                 else:

@@ -298,7 +298,7 @@ class Mesh(Representation):
         if self._related_robot_instance is None or self._related_robot_instance.xmlfile is None:
             self._filename = new_val
         elif not os.path.isabs(new_val):
-            self._filename = xml_utils.read_urdf_filename(new_val, self._related_robot_instance.xmlfile)
+            self._filename = xml_utils.read_relative_filename(new_val, self._related_robot_instance.xmlfile)
         else:
             self._filename = new_val
 

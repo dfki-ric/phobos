@@ -104,7 +104,7 @@ class BaseModel(yaml.YAMLObject):
                 for link in r.links:
                     for g in link.visuals + link.collisions:
                         if hasattr(g.geometry, "filename"):
-                            self._meshes += [xml.read_urdf_filename(g.geometry.filename[:-4], v["basefile"])]
+                            self._meshes += [xml.read_relative_filename(g.geometry.filename[:-4], v["basefile"])]
             elif "repo" in v.keys():
                 repo_path = os.path.join(self.tempdir, "repo", os.path.basename(self.input_models["repo"]["git"]))
                 git.clone(
@@ -120,7 +120,7 @@ class BaseModel(yaml.YAMLObject):
                 for link in r.links:
                     for g in link.visuals + link.collisions:
                         if isinstance(g.geometry, representation.Mesh):
-                            self._meshes += [xml.read_urdf_filename(g.geometry.filename[:-4], self.basefile)]
+                            self._meshes += [xml.read_relative_filename(g.geometry.filename[:-4], self.basefile)]
         self.processed_meshes = []  # used to make mesh processing more efficient
 
         # where to find the already processed model

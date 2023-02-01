@@ -125,7 +125,7 @@ def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
     if urdf_path is not None and urdf_path.lower().endswith(".urdf"):
         urdf_path = os.path.dirname(urdf_path)
 
-    filepath = xml_utils.read_urdf_filename(filepath, urdf_path)
+    filepath = xml_utils.read_relative_filename(filepath, urdf_path)
 
     do_export = mesh is not None
     if do_export and os.path.isfile(filepath):
@@ -220,7 +220,7 @@ def import_mesh(filepath, urdf_path=None):
     """Import the mesh from a given filepath with an urdf_path.
     """
 
-    filepath = xml_utils.read_urdf_filename(filepath, urdf_path)
+    filepath = xml_utils.read_relative_filename(filepath, urdf_path)
 
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"Mesh file {filepath} does not exist!")

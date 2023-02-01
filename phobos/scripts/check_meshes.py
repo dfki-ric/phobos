@@ -45,7 +45,7 @@ def main(args):
         link_issues = False
         for geo in link.collisions + link.visuals:
             if isinstance(geo.geometry, representation.Mesh):
-                mesh_path = xml.read_urdf_filename(geo.geometry.filename, robot.xmlfile)
+                mesh_path = xml.read_relative_filename(geo.geometry.filename, robot.xmlfile)
                 geo_report = {"path": mesh_path, "found": True, "error": False, "warning": False, "note": ""}
                 if not path.isfile(path.realpath(mesh_path)):
                     geo_report["found"] = False
