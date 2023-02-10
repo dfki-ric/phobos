@@ -34,6 +34,7 @@ def main():
             import traceback
             from pstats import SortKey
             import datetime
+            retval = 4
             with cProfile.Profile() as pr:
                 try:
                     retval = getattr(scripts, sys.argv[1]).main(sys.argv[2:])

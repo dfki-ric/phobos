@@ -406,7 +406,7 @@ class Robot(SMURFRobot):
         xml_string = export_robot.to_urdf_string(float_fmt_dict=float_fmt_dict)
 
         if ros_pkg is True:
-            xml_string = regex_replace(xml_string, {'filename="../': 'filename="package://'})
+            xml_string = regex_replace(xml_string, {'filename="../': 'filename="package://' if ros_pkg_name is None else f'filename="package://{ros_pkg_name}/'})
 
         if not os.path.exists(os.path.dirname(os.path.abspath(outputfile))):
             os.makedirs(os.path.dirname(outputfile))
@@ -448,7 +448,7 @@ class Robot(SMURFRobot):
         xml_string = "<sdf>\n"+export_robot.to_sdf_string(float_fmt_dict=float_fmt_dict)+"\n</sdf>"
 
         if ros_pkg is True:
-            xml_string = regex_replace(xml_string, {'<uri>../': '<uri>package://'})
+            xml_string = regex_replace(xml_string, {'<uri>../': '<uri>package://' if ros_pkg_name is None else f'<uri>package://{ros_pkg_name}/'})
 
         if not os.path.exists(os.path.dirname(os.path.abspath(outputfile))):
             os.makedirs(os.path.dirname(outputfile))
@@ -636,7 +636,7 @@ class Robot(SMURFRobot):
 
     def export_joint_limits(self, outputdir, file_name="joint_limits.yml", joint_desc=None):
         output_dict = get_joint_info_dict(self, get_joints(self, joint_desc))
-        log.debug(f"Exporting joint_limits file {os.path.join(outputdir, file_name)}")
+        log.info(f"Exporting joint_limits file {os.path.join(outputdir, file_name)}")
         if not os.path.isdir(os.path.dirname(os.path.join(outputdir, file_name))):
             os.makedirs(os.path.dirname(os.path.join(outputdir, file_name)))
         output_dict = {"limits": output_dict}
@@ -1386,8 +1386,7 @@ class Robot(SMURFRobot):
                 M[3:, 3:] = I
 
             link.inertial = representation.Inertial.from_mass_matrix(M, origin)
-
-            log.info(" Corrected inertia for link {}".format(link.name))
+            log.debug(" Corrected inertia for link {}".format(link.name))
 
     def compute_mass(self):
         """

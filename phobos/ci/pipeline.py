@@ -222,6 +222,7 @@ class Pipeline(yaml.YAMLObject):
             misc.create_dir(self, os.path.join(self.temp_dir, str(mp)))
             ext = mt
             misc.copy(self, os.path.join(self.root, str(mp), "*."+ext), os.path.join(self.temp_dir, str(mp)))
+        # [TODO pre_v2.0.0] fill with created meshes
         processed_meshes = []
         for model in self.models:
             log.info(f"\nProcessing {model.modelname} model...")

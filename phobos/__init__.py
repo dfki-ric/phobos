@@ -136,7 +136,7 @@ def register():
     from . import scenes
     from . import utils
     from . import ci
-    from . import scripts
+    # from . import scripts
 
     # Recursively import all submodules
     from . import blender

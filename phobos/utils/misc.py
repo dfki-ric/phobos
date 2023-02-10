@@ -97,16 +97,16 @@ def execute_shell_command(cmd, cwd=None, dry_run=False, silent=False):
     if cwd is None:
         cwd = os.getcwd()
     if not silent:
-        log.info(("Skipping" if dry_run else "Executing") + f": {cmd} in {cwd}")
+        log.debug(("Skipping" if dry_run else "Executing") + f": {cmd} in {cwd}")
     if dry_run:
         return "", ""
     proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=cwd)
     # proc.wait()
     (out, err) = proc.communicate()
     if not silent:
-        log.info(out.decode('UTF-8'))
-        log.info(err.decode('UTF-8'))
-        log.info(f"Subprocess returned {proc.returncode}")
+        log.debug(out.decode('UTF-8'))
+        log.debug(err.decode('UTF-8'))
+        log.debug(f"Subprocess returned {proc.returncode}")
     if proc.returncode != 0:
         log.error(out.decode('UTF-8'))
         log.error(err.decode('UTF-8'))
@@ -127,7 +127,7 @@ def create_symlink(pipeline, target, link):
 def create_dir(pipeline, directory):
     if not os.path.exists(directory):
         log.debug(f"Creating {pipeline.relpath(directory) if pipeline is not None else directory}")
-        execute_shell_command("mkdir -p " + directory, silent=True)
+        os.makedirs(directory, exist_ok=True)
     else:
         log.debug(f"Already exists: {pipeline.relpath(directory)}")
 

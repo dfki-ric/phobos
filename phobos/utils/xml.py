@@ -62,6 +62,7 @@ def transform_object(obj, T):
 
 
 def adapt_mesh_pathes(robot, new_urdf_dir, copy_to=None):
+    # [TODO pre_v2.0.0] Check whether this has become obsolete due to export adaption
     for link in robot.links:
         for geo in link.visuals + link.collisions:
             if isinstance(geo.geometry, representation.Mesh):
