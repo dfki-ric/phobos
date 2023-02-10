@@ -7,11 +7,11 @@ import yaml
 import numpy as np
 from copy import deepcopy, copy
 
+from .. import defs
 from ..defs import load_json, dump_json, dump_yaml, KINEMATIC_TYPES
 
 from ..core import Robot
-from ..geometry import replace_collision, join_collisions, remove_collision, import_mesh, import_mars_mesh, \
-    export_mesh, export_mars_mesh, export_bobj_mesh
+from ..geometry import replace_collision, join_collisions, remove_collision
 from ..io.hyrodyn import ConstraintAxis
 from ..utils import misc, git, xml, transform, tree, resources
 from ..io import representation, sensor_representations, poses
@@ -97,14 +97,15 @@ class BaseModel(yaml.YAMLObject):
         assert hasattr(self, "assemble") and len(self.assemble) > 0
 
         # list directly imported mesh pathes
+        # [TODO pre_v2.0.0] REVIEW mesh usage
         self._meshes = []
         for _, v in self.input_models.items():
             if "basefile" in v.keys():
                 r = Robot(inputfile=v["basefile"], is_human=v["is_human"] if "is_human" in v else False)
                 for link in r.links:
                     for g in link.visuals + link.collisions:
-                        if hasattr(g.geometry, "filename"):
-                            self._meshes += [xml.read_relative_filename(g.geometry.filename[:-4], v["basefile"])]
+                        if isinstance(g.geometry, representation.Mesh):
+                            self._meshes += [xml.read_relative_filename(g.geometry.filepath[:-4], v["basefile"])]
             elif "repo" in v.keys():
                 repo_path = os.path.join(self.tempdir, "repo", os.path.basename(self.input_models["repo"]["git"]))
                 git.clone(
@@ -179,15 +180,6 @@ class BaseModel(yaml.YAMLObject):
                 kwargs["inputfile"] = config["basefile"]
                 self.dep_models.update({name: Robot(name=name, **kwargs)})
                 # copy the mesh files to the temporary combined model directory
-                for link in self.dep_models[name].links:
-                    for v in link.visuals + link.collisions:
-                        if isinstance(v.geometry, representation.Mesh):
-                            misc.copy(
-                                self.pipeline,
-                                os.path.join(os.path.dirname(config["basefile"]), v.geometry.filename),
-                                os.path.join(os.path.dirname(self.basefile), v.geometry.filename),
-                                silent=True
-                            )
             elif "repo" in config.keys():
                 repo_path = os.path.join(self.tempdir, "repo", os.path.basename(config["repo"]["git"]))
                 git.clone(
@@ -205,17 +197,6 @@ class BaseModel(yaml.YAMLObject):
                                 is_human=config["is_human"] if "is_human" in config else False)
                 })
                 # copy the mesh files to the temporary combined model directory
-                for link in self.dep_models[name].links:
-                    for v in link.visuals + link.collisions:
-                        if isinstance(v.geometry, representation.Mesh):
-                            source = os.path.join(repo_path, os.path.dirname(self.dep_models[name].xmlfile),
-                                                  v.geometry.filename)
-                            target = os.path.join(os.path.dirname(self.basefile), v.geometry.filename)
-                            if not os.path.exists(target) or (os.path.exists(target) and filecmp.cmp(source, target)):
-                                misc.copy(self.pipeline, source, target)
-                            else:
-                                misc.copy(self.pipeline, source, target[:-4] + name + target[-4:])
-                                v.geometry.filename = v.geometry.filename[:-4] + name + v.geometry.filename[-4:]
 
         # now we can join theses models
         # 1. get root model
@@ -387,7 +368,7 @@ class BaseModel(yaml.YAMLObject):
 
     def recreate_sym_links(self):
         for mt, mp in self.export_meshes.items():
-            log.info('  Re-exporting meshes')
+            log.info('Re-creating mesh symlinks')
             misc.create_symlink(
                 self.pipeline, os.path.join(self.pipeline.temp_dir, str(mp)), os.path.join(self.exportdir, str(mp))
             )
@@ -395,6 +376,13 @@ class BaseModel(yaml.YAMLObject):
     def process(self):
         misc.recreate_dir(self.pipeline, self.tempdir)
         misc.recreate_dir(self.pipeline, self.exportdir)
+
+        # Make sure the mesh symlinks are set correctly
+        for mt, mp in self.export_meshes.items():
+            log.info('  Creating mesh symlinks')
+            misc.create_symlink(
+                self.pipeline, os.path.join(self.pipeline.temp_dir, str(mp)), os.path.join(self.exportdir, str(mp))
+            )
 
         self._join_to_basefile()
         self._load_robot()
@@ -622,48 +610,6 @@ class BaseModel(yaml.YAMLObject):
                                 conf.pop(key)
                         coll.add_annotations(**conf)
 
-        # Re-export meshes
-        assert self.processed_meshes == []
-        for mt, mp in self.export_meshes.items():
-            log.info('  Re-exporting meshes')
-            misc.create_symlink(
-                self.pipeline, os.path.join(self.pipeline.temp_dir, str(mp)), os.path.join(self.exportdir, str(mp))
-            )
-            for link in self.robot.links:
-                v_c = 0
-                for v in link.visuals + link.collisions:
-                    if isinstance(v.geometry, representation.Mesh) and v.geometry.filename:
-                        v_c += 1
-                        if "mars_obj" in v.geometry.filename.lower() or v.geometry.filename.lower().endswith(".mars.obj"):
-                            mesh = v.geometry.load_mesh(urdf_path=os.path.dirname(self.basefile), mars_mesh=True)
-                        elif v.geometry.filename.lower().endswith("bobj"):
-                            raise NotImplementedError("Can't load bobj meshes!")
-                        else:
-                            if v.geometry.filename.lower().endswith("obj"):
-                                log.warning(f"Loading obj mesh {v.geometry.filename}, "
-                                            f"where the orientation convention might be unknown")
-                            mesh = v.geometry.load_mesh(urdf_path=os.path.dirname(self.basefile))
-                        meshexport = os.path.join(self.exportdir, mp, os.path.basename(v.geometry.filename)[:-3]) + mt.replace("_", ".")
-                        v.geometry.filename = v.geometry.filename.replace(" ", "_")
-                        v.geometry.filename = meshexport
-                        if mt == "mars_obj":
-                            export_mars_mesh(mesh, meshexport, urdf_path=self.export_xmlfile)
-                        elif mt == "bobj":
-                            export_bobj_mesh(mesh, meshexport, urdf_path=self.export_xmlfile)
-                        elif mt in ["obj", "stl"]:
-                            export_mesh(mesh, meshexport, urdf_path=self.export_xmlfile)
-                        elif mt == "dae":
-                            color = None
-                            for m in self.robot.materials:
-                                if str(m) != str(v.material):
-                                    continue
-                                else:
-                                    color = m.color.rgba
-                            export_mesh(mesh, urdf_path=self.export_xmlfile, dae_mesh_color=color)
-                        else:
-                            raise ValueError("Unknown mesh type: " + mt)
-                        self.processed_meshes.append(os.path.realpath(v.geometry._filename))
-
         if hasattr(self, "exoskeletons") or hasattr(self, "submechanisms"):
             if hasattr(self, "exoskeletons"):
                 self.robot.load_submechanisms({"exoskeletons": deepcopy(self.exoskeletons)},
@@ -744,7 +690,7 @@ class BaseModel(yaml.YAMLObject):
     def export(self):
         ros_pkg_name = self.robot.export(outputdir=self.exportdir, export_config=self.export_config,
                                          rel_mesh_pathes=self.export_meshes, ros_pkg_later=True)
-
+        # [TODO pre_v2.0.0] Fill self.processed_meshes with the meshes that have been processed
         if hasattr(self, "deployment") and "keep_files" in self.deployment:
             git.reset(self.targetdir, "autobuild", "master")
             misc.store_persisting_files(self.pipeline, self.targetdir, self.keep_files, self.exportdir)

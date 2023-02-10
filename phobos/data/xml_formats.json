@@ -179,7 +179,7 @@
     "Mesh": {
       "tag": "mesh",
       "attributes": {
-        "filename": "filename",
+        "filename": "filepath",
         "scale": "scale"
       }
     },
@@ -654,7 +654,7 @@
     "Mesh": {
       "tag": "mesh",
       "value_children": {
-        "uri": "filename",
+        "uri": "filepath",
         "scale": "scale"
       }
     },

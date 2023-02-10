@@ -30,6 +30,9 @@ class XMLRobot(Representation):
         self.sensors = []
         self.xmlfile = xmlfile
 
+        # Default export mesh format from phobos.defs.MESH_TYPES
+        self.mesh_format = "stl"
+
         if name is None or len(name) == 0:
             if self.xmlfile is not None:
                 self.name, _ = os.path.splitext(xmlfile)

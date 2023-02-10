@@ -50,6 +50,8 @@ class SMURFRobot(XMLRobot):
                 xmlfile = inputfile
             else:
                 raise ValueError("Can't parse robot format: "+inputfile.lower().split(".")[-1])
+
+        super(SMURFRobot, self).__init__(is_human=is_human)
         self.xmlfile = xmlfile
         self.smurffile = smurffile
         self.submechanisms_file = submechanisms_file
@@ -58,7 +60,6 @@ class SMURFRobot(XMLRobot):
             # Check the input file
             self.read_smurffile(self.smurffile)
 
-        super(SMURFRobot, self).__init__(xmlfile=self.xmlfile, is_human=is_human)
         if self.xmlfile is not None:
             # Fill everything with the xml information
             base_robot = parse_xml(self.xmlfile)
@@ -278,14 +279,16 @@ class SMURFRobot(XMLRobot):
 
     # tools
     def verify_meshes(self):
+        """
+        Checks whether all meshes are available.
+
+        Returns:
+            bool
+        """
         no_problems = True
         for link in self.links:
             for vc in link.collisions + link.visuals:
-                if isinstance(vc.geometry, representation.Mesh) and \
-                        import_mesh(vc.geometry.filename, urdf_path=self.xmlfile) is None:
-                    log.info(f"Mesh file {vc.geometry.filename} is empty and therefore the corresponding visual/geometry removed!")
-                    no_problems = False
-                    link.remove_aggregate(vc)
+                no_problems &= not isinstance(vc.geometry, representation.Mesh) or not vc.geometry.available()
         return no_problems
 
     def add_named_annotation(self, name, content):

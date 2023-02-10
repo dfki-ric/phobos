@@ -11,6 +11,7 @@
 
 """
 Contains the functions for the mesh entity.
+# [TODO pre_v2.0.0] REVIEW functionality should be included by representation.Mesh
 """
 
 import os

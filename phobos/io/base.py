@@ -36,7 +36,7 @@ class Linkable(object):
 
     def stringable(self):
         """
-        Whether this class has a unique_name and can be referenced by it
+        Whether this class has a unique_name and can be referenced by it when linking it to a robot class
         """
         return True
 
