@@ -250,10 +250,11 @@ class Pipeline(yaml.YAMLObject):
                                                resolve_symlinks=True, abs_path=True)
         existing_meshes = set(existing_meshes)
         processed_meshes = set(processed_meshes)
-        for unused_mesh in existing_meshes - processed_meshes:
-            log.debug("Removing unused mesh: "+unused_mesh)
-            assert os.path.isfile(unused_mesh)
-            os.remove(unused_mesh)
+        # [TODO pre_v2.0.0] Re-add this as soon processed_meshes is filled again
+        # for unused_mesh in existing_meshes - processed_meshes:
+        #     log.debug("Removing unused mesh: "+unused_mesh)
+        #     assert os.path.isfile(unused_mesh)
+        #     os.remove(unused_mesh)
         with open(self.faillog, "w") as f:
             f.write(dump_json(self.processing_failed, default_flow_style=False))
 

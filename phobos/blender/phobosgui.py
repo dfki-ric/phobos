@@ -110,6 +110,21 @@ class PhobosPrefs(AddonPreferences):
 
     models_poses : CollectionProperty(type=ModelPoseProp)
 
+    # obj optional information
+    axis_forward_items = (
+        (item, item + ' forward', item) for item in ('X', 'Y', 'Z', '-X', '-Y', '-Z')
+    )
+    axis_up_items = ((item, item + ' up', item) for item in ('X', 'Y', 'Z', '-X', '-Y', '-Z'))
+    obj_axis_forward : EnumProperty(
+        items=axis_forward_items,
+        name='Forward',
+        description="Forward axis of the obj export.",
+        default='Y',
+    )
+    obj_axis_up : EnumProperty(
+        items=axis_up_items, name='Up', description="Up axis of the obj export.", default='Z'
+    )
+
     def draw(self, context):
         """
 
@@ -139,6 +154,16 @@ class PhobosPrefs(AddonPreferences):
         box.prop(self, "logtofile", text="write to logfile")
         box.prop(self, "logtoterminal", text="write to terminal")
         box.prop(self, "loglevel", text="log level")
+
+        box = layout.box()
+        row1 = box.row()
+        row1.label(text="OBJ export frame")
+        row2 = box.row()
+        row2.label("Some loaders e.g. OSG use different conventions.See Phobos-Documentation on meshes. "
+                   "The default is Z-Up Y-Forward. "
+                   "You should adapt this only if you are working e.g. with an old version of MARS.")
+        box.prop(self, 'obj_axis_forward')
+        box.prop(self, 'obj_axis_up')
 
 
 prev_collections = {}
@@ -245,21 +270,6 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
     # TODO make this default to the model name
     rosPackageName : StringProperty(name='ROS package name', default='robot_name_model')
-
-    # obj optional information
-    axis_forward_items = (
-        (item, item + ' forward', item) for item in ('X', 'Y', 'Z', '-X', '-Y', '-Z')
-    )
-    axis_up_items = ((item, item + ' up', item) for item in ('X', 'Y', 'Z', '-X', '-Y', '-Z'))
-    obj_axis_forward : EnumProperty(
-        items=axis_forward_items,
-        name='Forward',
-        description="Forward axis of the obj export.",
-        default='-Z',
-    )
-    obj_axis_up : EnumProperty(
-        items=axis_up_items, name='Up', description="Up axis of the obj export.", default='Y'
-    )
 
     export_smurf_xml_type : EnumProperty(
         items=getXMLTypeListForEnumProp,
@@ -1275,15 +1285,6 @@ class PhobosExportPanel(bpy.types.Panel):
         # for scenetype in ioUtils.getSceneTypesForExport():
         #     typename = "export_scene_" + scenetype
         #     cscene.prop(bpy.context.scene, typename)
-
-
-        # additional obj guiparams
-        if getattr(bpy.context.scene, 'export_mesh_obj', False):
-            layout.separator()
-            box = layout.box()
-            box.label(text='OBJ axis')
-            box.prop(ioUtils.getExpSettings(), 'obj_axis_forward')
-            box.prop(ioUtils.getExpSettings(), 'obj_axis_up')
 
         if getattr(bpy.context.scene, 'export_entity_smurf', False):
             layout.separator()
