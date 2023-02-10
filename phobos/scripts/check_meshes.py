@@ -102,7 +102,7 @@ def main(args):
     if args.output is not None:
         if path.exists(args.output):
             log.error(f"Won't overwrite {args.output}")
-            sys.exit(1)
+            return 1
         with open(args.output, "w") as f:
             f.write(dump_json(report))
         log.info(f"Wrote full output to {args.output}")
@@ -120,9 +120,9 @@ def main(args):
     log.info(f"{n_errors} mesh errors and {n_warnings} warnings found!")
     if not args.warn and n_warnings != 0:
         log.info("To display warnings add -w option.")
+    return 0
 
 
 if __name__ == '__main__':
     import sys
-
     main(sys.argv)

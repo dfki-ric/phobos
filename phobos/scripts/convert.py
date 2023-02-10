@@ -32,7 +32,7 @@ def main(args):
     log = setup_logger_level(log_level=args.loglevel)
 
     if args.input_file == args.output_file:
-        sys.exit(0)
+        return 0
 
     robot = Robot(inputfile=args.input_file)
     if args.output_file.lower().endswith("sdf"):
@@ -49,7 +49,8 @@ def main(args):
         robot.export_smurf(outputfile=args.output_file)
     else:
         log.error(f"Don't know which conversion to apply for {args.output_file}")
-        sys.exit(1)
+        return 1
+    return 0
 
 
 if __name__ == '__main__':

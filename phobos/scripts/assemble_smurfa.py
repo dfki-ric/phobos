@@ -32,7 +32,7 @@ def main(args):
     scene = Scene(args.input)
     if scene.is_empty():
         log.error("Given file is empty!")
-        sys.exit(1)
+        return 1
     elif scene.has_one_root():
         log.info("Found assembly!")
         assembly = Assembly.from_scene(scene, output_dir=args.output)
@@ -47,7 +47,7 @@ def main(args):
             assembly.merge(copy_meshes=args.copy_meshes)
             assembly.robot.name = name
             assembly.robot.export(outputdir=args.output, export_config=resources.get_default_export_config())
-
+    return 0
 
 if __name__ == '__main__':
     import sys

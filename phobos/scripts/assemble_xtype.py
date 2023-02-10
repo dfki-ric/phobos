@@ -28,7 +28,7 @@ def main(args):
         from deimos.deimos import Deimos
     except ImportError:
         print("Package tools/cad/deimos is required for this tool!")
-        sys.exit(1)
+        return 1
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + os.path.basename(__file__)[:-3])
 
@@ -116,6 +116,7 @@ def main(args):
         load_cfg(args.load_cfg)
     else:
         parser.print_help()
+    return 0
 
 
 if __name__ == '__main__':
