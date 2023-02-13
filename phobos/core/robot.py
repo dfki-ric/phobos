@@ -402,6 +402,7 @@ class Robot(SMURFRobot):
         export_robot = self.duplicate()
         if mesh_format is not None:
             export_robot.mesh_format = mesh_format
+        export_robot.xmlfile = outputfile
 
         xml_string = export_robot.to_urdf_string(float_fmt_dict=float_fmt_dict)
 
@@ -444,6 +445,7 @@ class Robot(SMURFRobot):
         export_robot = self.duplicate()
         if mesh_format is not None:
             export_robot.mesh_format = mesh_format
+        export_robot.xmlfile = outputfile
 
         xml_string = "<sdf>\n"+export_robot.to_sdf_string(float_fmt_dict=float_fmt_dict)+"\n</sdf>"
 
@@ -472,7 +474,8 @@ class Robot(SMURFRobot):
 
     def export_xml(self, outputdir=None, format="urdf", filename=None, float_fmt_dict=None, no_format_dir=False,
                    ros_pkg=False, copy_with_other_pathes=None, ros_pkg_name=None,
-                   with_meshes=True, mesh_format=None, additional_meshes=None, rel_mesh_pathes=None):
+                   with_meshes=True, mesh_format=None, additional_meshes=None, rel_mesh_pathes=None,
+                   enforce_zero=False):
         """ Exports all model information stored inside this instance.
         """
         outputdir = os.path.abspath(outputdir)
@@ -511,15 +514,18 @@ class Robot(SMURFRobot):
                 export_robot.export_meshes(mesh_output_dir=os.path.join(outputdir, rel_mesh_pathes[mf]), format=mf)
 
         # xml
+        _export_robot = self.duplicate()
+        if enforce_zero:
+            _export_robot.enforce_zero()
         assert len(self.links) == len(self.joints) + 1
         if format == "urdf":
-            export_robot.export_urdf(
+            _export_robot.export_urdf(
                 outputfile=model_file,
                 ros_pkg=ros_pkg, copy_with_other_pathes=copy_with_other_pathes, ros_pkg_name=ros_pkg_name,
                 float_fmt_dict=float_fmt_dict, mesh_format=mesh_format
             )
         elif format == "sdf":
-            export_robot.export_sdf(
+            _export_robot.export_sdf(
                 outputfile=model_file,
                 ros_pkg=ros_pkg, copy_with_other_pathes=copy_with_other_pathes, ros_pkg_name=ros_pkg_name,
                 float_fmt_dict=float_fmt_dict, mesh_format=mesh_format
@@ -890,14 +896,26 @@ class Robot(SMURFRobot):
         ros_pkg = False
         if ros_pkg_name is None:
             ros_pkg_name = os.path.basename(outputdir)
+        # submechanism generation if necessary
+        if self.autogenerate_submechanisms is None or self.autogenerate_submechanisms is True:
+            self.generate_submechanisms()
+
+        # export meshes
+        if with_meshes:
+            mesh_formats = set()
+            for ex in export_config:
+                mesh_formats = mesh_formats.union([f.lower() for f in ex.get("additional_meshes", [])])
+                if "mesh_format" in ex:
+                    mesh_formats.add(ex["mesh_format"].lower())
+            for mf in mesh_formats:
+                self.export_meshes(mesh_output_dir=os.path.join(outputdir, rel_mesh_pathes[mf]), format=mf)
+        # export everything else
         for export in export_config:
-            export_robot_instance = self.duplicate()
-            if export_robot_instance.autogenerate_submechanisms is None or export_robot_instance.autogenerate_submechanisms is True:
-                export_robot_instance.generate_submechanisms()
-                export_robot_instance.autogenerate_submechanisms = False  # because it's already done here
             if export["type"] in KINEMATIC_TYPES:
-                if "enforce_zero" in export and export["enforce_zero"]:
-                    export_robot_instance.enforce_zero()
+                if not export["link_in_smurf"]:
+                    export_robot_instance = self.duplicate()
+                else:
+                    export_robot_instance = self
                 xml_file = export_robot_instance.export_xml(
                     outputdir=outputdir,
                     format=export["type"],
@@ -906,10 +924,11 @@ class Robot(SMURFRobot):
                     ros_pkg_name=ros_pkg_name,
                     float_fmt_dict=export["float_format_dict"] if "float_format_dict" in export else None,
                     filename=export["filename"] if "filename" in export else None,
-                    with_meshes=with_meshes,
+                    with_meshes=False, # this has already been done above
                     mesh_format=export["mesh_format"],
                     additional_meshes=export["additional_meshes"] if "additional_meshes" in export else None,
-                    rel_mesh_pathes=rel_mesh_pathes
+                    rel_mesh_pathes=rel_mesh_pathes,
+                    enforce_zero=export.get("enforce_zero", False)
                 )
                 ros_pkg |= export["ros_pathes"] if "ros_pathes" in export else None
                 if export["link_in_smurf"]:
@@ -939,7 +958,7 @@ class Robot(SMURFRobot):
                     no_smurf=no_smurf
                 )
             elif export["type"] == "pdf":
-                export_robot_instance.export_pdf(outputfile=os.path.join(outputdir, self.name + ".pdf"))
+                self.export_pdf(outputfile=os.path.join(outputdir, self.name + ".pdf"))
             elif export["type"] == "kccd":
                 export_robot_instance.export_kccd(
                     outputdir=outputdir,

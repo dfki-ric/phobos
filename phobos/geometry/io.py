@@ -300,45 +300,6 @@ def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
     return filepath
 
 
-def export_bobj_mesh(mesh, filepath, urdf_path=None):
-    m = as_trimesh(mesh)
-    m = deepcopy(m)
-
-    m.fix_normals()
-    m.merge_vertices()
-    m = improve_mesh(m)
-
-    # if filepath.split(".")[-1] == 'bobj':
-    #     v_ = m.vertices
-    #
-    #     # Swap according to blender
-    #     v = np.column_stack(
-    #         (v_[:, 0], v_[:, 2], -v_[:, 1])
-    #     )
-    #
-    #     m.vertices = v
-    #     trimesh.repair.broken_faces(m)
-    #     m.merge_vertices()
-    #
-    #     try:
-    #         trimesh.repair.fix_normals(m)
-    #     except:
-    #         pass
-
-    # Check if filepath is abspath
-    if not os.path.isabs(filepath) and not urdf_path:
-        filepath = os.path.abspath(filepath)
-    elif not os.path.isabs(filepath) and urdf_path:
-        filepath = os.path.join(
-            os.path.abspath(urdf_path), filepath
-        )
-    elif not os.path.isabs(filepath):
-        filepath = os.path.abspath(filepath)
-
-    export_bobj(filepath, m)
-    return filepath
-
-
 def import_mesh(filepath, urdf_path=None):
     """Import the mesh from a given filepath with an urdf_path.
     """

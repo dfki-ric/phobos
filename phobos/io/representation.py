@@ -537,13 +537,18 @@ class Mesh(Representation, SmurfBase):
                 self.exported[ext] = targetpath
                 self.write_history(targetpath)
                 return
-            elif existing_mesh is not None:
-                if o_history is not None:
-                    s_history = "\n".join(self.history)
-                    log.info(f"This history:\n{s_history}")
-                    s_history = "\n".join(o_history)
-                    log.info(f"Existing history:\n{s_history}")
+            elif existing_mesh is not None and o_history is not None:
+                s_history = "\n".join(self.history)
+                log.info(f"This history:\n{s_history}")
+                s_history = "\n".join(o_history)
+                log.info(f"Existing history:\n{s_history}")
                 raise IOError(f"Can't export mesh {self.unique_name} to {targetpath} because there exists already a file with different content.")
+            elif existing_mesh is not None:
+                # if there is now history file to this mesh file we will overwrite it
+                log.debug(f"Will overwrite mesh without history at {targetpath}")
+            else:
+                # there is a file but it's not a mesh, we'll overwrite it
+                pass
         # load mesh if not yet done
         if self.input_type.startswith("file") and self.mesh_object is None:
             self.load_mesh()

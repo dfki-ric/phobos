@@ -122,7 +122,7 @@ class BaseModel(yaml.YAMLObject):
                     for g in link.visuals + link.collisions:
                         if isinstance(g.geometry, representation.Mesh):
                             self._meshes += [xml.read_relative_filename(g.geometry.filename[:-4], self.basefile)]
-        self.processed_meshes = []  # used to make mesh processing more efficient
+        self.processed_meshes = set()  # used to make mesh processing more efficient
 
         # where to find the already processed model
         self.basedir = os.path.join(self.tempdir, "combined_model")
@@ -690,7 +690,10 @@ class BaseModel(yaml.YAMLObject):
     def export(self):
         ros_pkg_name = self.robot.export(outputdir=self.exportdir, export_config=self.export_config,
                                          rel_mesh_pathes=self.export_meshes, ros_pkg_later=True)
-        # [TODO pre_v2.0.0] Fill self.processed_meshes with the meshes that have been processed
+        for vc in self.robot.collisions + self.robot.visuals:
+            if isinstance(vc.geometry, representation.Mesh):
+                self.processed_meshes = self.processed_meshes.union([os.path.realpath(f) for f in vc.geometry.exported.values()])
+                self.processed_meshes.add(os.path.realpath(vc.geometry.abs_filepath))
         if hasattr(self, "deployment") and "keep_files" in self.deployment:
             git.reset(self.targetdir, "autobuild", "master")
             misc.store_persisting_files(self.pipeline, self.targetdir, self.keep_files, self.exportdir)

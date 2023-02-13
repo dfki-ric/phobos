@@ -130,10 +130,9 @@ class ModelTest(object):
                 success &= joint_name not in joint_names
         # [TODO later] check the others
         # check if meshes are there
-        # [TODO pre_v2.0.0] Review mesh usage
+        log.debug(f"Checking meshes for {self.new.robot.xmlfil}")
         for link in self.new.robot.links:
-            for mesh in [c.geometry.filepath for c in link.collisions if isinstance(c.geometry, representation.Mesh)] +\
-                        [c.geometry.filepath for c in link.visuals if isinstance(c.geometry, representation.Mesh)]:
+            for mesh in [c.geometry.filepath for c in link.collisions+link.visuals if isinstance(c.geometry, representation.Mesh)]:
                 mesh_path = xml.read_relative_filename(mesh, self.new.robot.xmlfile)
                 if os.path.isfile(mesh_path):
                     success &= True
