@@ -159,15 +159,15 @@ def add_submodule(repo, remote, path, commit=None, branch="master"):
 
 def install_lfs(repo, track):
     execute_shell_command("git remote rename autobuild origin || true", repo)
-    execute_shell_command("git lfs install || true", repo)
+    execute_shell_command("git lfs install || true", repo, silent=True)
     if ".gitattributes" not in os.listdir(repo) or False:
         if type(track) is str:
-            execute_shell_command("git lfs track '" + track.lower() + "' || true", repo)
-            execute_shell_command("git lfs track '" + track.upper() + "' || true", repo)
+            execute_shell_command("git lfs track '" + track.lower() + "' || true", repo, silent=True)
+            execute_shell_command("git lfs track '" + track.upper() + "' || true", repo, silent=True)
         else:
             for t in track:
-                execute_shell_command("git lfs track '" + t.lower() + "' || true", repo)
-                execute_shell_command("git lfs track '" + t.upper() + "' || true", repo)
+                execute_shell_command("git lfs track '" + t.lower() + "' || true", repo, silent=True)
+                execute_shell_command("git lfs track '" + t.upper() + "' || true", repo, silent=True)
     execute_shell_command("git remote rename origin autobuild || true", repo)
     execute_shell_command("git add .gitattributes || true", repo)
 
