@@ -535,7 +535,7 @@ class Robot(SMURFRobot):
 
         return model_file
 
-    def export_smurf(self, outputdir=None, outputfile=None, robotfile=None, check_submechs=True):
+    def export_smurf(self, outputdir=None, outputfile=None, robotfile=None, check_submechs=True, with_submodel_defs=False):
         """ Export self and all annotations inside a given folder with structure
         """
         # Convert to absolute path
@@ -616,6 +616,12 @@ class Robot(SMURFRobot):
                 with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w+") as stream:
                     stream.write(dump_json({k: v}, default_style=False))
                     export_files.append(os.path.split(stream.name)[-1])
+
+        # submodel list
+        if with_submodel_defs:
+            with open(os.path.join(smurf_dir, "{}_submodels.yml".format(self.name)), "w+") as stream:
+                stream.write(dump_json({"submodels": self.submodel_defs}, default_style=False))
+                export_files.append(os.path.split(stream.name)[-1])
 
         for k, v in self.named_annotations.items():
             # if os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k))):
@@ -935,14 +941,21 @@ class Robot(SMURFRobot):
                     assert xml_file_in_smurf is None, "Only one xml file can be linked in the SMURF"
                     xml_file_in_smurf = xml_file
             elif export["type"] == "submodel":
-                export_robot_instance = export_robot_instance.define_submodel(
-                    name=export["name"],
-                    start=export["start"] if "start" in export else str(export_robot_instance.get_root()),
-                    stop=export["stop"] if "stop" in export else [str(x) for x in export_robot_instance.get_leaves()],
-                    include_unstopped_branches=export["include_unstopped_branches"]
-                    if "include_unstopped_branches" in export else None,
-                    no_submechanisms=export["no_submechanisms"] if "no_submechanisms" in export else False
-                )
+                if export["name"] not in self.submodel_defs:
+                    export_robot_instance = self.define_submodel(
+                        name=export["name"],
+                        start=export["start"] if "start" in export else str(export_robot_instance.get_root()),
+                        stop=export["stop"] if "stop" in export else [str(x) for x in export_robot_instance.get_leaves()],
+                        include_unstopped_branches=export["include_unstopped_branches"]
+                        if "include_unstopped_branches" in export else None,
+                        no_submechanisms=export["no_submechanisms"] if "no_submechanisms" in export else False
+                    )
+                else:
+                    assert export["start"] == self.submodel_defs["start"]
+                    assert export["stop"] == self.submodel_defs["stop"]
+                    assert export["include_unstopped_branches"] == self.submodel_defs["include_unstopped_branches"]
+                    assert export["no_submechanisms"] == self.submodel_defs["no_submechanisms"]
+                    export_robot_instance = self.instantiate_submodel(export["name"])
                 if "add_floating_base" in export and export["add_floating_base"]:
                     export_robot_instance.add_floating_base()
                 _export_config = None
@@ -950,8 +963,9 @@ class Robot(SMURFRobot):
                     _export_config = export["export_config"]
                 else:
                     _export_config = [ec for ec in export_config if ec["type"] != "submodel"]
+                self.submodel_defs[export["name"]]["export_dir"] = os.path.join(outputdir, "submodels", export["name"])
                 export_robot_instance.export(
-                    outputdir=os.path.join(outputdir, "submodels", export["name"]),
+                    outputdir=self.submodel_defs[export["name"]]["export_dir"],
                     export_config=_export_config,
                     rel_mesh_pathes={k: os.path.join("..", "..", v) for k, v in rel_mesh_pathes.items()},
                     with_meshes=False,
@@ -983,7 +997,8 @@ class Robot(SMURFRobot):
             self.export_smurf(
                 outputdir=outputdir,
                 robotfile=xml_file_in_smurf,
-                check_submechs=check_submechs
+                check_submechs=check_submechs,
+                with_submodel_defs=True
             )
         # export ros package files
         if ros_pkg and not ros_pkg_later:
@@ -1167,7 +1182,8 @@ class Robot(SMURFRobot):
             "start": start,
             "stop": stop,
             "only_urdf": only_urdf,
-            "include_unstopped_branches": include_unstopped_branches
+            "include_unstopped_branches": include_unstopped_branches,
+            "no_submechanisms": no_submechanisms
         }
         if only_return:
             return self.instantiate_submodel(definition=definition, no_submechanisms=no_submechanisms,
