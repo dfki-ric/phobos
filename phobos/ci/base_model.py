@@ -365,11 +365,6 @@ class BaseModel(yaml.YAMLObject):
 
                 parent.attach(att_model if isinstance(att_model, Robot) else att_model.robot, joint, do_not_rename=False)
                 assert len(combined_model.links) == len(combined_model.joints) + 1
-                if "remove_joint_later" in child["joint"] and child["joint"]["remove_joint_later"]:
-                    if hasattr(self, "remove_joints") and type(self.remove_joints) == list:
-                        self.remove_joints += [child["joint"]["name"]]
-                    else:
-                        self.remove_joints = [child["joint"]["name"]]
                 parent.relink_entities()
 
                 if "children" in child.keys():
@@ -539,6 +534,8 @@ class BaseModel(yaml.YAMLObject):
                             elif v is True:
                                 _motor = representation.Motor(name=jointname+"_motor", joint=jointname)
                                 self.robot.add_motor(_motor)
+                        elif k == "remove" and v is True:
+                            self.robot.remove_joint(jointname)
                         else:  # axis
                             joint.add_annotation(k, v, overwrite=True)
                 elif "$default" in self.joints:
