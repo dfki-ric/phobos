@@ -998,6 +998,7 @@ class Robot(SMURFRobot):
                     assert xml_file_in_smurf is None, "Only one xml file can be linked in the SMURF"
                     xml_file_in_smurf = xml_file
             elif export["type"] == "submodel":
+                log.debug(f"Exporting submodel {export['name']}")
                 export_robot_instance = export_robot_instance.define_submodel(
                     name=export["name"],
                     start=export["start"] if "start" in export else str(export_robot_instance.get_root()),

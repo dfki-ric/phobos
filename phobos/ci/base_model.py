@@ -491,11 +491,15 @@ class BaseModel(yaml.YAMLObject):
                 log.error("The following joint changes are defined but the joint does not exist:")
                 for fjd in faulty_joint_defs:
                     log.error(f"- {fjd[0]} "+(f"Did you mean: {fjd[1]}" if len(fjd[1]) > 0 else ""))
+            remove_joints = []
             for joint in self.robot.joints:
                 jointname = joint.name
                 if jointname in self.joints:
                     config = misc.merge_default(self.joints[jointname], _default)
                     for k, v in config.items():
+                        if k == "remove" and v is True:
+                            remove_joints.append(jointname)
+                            break
                         if k in ["min", "max", "eff", "vel"]:
                             if joint.limit is None:
                                 joint.limit = representation.JointLimit()
@@ -534,8 +538,6 @@ class BaseModel(yaml.YAMLObject):
                             elif v is True:
                                 _motor = representation.Motor(name=jointname+"_motor", joint=jointname)
                                 self.robot.add_motor(_motor)
-                        elif k == "remove" and v is True:
-                            self.robot.remove_joint(jointname)
                         else:  # axis
                             joint.add_annotation(k, v, overwrite=True)
                 elif "$default" in self.joints:
@@ -545,7 +547,9 @@ class BaseModel(yaml.YAMLObject):
                             joint.add_annotation(k, v, overwrite=True)
                 # [TODO pre_v2.0.0] Re-add transmission support
                 joint.link_with_robot(self.robot)
-    
+            for joint in remove_joints:
+                self.robot.remove_joint(joint)
+
         # Check for joint definitions
         self.robot.check_joint_definitions(
             raise_error=True,
