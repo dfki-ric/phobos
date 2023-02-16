@@ -1296,7 +1296,7 @@ class Robot(SMURFRobot):
 
         submodel = type(self)(name=definition["robotname"])
         if include_unstopped_branches is None:
-            include_unstopped_branches=True
+            include_unstopped_branches = False
 
         linknames, jointnames = self.get_links_and_joints_in_subtree(
             start=definition["start"], stop=definition["stop"],
