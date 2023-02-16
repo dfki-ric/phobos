@@ -1003,7 +1003,7 @@ class Robot(SMURFRobot):
                     name=export["name"],
                     start=export["start"] if "start" in export else str(export_robot_instance.get_root()),
                     stop=export["stop"] if "stop" in export else [str(x) for x in export_robot_instance.get_leaves()],
-                    include_unstopped_branches=export["include_unstopped_branches"]
+                    include_unstopped_branches=export["include_unstopped_branches"] or "stop" not in export
                     if "include_unstopped_branches" in export else None,
                     no_submechanisms=export["no_submechanisms"] if "no_submechanisms" in export else False
                 )
