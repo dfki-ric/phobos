@@ -1360,8 +1360,9 @@ class Robot(SMURFRobot):
                 exo.unlink_from_robot()
                 _exo = deepcopy(exo)
                 exo.link_with_robot(self)
+                _exo.reduce_to_match(joints)
                 _exo._jointnames = None
-                if _exo.is_related_to(joints, pure=True):
+                if not _exo.is_empty():
                     exoskeletons.append(_exo)
         interfaces = []
         for interf in self.interfaces:

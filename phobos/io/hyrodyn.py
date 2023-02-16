@@ -361,3 +361,9 @@ class Exoskeleton(HyrodynAnnotation):
         self.jointnames = [str(j) for j in joints_df if j._child.is_human]
         self.jointnames_spanningtree = [str(j) for j in joints_df if j._child.is_human and j.joint_type != "fixed"]
         self.jointnames_dependent = [str(j.mimic.joint) for j in joints_df if j._child.is_human and j.joint_type != "fixed"]
+
+    def reduce_to_match(self, joints):
+        joints = [str(j) for j in joints]
+        self.jointnames = [str(j) for j in self.jointnames if str(j) in joints]
+        self.jointnames_spanningtree = [str(j) for j in self.jointnames_spanningtree if str(j) in joints]
+        self.jointnames_dependent = [str(j) for j in self.jointnames_dependent if str(j) in joints]
