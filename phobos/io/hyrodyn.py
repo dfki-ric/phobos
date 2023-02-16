@@ -364,6 +364,7 @@ class Exoskeleton(HyrodynAnnotation):
 
     def reduce_to_match(self, joints):
         joints = [str(j) for j in joints]
-        self.jointnames = [str(j) for j in self.jointnames if str(j) in joints]
+        if self.jointnames is not None:
+            self.jointnames = [str(j) for j in self.jointnames if str(j) in joints]
         self.jointnames_spanningtree = [str(j) for j in self.jointnames_spanningtree if str(j) in joints]
         self.jointnames_dependent = [str(j) for j in self.jointnames_dependent if str(j) in joints]
