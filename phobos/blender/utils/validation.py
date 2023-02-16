@@ -632,6 +632,15 @@ def validateInertiaData(obj, *args, adjust=False):
 
     expsetting = 10**(-getExpSettings().decimalPlaces)
 
+    if obj.phobostype != 'inertial':
+        errors.append(
+            ValidateMessage(
+                "Object '{0}' is not of phobostype 'inertial'.".format(obj.name),
+                "ERROR",
+                obj
+            )
+        )
+
     # check dictionary parameters (most of the time pre object creation)
     if isinstance(obj, dict):
         missing = []

@@ -233,7 +233,7 @@ class Robot(SMURFRobot):
                 else:
                     cli_limit = None
                 mimic_dict = {}
-                for k, v in values.items():  # [TODO pre_v2.0.0] this doesn't work, it seems phobos input dictionary is differently handled than the output dict
+                for k, v in values.items():  # [TODO v2.0.0] this doesn't work, it seems phobos input dictionary is differently handled than the output dict
                     if k.startswith("mimic_"):
                         mimic_dict[k[len("mimic_"):]] = v
 
@@ -314,7 +314,7 @@ class Robot(SMURFRobot):
 
             if "sensors" in blender_model:
                 for key, values in blender_model['sensors'].items():
-                    # [TODO pre_v2.0.0] "type" Abfragen an die verschiedenen User-Präferenzen angleichen
+                    # [TODO v2.0.0] "type" Abfragen an die verschiedenen User-Präferenzen angleichen
                     if values.get('id') is not None:
                         values['targets'] = [
                             x for x in values['id'] if (
@@ -1397,7 +1397,7 @@ class Robot(SMURFRobot):
         Correct all inertials of the robot.
         """
         for link in self.links:
-            # [TODO pre_v2.0.0] check if the I is basically zero and then recreate the inertial using the collision
+            # [TODO v2.0.0] check if the I is basically zero and then recreate the inertial using the collision
             if link.inertial:
                 M = self.get_inertial(link.name).to_mass_matrix()
                 origin = link.inertial.origin

@@ -469,7 +469,7 @@ class BaseModel(yaml.YAMLObject):
                 if self.robot.get_joint(jointname) is None and ("cut_joint" not in config or config["cut_joint"] is False):
                     faulty_joint_defs += [(jointname, [str(j) for j in self.robot.joints if jointname in str(j) or str(j) in jointname])]
                 elif self.robot.get_joint(jointname) is None and ("cut_joint" in config and config["cut_joint"] is True):  # cut_joint
-                    # [TODO pre_v2.0.0] Review and Check whether this works as expected
+                    # [TODO v2.0.0] Review and Check whether this works as expected
                     # Check whether everything is given and calculate origin and axis (?)
                     _joint = representation.Joint(**config)
                     assert "constraint_axes" in config
@@ -532,7 +532,7 @@ class BaseModel(yaml.YAMLObject):
                     for k, v in config.items():
                         if k not in ["min", "max", "eff", "vel", "movement_depends_on", "active"] + representation.Joint._class_variables:
                             joint.add_annotation(k, v, overwrite=True)
-                # [TODO pre_v2.0.0] Re-add transmission support
+                # [TODO v2.0.0] Re-add transmission support
                 joint.link_with_robot(self.robot)
     
         # Check for joint definitions

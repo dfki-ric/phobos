@@ -174,16 +174,16 @@ class Material(Representation, SmurfBase):
         self.excludes += ["diffuse", "ambient", "specular", "emissive", "original_name", "users"]
 
     def check_valid(self):
-        # [TODO pre_v2.0.0] REVIEW add other colors here
+        # [TODO v2.0.0] REVIEW add other colors here
         if self.diffuse is None and self.diffuseTexture is None:
             raise Exception("Material has neither a color nor texture.")
 
     def equivalent(self, other):
-        # [TODO pre_v2.0.0] REVIEW add other colors here
+        # [TODO v2.0.0] REVIEW add other colors here
         return other.diffuseTexture == self.diffuseTexture and other.diffuse == self.diffuse
 
     def is_delegate(self):
-        # [TODO pre_v2.0.0] REVIEW add other colors here
+        # [TODO v2.0.0] REVIEW add other colors here
         return self.diffuse is None and self.diffuseTexture is None
 
     @property
@@ -978,9 +978,9 @@ class KCCDHull(Representation, SmurfBase):
 class Link(Representation, SmurfBase):
     _class_variables = ["name", "visuals", "collisions", "inertial", "kccd_hull"]
 
-    def __init__(self, name=None, visuals=None, inertial=None, collisions=None, origin=None,
+    def __init__(self, name=None, visuals=None, inertial=None, collisions=None, #origin=None,
                  noDataPackage=False, reducedDataPackage=False, is_human=None, kccd_hull=None, **kwargs):
-        assert origin is None  # Unused but might be neccesary for sdf
+        # assert origin is None  # Unused but might be neccesary for sdf
         SmurfBase.__init__(self, **kwargs)
         self.name = name
         self.is_human = is_human
@@ -1127,7 +1127,7 @@ class Joint(Representation, SmurfBase):
     def __init__(self, name=None, parent=None, child=None, joint_type=None,
                  axis=None, origin=None, limit=None,
                  dynamics=None, safety_controller=None, calibration=None,
-                 mimic=None, motor=None,
+                 mimic=None, joint_dependencies=None, motor=None,
                  noDataPackage=False, reducedDataPackage=False, cut_joint=False, constraint_axes=None, **kwargs):
         self.name = name
         self.returns = ['name']
@@ -1147,13 +1147,13 @@ class Joint(Representation, SmurfBase):
             origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=self.parent)
         self._origin = _singular(origin)
         self.limit = _singular(limit)
-        if "joint_dependencies" in kwargs:
-            self.joint_dependencies = kwargs.pop("joint_dependencies") + _plural(mimic)
+        if joint_dependencies is not None:
+            self.joint_dependencies = _plural(joint_dependencies) + _plural(mimic)
         else:
             self.joint_dependencies = _plural(mimic)
         self.cut_joint = cut_joint
         self.constraint_axes = _plural(constraint_axes)
-        self.motor = (motor if type(motor) == str else motor.name) if motor is not None else None
+        self.motor = str(motor) if motor is not None else None
         if noDataPackage is not None:
             self.noDataPackage = noDataPackage
             self.returns += ["noDataPackage"]

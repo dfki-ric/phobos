@@ -223,7 +223,6 @@ def toggleLayer(cname, value=None):
         coll.exclude = not coll.exclude
 
 
-
 def updateTextFile(textfilename, newContent):
     """This function updates a blender textfile or creates a new one if it is not existent.
 

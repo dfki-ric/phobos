@@ -39,7 +39,7 @@ from phobos.blender.utils.io import securepath
 from phobos.defs import IMPORT_TYPES, EXPORT_TYPES
 
 
-# [TODO pre_v2.0.0] let this use the phobos API as well
+# [TODO v2.0.0] let this use the phobos API as well
 class ExportSceneOperator(Operator):
     """Export the selected model(s) in a scene"""
 
