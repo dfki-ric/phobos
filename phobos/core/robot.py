@@ -999,14 +999,21 @@ class Robot(SMURFRobot):
                     xml_file_in_smurf = xml_file
             elif export["type"] == "submodel":
                 log.debug(f"Exporting submodel {export['name']}")
-                export_robot_instance = export_robot_instance.define_submodel(
-                    name=export["name"],
-                    start=export["start"] if "start" in export else str(export_robot_instance.get_root()),
-                    stop=export["stop"] if "stop" in export else [str(x) for x in export_robot_instance.get_leaves()],
-                    include_unstopped_branches=export["include_unstopped_branches"] or "stop" not in export
-                    if "include_unstopped_branches" in export else None,
-                    no_submechanisms=export["no_submechanisms"] if "no_submechanisms" in export else False
-                )
+                if export["name"] not in self.submodel_defs:
+                    export_robot_instance = self.define_submodel(
+                        name=export["name"],
+                        start=export["start"] if "start" in export else str(export_robot_instance.get_root()),
+                        stop=export["stop"] if "stop" in export else None,
+                        include_unstopped_branches=export["include_unstopped_branches"] or "stop" not in export
+                        if "include_unstopped_branches" in export else None,
+                        no_submechanisms=export["no_submechanisms"] if "no_submechanisms" in export else False
+                    )
+                else:
+                    assert export["start"] == self.submodel_defs["start"]
+                    assert export["stop"] == self.submodel_defs["stop"]
+                    assert export["include_unstopped_branches"] == self.submodel_defs["include_unstopped_branches"]
+                    assert export["no_submechanisms"] == self.submodel_defs["no_submechanisms"]
+                    export_robot_instance = self.instantiate_submodel(export["name"])
                 if "add_floating_base" in export and export["add_floating_base"]:
                     export_robot_instance.add_floating_base()
                 _export_config = None
@@ -1219,7 +1226,7 @@ class Robot(SMURFRobot):
         joint.parent = new_parent_name
 
     def define_submodel(self, name, start, stop=None, robotname=None, only_urdf=False, only_return=False,
-                        overwrite=False, no_submechanisms=False, include_unstopped_branches=True):
+                        overwrite=False, no_submechanisms=False, include_unstopped_branches=False):
         """Defines a submodel from a given starting link.
         If stop is provided than the chain from start to stop is used.
         """
@@ -1243,7 +1250,7 @@ class Robot(SMURFRobot):
         return self.instantiate_submodel(name, no_submechanisms=no_submechanisms,
                                          include_unstopped_branches=include_unstopped_branches)
 
-    def get_links_and_joints_in_subtree(self, start, stop=None, include_unstopped_branches=True):
+    def get_links_and_joints_in_subtree(self, start, stop=None, include_unstopped_branches=False):
         assert self.get_link(start, verbose=True) is not None
         if stop is None:
             # Collect all links on the way to the leaves

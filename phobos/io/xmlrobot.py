@@ -689,7 +689,7 @@ class XMLRobot(Representation):
         leaves = list(chains_to_leave.keys())
         if stop is not None:
             # reduce to only those stops that are in the tree with "start" as root
-            stop = [s for s in stop if any([s in c for c in chains_to_leave.values()])]
+            stop = [s for s in stop if any([s in c and c.index[s] > c.index[start] for c in chains_to_leave.values()])]
             # remove leaves of branches that are stopped and add the stops therefore
             leaves = [l for l in leaves if not any([s in chains_to_leave[l] for s in stop])] + stop
         return leaves
