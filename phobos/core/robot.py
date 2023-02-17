@@ -949,7 +949,7 @@ class Robot(SMURFRobot):
                     export_robot_instance = self.define_submodel(
                         name=export["name"],
                         start=export["start"] if "start" in export else str(export_robot_instance.get_root()),
-                        stop=export["stop"] if "stop" in export else [str(x) for x in export_robot_instance.get_leaves()],
+                        stop=export["stop"] if "stop" in export else None,
                         include_unstopped_branches=export["include_unstopped_branches"] or "stop" not in export
                         if "include_unstopped_branches" in export else None,
                         no_submechanisms=export["no_submechanisms"] if "no_submechanisms" in export else False
@@ -1174,7 +1174,7 @@ class Robot(SMURFRobot):
         joint.parent = new_parent_name
 
     def define_submodel(self, name, start, stop=None, robotname=None, only_urdf=False, only_return=False,
-                        overwrite=False, no_submechanisms=False, include_unstopped_branches=True):
+                        overwrite=False, no_submechanisms=False, include_unstopped_branches=False):
         """Defines a submodel from a given starting link.
         If stop is provided than the chain from start to stop is used.
         """
@@ -1199,7 +1199,7 @@ class Robot(SMURFRobot):
         return self.instantiate_submodel(name, no_submechanisms=no_submechanisms,
                                          include_unstopped_branches=include_unstopped_branches)
 
-    def get_links_and_joints_in_subtree(self, start, stop=None, include_unstopped_branches=True):
+    def get_links_and_joints_in_subtree(self, start, stop=None, include_unstopped_branches=False):
         assert self.get_link(start, verbose=True) is not None
         if stop is None:
             # Collect all links on the way to the leaves
@@ -1211,7 +1211,7 @@ class Robot(SMURFRobot):
             linknames = set()
             _stop = list(set(stop))
             if include_unstopped_branches:
-                _stop = self.get_leaves(start, stop=_stop)
+                _stop = self.get_leaves(start)
             for leave in _stop:
                 linknames = linknames.union(self.get_chain(start, leave, joints=False))
             linknames = list(linknames)
