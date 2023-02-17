@@ -25,7 +25,7 @@ from phobos.blender.utils import selection as sUtils
 from phobos.blender.utils import naming as nUtils
 from phobos.blender.utils import blender as bUtils
 from phobos.utils.resources import get_blender_resources_path
-from phobos.core import Robot
+
 
 from phobos.defs import EXPORT_TYPES, IMPORT_TYPES, KINEMATIC_TYPES
 
@@ -465,133 +465,6 @@ def copy_model(model):
         "Deep copy failed. Unsuspected element in the dictionary: {}".format(type(model))
     )
 
-
-def exportModel(model, exportpath='.', entitytypes=None):
-    """Exports model to a given path in the provided formats.
-
-    Args:
-      model(dict): dictionary of model to export
-      exportpath(str, optional): path to export root (Default value = '.')
-      entitytypes(list of str, optional): export types - model will be exported to all (Default value = None)
-
-    Returns:
-
-    """
-    if not exportpath:
-        exportpath = getExportPath()
-    if not entitytypes:
-        entitytypes = getEntityTypesForExport()
-    if not exportpath.endswith(model["name"]) and not exportpath.endswith(model["name"]+"/"):
-        exportpath = os.path.join(exportpath, model['name'])
-
-    # TODO: Move texture export to individual formats? This is practically SMURF
-    # TODO: Also, this does not properly take care of textures embedded in a .blend file
-    # export textures
-    if getExpSettings().exportTextures:
-        path = os.path
-        for materialname in model['materials']:
-            mat = model['materials'][materialname]
-            for texturetype in ['diffuseTexture', 'normalTexture', 'displacementTexture']:
-                # skip materials without texture
-                if texturetype not in mat:
-                    continue
-
-                sourcepath = path.join(path.expanduser(bpy.path.abspath('//')), mat[texturetype])
-                if path.isfile(sourcepath):
-                    texture_path = securepath(path.join(exportpath, 'textures'))
-                    log(
-                        "Exporting texture {} of material {} to {}.".format(
-                            texturetype, mat[texturetype], texture_path
-                        ),
-                        'INFO',
-                    )
-                    try:
-                        shutil.copy(
-                            sourcepath, path.join(texture_path, path.basename(mat[texturetype]))
-                        )
-                    except shutil.SameFileError:
-                        log(
-                            "{} of material {} already in place.".format(texturetype, materialname),
-                            'WARNING',
-                        )
-
-                    # update the texture path in the model
-                    mat[texturetype] = '../textures/' + path.basename(mat[texturetype])
-
-    # [TODO pre_v2.0.0] Review mesh handling
-    for meshname in model['meshes']:
-        mesh_path = getOutputMeshpath(exportpath, getExpSettings().export_urdf_mesh_type, "relative")
-        mesh_path = os.path.join(mesh_path, meshname + "." + mesh_types[getExpSettings().export_urdf_mesh_type]['extension'])
-        for ln, link in model["links"].items():
-            for key in ["collision", "collisions", "visual", "visuals"]:
-                if key in link:
-                    assert (key.endswith("s") and key + "s" not in link) or (not key.endswith("s") and key[:-1] not in link)
-                    for cn, geo_property in link[key].items():
-                        if geo_property["geometry"]["type"] == "mesh" and geo_property["geometry"]["filename"] == meshname:
-                            model["links"][ln][key][cn]["geometry"]["filepath"] = mesh_path
-    # export meshes in selected formats
-    i = 1
-    mt = len([m for m in mesh_types if getattr(bpy.context.scene, "export_mesh_" + m, False)])
-    mc = len(model['meshes'])
-    n = mt * mc
-    rel_mesh_pathes = {}
-    for meshtype in mesh_types:
-        try:
-            if getattr(bpy.context.scene, "export_mesh_" + meshtype, False):
-                mesh_path = getOutputMeshpath(exportpath, meshtype, "relative")
-                rel_mesh_pathes["meshtype"] = os.path.relpath(mesh_path, exportpath)
-                securepath(mesh_path)
-                for meshname in model['meshes']:
-                    mesh_filepath = os.path.join(mesh_path, meshname+"."+mesh_types[meshtype]['extension'])
-                    mesh_types[meshtype]['export'](model['meshes'][meshname], mesh_filepath)
-                    display.setProgress(i / n, 'Exporting ' + meshname + '.' + meshtype + '...')
-                    i += 1
-        except KeyError as e:
-            log("Error exporting mesh {0} as {1}: {2}".format(meshname, meshtype, str(e)), "ERROR")
-    display.endProgress()
-
-    robot = Robot.get_robot_from_blender_dict(blender_model=model)
-    export_config = []
-    # go through export settings
-    for fmt in [et for et in entitytypes if getattr(bpy.context.scene, f'export_entity_{et}', False)]:
-        if fmt in KINEMATIC_TYPES:
-            export_config.append({
-                "type": fmt.lower(),
-                "mesh_format": getattr(getExpSettings(), f'export_{fmt}_mesh_type'),
-                "link_in_smurf": getattr(getExpSettings(), 'export_smurf_xml_type') == fmt,
-                "ros_pathes": getattr(getExpSettings(), f'{fmt}OutputPathtype').startswith("ros_package"),
-                "enforce_zero": getattr(getExpSettings(), 'enforceZero'),
-                "copy_with_other_pathes": "+" in getattr(getExpSettings(), f'{fmt}OutputPathtype')
-            })
-        elif fmt == "joint_limits":
-            export_config.append({
-                "type": "joint_limits",
-                "joints": "ALL",  # TODO as soon as submechanisms are working
-                "file_name": "joint_limits.yml"
-            })
-        elif fmt == "pdf":
-            export_config.append({
-                "type": "pdf"
-            })
-        # elif fmt == "submodels":
-        #     for sm in submodels:
-        #         export_config.append({
-        #             "type": "submodel",
-        #             "name": sm["name"],
-        #             "start": sm["start"],
-        #             "stop": sm["stop"]
-        #         })
-        elif fmt == "smurf":
-            # will be exported anyways
-            pass
-        else:
-            raise ValueError(f"Can't export for given format: {fmt}")
-    robot.export(
-        outputdir=exportpath,
-        export_config=export_config,
-        rel_mesh_pathes=rel_mesh_pathes,
-        ros_pkg_name=None if len(getRosPackageName()) == 0 else getRosPackageName()
-    )
 
 def exportScene(
     scenedict, exportpath='.', scenetypes=None, export_entity_models=False, entitytypes=None

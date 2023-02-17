@@ -16,7 +16,7 @@ Contains all Blender operators for import and export of models/files.
 import os
 import json
 import sys
-import inspect
+import shutil
 
 import bpy
 import bgl
@@ -34,12 +34,16 @@ import phobos.blender.utils.editing as eUtils
 import phobos.blender.utils.io as ioUtils
 import phobos.blender.utils.blender as bUtils
 import phobos.blender.utils.naming as nUtils
-from phobos.blender.utils.io import securepath
 
-from phobos.defs import IMPORT_TYPES, EXPORT_TYPES
+from phobos import core
+from phobos.blender.io.blender2phobos import deriveRobot
+from phobos.blender.io.phobos2blender import createRobot
+from phobos.utils.resources import get_default_rel_mesh_pathes
+
+from phobos.defs import IMPORT_TYPES, EXPORT_TYPES, KINEMATIC_TYPES
 
 
-# [TODO v2.0.0] let this use the phobos API as well
+# [TODO v2.1.0] let this use the phobos API as well
 class ExportSceneOperator(Operator):
     """Export the selected model(s) in a scene"""
 
@@ -151,6 +155,93 @@ class ExportModelOperator(Operator):
         log("No propely defined models to export.", 'ERROR')
         return {'CANCELLED'}
 
+    def exportModel(self, root, exportpath='.', entitytypes=None):
+        """Exports model to a given path in the provided formats.
+
+        Args:
+          model(dict): dictionary of model to export
+          exportpath(str, optional): path to export root (Default value = '.')
+          entitytypes(list of str, optional): export types - model will be exported to all (Default value = None)
+
+        Returns:
+
+        """
+        robot = deriveRobot(root)
+        # [TODO v2.0.0] Handle Textures similarly to meshes
+        # export textures
+        if ioUtils.getExpSettings().exportTextures:
+            path = os.path
+            for mat in robot.materials:
+                for texturetype in ['diffuseTexture', 'normalTexture', 'displacementTexture']:
+                    # skip materials without texture
+                    if texturetype not in mat:
+                        continue
+
+                    sourcepath = path.join(path.expanduser(bpy.path.abspath('//')), mat[texturetype])
+                    if path.isfile(sourcepath):
+                        texture_path = ioUtils.securepath(path.join(exportpath, 'textures'))
+                        log(
+                            "Exporting texture {} of material {} to {}.".format(
+                                texturetype, mat[texturetype], texture_path
+                            ),
+                            'INFO',
+                        )
+                        try:
+                            shutil.copy(
+                                sourcepath, path.join(texture_path, path.basename(mat[texturetype]))
+                            )
+                        except shutil.SameFileError:
+                            log(
+                                "{} of material {} already in place.".format(texturetype, mat.name),
+                                'WARNING',
+                            )
+
+                        # update the texture path in the model
+                        mat[texturetype] = '../textures/' + path.basename(mat[texturetype])
+
+        export_config = []
+        # go through export settings
+        for fmt in [et for et in entitytypes if getattr(bpy.context.scene, f'export_entity_{et}', False)]:
+            if fmt in KINEMATIC_TYPES:
+                export_config.append({
+                    "type": fmt.lower(),
+                    "mesh_format": getattr(getExpSettings(), f'export_{fmt}_mesh_type'),
+                    "link_in_smurf": getattr(getExpSettings(), 'export_smurf_xml_type') == fmt,
+                    "ros_pathes": getattr(getExpSettings(), f'{fmt}OutputPathtype').startswith("ros_package"),
+                    "enforce_zero": getattr(getExpSettings(), 'enforceZero'),
+                    "copy_with_other_pathes": "+" in getattr(getExpSettings(), f'{fmt}OutputPathtype')
+                })
+            elif fmt == "joint_limits":
+                export_config.append({
+                    "type": "joint_limits",
+                    "joints": "ALL",  # TODO as soon as submechanisms are working
+                    "file_name": "joint_limits.yml"
+                })
+            elif fmt == "pdf":
+                export_config.append({
+                    "type": "pdf"
+                })
+            # [TODO v2.1.0] Re-add submodel support
+            # elif fmt == "submodels":
+            #     for sm in submodels:
+            #         export_config.append({
+            #             "type": "submodel",
+            #             "name": sm["name"],
+            #             "start": sm["start"],
+            #             "stop": sm["stop"]
+            #         })
+            elif fmt == "smurf":
+                # will be exported anyways
+                pass
+            else:
+                raise ValueError(f"Can't export for given format: {fmt}")
+        robot.export(
+            outputdir=exportpath,
+            export_config=export_config,
+            rel_mesh_pathes=get_default_rel_mesh_pathes(),
+            ros_pkg_name=None if len(ioUtils.getRosPackageName()) == 0 else ioUtils.getRosPackageName()
+        )
+
     def execute(self, context):
         """
 
@@ -180,11 +271,11 @@ class ExportModelOperator(Operator):
         for root in roots:
             # setup paths
             exportpath = ioUtils.getExportPath()
-            if not securepath(exportpath):
+            if not ioUtils.securepath(exportpath):
                 log("Could not secure path to export to.", "ERROR")
                 continue
             log("Export path: " + exportpath, "DEBUG")
-            ioUtils.exportModel(models.deriveModelDictionary(root), exportpath)
+            self.exportModel(root, exportpath)
 
         # select all exported models after export is done
         if ioUtils.getExpSettings().selectedOnly:
@@ -197,39 +288,6 @@ class ExportModelOperator(Operator):
                 sUtils.selectObjects(list([root]), False)
             bpy.ops.phobos.select_model()
 
-        # TODO: Move mesh export to individual formats? This is practically SMURF
-        # export meshes in selected formats
-        # for meshtype in meshes.mesh_types:
-        #     mesh_path = ioUtils.getOutputMeshpath(meshtype)
-        #     try:
-        #         typename = "export_mesh_" + meshtype
-        #         if getattr(bpy.data.worlds[0], typename):
-        #             securepath(mesh_path)
-        #             for meshname in model['meshes']:
-        #                 meshes.mesh_types[meshtype]['export'](model['meshes'][meshname], mesh_path)
-        #     except KeyError:
-        #         log("No export function available for selected mesh function: " + meshtype,
-        #             "ERROR", "ExportModelOperator")
-        #         print(sys.exc_info()[0])
-
-        # TODO: Move texture export to individual formats? This is practically SMURF
-        # export textures
-        # if ioUtils.textureExportEnabled():
-        #     texture_path = ''
-        #     for materialname in model['materials']:
-        #         mat = model['materials'][materialname]
-        #         for texturetype in ['diffuseTexture', 'normalTexture', 'displacementTexture']:
-        #             if texturetype in mat:
-        #                 texpath = os.path.join(os.path.expanduser(bpy.path.abspath('//')), mat[texturetype])
-        #                 if os.path.isfile(texpath):
-        #                     if texture_path == '':
-        #                         texture_path = securepath(os.path.join(export_path, 'textures'))
-        #                         log("Exporting textures to " + texture_path, "INFO", "ExportModelOperator")
-        #                     try:
-        #                         shutil.copy(texpath, os.path.join(texture_path, os.path.basename(mat[texturetype])))
-        #                     except shutil.SameFileError:
-        #                         log("{} already in place".format(texturetype), "INFO", "ExportModelOperator")
-        # report success to user
         log("Export successful.", "INFO", end="\n\n")
         return {'FINISHED'}
 
@@ -276,14 +334,11 @@ class ImportModelOperator(bpy.types.Operator):
         Returns:
 
         """
-        from phobos.core.robot import Robot
         suffix = self.filepath.split(".")[-1]
         if suffix.lower() in IMPORT_TYPES:
             log("Importing " + self.filepath + ' as ' + suffix, "INFO")
-            robot = Robot(inputfile=self.filepath)
-            model = robot.get_blender_model_dictionary()
-            # bUtils.cleanScene()
-            models.buildModelFromDictionary(model)
+            robot = core.Robot(inputfile=self.filepath)
+            createRobot(robot)
             for layer in ['link', 'inertial', 'visual', 'collision', 'sensor']:
                 bUtils.toggleLayer(layer, True)
         else:

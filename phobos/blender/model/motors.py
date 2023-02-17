@@ -38,17 +38,6 @@ def createMotor(motor, parentobj, origin=mathutils.Matrix(), addcontrollers=Fals
     """
     bUtils.toggleLayer('motor', value=True)
 
-    primitive_name = ''
-
-    # create name if not given by motor dict
-    if not 'name' in motor or len(motor['name']) == 0:
-        motor['name'] = parentobj.name
-        primitive_name = "motor_" + motor['name']
-    else:
-        primitive_name = motor['name']
-
-    primitive_name = ''
-
     # create name if not given by motor dict
     if not 'name' in motor or len(motor['name']) == 0:
         motor['name'] = parentobj.name

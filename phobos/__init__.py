@@ -25,7 +25,7 @@ except ImportError:
 bl_info = {
     "name": "Phobos",
     "description": "A toolbox to enable editing of robot models in Blender.",
-    "author": "Kai von Szadkowski, Malte Langosz, Henning Wiedemann, Simon Reichel, Julius Martensen, Ole Schwiegert, Stefan Rahms, ",
+    "author": "Kai von Szadkowski, Henning Wiedemann, Malte Langosz, Simon Reichel, Julius Martensen, et. al.",
     "version": (2, 0, 0),
     "blender": (3, 3, 1),
     "location": "Phobos adds a number of custom tool panels.",

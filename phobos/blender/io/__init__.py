@@ -22,3 +22,7 @@ subpackage. These are parsed automatically by Phobos and added to the Blender GU
 proper ``entity_type_dict``. See one of the existing entities (such as
 :mod:`phobos.io.entities.yaml` or :mod:`phobos.io.entities.urdf` for an example).
 """
+
+from . import reserved_keys
+from . import blender2phobos
+from . import phobos2blender

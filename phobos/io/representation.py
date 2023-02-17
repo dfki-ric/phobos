@@ -154,6 +154,8 @@ class Pose(Representation, SmurfBase):
         return False
 
 
+# [TODO v2.0.0] Handle Textures similarly to meshes
+
 class Material(Representation, SmurfBase):
     _class_variables = ["name", "diffuse", "ambient", "emissive", "specular", "diffuseTexture", "normalTexture"]
 
@@ -245,6 +247,10 @@ class Box(Representation):
     def __str__(self):
         return "box"
 
+    @property
+    def extent(self):
+        return self.size
+
 
 class Cylinder(Representation):
     _class_variables = ["radius", "length"]
@@ -262,6 +268,10 @@ class Cylinder(Representation):
     def __str__(self):
         return "cylinder"
 
+    @property
+    def extent(self):
+        return (self.radius, self.radius, self.length)
+
 
 class Sphere(Representation):
     _class_variables = ["radius"]
@@ -276,6 +286,10 @@ class Sphere(Representation):
 
     def __str__(self):
         return "sphere"
+
+    @property
+    def extent(self):
+        return (self.radius, self.radius, self.radius)
 
 
 class Mesh(Representation, SmurfBase):
@@ -474,12 +488,12 @@ class Mesh(Representation, SmurfBase):
             elif self.input_type == "file_dae":
                 bpy.ops.wm.collada_import(filepath=self.input_file)
                 self.mesh_information = mesh_io.parse_dae(self.input_file)
+                self._mesh_object = bpy.context.object.data
             elif self.input_type == "file_bobj":
                 self.mesh_information = mesh_io.parse_bobj(self.input_file)
                 self._mesh_object = mesh_io.mesh_info_dict_2_blender(self.unique_name, **self.mesh_information)
                 bpy.context.view_layer.objects.active = bpy.data.objects.new(self.unique_name, self.mesh_object)
-            assert isinstance(self.mesh_object, bpy.types.Mesh)
-            self._mesh_object = bpy.context.object.data
+            bpy.ops.object.delete()
             self.changed = True  # as we there might be unnoticed changes by blender
         else:
             if self.input_type == "file_stl":
@@ -497,7 +511,7 @@ class Mesh(Representation, SmurfBase):
                 self.mesh_information = mesh_io.parse_bobj(self.input_file)
                 self._mesh_object = mesh_io.mesh_info_dict_2_trimesh(**self.mesh_information)
         self.history.append(f"loaded {'bpy-Mesh' if BPY_AVAILABLE else 'trimesh'} from {self.input_type} {self.input_file}")
-        return deepcopy(self.mesh_object)
+        return self.mesh_object
 
     def provide_mesh_file(self, targetpath, format=None, throw_on_invalid_bobj=False):
         if format is None and self._related_robot_instance is not None:
@@ -840,6 +854,7 @@ class Visual(Representation, SmurfBase):
         assert isinstance(self.origin, Pose)
 
     @property
+    # [TODO v2.0.0] Make the name more selfexplanatory, that this is the dummy for exporting only a reference
     def material_(self):
         return None
 
@@ -848,7 +863,7 @@ class Visual(Representation, SmurfBase):
                self.origin == other.origin
 
 
-class Inertia(Representation):
+class Inertia(Representation, SmurfBase):
     _class_variables = ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz']
 
     def __init__(self, ixx=1e-16, ixy=0.0, ixz=0.0, iyy=1e-16, iyz=0.0, izz=1e-16, **kwargs):
@@ -860,6 +875,9 @@ class Inertia(Representation):
         self.iyy = iyy
         self.iyz = iyz
         self.izz = izz
+
+    def stringable(self):
+        return False
 
     def to_matrix(self):
         return [[self.ixx, self.ixy, self.ixz],
@@ -884,7 +902,7 @@ class Inertia(Representation):
         return Inertia(**inertias)
 
 
-class Inertial(Representation):
+class Inertial(Representation, SmurfBase):
     _class_variables = ["mass", "inertia", "origin"]
 
     def __init__(self, mass=0.0, inertia=None, origin=None, **kwargs):
@@ -895,6 +913,9 @@ class Inertial(Representation):
             origin = Pose()
         self.origin = _singular(origin)
         assert type(self.origin) == Pose, f"{origin} is not Pose"
+
+    def stringable(self):
+        return False
 
     @staticmethod
     def from_mass_matrix(M, origin: Pose):
@@ -1373,16 +1394,18 @@ class Transmission(Representation):
 
 
 class Motor(Representation, SmurfBase):
+    TYPES = ["dc", "ac", "step"]
     _class_variables = ["name", "joint"]
 
     def __init__(self, name=None, joint=None, **kwargs):
-        SmurfBase.__init__(self, name=name, joint=joint, **kwargs)
+        SmurfBase.__init__(self, name=name, joint=joint, type="dc", **kwargs)
         # This is hardcoded information
         assert self.joint is not None
         self._maxEffort = None
         self._maxSpeed = None
         self._maxValue = None
         self._minValue = None
+        self.type = type
         self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue']
 
     @property

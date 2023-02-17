@@ -88,6 +88,13 @@ class Sensor(Representation, SmurfBase):
     def merge(self, other):
         raise NotImplementedError
 
+    @property
+    def frame(self):
+        if hasattr(self, "link") and self.link is not None:
+            return self.link
+        return None
+
+
 
 class Joint6DOF(Sensor):
     _class_variables = ["name", "link"]

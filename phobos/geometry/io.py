@@ -69,7 +69,7 @@ def blender_2_mesh_info_dict(mesh):
 
     # prepare info dict
     n_info = {
-        "vertices": np.array(mesh.vertices, dtype=np.single),
+        "vertices": np.array([v.co for v in mesh.vertices], dtype=np.single),
         "vertex_normals": np.array([v.normal for v in mesh.vertices], dtype=np.single),
         "faces": []
     }

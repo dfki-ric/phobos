@@ -1,6 +1,7 @@
 import os
 import json
 
+
 def get_resources_path(*filepath):
     path = None
     try:
