@@ -672,13 +672,14 @@ class Robot(SMURFRobot):
                 kccd_robot.remove_joint(j)
                 assert str(j) not in [str(jnt) for jnt in kccd_robot.joints]
         # generate collision model
-        pgu.generate_kccd_optimizer_ready_collision(kccd_robot, [link.name for link in kccd_robot.links],
-                                                    outputdir=kccd_meshes,
-                                                    join_first=join_before_convexhull,
-                                                    merge_additionally=kwargs["merge_additionally"]
-                                                    if "merge_additionally" in kwargs.keys() else None,
-                                                    mars_meshes=output_mesh_format.lower() == "mars_obj",
-                                                    reduce_meshes=reduce_meshes)
+        pgu.generate_kccd_optimizer_ready_collision(
+            kccd_robot, [link.name for link in kccd_robot.links],
+            outputdir=kccd_meshes,
+            join_first=join_before_convexhull,
+            merge_additionally=kwargs["merge_additionally"] if "merge_additionally" in kwargs.keys() else None,
+            mars_meshes=output_mesh_format.lower() == "mars_obj",
+            reduce_meshes=reduce_meshes
+        )
 
         # urdf2kccd generates the model out of the visuals therefore we have to remove all visuals and make the
         # collisions visuals
@@ -887,6 +888,8 @@ class Robot(SMURFRobot):
 
         out += "}\n"
 
+        if not os.path.isdir(os.path.dirname(outputfile)):
+            os.makedirs(os.path.dirname(outputfile), exist_ok=True)
         with open(outputfile + ".gv", "w") as f:
             f.write(out)
 
