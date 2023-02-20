@@ -618,7 +618,7 @@ class Robot(SMURFRobot):
                     export_files.append(os.path.split(stream.name)[-1])
 
         # submodel list
-        if with_submodel_defs:
+        if with_submodel_defs and len(self.submodel_defs) > 0:
             with open(os.path.join(smurf_dir, "{}_submodels.yml".format(self.name)), "w+") as stream:
                 stream.write(dump_json({"submodels": self.submodel_defs}, default_style=False))
                 export_files.append(os.path.split(stream.name)[-1])

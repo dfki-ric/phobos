@@ -519,9 +519,9 @@ def deriveMotor(obj):
         if k not in reserved_keys.MOTOR_KEYS+reserved_keys.INTERNAL_KEYS:
             annotations[k] = v
 
-    return representation.Joint(
+    return representation.Motor(
         name=obj.name,
-        joint=parent.get("jointname", parent.name),
+        joint=parent.get("joint/name", parent.name),
         **annotations
     )
 
