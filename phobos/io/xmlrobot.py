@@ -40,14 +40,9 @@ class XMLRobot(Representation):
                 self.name = None
         else:
             self.name = name
-        if version is None:
-            version = "1.0"
-        elif type(version) is not str:
-            version = str(version)
-        if version not in self.SUPPORTED_VERSIONS:
-            raise ValueError("Invalid version; only %s is supported" % (','.join(self.SUPPORTED_VERSIONS)))
 
         self.version = version
+        self.urdf_version = "1.0.0"
 
         if joints is not None:
             for joint in joints:

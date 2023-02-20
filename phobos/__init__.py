@@ -55,7 +55,8 @@ optional_requirements = {
 extra_requirements = {
     "pybullet": "pybullet",  # optional for blender
     "open3d": "open3d",  # optional for blender
-    "python-fcl": "python-fcl"  # optional for blender
+    "python-fcl": "python-fcl",  # optional for blender,
+    "PIL": "Pillow"  # optional for blender,
 }
 
 

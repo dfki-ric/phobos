@@ -17,7 +17,7 @@ from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 
-def as_trimesh(scene_or_mesh, scale=None):
+def as_trimesh(scene_or_mesh, scale=None, silent=False):
     if scale is None:
         scale = [1.0, 1.0, 1.0]
     scale = np.asarray(scale)
@@ -28,8 +28,9 @@ def as_trimesh(scene_or_mesh, scale=None):
         mesh = trimesh.util.concatenate([
             trimesh.Trimesh(vertices=m.vertices, faces=m.faces)
             for m in scene_or_mesh.geometry.values()])
-    elif not isinstance(scene_or_mesh, trimesh.Trimesh):  # we assume it's blender
-        blender_mesh = scene_or_mesh.data
+    elif not isinstance(scene_or_mesh, trimesh.Trimesh) and BPY_AVAILABLE:  # we assume it's blender
+        import bpy
+        blender_mesh = scene_or_mesh if isinstance(scene_or_mesh, bpy.types.Mesh) else scene_or_mesh.data
         if len(set([len(p.vertices) for p in blender_mesh.polygons])) > 1:
             assert BPY_AVAILABLE
             import bmesh
@@ -40,8 +41,9 @@ def as_trimesh(scene_or_mesh, scale=None):
             bm.free()
         vertices = np.asarray([np.asarray(scale * v.co) for v in blender_mesh.vertices])
         faces = np.array([[v for v in p.vertices] for p in blender_mesh.polygons], dtype=np.int64)
-        # [TODO pre_v2.0.0] Resolve the following error
-        log.error("Received a blender mesh, porting uv maps to trimesh representation are not yet supported and thus will be lost.")
+        if not silent:
+            # [TODO v2.0.0] Resolve the following error
+            log.error("Received a blender mesh, porting uv maps to trimesh representation are not yet supported and thus will be lost.")
         mesh = trimesh.Trimesh(vertices=vertices, faces=trimesh.geometry.triangulate_quads(faces))
     else:
         mesh = scene_or_mesh
@@ -83,7 +85,7 @@ def blender_2_mesh_info_dict(mesh):
             for loop_index in tri.loops:
                 uv_face_mapping[tri][loop_index] = numUVs
                 numUVs += 1
-                n_info["texture_coords"].append(uv_layer.data[loop_index].uv)
+                n_info["texture_coords"].append(np.array(uv_layer.data[loop_index].uv))
 
     for tri in mesh.loop_triangles:
         for i in range(len(tri.vertices)):

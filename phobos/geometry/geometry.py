@@ -153,6 +153,8 @@ def identical(mesh_a, mesh_b):
     if mesh_a == mesh_b:
         return True
     assert mesh_a is not None and mesh_b is not None
+    assert isinstance(mesh_a, trimesh.Trimesh) and isinstance(mesh_b, trimesh.Trimesh) or\
+        isinstance(mesh_a, trimesh.Scene) and isinstance(mesh_b, trimesh.Scene)
     return (
         all(trimesh.comparison.identifier_simple(mesh_a) == trimesh.comparison.identifier_simple(mesh_b)) or
         ((

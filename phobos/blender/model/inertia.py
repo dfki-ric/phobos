@@ -28,6 +28,7 @@ import phobos.blender.utils.naming as nUtils
 from phobos.blender.model.geometries import deriveGeometry
 from phobos.blender.model.poses import deriveObjectPose
 from phobos.blender.utils.validation import validate
+from phobos.blender.io import reserved_keys
 
 
 @validate('inertia_data')
@@ -88,7 +89,7 @@ def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logg
 
     # add properties to the object
     for prop in ('mass', 'inertia'):
-        inertialobject['inertial/' + prop] = inertialdict[prop]
+        inertialobject[prop] = inertialdict[prop]
     return inertialobject
 
 
@@ -193,9 +194,7 @@ def fuse_inertia_data(inertials):
     expsetting = 10**(-getExpSettings().decimalPlaces)
 
     # Find objects who have some inertial data
-    for obj in inertials:
-        if not any([True for key in obj.keys() if key.startswith('inertial/')]):
-            inertials.remove(obj)
+    inertials = [obj for obj in inertials if any([key in reserved_keys.INERTIAL_KEYS for key in obj.keys()])]
 
     # Check for an empty list -> No inertials to fuse
     if not inertials:
@@ -218,7 +217,7 @@ def fuse_inertia_data(inertials):
     for obj in inertials:
         # Get the rotation of the inertia
         current_Rotation = numpy.array(obj.matrix_local.to_3x3())
-        current_Inertia = numpy.array(inertiaListToMatrix(obj['inertial/inertia']))
+        current_Inertia = numpy.array(inertiaListToMatrix(obj['inertia']))
         # Rotate the inertia into the current frame
         current_Inertia = numpy.dot(
             numpy.dot(current_Rotation.T, current_Inertia), current_Rotation
@@ -227,7 +226,7 @@ def fuse_inertia_data(inertials):
         # Get the current relative position of the center of mass
         relative_position = numpy.array(obj.matrix_local.translation) - fused_com
         # Calculate the translational influence
-        current_Inertia += obj['inertial/mass'] * (
+        current_Inertia += obj['mass'] * (
             relative_position.T * relative_position * numpy.eye(3)
             - numpy.outer(relative_position, relative_position)
         )
@@ -267,8 +266,8 @@ def combine_com_3x3(objects):
     combined_com = mathutils.Vector((0.0,) * 3)
     combined_mass = 0
     for obj in objects:
-        combined_com = combined_com + obj.matrix_local.translation * obj['inertial/mass']
-        combined_mass += obj['inertial/mass']
+        combined_com = combined_com + obj.matrix_local.translation * obj['mass']
+        combined_mass += obj['mass']
     combined_com = combined_com / combined_mass
     log("  Combined center of mass: " + str(combined_com), 'DEBUG')
     return combined_mass, combined_com

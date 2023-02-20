@@ -43,14 +43,14 @@ def createMaterial(material: representation.Material):
 
     if material.diffuseTexture is not None:
         diffuse_tex_node = newmat.node_tree.nodes.new('ShaderNodeTexImage')
-        diffuse_tex_node.image = bpy.data.images.load(material.diffuseTexture)
+        diffuse_tex_node.image = material.diffuseTexture.load_image()
         diffuse_tex_node.location = (-400, 0)
         material.node_tree.links.new(diffuse_tex_node.outputs[0], shader_node.inputs[0])
     shader_node.inputs['Base Color'].default_value = material.diffuse
 
     if material.normalTexture is not None:
         normal_tex_node = newmat.node_tree.nodes.new('ShaderNodeTexImage')
-        normal_tex_node.image = bpy.data.images.load(material.normalTexture)
+        normal_tex_node.image = material.normalTexture.load_image()
         normal_tex_node.location = (-600, -400)
         normal_map_node = newmat.node_tree.nodes.new('ShaderNodeNormalMap')
         normal_map_node.location = (-300, -400)
@@ -114,7 +114,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
         return None
 
     # from here it's the same for both meshes and primitives
-    newgeom['geometry_type'] = geometry_type
+    newgeom['geometry/type'] = geometry_type
     if geomsrc == 'visual':
         if hasattr(viscol, "material") and viscol.material is not None:
             assignMaterial(newgeom, viscol.material)

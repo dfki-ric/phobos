@@ -606,8 +606,8 @@ def validateGeometryType(obj, *args, adjust=False, geometry_dict=None):
 def validateInertiaData(obj, *args, adjust=False):
     """Validates an inertia dictionary or object.
     
-    This checks for the *inertia* and *mass* values in the dictionary (*inertial/inertia* and
-    *inertial/mass* for an object respectively).
+    This checks for the *inertia* and *mass* values in the dictionary (*inertia* and
+    *mass* for an object respectively).
     
     Also, the inertia values are checked to be positive definite (for diagonal, determinant and
     eigenvalues).
@@ -674,7 +674,7 @@ def validateInertiaData(obj, *args, adjust=False):
         mass = obj['mass']
     # check existing object properties
     elif isinstance(obj, bpy.types.Object):
-        if 'inertial/inertia' not in obj:
+        if 'inertia' not in obj:
             errors.append(
                 ValidateMessage(
                     "Inertia not defined!",
@@ -684,9 +684,9 @@ def validateInertiaData(obj, *args, adjust=False):
                     {'log_info': "Set to default 1e-3."},
                 )
             )
-            obj['inertial/inertia'] = (1e-3, 0., 0., 1e-3, 0., 1e-3)
+            obj['inertia'] = (1e-3, 0., 0., 1e-3, 0., 1e-3)
 
-        if 'inertial/mass' not in obj:
+        if 'mass' not in obj:
             errors.append(
                 ValidateMessage(
                     "Mass is not defined!",
@@ -696,9 +696,9 @@ def validateInertiaData(obj, *args, adjust=False):
                     {'log_info': "Set to default 1e-3."},
                 )
             )
-            obj['inertial/mass'] = 1e-3
-        inertia = obj['inertial/inertia']
-        mass = obj['inertial/mass']
+            obj['mass'] = 1e-3
+        inertia = obj['inertia']
+        mass = obj['mass']
     else:
         raise AssertionError(type(obj))
 
@@ -758,10 +758,7 @@ def validateInertiaData(obj, *args, adjust=False):
 
     inertia = inertiaMatrixToList(inertia)
 
-    if adjust and isinstance(obj, bpy.types.Object):
-        obj['inertial/inertia'] = inertia
-        obj['inertial/mass'] = mass
-    elif adjust:
+    if adjust:
         obj['inertia'] = inertia
         obj['mass'] = mass
 

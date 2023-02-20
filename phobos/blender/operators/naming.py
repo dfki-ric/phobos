@@ -26,6 +26,7 @@ import phobos.blender.utils.validation as validation
 from phobos.blender.phoboslog import log
 
 
+# [TODO v2.1.0] REVIEW this
 class ToggleNamespaces(Operator):
     """Toggle the use of namespaces for the selected objects"""
 
@@ -187,6 +188,7 @@ class SetModelVersionOperator(Operator):
         return {'FINISHED'}
 
 
+# [TODO v2.0.0] Review this
 class BatchRename(Operator):
     """Replace part of the name of selected object(s)"""
 
@@ -242,6 +244,7 @@ class BatchRename(Operator):
         return len(context.selected_objects) > 0
 
 
+# [TODO v2.0.0] Review this
 class FixObjectNames(Operator):
     """Cleans up the redundant names of the active object"""
 
@@ -399,6 +402,7 @@ class ChangeObjectName(Operator):
             layout.prop(self, 'newname')
             self.jointname = ''
             layout.label(text="Phobostype: " + obj.phobostype)
+
 
 classes = (
     ToggleNamespaces,

@@ -47,9 +47,9 @@ def deriveMaterial(mat, logging=False, errors=None):
     if mat.use_nodes:
         for tex in [node for node in mat.node_tree.nodes if "Image Texture" in node.name]:
             if tex.outputs["Color"].links[0].to_socket.name == "Base Color":
-                diffuseTexture = os.path.normpath(bpy.path.abspath(tex.image.filepath))
+                diffuseTexture = representation.Texture(image=tex.image)
             elif tex.outputs["Color"].links[0].to_socket.node.name == "Normal Map":
-                normalTexture = os.path.normpath(bpy.path.abspath(tex.image.filepath))
+                normalTexture = representation.Texture(image=tex.image)
         if "Specular BSDF" in mat.node_tree.nodes.keys():
             diffuse_color = mat.node_tree.nodes["Specular BSDF"].inputs["Base Color"].default_value
             specular_color = mat.node_tree.nodes["Specular BSDF"].inputs["Specular"].default_value
@@ -83,7 +83,7 @@ def deriveMaterial(mat, logging=False, errors=None):
 
 @validate('geometry_type')
 def deriveGeometry(obj, **kwargs):
-    gtype = obj['geometry_type']
+    gtype = obj['geometry/type']
     if gtype == 'box':
         return representation.Box(size=list(obj.dimensions))
     elif gtype == 'cylinder':
@@ -123,7 +123,7 @@ def deriveCollision(obj, **kwargs):
     # further annotations
     annotations = {}
     for k, v in obj.items():
-        if k not in reserved_keys.VISCOL_KEYS:
+        if k not in reserved_keys.VISCOL_KEYS+reserved_keys.INTERNAL_KEYS:
             if "/" not in k:
                 annotations[k] = v
             else:
@@ -169,7 +169,7 @@ def deriveVisual(obj, logging=True, **kwargs):
     # further annotations
     annotations = {}
     for k, v in obj.items():
-        if k not in reserved_keys.VISCOL_KEYS:
+        if k not in reserved_keys.VISCOL_KEYS+reserved_keys.INTERNAL_KEYS:
             if "/" not in k:
                 annotations[k] = v
             else:
@@ -178,7 +178,7 @@ def deriveVisual(obj, logging=True, **kwargs):
                     annotations[k1] = {}
                 annotations[k1][k2] = v
 
-    return representation.Collision(
+    return representation.Visual(
         name=obj.name,
         geometry=deriveGeometry(obj),
         origin=deriveObjectPose(obj),
@@ -189,7 +189,7 @@ def deriveVisual(obj, logging=True, **kwargs):
 
 @validate('inertia_data')
 def deriveInertial(obj, logging=True, **kwargs):
-    inertia = representation.Inertia(*obj["inertia"])
+    inertia = representation.Inertia(*obj["inertia"][0])
 
     # further annotations
     annotations = {}
@@ -308,9 +308,9 @@ def deriveInertial(obj, logging=True, **kwargs):
 
 
 @validate('link')
-def deriveLink(obj, objectlist=[], logging=False, errors=None):
+def deriveLink(obj, objectlist=None, logging=True, errors=None):
     # use scene objects if no objects are defined
-    if not objectlist:
+    if objectlist is None:
         objectlist = list(bpy.context.scene.objects)
 
     if logging:
@@ -340,7 +340,7 @@ def deriveLink(obj, objectlist=[], logging=False, errors=None):
             #     annotations['approxcollision'].append(deriveApproxsphere(obj))
 
     # gather the inertials for fusing the link inertia
-    inertials = inertiamodel.gatherInertialChilds(obj, objectlist, logging=logging)
+    inertials = [inert for inert in obj.children if inert.phobostype == 'inertial']
 
     mass = None
     com = None
@@ -357,14 +357,14 @@ def deriveLink(obj, objectlist=[], logging=False, errors=None):
         # add inertia to link
         inertial = representation.Inertial(
             mass=mass,
-            inertia=representation.Inertia(inertiamodel.inertiaMatrixToList(inertia)),
+            inertia=representation.Inertia(*inertiamodel.inertiaMatrixToList(inertia)),
             origin=representation.Pose(xyz=list(com))
         )
 
     # further annotations
     annotations = {}
     for k, v in obj.items():
-        if k not in reserved_keys.JOINT_KEYS+reserved_keys.LINK_KEYS and not k.startswith("joint/"):
+        if k not in reserved_keys.JOINT_KEYS+reserved_keys.LINK_KEYS+reserved_keys.INTERNAL_KEYS and not k.startswith("joint/"):
             k = k.replace("link/", "")
             if "/" not in k:
                 annotations[k] = v
@@ -391,7 +391,7 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
     # further annotations
     annotations = {}
     for k, v in obj.items():
-        if k not in reserved_keys.JOINT_KEYS+reserved_keys.LINK_KEYS and not k.startswith("link/"):
+        if k not in reserved_keys.JOINT_KEYS+reserved_keys.LINK_KEYS+reserved_keys.INTERNAL_KEYS and not k.startswith("link/"):
             k = k.replace("joint/", "")
             if "/" not in k:
                 annotations[k] = v
@@ -440,7 +440,7 @@ def deriveInterface(obj):
     # further annotations
     annotations = {}
     for k, v in obj.items():
-        if k not in ["name", "type", "direction", "parent"]:
+        if k not in reserved_keys.INTERFACE_KEYS+reserved_keys.INTERNAL_KEYS:
             if "/" not in k:
                 annotations[k] = v
             else:
@@ -470,7 +470,7 @@ def deriveAnnotation(obj):
         "$name": obj.name
     }
     props.update({
-        k: v for k, v in obj.items()
+        k: v for k, v in obj.items() if k not in reserved_keys.INTERNAL_KEYS
     })
     return props
 
@@ -494,7 +494,7 @@ def deriveSensor(obj, logging=False):
             'DEBUG',
         )
 
-    values = {k: v for k, v in obj.items()}
+    values = {k: v for k, v in obj.items() if k not in reserved_keys.INTERNAL_KEYS}
     values["parent"] = sUtils.getEffectiveParent(obj).name
     sensor_type = values.pop("type")
 
@@ -516,7 +516,7 @@ def deriveMotor(obj):
     # further annotations
     annotations = {}
     for k, v in obj.items():
-        if k not in ["name", "joint"]:
+        if k not in reserved_keys.MOTOR_KEYS+reserved_keys.INTERNAL_KEYS:
             annotations[k] = v
 
     return representation.Joint(

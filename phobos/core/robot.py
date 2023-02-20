@@ -641,6 +641,8 @@ class Robot(SMURFRobot):
             'files': sorted(export_files),
             'description': self.description
         }
+        if self.version is not None:
+            annotation_dict['version'] = self.version
 
         with open(self.smurffile, "w+") as stream:
             stream.write(dump_json(annotation_dict, default_style=False, sort_keys=True))

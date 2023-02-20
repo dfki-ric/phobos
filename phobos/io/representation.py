@@ -20,10 +20,20 @@ from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix, create_
 from ..utils import xml as xml_utils, transform
 
 MESH_INFO_KEYS = ["vertex_normals", "texture_coords", "vertices", "faces"]
-MESH_DATA_TYPES = ["trimesh.base.Trimesh", "trimesh.scen.scene.Scene", "file_obj", "file_stl", "file_dae", "file_iv"]
+MESH_DATA_TYPES = ["trimesh.base.Trimesh", "trimesh.scene.scene.Scene", "file_obj", "file_stl", "file_dae", "file_iv"]
 if BPY_AVAILABLE:
     import bpy
-    MESH_DATA_TYPES += ["bpy.types.Mesh"]
+
+    def _bpy_mesh_dc(inst, memo={}):
+        log.debug(f"Skipping deepcopy of {type(inst)}")
+        return inst
+
+    setattr(bpy.types.Mesh, "__deepcopy__", _bpy_mesh_dc)
+    setattr(bpy.types.Image, "__deepcopy__", _bpy_mesh_dc)
+
+    del _bpy_mesh_dc
+
+    MESH_DATA_TYPES += ["bpy_types.Mesh"]
 
 from ..commandline_logging import get_logger
 log = get_logger(__name__)
@@ -154,7 +164,91 @@ class Pose(Representation, SmurfBase):
         return False
 
 
-# [TODO v2.0.0] Handle Textures similarly to meshes
+class Texture(Representation):
+    def __init__(self, name=None, filepath=None, image=None, **kwargs):
+        super(Texture, self).__init__()
+        self.unique_name = name
+        if image is not None:
+            self.unique_name = None
+            self.image = image
+            self.input_file = None
+            self.input_type = "img"
+            if BPY_AVAILABLE and isinstance(image, bpy.types.Image):
+                self.input_file = os.path.normpath(bpy.path.abspath(image.filepath))
+                self.input_type = "img_bpy"
+                if self.unique_name is None:
+                    self.unique_name, ext = os.path.splitext(image.name)
+            elif hasattr(image, "filename"):
+                # assumes PIL/Pillow image
+                self.input_file = os.path.expanduser(image.filename)
+        elif filepath is not None:
+            self.input_file = filepath
+            self.input_type = "file"
+            self.image = None
+
+        if not os.path.isabs(self.input_file) and "xmlfile" in kwargs and kwargs["xmlfile"] is not None:
+            self.input_file = os.path.join(os.path.dirname(kwargs["xmlfile"]), self.input_file)
+        elif not os.path.isabs(self.input_file) and "smurffile" in kwargs and kwargs["smurffile"] is not None:
+            self.input_file = os.path.join(os.path.dirname(kwargs["smurffile"]), self.input_file)
+        if not os.path.isabs(self.input_file) or not os.path.isfile(self.input_file):
+            raise IOError(f"Texture file {self.input_file} couldn't be found!")
+
+        if self.unique_name is None:
+            self.unique_name, ext = os.path.splitext(os.path.basename(self.input_file))
+
+        self.exported = None
+
+    def stringable(self):
+        # [TODO v2.1.0]
+        # Eventhough we can create a string of a texture, it's not possible yet to have this mesh as link in the robot
+        # This is still an open to do, which requires to deepcopy meshes on demand when one instance is changed in a
+        # way that is not applicable to other usages of this mesh.
+        return False
+
+    def __str__(self):
+        return self.filepath
+
+    @property
+    def abs_filepath(self):
+        if self.exported is None:
+            return self.input_file
+        else:
+            return self.exported
+
+    @property
+    def filepath(self):
+        if self._related_robot_instance is not None and self._related_robot_instance.xmlfile is not None:
+            return os.path.relpath(self.abs_filepath, os.path.dirname(self._related_robot_instance.xmlfile))
+        else:
+            return self.abs_filepath
+
+    def load_image(self):
+        if BPY_AVAILABLE:
+            self.image = bpy.data.images.load(self.input_file)
+        else:
+            from PIL import Image
+            self.image = Image.open(self.input_file)
+
+    def provide_image_file(self, targetpath, format=None):
+        if format is None:
+            format = "JPG"
+        assert format in ["JPG", "PNG"]
+        ext = format.lower()
+        targetpath = os.path.join(targetpath, self.unique_name+"."+ext)
+        if os.path.isfile(targetpath):
+            log.info(f"Texture fiel {targetpath} already exists, considering this as already exported")
+            self.exported = targetpath
+            return
+        if BPY_AVAILABLE and self.input_type == "img_bpy":
+            self.image.filepath_raw = targetpath
+            self.image.file_format = format
+            self.image.save()
+        else:
+            # assumes PIL/Pillow image
+            self.image.save(targetpath)
+        self.exported = targetpath
+        return
+
 
 class Material(Representation, SmurfBase):
     _class_variables = ["name", "diffuse", "ambient", "emissive", "specular", "diffuseTexture", "normalTexture"]
@@ -306,7 +400,8 @@ class Mesh(Representation, SmurfBase):
         if mesh is not None:
             assert meshname is not None
             self._mesh_object = mesh
-            self.input_type = str(type(mesh))
+            self.input_type = str(type(mesh))[8:-2]  # handle: <class 'the type name'>
+            assert self.input_type in MESH_DATA_TYPES
             self.input_file = None
             self.unique_name = meshname
             self.mesh_information = None
@@ -360,18 +455,18 @@ class Mesh(Representation, SmurfBase):
         self._mesh_object = value
         self.mesh_information = None
 
-    def __str__(self):
-        return self.unique_name
-
-    def set_unique_name(self, value):
-        self.unique_name = value
-
     def stringable(self):
         # [TODO v2.1.0]
         # Eventhough we can create a string of this mesh, it's not possible yet to have this mesh as link in the robot
         # This is still an open to do, which requires to deepcopy meshes on demand when one instance is changed in a
         # way that is not applicable to other usages of this mesh.
         return False
+
+    def __str__(self):
+        return self.unique_name
+
+    def set_unique_name(self, value):
+        self.unique_name = value
 
     def write_history(self, targetpath):
         # log.debug(f"Writing history to {targetpath}_history.log")
@@ -546,7 +641,7 @@ class Mesh(Representation, SmurfBase):
             equiv_histories = False
             if o_history is not None:
                 equiv_histories = [x for x in o_history[1:] if not x.startswith("->")] == [x for x in self.history[1:] if not x.startswith("->")]
-            if existing_mesh is not None and (equiv_histories or mesh_io.identical(self.mesh_object, existing_mesh)):
+            if existing_mesh is not None and (equiv_histories or mesh_io.identical(mesh_io.as_trimesh(self.mesh_object), existing_mesh)):
                 log.debug(f"Skipping export of {targetpath } as the mesh file already exists and is identical")
                 self.exported[ext] = targetpath
                 self.write_history(targetpath)
@@ -847,14 +942,14 @@ class Visual(Representation, SmurfBase):
                 self.material = material_
         elif isinstance(material, Material):
             assert material_ is None or material_.equivalent(material)
-            self.material = material_
+            self.material = material
         if origin is None:
             origin = Pose()
         self.origin = _singular(origin)
         assert isinstance(self.origin, Pose)
 
     @property
-    # [TODO v2.0.0] Make the name more selfexplanatory, that this is the dummy for exporting only a reference
+    # [TODO v2.0.0] Make the name more self-explanatory, that this is the dummy for exporting only a reference
     def material_(self):
         return None
 

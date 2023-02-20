@@ -159,7 +159,7 @@ class PhobosPrefs(AddonPreferences):
         row1 = box.row()
         row1.label(text="OBJ export frame")
         row2 = box.row()
-        row2.label("Some loaders e.g. OSG use different conventions.See Phobos-Documentation on meshes. "
+        row2.label(text="Some loaders e.g. OSG use different conventions.See Phobos-Documentation on meshes. "
                    "The default is Z-Up Y-Forward. "
                    "You should adapt this only if you are working e.g. with an old version of MARS.")
         box.prop(self, 'obj_axis_forward')
@@ -824,6 +824,7 @@ ignoredProps = set(
 )
 
 
+# [TODO v2.0.0] Repair
 class PhobosPropertyInformationPanel(bpy.types.Panel):
     """Contains all properties sorted in different categories"""
 

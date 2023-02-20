@@ -4,7 +4,7 @@
       "tag": "robot",
       "attributes": {
         "name": "name",
-        "version": "version"
+        "version": "urdf_version"
       },
       "children": {
         "link": {
@@ -49,17 +49,26 @@
         }
       }
     },
+    "Texture": {
+      "tag": "texture",
+      "attributes": {
+        "filename": "filepath"
+      }
+    },
     "Material": {
       "tag": "material",
       "attributes": {
         "name": "name"
       },
+      "children": {
+        "texture": {
+          "classname": "Texture",
+          "varname": "diffuseTexture"
+        }
+      },
       "attribute_children": {
         "color": {
           "rgba": "diffuse"
-        },
-        "texture": {
-          "filename": "diffuseTexture"
         }
       }
     },
