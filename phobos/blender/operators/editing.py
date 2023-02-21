@@ -47,11 +47,8 @@ import phobos.blender.utils.editing as eUtils
 import phobos.blender.utils.validation as vUtils
 import phobos.blender.model.joints as jUtils
 import phobos.blender.model.links as modellinks
-import phobos.blender.model.motors as modelmotors
+from phobos.blender.io import blender2phobos, phobos2blender
 import phobos.blender.model.controllers as controllermodel
-import phobos.blender.model.interfaces as interfmodel
-import phobos.blender.model.sensors as sensors
-import phobos.blender.model.models as models
 from phobos.blender.operators.generic import addObjectFromYaml
 from phobos.blender.phoboslog import log
 
@@ -623,7 +620,7 @@ class CreateInterfaceOperator(Operator):
         }
         if self.all_selected:
             for link in [obj for obj in context.selected_objects if obj.phobostype == 'link']:
-                interfmodel.createInterface(
+                phobos2blender.createInterface(
                     representation.Interface(
                         name=self.interface_name,
                         parent=link.name,
@@ -633,7 +630,7 @@ class CreateInterfaceOperator(Operator):
                     link
                 )
         else:
-            interfmodel.createInterface(
+            phobos2blender.createInterface(
                 representation.Interface(
                         name=self.interface_name,
                         parent=context.object.name,
@@ -1950,7 +1947,7 @@ def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
     for joint in joints:
         pos_matrix = joint.matrix_world
         motor_dict['name'] = ''
-        motor_obj = modelmotors.createMotor(
+        motor_obj = phobos2blender.createMotor(
             motor_dict, joint, pos_matrix, addcontrollers=addcontrollers
         )
 
@@ -2021,7 +2018,7 @@ class CreateLinksOperator(Operator):
 
         """
         if self.location == '3D cursor':
-            modellinks.createLink({'name': self.linkname, 'scale': self.size})
+            phobos2blender.createLink(representation.Link(name=self.linkname))
         else:
             for obj in context.selected_objects:
                 modellinks.deriveLinkfromObject(
@@ -2108,7 +2105,9 @@ def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args
         parent_obj = parentlink
 
     pos_matrix = active_obj.matrix_world
-    sensor_obj = sensors.createSensor(sensor_dict, parent_obj, pos_matrix)
+    # [TODO v2.0.0] Fix this
+    sensor_obj = None
+    # sensor_obj = sensors.createSensor(sensor_dict, parent_obj, pos_matrix)
 
     # parent to the added link
     if newlink:
@@ -3401,32 +3400,34 @@ class SetModelRoot(Operator):
 #         return {'FINISHED'}
 
 
-class ValidateOperator(Operator):
-    """Check the robot dictionary"""
-
-    bl_idname = "phobos.validate"
-    bl_label = "Validate"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        messages = {}
-        root = sUtils.getRoot(context.selected_objects[0])
-        model = models.deriveModelDictionary(root)
-        vUtils.check_dict(model, defs.definitions['model'], messages)
-        vUtils.checkMessages = messages if len(list(messages.keys())) > 0 else {"NoObject": []}
-        for entry in messages:
-            log("Errors in object " + entry + ":", 'INFO')
-            for error in messages[entry]:
-                log(error, 'INFO')
-        return {'FINISHED'}
+# [TODO v2.1.0] Make this work again
+# class ValidateOperator(Operator):
+#     """Check the robot dictionary"""
+#
+#     bl_idname = "phobos.validate"
+#     bl_label = "Validate"
+#     bl_options = {'REGISTER', 'UNDO'}
+#
+#     def execute(self, context):
+#         """
+#
+#         Args:
+#           context:
+#
+#         Returns:
+#
+#         """
+#         messages = {}
+#         root = sUtils.getRoot(context.selected_objects[0])
+#         model = blender2phobos.deriveRobot(root)
+#         # [TODO v2.1.0] Make this work again
+#         # vUtils.check_dict(model, defs.definitions['model'], messages)
+#         vUtils.checkMessages = messages if len(list(messages.keys())) > 0 else {"NoObject": []}
+#         for entry in messages:
+#             log("Errors in object " + entry + ":", 'INFO')
+#             for error in messages[entry]:
+#                 log(error, 'INFO')
+#         return {'FINISHED'}
 
 
 class CalculateMassOperator(Operator):
@@ -3559,7 +3560,8 @@ classes = (
     DeleteSubmechanism,
     MergeLinks,
     SetModelRoot,
-    ValidateOperator,
+    # [TODO v2.1.0] Make this work again
+    # ValidateOperator,
     CalculateMassOperator,
     MeasureDistanceOperator,
 )

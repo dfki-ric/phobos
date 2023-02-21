@@ -549,7 +549,7 @@ class BaseModel(yaml.YAMLObject):
                     and self.joints["$default"]["backup"]
             ) else None
         )
-
+        
         if hasattr(self, 'collisions'):
             for link in self.robot.links:
                 conf = deepcopy(self.collisions["$default"])
@@ -584,7 +584,7 @@ class BaseModel(yaml.YAMLObject):
                     # leads to problems in reusing identic meshes
                     # if conf["shape"] == "convex":
                     #     reduceMeshCollision(self.robot, link.name, reduction=0.3)
-
+            
             if "auto_bitmask" in self.collisions.keys() and \
                     self.collisions["auto_bitmask"] is True:
                 log.debug("         Setting auto bitmask")
@@ -610,7 +610,7 @@ class BaseModel(yaml.YAMLObject):
                             if key in conf:
                                 conf.pop(key)
                         coll.add_annotations(**conf)
-
+        
         if hasattr(self, "exoskeletons") or hasattr(self, "submechanisms"):
             if hasattr(self, "exoskeletons"):
                 self.robot.load_submechanisms({"exoskeletons": deepcopy(self.exoskeletons)},
@@ -631,7 +631,7 @@ class BaseModel(yaml.YAMLObject):
         #     self.robot.define_submodel(name=self.export_total_submechanisms, start=root,
         #                                stop=tree.find_leaves(self.robot, spanningtree),
         #                                only_urdf=True)
-
+        
         if hasattr(self, "sensors"):
             multi_sensors = [x for x in dir(sensor_representations) if
                              not x.startswith("__") and x not in sensor_representations.__IMPORTS__ and
@@ -664,12 +664,12 @@ class BaseModel(yaml.YAMLObject):
                 if sensor_ is not None:
                     self.robot.add_sensor(sensor_)
                     log.debug('      Attached {} {}'.format(s["type"], s['name']))
-
+        
         if hasattr(self, "poses"):
             for (cn, config) in self.poses.items():
                 pose = poses.JointPoseSet(robot=self.robot, name=cn, configuration=config)
                 self.robot.add_pose(pose)
-
+        
         if hasattr(self, "annotations"):
             log.debug('  Adding further annotations.')
 
@@ -685,7 +685,6 @@ class BaseModel(yaml.YAMLObject):
                     self.robot.add_named_annotation(k, v)
 
         log.info('Finished processing')
-
         return True
 
     def export(self):

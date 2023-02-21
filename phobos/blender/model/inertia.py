@@ -13,95 +13,27 @@
 Contains all functions to model inertias within Blender.
 """
 
-import math
 import numpy
-import bpy
 import mathutils
 from phobos.utils.inertia import calculateBoxInertia, calculateCylinderInertia, calculateSphereInertia, calculateEllipsoidInertia, calculateMeshInertia
-import phobos.blender.defs as defs
 from phobos.blender.phoboslog import log
 import phobos.blender.utils.general as gUtils
 import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.editing as eUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.naming as nUtils
-from phobos.blender.model.geometries import deriveGeometry
-from phobos.blender.model.poses import deriveObjectPose
-from phobos.blender.utils.validation import validate
-from phobos.blender.io import reserved_keys
-
-
-@validate('inertia_data')
-def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logging=False):
-    """Creates the Blender representation of a given inertial provided a dictionary.
-
-    Args:
-      inertialdict(dict): intertial data
-      obj: 
-      size: (Default value = 0.03)
-      errors: (Default value = None)
-      adjust: (Default value = False)
-      logging: (Default value = False)
-
-    Returns:
-      : bpy_types.Object -- newly created blender inertial object
-
-    """
-    if errors is not None and (len(errors) > 0 or type(errors) != list) and not adjust:
-        log(f'Can not create inertial object for {nUtils.getObjectName(obj)}.', 'ERROR')
-        log('Erros were:', 'ERROR')
-        for e in errors:
-            log("  "+e.message, 'ERROR')
-            log("   "+str(e.information), 'ERROR')
-
-    try:
-        origin = mathutils.Vector(inertialdict['pose']['translation'])
-    except KeyError:
-        origin = mathutils.Vector()
-
-    # create new inertial object
-    name = nUtils.getUniqueName('inertial_' + nUtils.getObjectName(obj), bpy.data.objects)
-    inertialobject = bUtils.createPrimitive(
-        name,
-        'box',
-        (size,) * 3,
-        defs.layerTypes["inertial"],
-        pmaterial='phobos_inertial',
-        phobostype='inertial',
-    )
-    sUtils.selectObjects((inertialobject,), clear=True, active=0)
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
-
-    # set position according to the parent link
-    inertialobject.matrix_world = obj.matrix_world
-    inertialobject.location[0] += origin[0]
-    inertialobject.location[1] += origin[1]
-    inertialobject.location[2] += origin[2]
-    parent = obj
-    if parent.phobostype != 'link':
-        parent = sUtils.getEffectiveParent(obj, ignore_selection=True)
-    eUtils.parentObjectsTo(inertialobject, parent)
-
-    # position and parent the inertial object relative to the link
-    # inertialobject.matrix_local = mathutils.Matrix.Translation(origin)
-    sUtils.selectObjects((inertialobject,), clear=True, active=0)
-    #bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
-
-    # add properties to the object
-    for prop in ('mass', 'inertia'):
-        inertialobject[prop] = inertialdict[prop]
-    return inertialobject
+from phobos.blender.utils.validation import validate, validateInertiaData
+from phobos.blender import reserved_keys
+from phobos.io import representation
+from phobos.blender.utils.io import getExpSettings
 
 
 @validate('geometry_type')
-def calculateInertia(obj, mass, geometry_dict=None, errors=None, adjust=False, logging=False):
+def calculateInertia(obj, mass, geometry, errors=None, adjust=False, logging=False):
     """Calculates the inertia of an object using the specified mass and
        optionally geometry.
 
     Args:
       obj(bpy.types.Object): object to calculate inertia from
       mass(float): mass of object
-      geometry_dict(dict, optional): geometry part of the object dictionary
+      geometry(representation.Geometry instance, optional): geometry part of the object dictionary
     Returns(tuple): (Default value = None)
       geometry_dict(dict, optional): geometry part of the object dictionary
     Returns(tuple):
@@ -119,19 +51,17 @@ def calculateInertia(obj, mass, geometry_dict=None, errors=None, adjust=False, l
         return None
 
     inertia = None
-    if not geometry_dict:
-        geometry = deriveGeometry(obj)
 
     # Get the rotation of the object
     object_rotation = obj.rotation_euler.to_matrix()
 
-    if geometry['type'] == 'box':
-        inertia = calculateBoxInertia(mass, geometry['size'])
-    elif geometry['type'] == 'cylinder':
-        inertia = calculateCylinderInertia(mass, geometry['radius'], geometry['length'])
-    elif geometry['type'] == 'sphere':
-        inertia = calculateSphereInertia(mass, geometry['radius'])
-    elif geometry['type'] == 'mesh':
+    if isinstance(geometry, representation.Box):
+        inertia = calculateBoxInertia(mass, geometry.size)
+    elif isinstance(geometry, representation.Cylinder):
+        inertia = calculateCylinderInertia(mass, geometry.radius, geometry.length)
+    elif isinstance(geometry, representation.Sphere):
+        inertia = calculateSphereInertia(mass, geometry.radius)
+    elif isinstance(geometry, representation.Mesh):
         sUtils.selectObjects((obj,), clear=True, active=0)
         inertia = calculateMeshInertia(mass, obj.data, scale=obj.scale)
 
@@ -189,7 +119,6 @@ def fuse_inertia_data(inertials):
 
     """
 
-    from phobos.blender.utils.io import getExpSettings
 
     expsetting = 10**(-getExpSettings().decimalPlaces)
 
@@ -408,7 +337,6 @@ def gatherInertialChilds(obj, objectlist):
       : list(bpy.types.Object) -- inertial objects which belong to the specified obj
 
     """
-    from phobos.blender.utils.validation import validateInertiaData
 
     # only gather the links that are not in the list
     childlinks = [

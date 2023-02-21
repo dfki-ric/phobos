@@ -20,16 +20,17 @@ Factory functions for creating representation.* Instances from blender
 """
 
 
-def deriveObjectPose(obj, logging=False):
+def deriveObjectPose(obj, logging=True):
     effectiveparent = sUtils.getEffectiveParent(obj)
     matrix = eUtils.getCombinedTransform(obj, effectiveparent)
 
     pose = representation.Pose.from_matrix(np.array(matrix))
     if logging:
         log(
-            "Location: " + str(pose.location) + " Rotation: " + str(pose.rotation),
+            obj.name+": Location: " + str(pose.position) + " Rotation: " + str(pose.rotation),
             'DEBUG',
         )
+    return pose
 
 
 @validate("material")
@@ -531,7 +532,7 @@ def deriveSubmechanism(obj):
     raise NotImplementedError
 
 
-# # [TODO v2.1.0] Re-add light support
+# [TODO v2.1.0] Re-add light support
 # def deriveLight(obj):
 #     """This function derives a light from a given blender object
 #
@@ -568,6 +569,48 @@ def deriveSubmechanism(obj):
 #
 #     light['parent'] = nUtils.getObjectName(sUtils.getEffectiveParent(obj))
 #     return light
+
+
+def deriveRepresentation(obj, logging=True, adjust=True):
+    """Derives a phobos dictionary entry from the provided object.
+
+    Args:
+      obj(bpy_types.Object): The object to derive the dict entry (phobos data structure) from.
+      names(bool, optional): use object names as dict entries instead of object links. (Default value = False)
+      logging(bool, optional): whether to log messages or not (Default value = True)
+      objectlist: (Default value = [])
+      adjust: (Default value = True)
+
+    Returns:
+      : dict -- phobos representation of the object
+
+    """
+    repr_instance = None
+    try:
+        if obj.phobostype == 'inertial':
+            repr_instance = deriveInertial(obj, adjust=adjust, logging=logging)
+        elif obj.phobostype == 'visual':
+            repr_instance = deriveVisual(obj)
+        elif obj.phobostype == 'collision':
+            repr_instance = deriveCollision(obj)
+        # [TODO v2.1.0] Re-Add SRDF support
+        # elif obj.phobostype == 'approxsphere':
+        #     repr_instance = deriveApproxsphere(obj)
+        elif obj.phobostype == 'sensor':
+            repr_instance = deriveSensor(obj, logging=logging)
+        # elif obj.phobostype == 'controller':
+        #     repr_instance = deriveController(obj)
+        # [TODO v2.1.0] Re-add light support
+        # elif obj.phobostype == 'light':
+        #     repr_instance = deriveLight(obj)
+        elif obj.phobostype == 'motor':
+            repr_instance = deriveMotor(obj)
+        elif obj.phobostype == 'annotation':
+            repr_instance = deriveAnnotation(obj)
+    except KeyError:
+        log("A KeyError occurred due to missing data in object" + obj.name, "DEBUG")
+        return None
+    return repr_instance
 
 
 def deriveRobot(root, name='', objectlist=None):

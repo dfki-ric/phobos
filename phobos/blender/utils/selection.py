@@ -125,7 +125,7 @@ def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidde
 
 
 def getRecursiveChildren(
-    obj, recursion_depth=0, phobostypes=(), selected_only=False, include_hidden=False
+    obj, recursion_depth=None, phobostypes=(), selected_only=False, include_hidden=False
 ):
     """Returns all children for a given object and phobostypes (if provided) within the given recursion depth.
     Search can be limited to selected objects and non-hidden objects.
@@ -141,17 +141,14 @@ def getRecursiveChildren(
       list: Blender objects which are children of obj within recursion depth.
 
     """
-    if recursion_depth > -1:
-        # If no recursion, than find current children
-        children = getImmediateChildren(obj, phobostypes, selected_only, include_hidden)
-    else:
-        return []
+    # If no recursion, than find current children
+    children = getImmediateChildren(obj, phobostypes, selected_only, include_hidden)
 
-    if recursion_depth > 0 and children:
+    if recursion_depth is None or recursion_depth > 0 and children:
         new_children = []
         for child in children:
             new_children += getRecursiveChildren(
-                child, recursion_depth - 1, phobostypes, selected_only, include_hidden
+                child, recursion_depth - 1 if recursion_depth is not None else None, phobostypes, selected_only, include_hidden
             )
         children += new_children
 

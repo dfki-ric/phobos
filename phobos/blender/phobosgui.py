@@ -27,12 +27,9 @@ from bpy.props import (
 )
 from bpy.types import AddonPreferences
 
-from phobos.blender.io import entities
-from phobos.blender.io import meshes
+from phobos.blender.io import blender2phobos
 from phobos.blender.io import scenes
 from phobos.blender.io import libraries
-from phobos.blender.model.models import deriveDictEntry
-from phobos.blender.model.models import get_link_information
 from phobos.blender.phoboslog import LOGLEVELS
 import phobos.blender.utils.validation as validation
 import phobos.blender.utils.io as ioUtils
@@ -478,7 +475,8 @@ class PhobosToolsPanel(bpy.types.Panel):
         tsc2.operator('phobos.set_xray')
         tsc2.operator('phobos.toggle_namespaces')
         tsc2.operator('phobos.measure_distance')
-        tsc2.operator('phobos.validate')
+        # [TODO v2.1.0] Re-add this
+        # tsc2.operator('phobos.validate')
 
 
 # TODO-REFACTOR move this to utils.misc
@@ -952,95 +950,97 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         obj = context.active_object
 
         # derive object information as dictionary
+        joint = None
         if obj.phobostype == 'link':
-            dictprops = get_link_information(obj)
+            obj_repr = blender2phobos.deriveLink(obj)
+            joint = blender2phobos.deriveJoint(obj)
         else:
-            dictprops = deriveDictEntry(obj, logging=False, adjust=False)
+            obj_repr = blender2phobos.deriveRepresentation(obj, logging=False, adjust=False)
 
         # nothing to show
-        if not dictprops:
+        if not obj_repr:
             return
-        proplist = dictprops.keys()
 
         # categories saves the sublayouts as a dictionary, which contains this information:
         #  surrounding_box, left_column, right_column, [index_row, index_col]-> for next entry
         categories = {}
 
-        # generate general category only if needed
-        props = set([key for key in proplist if not isinstance(dictprops[key], dict)])
-        if props - ignoredProps:
-            box = layout.box()
-            row = box.split()
-            left = row.column()
-            right = row.column()
-            categories['general'] = [box, left, right, [0, 0]]
-
-        # remove the unimportant properties and iterate over the rest
-        proplist = set(proplist) - ignoredProps
-        for prop in sorted(proplist):
-            guiparams = self.checkParams(prop)
-            value = dictprops[prop]
-
-            # just a value for the general category
-            if not isinstance(value, dict):
-                # show properties as customproperties
-                guiparams['object'] = obj
-                if prop in obj:
-                    guiparams['customprop'] = prop
-                elif obj.phobostype + '/' + prop in obj:
-                    guiparams['customprop'] = obj.phobostype + '/' + prop
-                self.addProp([prop], [value], categories['general'], [guiparams])
-                continue
-
-            # check for categories
-            category = prop
-
-            # add a new category layout
-            if category not in categories:
-                # use custom icons for supported categories
-                if category in supportedCategories:
-                    if isinstance(supportedCategories[category]['icon_value'], int):
-                        layout.label(
-                            text=category.upper(), icon_value=supportedCategories[category]['icon_value']
-                        )
-                    else:
-                        layout.label(
-                            text=category.upper(), icon=supportedCategories[category]['icon_value']
-                        )
-                else:
-                    layout.label(text=category.upper())
-
-                # create column hierarchy
-                box = layout.box()
-                box = box.split()
-                left = box.column()
-                right = box.column()
-                categories[category] = [box, left, right, [0, 0]]
-
-            # add each subproperty to the layout
-            for prop_t2 in sorted(dictprops[category]):
-                guiparams = self.checkParams(category + '/' + prop_t2)
-
-                value = dictprops[category][prop_t2]
-
-                # skip ignored properties
-                if prop_t2 in ignoredProps:
-                    continue
-
-                # is it another dictionary with values?
-                elif isinstance(value, dict):
-                    # gather keys, guiparams etc as lists
-                    props = value.keys()
-                    values = [value[key] for key in props]
-                    paramkeys = [category + '/' + prop_t2 + '/' + propkey for propkey in props]
-                    paramlist = [self.checkParams(key) for key in paramkeys]
-                    props = [prop_t2 + '/' + propkey for propkey in props]
-
-                    # add the properties from the list
-                    self.addProp(props, values, categories[category], paramlist)
-                # just another value
-                else:
-                    self.addProp([prop_t2], [value], categories[category], [guiparams])
+        # [TODO v2.0.0] Repair
+        # # generate general category only if needed
+        # props = set([key for key in proplist if not isinstance(dictprops[key], dict)])
+        # if props - ignoredProps:
+        #     box = layout.box()
+        #     row = box.split()
+        #     left = row.column()
+        #     right = row.column()
+        #     categories['general'] = [box, left, right, [0, 0]]
+        #
+        # # remove the unimportant properties and iterate over the rest
+        # proplist = set(proplist) - ignoredProps
+        # for prop in sorted(proplist):
+        #     guiparams = self.checkParams(prop)
+        #     value = dictprops[prop]
+        #
+        #     # just a value for the general category
+        #     if not isinstance(value, dict):
+        #         # show properties as customproperties
+        #         guiparams['object'] = obj
+        #         if prop in obj:
+        #             guiparams['customprop'] = prop
+        #         elif obj.phobostype + '/' + prop in obj:
+        #             guiparams['customprop'] = obj.phobostype + '/' + prop
+        #         self.addProp([prop], [value], categories['general'], [guiparams])
+        #         continue
+        #
+        #     # check for categories
+        #     category = prop
+        #
+        #     # add a new category layout
+        #     if category not in categories:
+        #         # use custom icons for supported categories
+        #         if category in supportedCategories:
+        #             if isinstance(supportedCategories[category]['icon_value'], int):
+        #                 layout.label(
+        #                     text=category.upper(), icon_value=supportedCategories[category]['icon_value']
+        #                 )
+        #             else:
+        #                 layout.label(
+        #                     text=category.upper(), icon=supportedCategories[category]['icon_value']
+        #                 )
+        #         else:
+        #             layout.label(text=category.upper())
+        #
+        #         # create column hierarchy
+        #         box = layout.box()
+        #         box = box.split()
+        #         left = box.column()
+        #         right = box.column()
+        #         categories[category] = [box, left, right, [0, 0]]
+        #
+        #     # add each subproperty to the layout
+        #     for prop_t2 in sorted(dictprops[category]):
+        #         guiparams = self.checkParams(category + '/' + prop_t2)
+        #
+        #         value = dictprops[category][prop_t2]
+        #
+        #         # skip ignored properties
+        #         if prop_t2 in ignoredProps:
+        #             continue
+        #
+        #         # is it another dictionary with values?
+        #         elif isinstance(value, dict):
+        #             # gather keys, guiparams etc as lists
+        #             props = value.keys()
+        #             values = [value[key] for key in props]
+        #             paramkeys = [category + '/' + prop_t2 + '/' + propkey for propkey in props]
+        #             paramlist = [self.checkParams(key) for key in paramkeys]
+        #             props = [prop_t2 + '/' + propkey for propkey in props]
+        #
+        #             # add the properties from the list
+        #             self.addProp(props, values, categories[category], paramlist)
+        #         # just another value
+        #         else:
+        #             self.addProp([prop_t2], [value], categories[category], [guiparams])
 
 
 class PhobosModelPanel(bpy.types.Panel):
