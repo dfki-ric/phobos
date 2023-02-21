@@ -383,7 +383,7 @@ class Robot(SMURFRobot):
             if isinstance(vc.geometry, representation.Mesh):
                 vc.geometry.provide_mesh_file(targetpath=os.path.abspath(mesh_output_dir), format=format)
 
-    def export_urdf(self, outputfile=None, float_fmt_dict=None, ros_pkg=False, copy_with_other_pathes=False, ros_pkg_name=None, mesh_format=None):
+    def export_urdf(self, outputfile, float_fmt_dict=None, ros_pkg=False, copy_with_other_pathes=False, ros_pkg_name=None, mesh_format=None):
         """Export the mechanism to the given output file.
         If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
         If export_collisions is set to to True, all collisions will be exported. Otherwise no collision get exported.
@@ -394,8 +394,6 @@ class Robot(SMURFRobot):
         if float_fmt_dict is None:
             float_fmt_dict = {}
         self.joints = self.get_joints_ordered_df()
-        if not outputfile:
-            outputfile = self.name
 
         outputfile = os.path.abspath(outputfile)
 
@@ -429,7 +427,7 @@ class Robot(SMURFRobot):
         log.info("URDF written to {}".format(outputfile))
         return
 
-    def export_sdf(self, outputfile=None, float_fmt_dict=None, ros_pkg=False, copy_with_other_pathes=None, ros_pkg_name=None, mesh_format=None):
+    def export_sdf(self, outputfile, float_fmt_dict=None, ros_pkg=False, copy_with_other_pathes=None, ros_pkg_name=None, mesh_format=None):
         """Export the mechanism to the given output file.
         If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
         If export_collisions is set to to True, all collisions will be exported. Otherwise no collision get exported.
@@ -437,8 +435,6 @@ class Robot(SMURFRobot):
         if float_fmt_dict is None:
             float_fmt_dict = {}
         self.joints = self.get_joints_ordered_df()
-        if not outputfile:
-            outputfile = self.name
 
         outputfile = os.path.abspath(outputfile)
 
@@ -470,6 +466,45 @@ class Robot(SMURFRobot):
             f.close()
 
         log.info("SDF written to {}".format(outputfile))
+        return
+
+    def export_x3d(self, outputfile, float_fmt_dict=None):  #, ros_pkg=False, copy_with_other_pathes=None, ros_pkg_name=None, mesh_format=None):
+        """Export the mechanism to the given output file.
+        If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
+        If export_collisions is set to to True, all collisions will be exported. Otherwise no collision get exported.
+        """
+        if float_fmt_dict is None:
+            float_fmt_dict = {}
+
+        outputfile = os.path.abspath(outputfile)
+
+        xml_string = '<?xml version="1.0" encoding="UTF-8"?>\n'+\
+                     '<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 3.3//EN" "http://www.web3d.org/specifications/x3d-3.3.dtd">\n'+\
+                     "<X3D profile='Interchange' version='3.3' xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance' xsd:noNamespaceSchemaLocation='http://www.web3d.org/specifications/x3d-3.3.xsd'>"+\
+                     '<head><!-- All "meta" from this section you will found in <Scene> node as MetadataString nodes. --></head>\n'+\
+                     '<Scene>\n'+self.to_x3d_string(float_fmt_dict=float_fmt_dict)+'</Scene>\n</X3D>\n'
+
+        # if ros_pkg is True:
+        #     xml_string = regex_replace(xml_string, {'<uri>../': '<uri>package://' if ros_pkg_name is None else f'<uri>package://{ros_pkg_name}/'})
+
+        if not os.path.exists(os.path.dirname(os.path.abspath(outputfile))):
+            os.makedirs(os.path.dirname(outputfile))
+        with open(outputfile, "w") as f:
+            f.write(xml_string)
+            f.close()
+
+        # if copy_with_other_pathes and not ros_pkg:
+        #     xml_string = regex_replace(xml_string, {'<uri>../': '<uri>package://'})
+        #     f = open(outputfile[:-4] + "_ros.sdf", "w")
+        #     f.write(xml_string)
+        #     f.close()
+        # elif copy_with_other_pathes and ros_pkg:
+        #     xml_string = regex_replace(xml_string, {'<uri>package://': '<uri>../'})
+        #     f = open(outputfile[:-4] + "_relpath.sdf", "w")
+        #     f.write(xml_string)
+        #     f.close()
+
+        log.info("X3D written to {}".format(outputfile))
         return
 
     def export_xml(self, outputdir=None, format="urdf", filename=None, float_fmt_dict=None, no_format_dir=False,

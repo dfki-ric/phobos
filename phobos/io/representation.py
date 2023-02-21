@@ -3,6 +3,7 @@ import json
 import shutil
 from copy import deepcopy
 
+import numpy
 import trimesh
 import numpy as np
 
@@ -12,11 +13,13 @@ from .xml_factory import singular as _singular, plural as _plural
 from .yaml_reflection import to_yaml
 from ..defs import BPY_AVAILABLE
 from ..geometry import io as mesh_io
+from ..geometry.io import trimesh_2_mesh_info_dict, triangulate_faces_in_info_dict
 from ..utils import misc
 from ..utils.xml import read_relative_filename
 from ..geometry.geometry import identical, reduce_mesh, get_reflection_matrix, improve_mesh
 from ..utils.misc import trunc, execute_shell_command, to_hex_color, color_parser, edit_name_string
-from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix, create_transformation
+from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix, create_transformation, matrix_to_quaternion, \
+    quaternion_to_angle_axis
 from ..utils import xml as xml_utils, transform
 
 MESH_INFO_KEYS = ["vertex_normals", "texture_coords", "vertices", "faces"]
@@ -49,27 +52,25 @@ class Pose(Representation, SmurfBase):
         SmurfBase.__init__(self, returns=["rotation", "position"])
         self.excludes += ["xyz", "rpy"]
         self.relative_to = relative_to
-        self.xyz = None
-        self.rpy = None
+        if "matrix" in kwargs:
+            self._matrix = kwargs["matrix"]
+            return
+        xyz = xyz
+        rpy = rpy
         if vec is not None:
             assert xyz is None and rpy is None
             assert "rotation" not in kwargs and "position" not in kwargs
             assert isinstance(vec, list)
             if len(vec) == 3:
-                self.position = np.array(vec)
+                xyz = np.array(vec)
             else:
                 self.from_vec(vec)
-        else:
-            if "position" in kwargs:
-                assert xyz is None or xyz == kwargs["position"]
-                self.position = kwargs["position"]
-            else:
-                self.position = xyz
-            if "rotation" in kwargs:
-                assert rpy is None or rpy == kwargs["rotation"]
-                self.rotation = kwargs["rotation"]
-            else:
-                self.rotation = rpy
+                return
+        if xyz is None and "position" in kwargs:
+            self.position = kwargs["position"]
+        self._matrix = create_transformation(xyz=xyz, rpy=rpy)
+        if rpy is None and "rotation" in kwargs:
+            self.rotation = kwargs["rotation"]
 
     def check_valid(self):
         assert (len(self.xyz) == 3) and \
@@ -77,55 +78,76 @@ class Pose(Representation, SmurfBase):
 
     # Aliases for backwards compatibility
     @property
+    def xyz(self):
+        return self.position
+
+    @xyz.setter
+    def xyz(self, value):
+        self.position = value
+
+    @property
+    def rpy(self):
+        return self.rotation
+
+    @rpy.setter
+    def rpy(self, value):
+        self.rotation = value
+
+    @property
     def rotation(self):
-        return self.rpy
+        return transform.matrix_to_rpy(self._matrix[0:3, 0:3])
 
     @rotation.setter
     def rotation(self, value):
-        if type(value) == int:
-            self.rpy = [0, 0, value]
+        if type(value) in [int, float]:
+            self._matrix[0:3, 0:3] = transform.rpy_to_matrix([0, 0, value])
         elif type(value) in [list, tuple, np.ndarray] and len(value) == 3:
-            self.rpy = value
+            self._matrix[0:3, 0:3] = transform.rpy_to_matrix(value)
         elif type(value) in [list, tuple, np.ndarray] and len(value) == 4:
-            self.rpy = transform.quaternion_to_rpy(value)
+            self._matrix[0:3, 0:3] = transform.quaternion_to_matrix(value)
         elif type(value) == dict and len(value) == 3:
             if all([k in "rpy" for k in value.keys()]):
-                self.rpy = [value["r"], value["p"], value["y"]]
+                self._matrix[0:3, 0:3] = transform.rpy_to_matrix([value["r"], value["p"], value["y"]])
             elif all([k in "xyz" for k in value.keys()]):
-                self.rpy = [value["x"], value["y"], value["z"]]
+                self._matrix[0:3, 0:3] = transform.rpy_to_matrix([value["x"], value["y"], value["z"]])
             else:
                 raise ValueError("Can't parse rotation" + str(value))
         elif type(value) == dict and len(value) == 4:
-            self.rpy = transform.quaternion_to_rpy([value["x"], value["y"], value["z"], value["w"]])
+            self._matrix[0:3, 0:3] = transform.quaternion_to_matrix([value["x"], value["y"], value["z"], value["w"]])
         elif type(value) in [list, np.ndarray]:
-            self.rpy = transform.matrix_to_rpy(value)
+            self._matrix[0:3, 0:3] = transform.matrix_to_rpy(value)
         elif value is None:
-            self.rpy = [0.0, 0.0, 0.0]
+            self._matrix[0:3, 0:3] = numpy.identity(3)
         else:
             raise ValueError("Can't parse rotation " + str(value))
         # if we have an pi or pi/2, pi/4 approximation let's make pi or pi/2, pi/4 out of it
-        for i in range(3):
-            if type(self.rpy[i]) in [float, np.float64, np.float32] and "e" not in str(self.rpy[i]).lower():
-                in_decimals = len(str(self.rpy[i]).split(".")[1])
-                if in_decimals >= 3:
-                    for div in [1, 2, 4]:
-                        if str(self.rpy[i]) == f"%.{in_decimals}f" % (np.pi / div) or \
-                               self.rpy[i] == np.round(np.pi/div, decimals=in_decimals) or \
-                               self.rpy[i] == trunc(np.pi/div, decimals=in_decimals):
-                            self.rpy[i] = np.pi / div
-        self.rpy = np.array(self.rpy)
+        # [TODO v2.1.0] re-establich this
+        # for i in range(3):
+        #     if type(self.rpy[i]) in [float, np.float64, np.float32] and "e" not in str(self.rpy[i]).lower():
+        #         in_decimals = len(str(self.rpy[i]).split(".")[1])
+        #         if in_decimals >= 3:
+        #             for div in [1, 2, 4]:
+        #                 if str(self.rpy[i]) == f"%.{in_decimals}f" % (np.pi / div) or \
+        #                        self.rpy[i] == np.round(np.pi/div, decimals=in_decimals) or \
+        #                        self.rpy[i] == trunc(np.pi/div, decimals=in_decimals):
+        #                     self.rpy[i] = np.pi / div
+
+    @property
+    def angle_axis(self):
+        quat = matrix_to_quaternion(self._matrix[0:3, 0:3])
+        return quaternion_to_angle_axis(quat)
 
     @property
     def position(self):
-        return self.xyz
+        return self.to_matrix()[0:3, 3]
 
     @position.setter
     def position(self, value):
         if value is None:
-            self.xyz = np.array([0.0, 0.0, 0.0])
+            self._matrix[0:3, 3] = np.array([0.0, 0.0, 0.0])
         else:
             assert type(value) in [list, np.ndarray] and len(value) == 3
-            self.xyz = np.array(value)
+            self._matrix[0:3, 3] = np.array(value)
 
     def from_vec(self, vec):
         assert len(vec) == 6, "Invalid length"
@@ -140,23 +162,15 @@ class Pose(Representation, SmurfBase):
 
     @staticmethod
     def from_matrix(T, dec=16, relative_to=None):
-        xyz = T[0:3, 3]
-        rpy = matrix_to_rpy(T[0:3, 0:3])
-        return Pose(xyz=xyz, rpy=rpy, dec=dec, relative_to=relative_to)
+        return Pose(matrix=T, dec=dec, relative_to=relative_to)
 
     def to_matrix(self):
-        R = rpy_to_matrix(self.rpy if hasattr(self, "rpy") else np.array([0.0, 0.0, 0.0]))
-        p = np.array(self.xyz if hasattr(self, "xyz") else np.array([0.0, 0.0, 0.0]))
-        T = np.identity(4)
-        T[0:3, 3] = p
-        T[0:3, 0:3] = R
-        T[3, 3] = 1.0
-        return T
+        return self._matrix
 
     def transform(self, T):
         """T.dot(this)"""
         return Pose.from_matrix(
-            T.dot(self.to_matrix()),
+            T.dot(self._matrix),
             self.relative_to
         )
 
@@ -254,13 +268,17 @@ class Material(Representation, SmurfBase):
     _class_variables = ["name", "diffuse", "ambient", "emissive", "specular", "diffuseTexture", "normalTexture"]
 
     def __init__(self, name=None, diffuse=None, ambient=None, specular=None, emissive=None,
-                 diffuseTexture=None, normalTexture=None, **kwargs):
+                 diffuseTexture=None, normalTexture=None, transparency=None, shininess=None, **kwargs):
         self.diffuse = color_parser(rgba=diffuse)
         self.ambient = color_parser(rgba=ambient)
         self.specular = color_parser(rgba=specular)
         self.emissive = color_parser(rgba=emissive)
         self.diffuseTexture = diffuseTexture
         self.normalTexture = normalTexture
+        self.transparency = transparency
+        if self.transparency is None and self.diffuse is not None:
+            self.transparency = 1-self.diffuse[3]
+        self.shininess = shininess
         self.original_name = name
         SmurfBase.__init__(self, returns=["name", "diffuseColor", "ambientColor", "specularColor", "emissionColor",
                                           "diffuseTexture", "normalTexture"], **kwargs)
@@ -283,12 +301,20 @@ class Material(Representation, SmurfBase):
         return self.diffuse is None and self.diffuseTexture is None
 
     @property
+    def diffuse_rgb(self):
+        return self.diffuse[0:3]
+
+    @property
     def diffuseColor(self):
         return self.diffuse
 
     @diffuseColor.setter
     def diffuseColor(self, *args, rgba=None):
         self.diffuse = color_parser(*args, rgba=rgba)
+
+    @property
+    def ambient_rgb(self):
+        return self.ambient[0:3]
 
     @property
     def ambientColor(self):
@@ -299,12 +325,20 @@ class Material(Representation, SmurfBase):
         self.ambient = color_parser(*args, rgba=rgba)
 
     @property
+    def specular_rgb(self):
+        return self.specular[0:3]
+
+    @property
     def specularColor(self):
         return self.specular
 
     @specularColor.setter
     def specularColor(self, *args, rgba=None):
         self.specular = color_parser(*args, rgba=rgba)
+
+    @property
+    def emissive_rgb(self):
+        return self.emissive[0:3]
 
     @property
     def emissionColor(self):
@@ -561,7 +595,7 @@ class Mesh(Representation, SmurfBase):
 
     def load_mesh(self, reload=False):
         if self.mesh_object is not None and not reload:
-            return
+            return self.mesh_object
         assert os.path.isfile(self.input_file), f"Mesh with path {self.input_file} wasn't found!"
         if BPY_AVAILABLE:
             bpy.ops.object.select_all(action='DESELECT')
@@ -867,12 +901,30 @@ class Mesh(Representation, SmurfBase):
             self.history.append(f"converted from {type(self.mesh_object)} to trimesh")
             self._mesh_object = mesh_io.as_trimesh(self.mesh_object)
 
+    @property
+    def x3d_vertices(self):
+        self.load_mesh()
+        tm = mesh_io.as_trimesh(self.mesh_object)
+        return np.array(tm.vertices).flatten()
+
+    @property
+    def x3d_face_normals(self):
+        self.load_mesh()
+        tm = mesh_io.as_trimesh(self.mesh_object)
+        return np.array(tm.face_normals).flatten()
+
+    @property
+    def x3d_faces(self):
+        self.load_mesh()
+        tm = mesh_io.as_trimesh(self.mesh_object)
+        faces = np.array(tm.faces)
+        return np.c_[faces, [-1]*faces.shape[0]].flatten()
+
 
 class GeometryFactory(Representation):
     @classmethod
     def create(cls, *args, **kwargs):
         if kwargs["type"] == "mesh":
-            print(repr(args), repr(kwargs))
             return Mesh(**kwargs)
         elif kwargs["type"] == "box":
             return Box(**kwargs)
@@ -923,7 +975,6 @@ class Visual(Representation, SmurfBase):
     _class_variables = ["name", "geometry", "material", "origin"]
 
     def __init__(self, geometry=None, material=None, material_: Material = None, origin=None, name=None, **kwargs):
-        super().__init__()
         self.original_name = name
         if name is None or len(name) == 0:
             if "_parent_xml" in kwargs:
@@ -937,7 +988,7 @@ class Visual(Representation, SmurfBase):
         material = _singular(material)
         if type(material) == str:
             self.material = material
-            if material_ is not None:
+            if material_ is not None and not material_.is_delegate():
                 assert isinstance(material_, Material) and material_.original_name == material
                 self.material = material_
         elif isinstance(material, Material):
@@ -946,6 +997,7 @@ class Visual(Representation, SmurfBase):
         if origin is None:
             origin = Pose()
         self.origin = _singular(origin)
+        SmurfBase.__init__(self, **kwargs)
         assert isinstance(self.origin, Pose)
 
     @property
@@ -956,6 +1008,23 @@ class Visual(Representation, SmurfBase):
     def equivalent(self, other):
         return self.geometry.equivalent(other.geometry) and self._material.equivalent(other._material) and \
                self.origin == other.origin
+
+    @property
+    def origin_from_root(self):
+        assert self._related_robot_instance is not None
+        link = [ln for ln in self._related_robot_instance.links if self in ln.visuals]
+        assert len(link) == 1
+        transformation = self._related_robot_instance.get_transformation(link[0]).dot(self.origin.to_matrix())
+        return Pose.from_matrix(transformation)
+
+    @property
+    def position_from_root(self):
+        return self.origin_from_root.xyz
+
+    @property
+    def axis_angle_from_root(self):
+        angle, axis = self.origin_from_root.angle_axis
+        return [axis[0], axis[1], axis[2], angle]
 
 
 class Inertia(Representation, SmurfBase):

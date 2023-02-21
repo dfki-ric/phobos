@@ -13,7 +13,7 @@ class Linkable(object):
         "relative_to": "links",
     }
     _related_robot_instance = None
-    # _class_varaibles contains those properties which have to be scanned for linkables
+    # _class_variables contains those properties which have to be scanned for linkables
     _class_variables = []
 
     def __init__(self):

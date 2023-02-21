@@ -154,14 +154,14 @@ def trimesh_2_mesh_info_dict(mesh):
     # linking information for each triangle: vertex, uv, normal
     out["faces"] = []
     for face in mesh.faces:
-        values2 = [4]
+        values2 = []
         assert len(face) == 3
         for v_index in face:
             assert v_index >= 0
             assert v_index < N
-            values2 += [v_index + 1]*3 if write_uv else [v_index + 1, 0, v_index + 1]
-        out["faces"].append(np.array(values2, dtype=np.intc))
-        assert len(values2) == 10
+            values2.append(np.array([v_index + 1]*3 if write_uv else [v_index + 1, 0, v_index + 1], dtype=np.intc))
+        assert len(values2) == 3
+        out["faces"].append(values2)
 
     return out
 

@@ -19,7 +19,7 @@ class XMLRobot(Representation):
                  joints: List[representation.Joint] = None,
                  materials: List[representation.Material] = None,
                  transmissions: List[representation.Transmission] = None,
-                 sensors=None, xmlfile=None, is_human=False):
+                 sensors=None, xmlfile=None, is_human=False, urdf_version=None):
         super().__init__()
         self.joints = []
         self.links = []
@@ -42,7 +42,7 @@ class XMLRobot(Representation):
             self.name = name
 
         self.version = version
-        self.urdf_version = "1.0.0"
+        self.urdf_version = "1.0.0" if urdf_version is None else urdf_version
 
         if joints is not None:
             for joint in joints:

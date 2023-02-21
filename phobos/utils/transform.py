@@ -19,6 +19,13 @@ def quaternion_to_matrix(quat):
         return Rot.from_quat(quat).as_dcm()
 
 
+def quaternion_to_angle_axis(quat):
+    rotvec = Rot.from_quat(quat).as_rotvec()
+    angle = np.linalg.norm(rotvec)
+    axis = np.array(rotvec)/np.linalg.norm(rotvec) if np.linalg.norm(rotvec) != 0 else np.array((0., 0., 1.))
+    return angle, axis
+
+
 def rpy_to_quaternion(rotation):
     return Rot.from_euler(EULER_CONVENTION, rotation).as_quat()
 
@@ -77,7 +84,6 @@ def round_array(array, dec=16):
 
 
 def create_transformation(xyz=None, rpy=None):
-    assert xyz is not None or rpy is not None
     if rpy is None:
         rpy = [0, 0, 0]
     if xyz is None:
