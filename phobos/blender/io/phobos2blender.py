@@ -12,7 +12,7 @@ import phobos.blender.model.joints as jointmodel
 from phobos.blender.phoboslog import log
 import phobos.blender.defs as defs
 import phobos.blender.model.inertia as inertiamodel
-from . import reserved_keys
+from phobos.blender import reserved_keys
 from phobos.blender.utils.validation import validate
 
 from phobos.io import representation, sensor_representations

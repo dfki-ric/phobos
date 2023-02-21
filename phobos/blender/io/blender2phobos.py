@@ -10,7 +10,7 @@ import phobos.blender.utils.io as ioUtils
 from phobos.blender.utils.validation import validate
 from phobos.blender.phoboslog import log
 import phobos.blender.model.inertia as inertiamodel
-from phobos.blender.io import reserved_keys
+from phobos.blender import reserved_keys
 
 from phobos.io import representation, sensor_representations, xmlrobot
 from phobos import core
