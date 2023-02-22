@@ -47,13 +47,12 @@ import phobos.blender.utils.editing as eUtils
 import phobos.blender.utils.validation as vUtils
 import phobos.blender.model.joints as jUtils
 import phobos.blender.model.links as modellinks
-import phobos.blender.model.motors as modelmotors
+from phobos.blender.io import blender2phobos, phobos2blender
 import phobos.blender.model.controllers as controllermodel
-import phobos.blender.model.interfaces as interfmodel
-import phobos.blender.model.sensors as sensors
-import phobos.blender.model.models as models
 from phobos.blender.operators.generic import addObjectFromYaml
 from phobos.blender.phoboslog import log
+
+from phobos.io import representation
 
 
 class SafelyRemoveObjectsFromSceneOperator(Operator):
@@ -621,11 +620,25 @@ class CreateInterfaceOperator(Operator):
         }
         if self.all_selected:
             for link in [obj for obj in context.selected_objects if obj.phobostype == 'link']:
-                ifdict['parent'] = link
-                ifdict['name'] = link.name + '_' + self.interface_name
-                interfmodel.createInterface(ifdict, link)
+                phobos2blender.createInterface(
+                    representation.Interface(
+                        name=self.interface_name,
+                        parent=link.name,
+                        type=self.interface_type,
+                        direction=self.direction
+                    ),
+                    link
+                )
         else:
-            interfmodel.createInterface(ifdict, context.object)
+            phobos2blender.createInterface(
+                representation.Interface(
+                        name=self.interface_name,
+                        parent=context.object.name,
+                        type=self.interface_type,
+                        direction=self.direction
+                    ),
+                context.object
+            )
         return {'FINISHED'}
 
     @classmethod
@@ -644,6 +657,7 @@ class CreateInterfaceOperator(Operator):
             return True
 
 
+# [TODO v2.0.0] REVIEW this
 class CopyCustomProperties(Operator):
     """Copy custom properties of selected object(s)"""
 
@@ -689,6 +703,7 @@ class CopyCustomProperties(Operator):
         return len(obs) > 0 and ob is not None and ob.mode == 'OBJECT'
 
 
+# [TODO v2.0.0] REVIEW this
 class RenameCustomProperty(Operator):
     """Rename custom property of selected object(s)"""
 
@@ -825,6 +840,7 @@ class SetGeometryType(Operator):
         return context.window_manager.invoke_props_dialog(self, width=200)
 
 
+# [TODO v2.0.0] REVIEW this
 class SmoothenSurfaceOperator(Operator):
     """Smoothen surface of selected objects"""
 
@@ -909,8 +925,8 @@ class EditInertialData(Operator):
             for error in errors:
                 error.log()
 
-            self.mass = context.active_object['inertial/mass']
-            self.inertiavector = mathutils.Vector(context.active_object['inertial/inertia'])
+            self.mass = context.active_object['mass']
+            self.inertiavector = mathutils.Vector(context.active_object['inertia'])
 
         return context.window_manager.invoke_props_dialog(self, width=200)
 
@@ -940,9 +956,9 @@ class EditInertialData(Operator):
         # change object properties accordingly
         for obj in objs:
             if self.changeMass:
-                obj['inertial/mass'] = newmass
+                obj['mass'] = newmass
             if self.changeInertia:
-                obj['inertial/inertia'] = newinertia
+                obj['inertia'] = newinertia
 
         if self.changeMass:
             log("Changed mass to " + str(newmass) + " for {} objects.".format(len(objs)), 'INFO')
@@ -1176,6 +1192,7 @@ class GenerateInertialObjectsOperator(Operator):
         )
 
 
+# [TODO v2.0.0] REVIEW this
 class EditYAMLDictionary(Operator):
     """Edit object dictionary as YAML"""
 
@@ -1245,6 +1262,7 @@ class EditYAMLDictionary(Operator):
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
 
+# [TODO v2.0.0] REVIEW this
 class CreateCollisionObjects(Operator):
     """Create collision objects for all selected visual objects"""
 
@@ -1468,6 +1486,7 @@ class DefineJointConstraintsOperator(Operator):
     bl_label = "Define Joint(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
+    # [TODO v2.0.0] Create motor for active joints
     passive : BoolProperty(
         name='Passive', default=False, description='Make the joint passive (no actuation)'
     )
@@ -1523,6 +1542,7 @@ class DefineJointConstraintsOperator(Operator):
 
         # enable/disable optional parameters
         if not self.joint_type == 'fixed':
+            # [TODO v2.0.0] Create motor for active joints
             layout.prop(self, "passive", text="makes the joint passive (no actuation)")
             if self.joint_type != "sphere":
                 layout.prop(self, "axis", text="Sets the joint axis")
@@ -1612,18 +1632,20 @@ class DefineJointConstraintsOperator(Operator):
 
             # TODO is this still needed? Or better move it to the utility function
             if self.joint_type != 'fixed':
-                joint['joint/maxEffort'] = self.maxeffort
-                joint['joint/maxSpeed'] = velocity
+                joint['joint/limits/effort'] = self.maxeffort
+                joint['joint/limits/velocity'] = velocity
             else:
-                if "joint/maxEffort" in joint:
-                    del joint["joint/maxEffort"]
-                if "joint/maxSpeed" in joint:
-                    del joint["joint/maxSpeed"]
-            if self.passive:
-                joint['joint/passive'] = "$true"
-            else:
-                # TODO show up in text edit which joints are to change?
-                log("Please add motor to active joint in " + joint.name, "INFO")
+                if "joint/limits/effort" in joint:
+                    del joint["joint/limits/effort"]
+                if "joint/limits/velocity" in joint:
+                    del joint["joint/limits/velocity"]
+
+            # [TODO v2.0.0] Create motor for active joints
+            # if self.passive:
+            #     joint['joint/passive'] = "$true"
+            # else:
+            #     # TODO show up in text edit which joints are to change?
+            #     log("Please add motor to active joint in " + joint.name, "INFO")
         return {'FINISHED'}
 
     @classmethod
@@ -1723,6 +1745,7 @@ class DissolveLink(Operator):
         return ob is not None and ob.phobostype == 'link' and context.mode == "OBJECT"
 
 
+# [TODO v2.0.0] REVIEW this
 class AddMotorOperator(Operator):
     """Add a motor to the selected joint.
     It is possible to add motors to multiple joints at the same time.
@@ -1812,8 +1835,6 @@ class AddMotorOperator(Operator):
                 layout.prop(self, v)
         self.lastMotorType = self.motorType
 
-
-
     def invoke(self, context, event):
         """
 
@@ -1881,7 +1902,7 @@ class AddMotorOperator(Operator):
         joints = [lnk for lnk in context.selected_objects if lnk.phobostype == 'link' and 'joint/type' in lnk]
         defDict = defs.definitions['motors'][self.motorType]
         for joint in joints:
-            for k,v in defDict.items():
+            for k, v in defDict.items():
                 cl = "motor/"
                 if k in self.jointProperties:
                     cl = "joint/"
@@ -1892,6 +1913,7 @@ class AddMotorOperator(Operator):
         return {'FINISHED'}
 
 
+# [TODO v2.0.0] REVIEW this
 def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
     """Execution function for the temporary operator to add motors from yaml files.
 
@@ -1925,7 +1947,7 @@ def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
     for joint in joints:
         pos_matrix = joint.matrix_world
         motor_dict['name'] = ''
-        motor_obj = modelmotors.createMotor(
+        motor_obj = phobos2blender.createMotor(
             motor_dict, joint, pos_matrix, addcontrollers=addcontrollers
         )
 
@@ -1996,7 +2018,7 @@ class CreateLinksOperator(Operator):
 
         """
         if self.location == '3D cursor':
-            modellinks.createLink({'name': self.linkname, 'scale': self.size})
+            phobos2blender.createLink(representation.Link(name=self.linkname))
         else:
             for obj in context.selected_objects:
                 modellinks.deriveLinkfromObject(
@@ -2040,6 +2062,7 @@ class CreateLinksOperator(Operator):
             layout.prop(self, "parent_objects")
 
 
+# [TODO v2.0.0] REVIEW this
 def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args):
     """Execution function for the temporary operator to add sensors from yaml files.
 
@@ -2082,7 +2105,9 @@ def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args
         parent_obj = parentlink
 
     pos_matrix = active_obj.matrix_world
-    sensor_obj = sensors.createSensor(sensor_dict, parent_obj, pos_matrix)
+    # [TODO v2.0.0] Fix this
+    sensor_obj = None
+    # sensor_obj = sensors.createSensor(sensor_dict, parent_obj, pos_matrix)
 
     # parent to the added link
     if newlink:
@@ -2275,7 +2300,7 @@ class AddSensorOperator(Operator):
             )
         return {'FINISHED'}
 
-
+# [TODO v2.0.0] REVIEW this
 def addControllerFromYaml(controller_dict, annotations, selected_objs, active_obj, *args):
     """Execution function for the temporary operator to add controllers from yaml files.
 
@@ -2320,6 +2345,7 @@ def addControllerFromYaml(controller_dict, annotations, selected_objs, active_ob
     return controller_objs, annotation_objs, []
 
 
+# [TODO v2.0.0] REVIEW this
 class AddControllerOperator(Operator):
     """Add a controller at the position of the selected object."""
 
@@ -2473,6 +2499,7 @@ class AddControllerOperator(Operator):
         return {'FINISHED'}
 
 
+# [TODO v2.0.0] REVIEW this
 def getControllerParameters(name):
     """Returns the controller parameters for the controller type with the provided
     name.
@@ -2489,6 +2516,7 @@ def getControllerParameters(name):
         return []
 
 
+# [TODO v2.0.0] REVIEW this
 def getDefaultControllerParameters(scene, context):
     """Returns the default controller parameters for the controller of the active
     object.
@@ -2507,6 +2535,7 @@ def getDefaultControllerParameters(scene, context):
         return None
 
 
+# [TODO v2.0.0] REVIEW this
 class CreateMimicJointOperator(Operator):
     """Make a number of joints follow a specified joint"""
 
@@ -2522,7 +2551,7 @@ class CreateMimicJointOperator(Operator):
 
     mimicjoint : BoolProperty(name="Mimic Joint", default=True, description="Create joint mimicry")
 
-    mimicmotor : BoolProperty(name="Mimic Motor", default=False, description="Create motor mimicry")
+    # mimicmotor : BoolProperty(name="Mimic Motor", default=False, description="Create motor mimicry")
 
     def execute(self, context):
         """
@@ -2542,13 +2571,13 @@ class CreateMimicJointOperator(Operator):
         for obj in objs:
             if obj.name != masterjoint.name:
                 if self.mimicjoint:
-                    obj["joint/mimic_joint"] = nUtils.getObjectName(masterjoint, 'joint')
-                    obj["joint/mimic_multiplier"] = self.multiplier
-                    obj["joint/mimic_offset"] = self.offset
-                if self.mimicmotor:
-                    obj["motor/mimic_motor"] = nUtils.getObjectName(masterjoint, 'motor')
-                    obj["motor/mimic_multiplier"] = self.multiplier
-                    obj["motor/mimic_offset"] = self.offset
+                    obj["joint/mimic/joint"] = nUtils.getObjectName(masterjoint, 'joint')
+                    obj["joint/mimic/multiplier"] = self.multiplier
+                    obj["joint/mimic/offset"] = self.offset
+                # if self.mimicmotor:
+                #     obj["motor/mimic/motor"] = nUtils.getObjectName(masterjoint, 'motor')
+                #     obj["motor/mimic/multiplier"] = self.multiplier
+                #     obj["motor/mimic/offset"] = self.offset
         return {'FINISHED'}
 
     @classmethod
@@ -2703,6 +2732,7 @@ class AddHeightmapOperator(Operator):
         return {'RUNNING_MODAL'}
 
 
+# [TODO v2.0.0] REVIEW this
 class AddSubmodel(Operator):
     """Add a submodel instance to the scene"""
 
@@ -2831,6 +2861,7 @@ class AddSubmodel(Operator):
         return {'FINISHED'}
 
 
+# [TODO v2.0.0] REVIEW this
 class DefineSubmodel(Operator):
     """Define a new submodel from objects"""
 
@@ -2878,6 +2909,7 @@ class DefineSubmodel(Operator):
         return {'FINISHED'}
 
 
+# [TODO v2.0.0] REVIEW this
 class AssignSubmechanism(Operator):
     """Assign a submechanism to the model"""
 
@@ -3073,6 +3105,7 @@ class AssignSubmechanism(Operator):
         return {'FINISHED'}
 
 
+# [TODO v2.0.0] REVIEW this
 class SelectSubmechanism(Operator):
     """Select all objects of a submechanism"""
 
@@ -3154,6 +3187,7 @@ class SelectSubmechanism(Operator):
         return {'FINISHED'}
 
 
+# [TODO v2.0.0] REVIEW this
 class DeleteSubmechanism(Operator):
     """Delete an existing submechanism"""
 
@@ -3237,156 +3271,7 @@ class DeleteSubmechanism(Operator):
         return {'FINISHED'}
 
 
-class ToggleInterfaces(Operator):
-    """Toggle interfaces of a submodel"""
-
-    bl_idname = "phobos.toggle_interfaces"
-    bl_label = "Toggle Interfaces"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    mode : EnumProperty(
-        name="Toggle mode",
-        description="The mode in which to display the interfaces",
-        items=(('toggle',) * 3, ('activate',) * 3, ('deactivate',) * 3),
-    )
-
-    def execute(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        eUtils.toggleInterfaces(None, self.mode)
-        return {'FINISHED'}
-
-
-class ConnectInterfacesOperator(Operator):
-    """Connects submodels at interfaces"""
-
-    bl_idname = "phobos.connect_interfaces"
-    bl_label = "Connect Interfaces"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        """Hide operator if there are more than two objects are selected and the interfaces do not
-        match.
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        try:
-            # no interface selected
-            if (
-                context.active_object is None
-                or len(context.selected_objects) != 2
-                or not all([obj.phobostype == 'interface' for obj in context.selected_objects])
-            ):
-                return False
-
-            parentinterface = context.active_object
-            childinterface = [a for a in context.selected_objects if a != context.active_object][0]
-            # check for same interface type and directions
-            if (
-                (parentinterface['interface/type'] == childinterface['interface/type'])
-                and (
-                    parentinterface['interface/direction'] != childinterface['interface/direction']
-                )
-                or (
-                    parentinterface['interface/direction'] == 'bidirectional'
-                    and childinterface['interface/direction'] == 'bidirectional'
-                )
-            ):
-                return True
-            else:
-                return False
-        except (KeyError, IndexError):  # if relevant data or selection is incorrect
-            return False
-
-    def execute(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        pi = 0 if context.selected_objects[0] == context.active_object else 1
-        ci = int(not pi)  # 0 if pi == 1 else 1
-        parentinterface = context.selected_objects[pi]
-        childinterface = context.selected_objects[ci]
-        eUtils.connectInterfaces(parentinterface, childinterface)
-        return {'FINISHED'}
-
-
-class DisconnectInterfaceOperator(Operator):
-    """Disconnects submodels at interface"""
-
-    bl_idname = "phobos.disconnect_interface"
-    bl_label = "Disconnect Interface"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    @classmethod
-    def poll(cls, context):
-        """Hide operator if there is more than one object selected.
-        Also, the selected object has to be a connected interface.
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        # no interface selected
-        if (
-            context.active_object is None
-            or len(context.selected_objects) != 1
-            or not context.active_object.phobostype == 'interface'
-        ):
-            return False
-
-        # interface needs to be connect to another interface
-        interface = bpy.context.active_object
-        if interface.parent and interface.parent.phobostype == 'interface':
-            return True
-        elif interface.children and any([obj.phobostype for obj in interface.children]):
-            return True
-        return False
-
-    def execute(self, context):
-        """Execute disconnection
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        interface = context.active_object
-        if interface.parent and interface.parent.phobostype == 'interface':
-            log('Selected interface is child.', 'DEBUG')
-            child = interface
-            parent = interface.parent
-        else:
-            log('Selected interface is parent.', 'DEBUG')
-            parent = interface
-            for curchild in interface.children:
-                if curchild.phobostype == 'interface':
-                    child = curchild
-                    break
-            log('Selected ' + child.name + ' as child.', 'DEBUG')
-
-        eUtils.disconnectInterfaces(parent, child)
-        return {'FINISHED'}
-
-
+# [TODO v2.0.0] REVIEW this
 class MergeLinks(Operator):
     """Merge links"""
 
@@ -3515,32 +3400,34 @@ class SetModelRoot(Operator):
 #         return {'FINISHED'}
 
 
-class ValidateOperator(Operator):
-    """Check the robot dictionary"""
-
-    bl_idname = "phobos.validate"
-    bl_label = "Validate"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        messages = {}
-        root = sUtils.getRoot(context.selected_objects[0])
-        model = models.deriveModelDictionary(root)
-        vUtils.check_dict(model, defs.definitions['model'], messages)
-        vUtils.checkMessages = messages if len(list(messages.keys())) > 0 else {"NoObject": []}
-        for entry in messages:
-            log("Errors in object " + entry + ":", 'INFO')
-            for error in messages[entry]:
-                log(error, 'INFO')
-        return {'FINISHED'}
+# [TODO v2.1.0] Make this work again
+# class ValidateOperator(Operator):
+#     """Check the robot dictionary"""
+#
+#     bl_idname = "phobos.validate"
+#     bl_label = "Validate"
+#     bl_options = {'REGISTER', 'UNDO'}
+#
+#     def execute(self, context):
+#         """
+#
+#         Args:
+#           context:
+#
+#         Returns:
+#
+#         """
+#         messages = {}
+#         root = sUtils.getRoot(context.selected_objects[0])
+#         model = blender2phobos.deriveRobot(root)
+#         # [TODO v2.1.0] Make this work again
+#         # vUtils.check_dict(model, defs.definitions['model'], messages)
+#         vUtils.checkMessages = messages if len(list(messages.keys())) > 0 else {"NoObject": []}
+#         for entry in messages:
+#             log("Errors in object " + entry + ":", 'INFO')
+#             for error in messages[entry]:
+#                 log(error, 'INFO')
+#         return {'FINISHED'}
 
 
 class CalculateMassOperator(Operator):
@@ -3562,7 +3449,7 @@ class CalculateMassOperator(Operator):
 
         """
         inertials = [obj for obj in context.selected_objects if obj.phobostype == 'inertial']
-        self.mass = gUtils.calculateSum(inertials, 'inertial/mass')
+        self.mass = gUtils.calculateSum(inertials, 'mass')
         log("The calculated mass is: " + str(self.mass), 'INFO')
         return context.window_manager.invoke_popup(self)
 
@@ -3671,20 +3558,18 @@ classes = (
     AssignSubmechanism,
     SelectSubmechanism,
     DeleteSubmechanism,
-    ToggleInterfaces,
-    ConnectInterfacesOperator,
-    DisconnectInterfaceOperator,
     MergeLinks,
     SetModelRoot,
-    ValidateOperator,
+    # [TODO v2.1.0] Make this work again
+    # ValidateOperator,
     CalculateMassOperator,
     MeasureDistanceOperator,
 )
 
+
 def register():
     """TODO Missing documentation"""
     print("Registering operators.editing...")
-    # TODO this seems not to be very convenient...
     for classdef in classes:
         bpy.utils.register_class(classdef)
 
@@ -3692,6 +3577,5 @@ def register():
 def unregister():
     """TODO Missing documentation"""
     print("Unregistering operators.editing...")
-    # TODO this seems not to be very convenient...
     for classdef in classes:
         bpy.utils.unregister_class(classdef)

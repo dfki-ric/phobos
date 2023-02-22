@@ -45,13 +45,14 @@ def main(args):
         link_issues = False
         for geo in link.collisions + link.visuals:
             if isinstance(geo.geometry, representation.Mesh):
-                mesh_path = xml.read_urdf_filename(geo.geometry.filename, robot.xmlfile)
+                mesh_path = geo.geometry.filepath
                 geo_report = {"path": mesh_path, "found": True, "error": False, "warning": False, "note": ""}
+                f = open(path.realpath(mesh_path), "rb")
                 if not path.isfile(path.realpath(mesh_path)):
                     geo_report["found"] = False
                     geo_report["error"] = True
                     geo_report["note"] = "Mesh not found."
-                elif b'\0' not in open(path.realpath(mesh_path), "rb").read():
+                elif b'\0' not in f.read():
                     file = open(path.realpath(mesh_path), "r").read()
                     if len(file.split("\n")) == 3 and file.startswith("version"):
                         geo_report["found"] = False
@@ -60,7 +61,7 @@ def main(args):
                     else:
                         geo_report["found"] = True
                         geo_report["note"] += "Mesh found. "
-
+                f.close()
                 if not mesh_path.lower().endswith("bobj"):
                     suffix_idx = mesh_path.rfind(".")
                     suffix = mesh_path[suffix_idx + 1:]
@@ -102,7 +103,7 @@ def main(args):
     if args.output is not None:
         if path.exists(args.output):
             log.error(f"Won't overwrite {args.output}")
-            sys.exit(1)
+            return 1
         with open(args.output, "w") as f:
             f.write(dump_json(report))
         log.info(f"Wrote full output to {args.output}")
@@ -120,9 +121,9 @@ def main(args):
     log.info(f"{n_errors} mesh errors and {n_warnings} warnings found!")
     if not args.warn and n_warnings != 0:
         log.info("To display warnings add -w option.")
+    return 0
 
 
 if __name__ == '__main__':
     import sys
-
     main(sys.argv)

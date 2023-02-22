@@ -222,7 +222,7 @@ class Pipeline(yaml.YAMLObject):
             misc.create_dir(self, os.path.join(self.temp_dir, str(mp)))
             ext = mt
             misc.copy(self, os.path.join(self.root, str(mp), "*."+ext), os.path.join(self.temp_dir, str(mp)))
-        processed_meshes = []
+        processed_meshes = set()
         for model in self.models:
             log.info(f"\nProcessing {model.modelname} model...")
             if self._get_model_failure_state(model.modelname) & (F_LOAD | NA_LOAD):
@@ -232,8 +232,8 @@ class Pipeline(yaml.YAMLObject):
                 continue
             try:
                 model.process()
-                processed_meshes += model.processed_meshes
                 model.export()
+                processed_meshes = processed_meshes.union(model.processed_meshes)
                 self.processing_failed[model.modelname]["process"] = "Good"
             except Exception as e:
                 log.error(f"\nFailed processing {model.modelname} model with the following error and skipped to next:\n {e}")
@@ -245,7 +245,7 @@ class Pipeline(yaml.YAMLObject):
         for mt, mp in export_meshes.items():
             # misc.create_dir(self, os.path.join(self.temp_dir, str(mp)))
             existing_meshes += misc.list_files(os.path.join(self.temp_dir, str(mp)),
-                                               ignore=["\.gv", "\.pdf", "\.git*", "README\.md", "manifest\.xml"],
+                                               ignore=["\.gv", "\.pdf", "\.git*", "\_history.log", "README\.md", "manifest\.xml"],
                                                resolve_symlinks=True, abs_path=True)
         existing_meshes = set(existing_meshes)
         processed_meshes = set(processed_meshes)

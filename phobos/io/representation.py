@@ -1,16 +1,42 @@
 import os
+import json
+import shutil
+from copy import deepcopy
 
+import numpy
+import trimesh
 import numpy as np
 
 from .base import Representation
 from .smurf_reflection import SmurfBase
 from .xml_factory import singular as _singular, plural as _plural
 from .yaml_reflection import to_yaml
-from ..geometry.geometry import identical
-from ..geometry.io import import_mesh, import_mars_mesh
-from ..utils.misc import trunc, execute_shell_command, to_hex_color, color_parser
-from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix
+from ..defs import BPY_AVAILABLE
+from ..geometry import io as mesh_io
+from ..geometry.io import trimesh_2_mesh_info_dict, triangulate_faces_in_info_dict
+from ..utils import misc
+from ..utils.xml import read_relative_filename
+from ..geometry.geometry import identical, reduce_mesh, get_reflection_matrix, improve_mesh
+from ..utils.misc import trunc, execute_shell_command, to_hex_color, color_parser, edit_name_string
+from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix, create_transformation, matrix_to_quaternion, \
+    quaternion_to_angle_axis
 from ..utils import xml as xml_utils, transform
+
+MESH_INFO_KEYS = ["vertex_normals", "texture_coords", "vertices", "faces"]
+MESH_DATA_TYPES = ["trimesh.base.Trimesh", "trimesh.scene.scene.Scene", "file_obj", "file_stl", "file_dae", "file_iv"]
+if BPY_AVAILABLE:
+    import bpy
+
+    def _bpy_mesh_dc(inst, memo={}):
+        log.debug(f"Skipping deepcopy of {type(inst)}")
+        return inst
+
+    setattr(bpy.types.Mesh, "__deepcopy__", _bpy_mesh_dc)
+    setattr(bpy.types.Image, "__deepcopy__", _bpy_mesh_dc)
+
+    del _bpy_mesh_dc
+
+    MESH_DATA_TYPES += ["bpy_types.Mesh"]
 
 from ..commandline_logging import get_logger
 log = get_logger(__name__)
@@ -26,27 +52,25 @@ class Pose(Representation, SmurfBase):
         SmurfBase.__init__(self, returns=["rotation", "position"])
         self.excludes += ["xyz", "rpy"]
         self.relative_to = relative_to
-        self.xyz = None
-        self.rpy = None
+        if "matrix" in kwargs:
+            self._matrix = kwargs["matrix"]
+            return
+        xyz = xyz
+        rpy = rpy
         if vec is not None:
             assert xyz is None and rpy is None
             assert "rotation" not in kwargs and "position" not in kwargs
             assert isinstance(vec, list)
             if len(vec) == 3:
-                self.position = np.array(vec)
+                xyz = np.array(vec)
             else:
                 self.from_vec(vec)
-        else:
-            if "position" in kwargs:
-                assert xyz is None or xyz == kwargs["position"]
-                self.position = kwargs["position"]
-            else:
-                self.position = xyz
-            if "rotation" in kwargs:
-                assert rpy is None or rpy == kwargs["rotation"]
-                self.rotation = kwargs["rotation"]
-            else:
-                self.rotation = rpy
+                return
+        if xyz is None and "position" in kwargs:
+            self.position = kwargs["position"]
+        self._matrix = create_transformation(xyz=xyz, rpy=rpy)
+        if rpy is None and "rotation" in kwargs:
+            self.rotation = kwargs["rotation"]
 
     def check_valid(self):
         assert (len(self.xyz) == 3) and \
@@ -54,55 +78,76 @@ class Pose(Representation, SmurfBase):
 
     # Aliases for backwards compatibility
     @property
+    def xyz(self):
+        return self.position
+
+    @xyz.setter
+    def xyz(self, value):
+        self.position = value
+
+    @property
+    def rpy(self):
+        return self.rotation
+
+    @rpy.setter
+    def rpy(self, value):
+        self.rotation = value
+
+    @property
     def rotation(self):
-        return self.rpy
+        return transform.matrix_to_rpy(self._matrix[0:3, 0:3])
 
     @rotation.setter
     def rotation(self, value):
-        if type(value) == int:
-            self.rpy = [0, 0, value]
+        if type(value) in [int, float]:
+            self._matrix[0:3, 0:3] = transform.rpy_to_matrix([0, 0, value])
         elif type(value) in [list, tuple, np.ndarray] and len(value) == 3:
-            self.rpy = value
+            self._matrix[0:3, 0:3] = transform.rpy_to_matrix(value)
         elif type(value) in [list, tuple, np.ndarray] and len(value) == 4:
-            self.rpy = transform.quaternion_to_rpy(value)
+            self._matrix[0:3, 0:3] = transform.quaternion_to_matrix(value)
         elif type(value) == dict and len(value) == 3:
             if all([k in "rpy" for k in value.keys()]):
-                self.rpy = [value["r"], value["p"], value["y"]]
+                self._matrix[0:3, 0:3] = transform.rpy_to_matrix([value["r"], value["p"], value["y"]])
             elif all([k in "xyz" for k in value.keys()]):
-                self.rpy = [value["x"], value["y"], value["z"]]
+                self._matrix[0:3, 0:3] = transform.rpy_to_matrix([value["x"], value["y"], value["z"]])
             else:
                 raise ValueError("Can't parse rotation" + str(value))
         elif type(value) == dict and len(value) == 4:
-            self.rpy = transform.quaternion_to_rpy([value["x"], value["y"], value["z"], value["w"]])
+            self._matrix[0:3, 0:3] = transform.quaternion_to_matrix([value["x"], value["y"], value["z"], value["w"]])
         elif type(value) in [list, np.ndarray]:
-            self.rpy = transform.matrix_to_rpy(value)
+            self._matrix[0:3, 0:3] = transform.matrix_to_rpy(value)
         elif value is None:
-            self.rpy = [0.0, 0.0, 0.0]
+            self._matrix[0:3, 0:3] = numpy.identity(3)
         else:
             raise ValueError("Can't parse rotation " + str(value))
         # if we have an pi or pi/2, pi/4 approximation let's make pi or pi/2, pi/4 out of it
-        for i in range(3):
-            if type(self.rpy[i]) in [float, np.float64, np.float32] and "e" not in str(self.rpy[i]).lower():
-                in_decimals = len(str(self.rpy[i]).split(".")[1])
-                if in_decimals >= 3:
-                    for div in [1, 2, 4]:
-                        if str(self.rpy[i]) == f"%.{in_decimals}f" % (np.pi / div) or \
-                               self.rpy[i] == np.round(np.pi/div, decimals=in_decimals) or \
-                               self.rpy[i] == trunc(np.pi/div, decimals=in_decimals):
-                            self.rpy[i] = np.pi / div
-        self.rpy = np.array(self.rpy)
+        # [TODO v2.1.0] re-establich this
+        # for i in range(3):
+        #     if type(self.rpy[i]) in [float, np.float64, np.float32] and "e" not in str(self.rpy[i]).lower():
+        #         in_decimals = len(str(self.rpy[i]).split(".")[1])
+        #         if in_decimals >= 3:
+        #             for div in [1, 2, 4]:
+        #                 if str(self.rpy[i]) == f"%.{in_decimals}f" % (np.pi / div) or \
+        #                        self.rpy[i] == np.round(np.pi/div, decimals=in_decimals) or \
+        #                        self.rpy[i] == trunc(np.pi/div, decimals=in_decimals):
+        #                     self.rpy[i] = np.pi / div
+
+    @property
+    def angle_axis(self):
+        quat = matrix_to_quaternion(self._matrix[0:3, 0:3])
+        return quaternion_to_angle_axis(quat)
 
     @property
     def position(self):
-        return self.xyz
+        return self.to_matrix()[0:3, 3]
 
     @position.setter
     def position(self, value):
         if value is None:
-            self.xyz = np.array([0.0, 0.0, 0.0])
+            self._matrix[0:3, 3] = np.array([0.0, 0.0, 0.0])
         else:
             assert type(value) in [list, np.ndarray] and len(value) == 3
-            self.xyz = np.array(value)
+            self._matrix[0:3, 3] = np.array(value)
 
     def from_vec(self, vec):
         assert len(vec) == 6, "Invalid length"
@@ -117,23 +162,15 @@ class Pose(Representation, SmurfBase):
 
     @staticmethod
     def from_matrix(T, dec=16, relative_to=None):
-        xyz = T[0:3, 3]
-        rpy = matrix_to_rpy(T[0:3, 0:3])
-        return Pose(xyz=xyz, rpy=rpy, dec=dec, relative_to=relative_to)
+        return Pose(matrix=T, dec=dec, relative_to=relative_to)
 
     def to_matrix(self):
-        R = rpy_to_matrix(self.rpy if hasattr(self, "rpy") else np.array([0.0, 0.0, 0.0]))
-        p = np.array(self.xyz if hasattr(self, "xyz") else np.array([0.0, 0.0, 0.0]))
-        T = np.identity(4)
-        T[0:3, 3] = p
-        T[0:3, 0:3] = R
-        T[3, 3] = 1.0
-        return T
+        return self._matrix
 
     def transform(self, T):
         """T.dot(this)"""
         return Pose.from_matrix(
-            T.dot(self.to_matrix()),
+            T.dot(self._matrix),
             self.relative_to
         )
 
@@ -141,17 +178,107 @@ class Pose(Representation, SmurfBase):
         return False
 
 
+class Texture(Representation):
+    def __init__(self, name=None, filepath=None, image=None, **kwargs):
+        super(Texture, self).__init__()
+        self.unique_name = name
+        if image is not None:
+            self.unique_name = None
+            self.image = image
+            self.input_file = None
+            self.input_type = "img"
+            if BPY_AVAILABLE and isinstance(image, bpy.types.Image):
+                self.input_file = os.path.normpath(bpy.path.abspath(image.filepath))
+                self.input_type = "img_bpy"
+                if self.unique_name is None:
+                    self.unique_name, ext = os.path.splitext(image.name)
+            elif hasattr(image, "filename"):
+                # assumes PIL/Pillow image
+                self.input_file = os.path.expanduser(image.filename)
+        elif filepath is not None:
+            self.input_file = filepath
+            self.input_type = "file"
+            self.image = None
+
+        if not os.path.isabs(self.input_file) and "xmlfile" in kwargs and kwargs["xmlfile"] is not None:
+            self.input_file = os.path.join(os.path.dirname(kwargs["xmlfile"]), self.input_file)
+        elif not os.path.isabs(self.input_file) and "smurffile" in kwargs and kwargs["smurffile"] is not None:
+            self.input_file = os.path.join(os.path.dirname(kwargs["smurffile"]), self.input_file)
+        if not os.path.isabs(self.input_file) or not os.path.isfile(self.input_file):
+            raise IOError(f"Texture file {self.input_file} couldn't be found!")
+
+        if self.unique_name is None:
+            self.unique_name, ext = os.path.splitext(os.path.basename(self.input_file))
+
+        self.exported = None
+
+    def stringable(self):
+        # [TODO v2.1.0]
+        # Eventhough we can create a string of a texture, it's not possible yet to have this mesh as link in the robot
+        # This is still an open to do, which requires to deepcopy meshes on demand when one instance is changed in a
+        # way that is not applicable to other usages of this mesh.
+        return False
+
+    def __str__(self):
+        return self.filepath
+
+    @property
+    def abs_filepath(self):
+        if self.exported is None:
+            return self.input_file
+        else:
+            return self.exported
+
+    @property
+    def filepath(self):
+        if self._related_robot_instance is not None and self._related_robot_instance.xmlfile is not None:
+            return os.path.relpath(self.abs_filepath, os.path.dirname(self._related_robot_instance.xmlfile))
+        else:
+            return self.abs_filepath
+
+    def load_image(self):
+        if BPY_AVAILABLE:
+            self.image = bpy.data.images.load(self.input_file)
+        else:
+            from PIL import Image
+            self.image = Image.open(self.input_file)
+
+    def provide_image_file(self, targetpath, format=None):
+        if format is None:
+            format = "JPG"
+        assert format in ["JPG", "PNG"]
+        ext = format.lower()
+        targetpath = os.path.join(targetpath, self.unique_name+"."+ext)
+        if os.path.isfile(targetpath):
+            log.info(f"Texture fiel {targetpath} already exists, considering this as already exported")
+            self.exported = targetpath
+            return
+        if BPY_AVAILABLE and self.input_type == "img_bpy":
+            self.image.filepath_raw = targetpath
+            self.image.file_format = format
+            self.image.save()
+        else:
+            # assumes PIL/Pillow image
+            self.image.save(targetpath)
+        self.exported = targetpath
+        return
+
+
 class Material(Representation, SmurfBase):
     _class_variables = ["name", "diffuse", "ambient", "emissive", "specular", "diffuseTexture", "normalTexture"]
 
     def __init__(self, name=None, diffuse=None, ambient=None, specular=None, emissive=None,
-                 diffuseTexture=None, normalTexture=None, **kwargs):
+                 diffuseTexture=None, normalTexture=None, transparency=None, shininess=None, **kwargs):
         self.diffuse = color_parser(rgba=diffuse)
         self.ambient = color_parser(rgba=ambient)
         self.specular = color_parser(rgba=specular)
         self.emissive = color_parser(rgba=emissive)
         self.diffuseTexture = diffuseTexture
         self.normalTexture = normalTexture
+        self.transparency = transparency
+        if self.transparency is None and self.diffuse is not None:
+            self.transparency = 1-self.diffuse[3]
+        self.shininess = shininess
         self.original_name = name
         SmurfBase.__init__(self, returns=["name", "diffuseColor", "ambientColor", "specularColor", "emissionColor",
                                           "diffuseTexture", "normalTexture"], **kwargs)
@@ -161,17 +288,21 @@ class Material(Representation, SmurfBase):
         self.excludes += ["diffuse", "ambient", "specular", "emissive", "original_name", "users"]
 
     def check_valid(self):
-        # [TODO pre_v2.0.0] REVIEW add other colors here
+        # [TODO v2.0.0] REVIEW add other colors here
         if self.diffuse is None and self.diffuseTexture is None:
             raise Exception("Material has neither a color nor texture.")
 
     def equivalent(self, other):
-        # [TODO pre_v2.0.0] REVIEW add other colors here
+        # [TODO v2.0.0] REVIEW add other colors here
         return other.diffuseTexture == self.diffuseTexture and other.diffuse == self.diffuse
 
     def is_delegate(self):
-        # [TODO pre_v2.0.0] REVIEW add other colors here
+        # [TODO v2.0.0] REVIEW add other colors here
         return self.diffuse is None and self.diffuseTexture is None
+
+    @property
+    def diffuse_rgb(self):
+        return self.diffuse[0:3]
 
     @property
     def diffuseColor(self):
@@ -182,6 +313,10 @@ class Material(Representation, SmurfBase):
         self.diffuse = color_parser(*args, rgba=rgba)
 
     @property
+    def ambient_rgb(self):
+        return self.ambient[0:3]
+
+    @property
     def ambientColor(self):
         return self.ambient
 
@@ -190,12 +325,20 @@ class Material(Representation, SmurfBase):
         self.ambient = color_parser(*args, rgba=rgba)
 
     @property
+    def specular_rgb(self):
+        return self.specular[0:3]
+
+    @property
     def specularColor(self):
         return self.specular
 
     @specularColor.setter
     def specularColor(self, *args, rgba=None):
         self.specular = color_parser(*args, rgba=rgba)
+
+    @property
+    def emissive_rgb(self):
+        return self.emissive[0:3]
 
     @property
     def emissionColor(self):
@@ -232,6 +375,10 @@ class Box(Representation):
     def __str__(self):
         return "box"
 
+    @property
+    def extent(self):
+        return self.size
+
 
 class Cylinder(Representation):
     _class_variables = ["radius", "length"]
@@ -249,6 +396,10 @@ class Cylinder(Representation):
     def __str__(self):
         return "cylinder"
 
+    @property
+    def extent(self):
+        return (self.radius, self.radius, self.length)
+
 
 class Sphere(Representation):
     _class_variables = ["radius"]
@@ -264,73 +415,512 @@ class Sphere(Representation):
     def __str__(self):
         return "sphere"
 
+    @property
+    def extent(self):
+        return (self.radius, self.radius, self.radius)
 
-class Mesh(Representation):
-    _class_variables = ["filename", "scale"]
 
-    def __init__(self, filename=None, scale=None, filepath=None, **kwargs):
-        if scale is None:
-            scale = [1.0, 1.0, 1.0]
-        self._filename = None
-        super().__init__()
-        if filepath:
-            self.filename = filepath
+class Mesh(Representation, SmurfBase):
+    _class_variables = ["material"]
+
+    def __init__(self, filepath=None, scale=None, mesh=None, meshname=None, material=None,
+                 mesh_orientation=None,
+                 **kwargs):
+        SmurfBase.__init__(self)
+        self._scale = [1.0, 1.0, 1.0] if scale is None else scale
+        self.changed = False
+        self.info_in_sync = True
+        self.material = material
+        if mesh is not None:
+            assert meshname is not None
+            self._mesh_object = mesh
+            self.input_type = str(type(mesh))[8:-2]  # handle: <class 'the type name'>
+            assert self.input_type in MESH_DATA_TYPES
+            self.input_file = None
+            self.unique_name = meshname
+            self.mesh_information = None
+            if isinstance(mesh, trimesh.Trimesh):
+                self.mesh_information = mesh_io.trimesh_2_mesh_info_dict(mesh)
+            elif BPY_AVAILABLE and isinstance(mesh, bpy.types.Mesh):
+                self.mesh_information = mesh_io.blender_2_mesh_info_dict(mesh)
         else:
-            self.filename = filename
-        self.scale = scale
-
-    def __str__(self):
-        return self.filename
-
-    def set_unique_name(self, value):
-        raise Exception("Can't set unique name of mesh")
+            if kwargs.get("xmlfile", None) is not None and not os.path.isabs(filepath):
+                filepath = read_relative_filename(filepath, kwargs["xmlfile"])
+            if kwargs.get("smurffile", None) is not None and not os.path.isabs(filepath):
+                filepath = read_relative_filename(filepath, kwargs["smurffile"])
+            elif not os.path.isabs(filepath) and os.path.isfile(filepath):
+                filepath = os.path.abspath(filepath)
+            elif not os.path.isabs(filepath):
+                raise AssertionError("Can't get the mesh data, as there is no valid file path given")
+            _meshname, meshext = os.path.splitext(os.path.basename(filepath))
+            meshext = meshext[1:]  # remove the dot
+            if meshname is None:
+                meshname = _meshname
+            self._mesh_object = None
+            self.mesh_information = None  # this will get the raw information present from file
+            self.input_type = "file_"+meshext.lower()
+            self.input_file = filepath
+            self.unique_name = meshname
+        self.original_mesh_name = deepcopy(self.unique_name)
+        # [ToDo pre_v2.0.0] deal with different obj mesh axes during import and export
+        # This is the default definition for stl and obj in general how the internal axis are defined
+        # using this convention exporting stl/obj from blender will have the vertices on the same axes as defined by the link frames in urdf/sdf.
+        # OSG has for obj a special handling which changes this https://github.com/openscenegraph/OpenSceneGraph/blob/2e4ae2ea94595995c1fc56860051410b0c0be605/src/osgPlugins/obj/ReaderWriterOBJ.cpp#L208
+        # This can only be switched off via an ReaderWriter option https://github.com/openscenegraph/OpenSceneGraph/blob/2e4ae2ea94595995c1fc56860051410b0c0be605/src/osgPlugins/obj/ReaderWriterOBJ.cpp#L60
+        mars_mesh = self.input_file is not None and "mars_obj" in self.input_file and ".mars.obj" in self.input_file
+        self.mesh_orientation = {
+            "up": "Z" if not mars_mesh else "Y",
+            "forward": "Y" if not mars_mesh else "-Z"
+        } if mesh_orientation is None else mesh_orientation
+        self.exported = {}
+        self.history = [f"Instantiated id:{id(self)} with filepath={filepath}->{self.input_file}, scale={scale}, mesh={mesh}, meshname={meshname}, "
+                        f"material={material}, mesh_orientation={mesh_orientation}, {kwargs}"]
 
     @property
-    def filename(self):
-        if self._related_robot_instance is None or self._related_robot_instance.xmlfile is None:
-            return self._filename
-        else:
-            return os.path.relpath(self._filename,
-                                   os.path.dirname(os.path.abspath(self._related_robot_instance.xmlfile)))
+    def mesh_object(self):
+        return self._mesh_object
 
-    @filename.setter
-    def filename(self, new_val):
-        if self._related_robot_instance is None or self._related_robot_instance.xmlfile is None:
-            self._filename = new_val
-        elif not os.path.isabs(new_val):
-            self._filename = xml_utils.read_urdf_filename(new_val, self._related_robot_instance.xmlfile)
+    @mesh_object.setter
+    def mesh_object(self, value):
+        assert isinstance(value, trimesh.Trimesh) or isinstance(value, trimesh.Scene) or isinstance(value, bpy.types.Mesh)
+        self.history.append(f"manually setting mesh_object by value of {type(value)}")
+        self.changed = True
+        self.info_in_sync = False
+        self._mesh_object = value
+        self.mesh_information = None
+
+    def stringable(self):
+        # [TODO v2.1.0]
+        # Eventhough we can create a string of this mesh, it's not possible yet to have this mesh as link in the robot
+        # This is still an open to do, which requires to deepcopy meshes on demand when one instance is changed in a
+        # way that is not applicable to other usages of this mesh.
+        return False
+
+    def __str__(self):
+        return self.unique_name
+
+    def set_unique_name(self, value):
+        self.unique_name = value
+
+    def write_history(self, targetpath):
+        # log.debug(f"Writing history to {targetpath}_history.log")
+        with open(targetpath+"_history.log", "w+") as f:
+            f.write("\n".join(self.history))
+
+    @classmethod
+    def history_file_exists(cls, targetpath):
+        return os.path.isfile(targetpath+"_history.log")
+
+    @classmethod
+    def read_history(cls, targetpath):
+        if cls.history_file_exists(targetpath):
+            with open(targetpath+"_history.log", "r") as f:
+                return [l.strip() for l in f.readlines()]
+        return None
+
+    @property
+    def abs_filepath(self):
+        if len(self.exported) == 0:
+            return self.input_file
         else:
-            self._filename = new_val
+            assert self._related_robot_instance is not None
+            assert self._related_robot_instance.mesh_format is not None
+            if self._related_robot_instance.mesh_format not in self.exported:
+                raise IOError(f"The mesh {self.unique_name} with the required mesh format ({self._related_robot_instance.mesh_format}) has not yet been exported.")
+            return self.exported[self._related_robot_instance.mesh_format]
 
     @property
     def filepath(self):
-        return self._filename
+        if self._related_robot_instance is not None and self._related_robot_instance.xmlfile is not None:
+            return os.path.relpath(self.abs_filepath, os.path.dirname(self._related_robot_instance.xmlfile))
+        else:
+            return self.abs_filepath
 
     @property
-    def name(self):
-        name, _ = os.path.splitext(os.path.dirname(self._filename))
-        return name
+    def input_file_name(self):
+        return os.path.splitext(os.path.basename(self.input_file))[0]
 
-    def scale_geometry(self, x=1, y=1, z=1, overwrite=False):
-        if overwrite or self.scale is None:
-            self.scale = [x, y, z]
+    def file_exists(self):
+        return os.path.isfile(self.abs_filepath)
+
+    def available(self):
+        return self.file_exists() or self.mesh_object is not None
+
+    def is_valid(self):
+        if self.input_file is None or not os.path.isfile(self.input_file):
+            log.error(f"Mesh {self.input_file} does not exist")
+            return False
+        if self.input_file is not None and os.path.isfile(self.input_file) and self.mesh_object is None:
+            with open(os.path.realpath(self.input_file), "rb") as f:
+                if b'\0' not in f.read():
+                    log.error(f"LFS not properly checked out. (Mesh {self.input_file})")
+                    return False
+        return self.has_enough_vertices()
+
+    def has_enough_vertices(self):
+        self.load_mesh()
+        mesh = deepcopy(mesh_io.as_trimesh(self.mesh_object))
+        zero_transform = create_transformation(xyz=-mesh.centroid)
+        mesh.apply_transform(zero_transform)
+        if len(mesh.vertices) <= 3:
+            log.debug(f"Mesh {self.unique_name} has less than 4 vertices")
+            return False
+        elif np.linalg.norm(mesh.bounding_box_oriented.primitive.extents) <= 0.01:
+            log.debug(f"Mesh {self.unique_name} is smaller than 1cm")
+            return False
+        return True
+
+    def approx_volume_and_com(self):
+        """
+        If the mesh is not watertight this method tries to make it a proper volume (see improve_mesh()).
+        Then, If the mesh is then watertight will return directly it's volume and com,
+        otherwise returns the volume of the convex_hull and the centroid of the mesh.
+        (see https://trimsh.org/trimesh.base.html#trimesh.base.Trimesh.centroid)
+
+        Returns:
+            tuple of approx. volume (float) and approx. center of mass ((3, ) float)
+        """
+        self.load_mesh()
+        mesh = mesh_io.as_trimesh(self.mesh_object)
+        if not mesh.is_volume:
+            mesh = improve_mesh(mesh)
+        if mesh.is_volume:
+            return mesh.volume, mesh.center_mass
         else:
-            self.scale = [v * s for v, s in zip(self.scale, [x, y, z])]
-
-    def load_mesh(self, urdf_path=None, mars_mesh=False):
-        if mars_mesh:
-            return import_mars_mesh(self.filename, urdf_path)
-        return import_mesh(self.filename, urdf_path)
-
-    def link_with_robot(self, robot, check_linkage_later=False):
-        super(Mesh, self).link_with_robot(robot, check_linkage_later=True)
-        assert os.path.isabs(self._filename) or (self._related_robot_instance is not None and self._related_robot_instance.xmlfile is not None)
-        self.filename = self._filename
-        if not check_linkage_later:
-            self.check_linkage()
+            return mesh.convex_hull.volume, mesh.convex_hull.centroid
 
     def equivalent(self, other):
-        return other.filepath == self.filepath or identical(self.load_mesh(), other.load_mesh())
+        return (not self.changed and not other.changed and self.input_file == other.input_file) or\
+               identical(mesh_io.as_trimesh(self.mesh_object), mesh_io.as_trimesh(other.mesh_object))
+
+    def load_mesh(self, reload=False):
+        if self.mesh_object is not None and not reload:
+            return self.mesh_object
+        assert os.path.isfile(self.input_file), f"Mesh with path {self.input_file} wasn't found!"
+        if BPY_AVAILABLE:
+            bpy.ops.object.select_all(action='DESELECT')
+            if self.input_type == "file_stl":
+                bpy.ops.import_mesh.stl(filepath=self.input_file)
+                self._mesh_object = bpy.context.object.data
+            elif self.input_type == "file_obj":
+                bpy.ops.import_scene.obj(filepath=self.input_file,
+                                         axis_forward=self.mesh_orientation["forward"],
+                                         axis_up=self.mesh_orientation["up"])
+                self._mesh_object = bpy.context.object.data
+                # with obj file import, blender only turns the object, not the vertices,
+                # leaving a rotation in the matrix_basis, which we here get rid of
+                bpy.ops.object.transform_apply(rotation=True)
+                if isinstance(mesh_io.import_mesh(self.input_file), trimesh.Trimesh):
+                    self.mesh_information = mesh_io.parse_obj(self.input_file)
+                else:
+                    log.debug(f"{self.input_file} can't be converted to bobj")
+            elif self.input_type == "file_dae":
+                bpy.ops.wm.collada_import(filepath=self.input_file)
+                self.mesh_information = mesh_io.parse_dae(self.input_file)
+                self._mesh_object = bpy.context.object.data
+            elif self.input_type == "file_bobj":
+                self.mesh_information = mesh_io.parse_bobj(self.input_file)
+                self._mesh_object = mesh_io.mesh_info_dict_2_blender(self.unique_name, **self.mesh_information)
+                bpy.context.view_layer.objects.active = bpy.data.objects.new(self.unique_name, self.mesh_object)
+            bpy.ops.object.delete()
+            self.changed = True  # as we there might be unnoticed changes by blender
+        else:
+            if self.input_type == "file_stl":
+                self._mesh_object = mesh_io.import_mesh(self.input_file)
+            elif self.input_type == "file_obj":
+                self._mesh_object = mesh_io.import_mesh(self.input_file)
+                if isinstance(self.mesh_object, trimesh.Trimesh):
+                    self.mesh_information = mesh_io.parse_obj(self.input_file)
+                else:
+                    log.debug(f"{self.input_file} can't be converted to bobj")
+            elif self.input_type == "file_dae":
+                self._mesh_object = mesh_io.import_mesh(self.input_file)
+                self.mesh_information = mesh_io.parse_dae(self.input_file)
+            elif self.input_type == "file_bobj":
+                self.mesh_information = mesh_io.parse_bobj(self.input_file)
+                self._mesh_object = mesh_io.mesh_info_dict_2_trimesh(**self.mesh_information)
+        self.history.append(f"loaded {'bpy-Mesh' if BPY_AVAILABLE else 'trimesh'} from {self.input_type} {self.input_file}")
+        return self.mesh_object
+
+    def provide_mesh_file(self, targetpath, format=None, throw_on_invalid_bobj=False):
+        if format is None and self._related_robot_instance is not None:
+            format = self._related_robot_instance.mesh_format
+        elif format is None:
+            raise AssertionError("To export meshes you have to specify the format. (format=None)")
+        assert os.path.isabs(targetpath)
+        ext = format.lower()
+        targetpath = os.path.join(targetpath, self.unique_name+"."+ext)
+        self.history.append(f"trying export of {type(self.mesh_object)} to {targetpath}")
+        # log.debug(f"Providing mesh {targetpath}...")
+        # if there are no changes we can simply copy
+        if "file_"+ext == self.input_type:
+            if not self.changed and self.input_file == targetpath:
+                log.debug(f"Using existing mesh {targetpath}...")
+                self.exported[ext] = targetpath
+                self.history.append(f"->target == input == {self.input_file} for ext {ext}")
+                self.write_history(targetpath)
+                return
+            elif not self.changed:
+                log.debug(f"Copying mesh {os.path.relpath(self.input_file, os.path.dirname(targetpath))} to {targetpath}...")
+                os.makedirs(os.path.dirname(targetpath), exist_ok=True)
+                shutil.copyfile(self.input_file, targetpath)
+                self.exported[ext] = targetpath
+                self.history.append(f"->copying {self.input_file} to {targetpath}")
+                self.write_history(targetpath)
+                return
+        # do nothing if the file is already there and identical
+        if os.path.isfile(targetpath):
+            existing_mesh = mesh_io.import_mesh(targetpath)
+            o_history = self.read_history(targetpath)
+            equiv_histories = False
+            if o_history is not None:
+                equiv_histories = [x for x in o_history[1:] if not x.startswith("->")] == [x for x in self.history[1:] if not x.startswith("->")]
+            if existing_mesh is not None and (equiv_histories or mesh_io.identical(mesh_io.as_trimesh(self.mesh_object), existing_mesh)):
+                log.debug(f"Skipping export of {targetpath } as the mesh file already exists and is identical")
+                self.exported[ext] = targetpath
+                self.write_history(targetpath)
+                return
+            elif existing_mesh is not None and o_history is not None:
+                s_history = "\n".join(self.history)
+                log.info(f"This history:\n{s_history}")
+                s_history = "\n".join(o_history)
+                log.info(f"Existing history:\n{s_history}")
+                raise IOError(f"Can't export mesh {self.unique_name} to {targetpath} because there exists already a file with different content.")
+            elif existing_mesh is not None:
+                # if there is now history file to this mesh file we will overwrite it
+                log.debug(f"Will overwrite mesh without history at {targetpath}")
+            else:
+                # there is a file but it's not a mesh, we'll overwrite it
+                pass
+        # load mesh if not yet done
+        if self.input_type.startswith("file") and self.mesh_object is None:
+            self.load_mesh()
+        # only export bobj, if it makes sense for the mesh
+        if ext == "bobj" and self.mesh_information is None:
+            if throw_on_invalid_bobj:
+                raise IOError(
+                    f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh can't be exported as bobj")
+            return
+        elif ext == "bobj" and (not self.info_in_sync and "texture_coords" in self.mesh_information):
+            if throw_on_invalid_bobj:
+                raise IOError(
+                    f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh has been edited and thus the textures might have get mixed up.")
+            return
+        # export
+        log.debug(f"Writing {type(self.mesh_object)} to {targetpath}...")
+        assert self.mesh_object is not None
+        if ext == "bobj" and self.input_type == "file_obj":
+            mesh_io.write_bobj(targetpath, **self.mesh_information)
+            self.exported[ext] = targetpath
+            self.history.append(f"->wrote bobj {targetpath} from {self.input_type}")
+            self.write_history(targetpath)
+            return
+        # export for blender
+        if BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
+            from ..blender.utils import blender as bUtils
+            objname = "tmp_export"+self.unique_name
+            tmpobject = bUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
+            # copy the mesh here
+            tmpobject.data = self.mesh_object
+            bpy.ops.object.select_all(action='DESELECT')
+            tmpobject.select_set(True)
+            if ext == 'obj':
+                axis_forward = bpy.context.preferences.addons["phobos"].preferences.obj_axis_forward
+                axis_up = bpy.context.preferences.addons["phobos"].preferences.obj_axis_up
+                bpy.ops.export_scene.obj(
+                    filepath=targetpath,
+                    use_selection=True,
+                    use_normals=True,
+                    use_materials=False,
+                    use_mesh_modifiers=True,
+                    axis_forward=axis_forward,
+                    axis_up=axis_up,
+                )
+            elif ext == 'stl':
+                bpy.ops.export_mesh.stl(filepath=targetpath, use_selection=True, use_mesh_modifiers=True)
+            elif ext == 'dae':
+                bpy.ops.wm.collada_export(filepath=targetpath, selected=True)
+            elif ext == "bobj":
+                log.debug(f"Exporting {targetpath} with {len(self.mesh_object.vertices)} vertices...")
+                mesh_io.write_bobj(targetpath, **mesh_io.blender_2_mesh_info_dict(self.mesh_object))
+            bpy.ops.object.select_all(action='DESELECT')
+            tmpobject.select_set(True)
+            bpy.ops.object.delete()
+            self.exported[ext] = targetpath
+            self.history.append(f"->wrote {ext} to {targetpath} from {self.input_type}")
+            self.write_history(targetpath)
+            return
+        # export from trimesh
+        assert isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene)
+        if ext == "dae":
+            dae_xml = trimesh.exchange.dae.export_collada(self.mesh_object)
+            if self.material is not None:
+                dae_xml = dae_xml.decode(json.detect_encoding(dae_xml))
+                dae_xml = misc.regex_replace(dae_xml, {
+                    "<color>0.0 0.0 0.0 1.0</color>": " <color>" + " ".join(
+                        [str(n) for n in self.material.diffuseColor]) + "</color>"})
+                with open(targetpath, "w") as f:
+                    f.write(dae_xml)
+            else:
+                with open(targetpath, "wb") as f:
+                    f.write(dae_xml)
+        elif ext == "bobj":
+            assert isinstance(self.mesh_object, trimesh.Trimesh),\
+                f"Export to bobj only possible from trimesh.Trimesh not for {type(self.mesh_object)}"
+            log.debug(f"Exporting {targetpath} with {len(self.mesh_object.vertices)} vertices...")
+            mesh_io.write_bobj(targetpath, **mesh_io.trimesh_2_mesh_info_dict(self.mesh_object))
+        else:
+            self.mesh_object.export(
+                file_obj=targetpath
+            )
+        self.history.append(f"->wrote {ext} to {targetpath} from {self.input_type}")
+        self.write_history(targetpath)
+        self.exported[ext] = targetpath
+
+    # methods that leave the mesh and mesh_info in sync
+    @property
+    def scale(self):
+        return self._scale
+
+    @scale.setter
+    def scale(self, scale):
+        if type(scale) == list:
+            assert len(scale) == 3
+            self._scale = [scale]
+        elif type(scale) in [float, int]:
+            self._scale = [scale, scale, scale]
+        else:
+            raise TypeError(f"Can't scale with {scale}, requires list(3) or float")
+
+    def multiply_scale(self, factor):
+        if type(factor) == list:
+            assert len(factor) == 3
+            self._scale = [v * s for v, s in zip(self.scale, factor)]
+        elif type(factor) in [float, int]:
+            self._scale = [v * factor for v in self.scale]
+        else:
+            raise TypeError(f"Can't multiply scale with {factor}, requires list(3) or float")
+
+    # methods that make changes on the mesh
+    def apply_scale(self):
+        self.load_mesh()
+        if isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene):
+            self.mesh_object.scale(self.scale)
+            self.history.append(f"applied scale {self.scale}")
+            self.changed = True
+            self.scale = 1
+            if self.mesh_information is not None:
+                self.mesh_information["vertices"] = self.mesh_information["vertices"] * np.array(self.scale)
+                self.mesh_information["vertex_normals"] = self.mesh_information["vertex_normals"] / np.array(self.scale)
+        elif BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
+            raise NotImplementedError
+
+    def improve_mesh(self):
+        self.load_mesh()
+        if isinstance(self.mesh_object, trimesh.Trimesh):
+            self.changed = True
+            self.info_in_sync = False
+            self._mesh_object = improve_mesh(self.mesh_object)
+            self.history.append(f"improved mesh")
+        elif isinstance(self.mesh_object, bpy.types.Mesh):
+            raise NotImplementedError("Please optimize the mesh directly in blender")
+        else:
+            log.warning(f"Can only optimize trimesh.Trimesh not {type(self.mesh_object)}")
+
+    def reduce_mesh(self, factor):
+        self.load_mesh()
+        if isinstance(self.mesh_object, trimesh.Trimesh):
+            self.changed = True
+            self.info_in_sync = False
+            self._mesh_object = reduce_mesh(self.mesh_object, factor)
+            self.unique_name = edit_name_string(self.unique_name, suffix=f"_red{str(factor).replace('.',',')}")
+            self.history.append(f"reduced mesh factor={factor}")
+        elif isinstance(self.mesh_object, bpy.types.Mesh):
+            raise NotImplementedError("Please reduce the mesh directly in blender")
+        else:
+            log.warning(f"Can only reduce trimesh.Trimesh not {type(self.mesh_object)}")
+
+    def to_convex_hull(self):
+        self.load_mesh()
+        if isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene):
+            self._mesh_object = self.mesh_object.convex_hull
+            self.mesh_information = mesh_io.trimesh_2_mesh_info_dict(self.mesh_object)
+            self.changed = True
+            self.info_in_sync = False
+            self.unique_name = edit_name_string(self.unique_name, suffix="_convex")
+            self.history.append(f"to trimesh convex_hull")
+        elif BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
+            import bmesh
+            bm = bmesh.new()
+            bm.from_mesh(self.mesh_object)
+            bmesh.ops.convex_hull(bm, bm.verts)
+            bm.to_mesh(self.mesh_object)
+            bm.free()
+            self.changed = True
+            self.info_in_sync = False
+            self.unique_name = edit_name_string(self.unique_name, suffix="_convex")
+            self.history.append(f"to bpy convex_hull")
+        else:
+            log.error(f"Couldn't create convex hull for mesh {self.unique_name}")
+
+    def mirror(self, mirror_transform=None, name_replacements=None):
+        self.load_mesh()
+        if mirror_transform is None:
+            mirror_transform = get_reflection_matrix()
+        if name_replacements is None:
+            name_replacements = {}
+        if isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene):
+            self._mesh_object = self.mesh_object.apply_transform(mirror_transform)
+            self.mesh_object.fix_normals()
+            self.mesh_information = mesh_io.trimesh_2_mesh_info_dict(self.mesh_object)
+            self.changed = True
+            self.info_in_sync = False
+            self.unique_name = edit_name_string(self.unique_name, suffix="_mirrored", replacements=name_replacements)
+            self.history.append(f"trimesh mirrored {['{:0.2f}'.format(x) for x in mirror_transform.diagonal()]}")
+        elif BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
+            import bmesh
+            import mathutils
+            bm = bmesh.new()
+            bm.from_mesh(self.mesh_object)
+            bmesh.ops.mirror(bm, bm.faces, mathutils.Matrix(mirror_transform))
+            bm.to_mesh(self.mesh_object)
+            bm.free()
+            self.changed = True
+            self.info_in_sync = False
+            self.mesh_information = mesh_io.blender_2_mesh_info_dict(self.mesh_object)
+            self.unique_name = edit_name_string(self.unique_name, suffix="_mirrored", replacements=name_replacements)
+            self.history.append(f"bpy mirrored {['{:0.2f}'.format(x) for x in mirror_transform.diagonal()]}")
+        else:
+            log.error(f"Couldn't create convex hull for mesh {self.unique_name}")
+
+    def to_trimesh_mesh(self):
+        self.load_mesh()
+        if not isinstance(self.mesh_object, trimesh.Trimesh):
+            self.changed = True
+            self.info_in_sync = False
+            self.history.append(f"converted from {type(self.mesh_object)} to trimesh")
+            self._mesh_object = mesh_io.as_trimesh(self.mesh_object)
+
+    # [TODO v2.1.0] Consider using this other shader for the x3d export
+    # shapes += "<CommonSurfaceShader ambientFactor='.588 .588 .588' diffuseFactor='{} {} {}' specularFactor='{} {} {}' shininessFactor='{}' normalScale='2 2 2' normalBias='-1 -1 1'>\n".format(diffuse[0], diffuse[1], diffuse[2], specular[0], specular[1], specular[2], shininess)
+    @property
+    def x3d_vertices(self):
+        self.load_mesh()
+        tm = mesh_io.as_trimesh(self.mesh_object)
+        return np.array(tm.vertices).flatten()
+
+    @property
+    def x3d_face_normals(self):
+        self.load_mesh()
+        tm = mesh_io.as_trimesh(self.mesh_object)
+        return np.array(tm.face_normals).flatten()
+
+    @property
+    def x3d_faces(self):
+        self.load_mesh()
+        tm = mesh_io.as_trimesh(self.mesh_object)
+        faces = np.array(tm.faces)
+        return np.c_[faces, [-1]*faces.shape[0]].flatten()
 
 
 class GeometryFactory(Representation):
@@ -387,7 +977,6 @@ class Visual(Representation, SmurfBase):
     _class_variables = ["name", "geometry", "material", "origin"]
 
     def __init__(self, geometry=None, material=None, material_: Material = None, origin=None, name=None, **kwargs):
-        super().__init__()
         self.original_name = name
         if name is None or len(name) == 0:
             if "_parent_xml" in kwargs:
@@ -401,18 +990,20 @@ class Visual(Representation, SmurfBase):
         material = _singular(material)
         if type(material) == str:
             self.material = material
-            if material_ is not None:
+            if material_ is not None and not material_.is_delegate():
                 assert isinstance(material_, Material) and material_.original_name == material
                 self.material = material_
         elif isinstance(material, Material):
             assert material_ is None or material_.equivalent(material)
-            self.material = material_
+            self.material = material
         if origin is None:
             origin = Pose()
         self.origin = _singular(origin)
+        SmurfBase.__init__(self, **kwargs)
         assert isinstance(self.origin, Pose)
 
     @property
+    # [TODO v2.0.0] Make the name more self-explanatory, that this is the dummy for exporting only a reference
     def material_(self):
         return None
 
@@ -420,8 +1011,25 @@ class Visual(Representation, SmurfBase):
         return self.geometry.equivalent(other.geometry) and self._material.equivalent(other._material) and \
                self.origin == other.origin
 
+    @property
+    def origin_from_root(self):
+        assert self._related_robot_instance is not None
+        link = [ln for ln in self._related_robot_instance.links if self in ln.visuals]
+        assert len(link) == 1
+        transformation = self._related_robot_instance.get_transformation(link[0]).dot(self.origin.to_matrix())
+        return Pose.from_matrix(transformation)
 
-class Inertia(Representation):
+    @property
+    def position_from_root(self):
+        return self.origin_from_root.xyz
+
+    @property
+    def axis_angle_from_root(self):
+        angle, axis = self.origin_from_root.angle_axis
+        return [axis[0], axis[1], axis[2], angle]
+
+
+class Inertia(Representation, SmurfBase):
     _class_variables = ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz']
 
     def __init__(self, ixx=1e-16, ixy=0.0, ixz=0.0, iyy=1e-16, iyz=0.0, izz=1e-16, **kwargs):
@@ -433,6 +1041,9 @@ class Inertia(Representation):
         self.iyy = iyy
         self.iyz = iyz
         self.izz = izz
+
+    def stringable(self):
+        return False
 
     def to_matrix(self):
         return [[self.ixx, self.ixy, self.ixz],
@@ -457,7 +1068,7 @@ class Inertia(Representation):
         return Inertia(**inertias)
 
 
-class Inertial(Representation):
+class Inertial(Representation, SmurfBase):
     _class_variables = ["mass", "inertia", "origin"]
 
     def __init__(self, mass=0.0, inertia=None, origin=None, **kwargs):
@@ -468,6 +1079,9 @@ class Inertial(Representation):
             origin = Pose()
         self.origin = _singular(origin)
         assert type(self.origin) == Pose, f"{origin} is not Pose"
+
+    def stringable(self):
+        return False
 
     @staticmethod
     def from_mass_matrix(M, origin: Pose):
@@ -551,9 +1165,9 @@ class KCCDHull(Representation, SmurfBase):
 class Link(Representation, SmurfBase):
     _class_variables = ["name", "visuals", "collisions", "inertial", "kccd_hull"]
 
-    def __init__(self, name=None, visuals=None, inertial=None, collisions=None, origin=None,
+    def __init__(self, name=None, visuals=None, inertial=None, collisions=None, #origin=None,
                  noDataPackage=False, reducedDataPackage=False, is_human=None, kccd_hull=None, **kwargs):
-        assert origin is None  # Unused but might be neccesary for sdf
+        # assert origin is None  # Unused but might be neccesary for sdf
         SmurfBase.__init__(self, **kwargs)
         self.name = name
         self.is_human = is_human
@@ -700,7 +1314,7 @@ class Joint(Representation, SmurfBase):
     def __init__(self, name=None, parent=None, child=None, joint_type=None,
                  axis=None, origin=None, limit=None,
                  dynamics=None, safety_controller=None, calibration=None,
-                 mimic=None, motor=None,
+                 mimic=None, joint_dependencies=None, motor=None,
                  noDataPackage=False, reducedDataPackage=False, cut_joint=False, constraint_axes=None, **kwargs):
         self.name = name
         self.returns = ['name']
@@ -720,13 +1334,13 @@ class Joint(Representation, SmurfBase):
             origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=self.parent)
         self._origin = _singular(origin)
         self.limit = _singular(limit)
-        if "joint_dependencies" in kwargs:
-            self.joint_dependencies = kwargs.pop("joint_dependencies") + _plural(mimic)
+        if joint_dependencies is not None:
+            self.joint_dependencies = _plural(joint_dependencies) + _plural(mimic)
         else:
             self.joint_dependencies = _plural(mimic)
         self.cut_joint = cut_joint
         self.constraint_axes = _plural(constraint_axes)
-        self.motor = (motor if type(motor) == str else motor.name) if motor is not None else None
+        self.motor = str(motor) if motor is not None else None
         if noDataPackage is not None:
             self.noDataPackage = noDataPackage
             self.returns += ["noDataPackage"]
@@ -946,16 +1560,18 @@ class Transmission(Representation):
 
 
 class Motor(Representation, SmurfBase):
+    TYPES = ["dc", "ac", "step"]
     _class_variables = ["name", "joint"]
 
     def __init__(self, name=None, joint=None, **kwargs):
-        SmurfBase.__init__(self, name=name, joint=joint, **kwargs)
+        SmurfBase.__init__(self, name=name, joint=joint, type="dc", **kwargs)
         # This is hardcoded information
         assert self.joint is not None
         self._maxEffort = None
         self._maxSpeed = None
         self._maxValue = None
         self._minValue = None
+        self.type = type
         self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue']
 
     @property

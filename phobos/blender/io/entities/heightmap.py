@@ -17,7 +17,7 @@ import os
 import shutil
 import bpy
 
-import phobos.blender.model.models as models
+from phobos.blender.io import blender2phobos
 import phobos.blender.utils.selection as sUtils
 import phobos.blender.utils.io as ioUtils
 from phobos.blender.utils.io import securepath
@@ -47,7 +47,7 @@ def deriveEntity(entity, outpath):
     heightmap_outpath = securepath(os.path.join(outpath, structure_subfolder))
 
     log("Exporting " + heightmap["entity/name"] + " as a heightmap entity", "INFO")
-    entitypose = models.deriveObjectPose(heightmap)
+    entitypose = blender2phobos.deriveObjectPose(heightmap)
     heightmapMesh = sUtils.getImmediateChildren(heightmap)[0]
     if bpy.data.window_managers[0].heightmapMesh:
         exMesh = heightmapMesh.to_mesh(bpy.context.scene, True, "PREVIEW")

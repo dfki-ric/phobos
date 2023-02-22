@@ -32,10 +32,7 @@ def generate_kccd_optimizer_ready_collision(robot, linkname, outputdir, join_fir
         out = []
         parent = robot.get_link(parent)
         for visual in parent.visuals:
-            if mars_meshes:
-                m = io.import_mars_mesh(visual.geometry.filename, urdf_path=robot.xmlfile)
-            else:
-                m = io.import_mesh(visual.geometry.filename, urdf_path=robot.xmlfile)
+            m = io.as_trimesh(visual.geometry.load_mesh())
             m.apply_transform(visual.origin.to_matrix())
             m.apply_transform(transform)
             if not join_first:
@@ -54,11 +51,6 @@ def generate_kccd_optimizer_ready_collision(robot, linkname, outputdir, join_fir
     link = robot.get_link(linkname)
     joint = robot.get_parent(linkname)
     remove_collision(robot, linkname)
-    for vis in link.visuals:
-        vis.geometry.filename = os.path.relpath(os.path.realpath(os.path.join(
-                os.path.dirname(robot.xmlfile),
-                vis.geometry.filename)
-            ), os.path.dirname(robot.xmlfile))
     if joint is None or not (robot.get_joint(joint).joint_type == "fixed" or joint in merge_additionally):
         meshes = get_meshes_of_link_and_fixed_children(linkname)
         if len(meshes) == 0:
@@ -74,13 +66,12 @@ def generate_kccd_optimizer_ready_collision(robot, linkname, outputdir, join_fir
         if reduce_meshes > 0:
             mesh = geometry.reduce_mesh(mesh, 1-reduce_meshes)
 
-        filepath = os.path.join(outputdir, "collision_"+linkname+".stl")
-
-        io.export_mesh(mesh, filepath, urdf_path=os.path.dirname(robot.xmlfile))
+        mesh_representation = representation.Mesh(mesh=mesh, meshname="collision_"+linkname)
+        # [TODO pre_v2.0.0] Review whether the mesh export happens on export of this xml anyways
+        mesh_representation.provide_mesh_file(targetpath=outputdir, format="stl")
         link.add_aggregate("collision", representation.Collision(
             origin=representation.Pose(rpy=[0, 0, 0], xyz=[0, 0, 0]),
-            geometry=representation.Mesh(filename=os.path.relpath(os.path.abspath(filepath),
-                                                            os.path.dirname(robot.xmlfile))),
+            geometry=mesh_representation,
             name="collision_"+link.name
         ))
 
@@ -91,7 +82,7 @@ def find_zero_pose_collisions(robot):
         T = robot.get_transformation(link.name)
         for coll in link.collisions:
             if isinstance(coll.geometry, representation.Mesh):
-                mesh = io.import_mesh(coll.geometry.filename, urdf_path=robot.xmlfile).convex_hull
+                mesh = io.import_mesh(coll.geometry.filepath, urdf_path=robot.xmlfile).convex_hull
             elif isinstance(coll.geometry, representation.Box):
                 mesh = trimesh.creation.box(coll.geometry.size)
             elif isinstance(coll.geometry, representation.Sphere):
@@ -127,7 +118,7 @@ def join_collisions(robot, linkname, collisionnames=None, name_id=None, only_ret
             primitives += [e]
             continue
         else:
-            mesh = io.import_mesh(e.geometry.filename, os.path.dirname(robot.xmlfile))
+            mesh = io.as_trimesh(e.geometry.load_mesh())
             name = e.name
             if name.lower().startswith("collision_"):
                 name = name[len("collision_"):]
@@ -144,17 +135,16 @@ def join_collisions(robot, linkname, collisionnames=None, name_id=None, only_ret
     if only_return:
         return mesh
 
-    filename = "_".join(names) + "_joined.stl"
+    filename = "_".join(names) + "_joined"
     if name_id is not None:
-        filename = "_".join([str.replace(linkname, "/", ""), name_id, "joined.stl"])
+        filename = "_".join([str.replace(linkname, "/", ""), name_id, "joined"])
 
-    filepath = os.path.join(os.path.dirname(elements[0].geometry.filename), filename)
-
-    io.export_mesh(mesh, filepath, urdf_path=os.path.dirname(robot.xmlfile))
-
+    mesh_representation = representation.Mesh(meshname=filename, mesh=mesh)
+    # [TODO pre_v2.0.0] Review whether the mesh export happens on export of this xml anyways
+    mesh_representation.provide_mesh_file(targetpath=os.path.dirname(elements[0].geometry.input_file), format="stl")
     link.add_aggregate("collision", representation.Collision(
         origin=representation.Pose(rpy=[0, 0, 0], xyz=[0, 0, 0]),
-        geometry=representation.Mesh(filename=filepath),
+        geometry=mesh_representation,
         name="collision_"+link.name
     ))
 
@@ -182,7 +172,7 @@ def replace_collision(robot, linkname, shape='box', oriented=False, scale=1.0):
     link = robot.get_link(linkname)
     if link and hasattr(link, 'collision'):
         # print("Processing {}...".format(link.name))
-        geometry.replace_geometry(link.collisions, robot.xmlfile, shape=shape, oriented=oriented, scale=scale)
+        geometry.replace_geometry(link.collisions, shape=shape, oriented=oriented, scale=scale)
     return
 
 
@@ -201,10 +191,7 @@ def reduce_mesh_collision(robot, linkname, collisionname=None, reduction=0.4):
     if link is not None:
         for c in link.collisions:
             if (collisionname is None or c.name in collisionname) and isinstance(c.geometry, representation.Mesh):
-                mesh = io.import_mesh(c.geometry.filename, urdf_path=robot.xmlfile)
-                mesh = geometry.improve_mesh(mesh)
-                mesh = geometry.reduce_mesh(mesh, 1 - reduction)
-                io.export_mesh(mesh, filepath=c.geometry.filename, urdf_path=robot.xmlfile)
+                c.geometry.reduce_mesh(reduction)
 
 
 def remove_collision(robot, linkname, collisionname=None):
@@ -240,7 +227,7 @@ def replace_visuals(robot, shape='box', oriented=False, exclude=None):
     for link in robot.links:
         if hasattr(link, 'visual') and link.name not in exclude:
             # print("Processing {}...".format(link.name))
-            geometry.replace_geometry(link.visual, robot.xmlfile, shape=shape, oriented=oriented)
+            geometry.replace_geometry(link.visual, shape=shape, oriented=oriented)
     return
 
 
@@ -254,7 +241,7 @@ def replace_visual(robot, linkname, shape='box', oriented=False):
     link = robot.get_link(linkname)
     if link and hasattr(link, 'visual'):
         # print("Processing {}...".format(link.name))
-        geometry.replace_geometry(link.visual, robot.xmlfile, shape=shape, oriented=oriented)
+        geometry.replace_geometry(link.visual, shape=shape, oriented=oriented)
     return
 
 

@@ -65,9 +65,9 @@ def main(args):
             allow_na=args.allow_na_in_verify)*100), file=sys.stderr)
         print("Number of not successfully processed models:", pipeline.number_unfinished_models(), file=sys.stderr)
         if not args.verify:
-            sys.exit(0)
+            return 0
         else:
-            sys.exit(pipeline.get_coverage(phases=phases, allow_na=args.allow_na_in_verify) != 1)
+            return pipeline.get_coverage(phases=phases, allow_na=args.allow_na_in_verify) != 1
     else:
         parser.print_help()
 

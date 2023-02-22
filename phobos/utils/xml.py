@@ -2,6 +2,7 @@ import os
 import numpy as np
 
 from . import misc
+from ..defs import IMPORT_TYPES
 from ..io import representation
 from ..commandline_logging import get_logger
 log = get_logger(__name__)
@@ -61,10 +62,11 @@ def transform_object(obj, T):
 
 
 def adapt_mesh_pathes(robot, new_urdf_dir, copy_to=None):
+    # [TODO pre_v2.0.0] Check whether this has become obsolete due to export adaption
     for link in robot.links:
         for geo in link.visuals + link.collisions:
             if isinstance(geo.geometry, representation.Mesh):
-                new_mesh_path = read_urdf_filename(geo.geometry.filename, robot.xmlfile)
+                new_mesh_path = read_relative_filename(geo.geometry.filename, robot.xmlfile)
                 if copy_to is not None:
                     new_mesh_path = os.path.join(copy_to,
                                                  os.path.basename(geo.geometry.filename).lower().split(".")[-1],
@@ -79,29 +81,21 @@ def adapt_mesh_pathes(robot, new_urdf_dir, copy_to=None):
                 geo.geometry.filename = os.path.relpath(new_mesh_path, new_urdf_dir)
 
 
-def read_urdf_filename(filename, urdf_file_path):
-    if urdf_file_path is None or os.path.isabs(filename):
+def read_relative_filename(filename, start_file_path):
+    if start_file_path is None or os.path.isabs(filename):
         return filename
-    if not os.path.isabs(urdf_file_path):
-        urdf_file_path = os.path.abspath(urdf_file_path)
-    if urdf_file_path.endswith(".urdf"):
-        urdf_file_path = os.path.dirname(urdf_file_path)  # /bla/blub/urdf/blib.urdf -> /bla/blub/urdf
-    elif urdf_file_path.endswith(".sdf"):
-        urdf_file_path = os.path.dirname(urdf_file_path)  # /bla/blub/sdf/blib.sdf -> /bla/blub/sdf
+    if not os.path.isabs(start_file_path):
+        start_file_path = os.path.abspath(start_file_path)
+    if start_file_path.split(".")[-1] in IMPORT_TYPES:
+        start_file_path = os.path.dirname(start_file_path)  # /bla/blub/xyz/blib.xyz -> /bla/blub/xyz
     if filename.startswith("package://"):  # ROS Package
-        if urdf_file_path.endswith("/urdf"):
-            package_dir = os.path.dirname(urdf_file_path)  # /bla/blub/urdf -> /bla/blub
-        elif urdf_file_path.endswith("/urdf/"):
-            package_dir = os.path.dirname(urdf_file_path[:-1])  # /bla/blub/urdf/ -> /bla/blub
-        elif urdf_file_path.endswith("/sdf"):
-            package_dir = os.path.dirname(urdf_file_path)  # /bla/blub/sdf -> /bla/blub
-        elif urdf_file_path.endswith("/sdf/"):
-            package_dir = os.path.dirname(urdf_file_path[:-1])  # /bla/blub/sdf/ -> /bla/blub
+        if os.path.basename(start_file_path) in IMPORT_TYPES:
+            package_dir = os.path.dirname(start_file_path)  # /bla/blub/xyz -> /bla/blub
         else:
-            raise IOError("Can't derive package_dir from " + urdf_file_path)
+            raise IOError("Can't derive package_dir from " + start_file_path)
         out = os.path.join(package_dir, filename[len("package://"):])
     elif os.path.isabs(filename):
         out = filename
     else:  # normal urdf
-        out = os.path.join(urdf_file_path, filename)
+        out = os.path.join(start_file_path, filename)
     return os.path.normpath(out)

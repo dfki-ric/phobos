@@ -25,14 +25,14 @@ def main(args):
                                                       'if the output_file has no ending like sdf, urdf or pdf and '
                                                       'is a (non-existing) directory SMURF will be exported.',
                         action="store", default=None)
-    parser.add_argument('-c', '--copy-meshes', help='Copies the meshes', action='store_true', default=False)  # [TODO pre_v2.0.0]
+    parser.add_argument('-c', '--copy-meshes', help='Copies the meshes', action='store_true', default=False)  # [TODO v2.0.0]
     parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
                         default=BASE_LOG_LEVEL)
     args = parser.parse_args(args)
     log = setup_logger_level(log_level=args.loglevel)
 
     if args.input_file == args.output_file:
-        sys.exit(0)
+        return 0
 
     robot = Robot(inputfile=args.input_file)
     if args.output_file.lower().endswith("sdf"):
@@ -49,7 +49,8 @@ def main(args):
         robot.export_smurf(outputfile=args.output_file)
     else:
         log.error(f"Don't know which conversion to apply for {args.output_file}")
-        sys.exit(1)
+        return 1
+    return 0
 
 
 if __name__ == '__main__':

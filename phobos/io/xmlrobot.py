@@ -19,7 +19,7 @@ class XMLRobot(Representation):
                  joints: List[representation.Joint] = None,
                  materials: List[representation.Material] = None,
                  transmissions: List[representation.Transmission] = None,
-                 sensors=None, xmlfile=None, is_human=False):
+                 sensors=None, xmlfile=None, is_human=False, urdf_version=None):
         super().__init__()
         self.joints = []
         self.links = []
@@ -30,6 +30,9 @@ class XMLRobot(Representation):
         self.sensors = []
         self.xmlfile = xmlfile
 
+        # Default export mesh format from phobos.defs.MESH_TYPES
+        self.mesh_format = "stl"
+
         if name is None or len(name) == 0:
             if self.xmlfile is not None:
                 self.name, _ = os.path.splitext(xmlfile)
@@ -37,14 +40,9 @@ class XMLRobot(Representation):
                 self.name = None
         else:
             self.name = name
-        if version is None:
-            version = "1.0"
-        elif type(version) is not str:
-            version = str(version)
-        if version not in self.SUPPORTED_VERSIONS:
-            raise ValueError("Invalid version; only %s is supported" % (','.join(self.SUPPORTED_VERSIONS)))
 
         self.version = version
+        self.urdf_version = "1.0.0" if urdf_version is None else urdf_version
 
         if joints is not None:
             for joint in joints:

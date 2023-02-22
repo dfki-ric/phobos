@@ -44,7 +44,6 @@
   <!--  Optional because in most cases it's easier to install it manually-->
   <depend package="git-lfs" optional="1"/>
   <!--  Only for xtype models-->
-  <depend package="tools/cad/deimos" optional="1"/>
   <depend package="representation/xtypes" optional="1"/>
   <depend package="database/xdbi" optional="1"/>
 

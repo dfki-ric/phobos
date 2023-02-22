@@ -98,16 +98,26 @@ class XMLDefinition(object):
                 return
         # normal children
         children = []
-        for tag, var in self.xml_children.items():
+        for _, var in self.xml_children.items():
             obj = getattr(object, var["varname"])
             if type(obj) == list:
                 children += [o for o in obj if o is not None and (not isinstance(o, Representation) or not o.is_empty())]
             elif isinstance(obj, var["class"]):
                 children += [obj]
+            elif hasattr(object, "_"+var["varname"]):
+                _obj = getattr(object, "_"+var["varname"])
+                if _obj is not None and (not isinstance(_obj, Representation) or not _obj.is_empty()):
+                    children += [_obj]
         for child in sorted(children, key=lambda x: x.sort_string()):
-            e = child.to_xml(self.dialect)
-            if e is not None:
-                out.append(e)
+            try:
+                e = child.to_xml(self.dialect)
+                if e is not None:
+                    out.append(e)
+            except KeyError as error:
+                if self.dialect not in child.factory.keys():
+                    pass
+                else:
+                    raise error
         # children that are created from a simple property and have only attributes
         for tag, attribute_map in self.xml_attribute_children.items():
             _attrib = {attname: self._serialize(getattr(object, varname), float_fmt=float_fmt_dict[tag] if tag in float_fmt_dict else None)
@@ -146,6 +156,8 @@ class XMLDefinition(object):
         return out
 
     def kwargs_from_xml(self, xml: ET.Element, **kwargs):
+        _xmlfile = kwargs.get("xmlfile", None)
+        _smurffile = kwargs.get("smurffile", None)
         # value
         if self.xml_value is not None and xml.text is not None:
             kwargs[self.xml_value] = self._deserialize(xml.text)
@@ -162,7 +174,8 @@ class XMLDefinition(object):
                 if self.xml_children[child.tag]["varname"] not in kwargs:
                     kwargs[self.xml_children[child.tag]["varname"]] = []
                 kwargs[self.xml_children[child.tag]["varname"]] += [
-                    self.xml_children[child.tag]["class"].from_xml(child, self.dialect, _parent_xml=xml)]
+                    self.xml_children[child.tag]["class"].from_xml(
+                        child, self.dialect, _parent_xml=xml, xmlfile=_xmlfile, smurffile=_smurffile)]
             if child.tag in self.xml_attribute_children.keys():
                 # children that are created from a simple property and have only attributes
                 for attname, varname in self.xml_attribute_children[child.tag].items():
@@ -173,7 +186,7 @@ class XMLDefinition(object):
                 kwargs[self.xml_value_children[child.tag]] = self._deserialize(child.text)
             if child.tag in self.xml_nested_children.keys():
                 # children that are nested in another element
-                _kwargs = self.xml_nested_children[child.tag].kwargs_from_xml(child)
+                _kwargs = self.xml_nested_children[child.tag].kwargs_from_xml(child, xmlfile=_xmlfile, smurffile=_smurffile)
                 for k, v in _kwargs.items():
                     if k in kwargs.keys() and v != kwargs[k]:
                         raise IndexError(
@@ -267,36 +280,52 @@ class XMLFactory(XMLDefinition):
         return None
 
 
-XML_REFLECTIONS = ["urdf", "sdf"]
+XML_REFLECTIONS = {
+    "urdf": {
+        "read": True,
+        "write": True
+    },
+    "sdf": {
+        "read": True,
+        "write": True
+    },
+    "x3d": {
+        "read": False,
+        "write": True
+    }
+}
 
 
 def class_factory(cls, only=None):
-    setattr(cls, "factory", {refl: XMLFactory(refl, cls.__name__) for refl in XML_REFLECTIONS})
-    for refl in XML_REFLECTIONS:
+    reflections = [refl for refl in XML_REFLECTIONS.keys() if cls.__name__ in FORMATS[refl].keys()]
+    setattr(cls, "factory", {refl: XMLFactory(refl, cls.__name__) for refl in reflections})
+    for refl in reflections:
         if only is not None and refl not in only:
             continue
 
-        def _from_xml(c, xml, _dialect=refl, **kwargs):
-            return c.from_xml(xml, dialect=_dialect, **kwargs)
+        if XML_REFLECTIONS[refl]["read"]:
+            def _from_xml(c, xml, _dialect=refl, **kwargs):
+                return c.from_xml(xml, dialect=_dialect, **kwargs)
 
-        def _from_string(c, xml, _dialect=refl):
-            return c.from_xml_string(xml, dialect=_dialect)
+            def _from_string(c, xml, _dialect=refl):
+                return c.from_xml_string(xml, dialect=_dialect)
 
-        def _to_xml(obj, _dialect=refl, **kwargs):
-            return obj.to_xml(dialect=_dialect, **kwargs)
+            setattr(cls, f"from_{refl}", classmethod(_from_xml))
+            setattr(cls, f"from_{refl}_string", classmethod(_from_string))
+            del _from_xml
+            del _from_string
 
-        def _to_string(obj, _dialect=refl, **kwargs):
-            return obj.to_xml_string(dialect=_dialect, **kwargs)
+        if XML_REFLECTIONS[refl]["write"]:
+            def _to_xml(obj, _dialect=refl, **kwargs):
+                return obj.to_xml(dialect=_dialect, **kwargs)
 
-        setattr(cls, f"from_{refl}", classmethod(_from_xml))
-        setattr(cls, f"from_{refl}_string", classmethod(_from_string))
-        setattr(cls, f"to_{refl}", _to_xml)
-        setattr(cls, f"to_{refl}_string", _to_string)
+            def _to_string(obj, _dialect=refl, **kwargs):
+                return obj.to_xml_string(dialect=_dialect, **kwargs)
 
-        del _from_xml
-        del _from_string
-        del _to_xml
-        del _to_string
+            setattr(cls, f"to_{refl}", _to_xml)
+            setattr(cls, f"to_{refl}_string", _to_string)
+            del _to_xml
+            del _to_string
 
     if cls.__class__ == type and issubclass(cls, Linkable):
         # creates the setters and getters for all linked attributes

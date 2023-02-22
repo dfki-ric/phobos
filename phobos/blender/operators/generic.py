@@ -335,6 +335,7 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
     return operatorBlenderId
 
 
+# [TODO v2.0.0] REVIEW this
 class AddAnnotationsOperator(bpy.types.Operator):
     """Add annotations defined by the Phobos definitions"""
 

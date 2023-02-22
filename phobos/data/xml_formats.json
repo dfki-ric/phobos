@@ -4,7 +4,7 @@
       "tag": "robot",
       "attributes": {
         "name": "name",
-        "version": "version"
+        "version": "urdf_version"
       },
       "children": {
         "link": {
@@ -49,17 +49,26 @@
         }
       }
     },
+    "Texture": {
+      "tag": "texture",
+      "attributes": {
+        "filename": "filepath"
+      }
+    },
     "Material": {
       "tag": "material",
       "attributes": {
         "name": "name"
       },
+      "children": {
+        "texture": {
+          "classname": "Texture",
+          "varname": "diffuseTexture"
+        }
+      },
       "attribute_children": {
         "color": {
           "rgba": "diffuse"
-        },
-        "texture": {
-          "filename": "diffuseTexture"
         }
       }
     },
@@ -179,7 +188,7 @@
     "Mesh": {
       "tag": "mesh",
       "attributes": {
-        "filename": "filename",
+        "filename": "filepath",
         "scale": "scale"
       }
     },
@@ -654,7 +663,7 @@
     "Mesh": {
       "tag": "mesh",
       "value_children": {
-        "uri": "filename",
+        "uri": "filepath",
         "scale": "scale"
       }
     },
@@ -946,6 +955,107 @@
         "contact": {
           "value_children": {
             "collision": "collisions"
+          }
+        }
+      }
+    }
+  },
+  "x3d": {
+    "XMLRobot": {
+      "tag": "Group",
+      "children": {
+        "Shape": {
+          "classname": "Visual",
+          "varname": "visuals"
+        }
+      }
+    },
+    "Mesh": {
+      "tag": "IndexedFaceSet",
+      "attributes": {
+        "coordIndex": "x3d_faces"
+      },
+      "attribute_children": {
+        "Coordinate": {
+          "point": "x3d_vertices"
+        },
+        "Normal": {
+          "vector": "x3d_face_normals"
+        }
+      }
+    },
+    "Cylinder": {
+      "tag": "Cylinder",
+      "attributes": {
+        "height": "length",
+        "radius": "radius"
+      }
+    },
+    "Box": {
+      "tag": "Cylinder",
+      "attributes": {
+        "size": "size"
+      }
+    },
+    "Sphere": {
+      "tag": "Cylinder",
+      "attributes": {
+        "radius": "radius"
+      }
+    },
+    "Material": {
+      "tag": "Appearance",
+      "attributes": {
+        "DEF": "name"
+      },
+      "attribute_children": {
+        "Material": {
+          "diffuseColor": "diffuse_rgb",
+          "specularColor": "specular_rgb",
+          "emissiveColor": "emissive_rgb",
+          "shininess": "shininess",
+          "transparency": "transparency"
+        }
+      },
+      "children": {
+        "ImageTexture": {
+          "classname": "Texture",
+          "varname": "diffuseTexture"
+        }
+      }
+    },
+    "Visual": {
+      "tag": "Transform",
+      "attributes": {
+        "translation": "position_from_root",
+        "rotation": "axis_angle_from_root"
+      },
+      "nested_children": {
+        "Shape": {
+          "attributes": {
+            "DEF": "name"
+          },
+          "children": {
+            "Cylinder": {
+              "classname": "Cylinder",
+              "varname": "geometry"
+            },
+            "box": {
+              "classname": "Box",
+              "varname": "geometry"
+            },
+            "sphere": {
+              "classname": "Sphere",
+              "varname": "geometry"
+            },
+            "mesh": {
+              "classname": "Mesh",
+              "varname": "geometry"
+            },
+            "Appearance": {
+              "classname": "Material",
+              "varname": "material"
+            }
           }
         }
       }

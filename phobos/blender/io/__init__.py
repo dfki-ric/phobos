@@ -9,16 +9,3 @@
 # If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 # -------------------------------------------------------------------------------
 
-"""Contains all kind of input/output modules which are required to import/export different formats.
-
-Basic model formats are in :mod:`phobos.io.entities`, while scene formats are found in
-:mod:`phobos.io.scenes`.
-
-The :mod:`phobos.io.meshes` module contains the different mesh formats and
-:mod:`phobos.io.libraries` contains the functions for robot/submechanism import and export.
-
-New import/export entities can be defined by just adding a new python file to the respective
-subpackage. These are parsed automatically by Phobos and added to the Blender GUI, if they have the
-proper ``entity_type_dict``. See one of the existing entities (such as
-:mod:`phobos.io.entities.yaml` or :mod:`phobos.io.entities.urdf` for an example).
-"""

@@ -13,6 +13,7 @@ class Linkable(object):
         "relative_to": "links",
     }
     _related_robot_instance = None
+    # _class_variables contains those properties which have to be scanned for linkables
     _class_variables = []
 
     def __init__(self):
@@ -36,7 +37,7 @@ class Linkable(object):
 
     def stringable(self):
         """
-        Whether this class has a unique_name and can be referenced by it
+        Whether this class has a unique_name and can be referenced by it when linking it to a robot class
         """
         return True
 

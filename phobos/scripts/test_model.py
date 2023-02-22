@@ -34,7 +34,7 @@ def main(args):
         test_failed = not pipeline.test_models()
 
         print("Success rate: {:.2f} %".format(pipeline.get_coverage() * 100), file=sys.stderr)
-        sys.exit(test_failed)
+        return test_failed
     else:
         parser.print_help()
         raise Exception(f"Config file '{args.config_file}' not found!")

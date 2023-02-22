@@ -23,7 +23,31 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] in [ascr[0] for ascr in available_scripts + unavailable_scripts]:
         if sys.argv[1] in unavailable_scripts:
             print(f"Attention: Script might not work properly:" + getattr(scripts, sys.argv[1]).cant_be_used_msg())
-        getattr(scripts, sys.argv[1]).main(sys.argv[2:])
+        if "--cProfile" in sys.argv:
+            print("Running with profiler")
+            sys.argv.remove("--cProfile")
+            try:
+                import cProfile
+            except ImportError:
+                import profile as cProfile
+            import pstats
+            import traceback
+            from pstats import SortKey
+            import datetime
+            retval = 4
+            with cProfile.Profile() as pr:
+                try:
+                    retval = getattr(scripts, sys.argv[1]).main(sys.argv[2:])
+                except KeyboardInterrupt:
+                    traceback.print_exc()
+            with open(datetime.datetime.now().isoformat()+"_phobos_cProfile.log", "w") as s:
+                s.write(f"# {sys.argv}")
+                sortby = SortKey.CUMULATIVE
+                ps = pstats.Stats(pr, stream=s).sort_stats(sortby)
+                ps.print_stats()
+            sys.exit(retval)
+        else:
+            sys.exit(getattr(scripts, sys.argv[1]).main(sys.argv[2:]))
     else:
         print("Phobos is a tool to process simulation models \n")
         print("Usage:")

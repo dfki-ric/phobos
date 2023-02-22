@@ -15,6 +15,7 @@ def main(args):
     import os
 
     from ..scenes import Scene, Assembly
+    from ..utils import resources
     from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser()
@@ -31,13 +32,13 @@ def main(args):
     scene = Scene(args.input)
     if scene.is_empty():
         log.error("Given file is empty!")
-        sys.exit(1)
+        return 1
     elif scene.has_one_root():
         log.info("Found assembly!")
         assembly = Assembly.from_scene(scene, output_dir=args.output)
         assembly.merge(copy_meshes=args.copy_meshes)
         assembly.robot.name = os.path.basename(args.input).split(".")[0]
-        assembly.robot.full_export(outputdir=args.output)
+        assembly.robot.export(outputdir=args.output, export_config=resources.get_default_export_config())
     else:
         log.info("Found Scene!")
         for i, ents in enumerate(scene.entities):
@@ -45,8 +46,8 @@ def main(args):
             assembly = Assembly.from_entities(ents, output_dir=os.path.join(args.output, name))
             assembly.merge(copy_meshes=args.copy_meshes)
             assembly.robot.name = name
-            assembly.robot.full_export(outputdir=args.output)
-
+            assembly.robot.export(outputdir=args.output, export_config=resources.get_default_export_config())
+    return 0
 
 if __name__ == '__main__':
     import sys

@@ -25,7 +25,7 @@ except ImportError:
 bl_info = {
     "name": "Phobos",
     "description": "A toolbox to enable editing of robot models in Blender.",
-    "author": "Kai von Szadkowski, Malte Langosz, Henning Wiedemann, Simon Reichel, Julius Martensen, Ole Schwiegert, Stefan Rahms, ",
+    "author": "Kai von Szadkowski, Henning Wiedemann, Malte Langosz, Simon Reichel, Julius Martensen, et. al.",
     "version": (2, 0, 0),
     "blender": (3, 3, 1),
     "location": "Phobos adds a number of custom tool panels.",
@@ -55,7 +55,9 @@ optional_requirements = {
 extra_requirements = {
     "pybullet": "pybullet",  # optional for blender
     "open3d": "open3d",  # optional for blender
-    "python-fcl": "python-fcl"  # optional for blender
+    "python-fcl": "python-fcl",  # optional for blender,
+    "PIL": "Pillow"  # optional for blender,
+
 }
 
 
@@ -136,7 +138,7 @@ def register():
     from . import scenes
     from . import utils
     from . import ci
-    from . import scripts
+    # from . import scripts
 
     # Recursively import all submodules
     from . import blender

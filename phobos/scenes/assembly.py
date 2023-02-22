@@ -7,6 +7,7 @@ from ..io import representation
 from ..defs import dump_json, load_json, dump_yaml
 
 
+# [Todo v2.1.0] Test and fix this
 class Assembly(Scene):
     def __init__(self, smurfassembly, copy_construct=False, output_dir=None, **kwargs):
         super().__init__(smurfassembly, copy_construct=copy_construct, output_dir=output_dir, **kwargs)
@@ -19,11 +20,12 @@ class Assembly(Scene):
     def merge(self, copy_meshes=False):
         self._robot = self.entities[0].robot.duplicate()
         mesh_dir = None
+        # [ToDo] Review mesh handling
         if copy_meshes:
             mesh_dir = os.path.join(self.output_dir, "meshes")
         xml.adapt_mesh_pathes(self._robot, os.path.join(self.output_dir, "urdf"), copy_to=mesh_dir)
 
-        def go_though_parts(children):
+        def go_through_parts(children):
             for child in children:
                 joint = representation.Joint(
                     name=child.name,
@@ -38,7 +40,7 @@ class Assembly(Scene):
 
                 self._robot.attach(crobot, joint)
 
-        go_though_parts(self.entities[0].children)
+        go_through_parts(self.entities[0].children)
 
         return self._robot
 

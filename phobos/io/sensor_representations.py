@@ -88,6 +88,13 @@ class Sensor(Representation, SmurfBase):
     def merge(self, other):
         raise NotImplementedError
 
+    @property
+    def frame(self):
+        if hasattr(self, "link") and self.link is not None:
+            return self.link
+        return None
+
+
 
 class Joint6DOF(Sensor):
     _class_variables = ["name", "link"]
@@ -97,7 +104,7 @@ class Joint6DOF(Sensor):
         self.returns += ['link']
 
 
-# [TODO pre_v2.0.0] Check kwargs, internal computation and usage in mars
+# [TODO v2.0.0] Check kwargs, internal computation and usage in mars
 class RotatingRaySensor(Sensor):
     _class_variables = ["name", "link", "bands", "draw_rays", "horizontal_offset", "horizontal_resolution",
                         "opening_width", "lasers", "max_distance", "min_distance", "opening_height", "vertical_offset"]

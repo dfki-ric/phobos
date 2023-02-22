@@ -7,11 +7,11 @@ import yaml
 import numpy as np
 from copy import deepcopy, copy
 
+from .. import defs
 from ..defs import load_json, dump_json, dump_yaml, KINEMATIC_TYPES
 
 from ..core import Robot
-from ..geometry import replace_collision, join_collisions, remove_collision, import_mesh, import_mars_mesh, \
-    export_mesh, export_mars_mesh, export_bobj_mesh
+from ..geometry import replace_collision, join_collisions, remove_collision
 from ..io.hyrodyn import ConstraintAxis
 from ..utils import misc, git, xml, transform, tree, resources
 from ..io import representation, sensor_representations, poses
@@ -97,14 +97,15 @@ class BaseModel(yaml.YAMLObject):
         assert hasattr(self, "assemble") and len(self.assemble) > 0
 
         # list directly imported mesh pathes
+        # [TODO pre_v2.0.0] REVIEW mesh usage
         self._meshes = []
         for _, v in self.input_models.items():
             if "basefile" in v.keys():
                 r = Robot(inputfile=v["basefile"], is_human=v["is_human"] if "is_human" in v else False)
                 for link in r.links:
                     for g in link.visuals + link.collisions:
-                        if hasattr(g.geometry, "filename"):
-                            self._meshes += [xml.read_urdf_filename(g.geometry.filename[:-4], v["basefile"])]
+                        if isinstance(g.geometry, representation.Mesh):
+                            self._meshes += [xml.read_relative_filename(g.geometry.filepath[:-4], v["basefile"])]
             elif "repo" in v.keys():
                 repo_path = os.path.join(self.tempdir, "repo", os.path.basename(self.input_models["repo"]["git"]))
                 git.clone(
@@ -120,8 +121,8 @@ class BaseModel(yaml.YAMLObject):
                 for link in r.links:
                     for g in link.visuals + link.collisions:
                         if isinstance(g.geometry, representation.Mesh):
-                            self._meshes += [xml.read_urdf_filename(g.geometry.filename[:-4], self.basefile)]
-        self.processed_meshes = []  # used to make mesh processing more efficient
+                            self._meshes += [xml.read_relative_filename(g.geometry.filename[:-4], self.basefile)]
+        self.processed_meshes = set()  # used to make mesh processing more efficient
 
         # where to find the already processed model
         self.basedir = os.path.join(self.tempdir, "combined_model")
@@ -179,15 +180,6 @@ class BaseModel(yaml.YAMLObject):
                 kwargs["inputfile"] = config["basefile"]
                 self.dep_models.update({name: Robot(name=name, **kwargs)})
                 # copy the mesh files to the temporary combined model directory
-                for link in self.dep_models[name].links:
-                    for v in link.visuals + link.collisions:
-                        if isinstance(v.geometry, representation.Mesh):
-                            misc.copy(
-                                self.pipeline,
-                                os.path.join(os.path.dirname(config["basefile"]), v.geometry.filename),
-                                os.path.join(os.path.dirname(self.basefile), v.geometry.filename),
-                                silent=True
-                            )
             elif "repo" in config.keys():
                 repo_path = os.path.join(self.tempdir, "repo", os.path.basename(config["repo"]["git"]))
                 git.clone(
@@ -205,17 +197,6 @@ class BaseModel(yaml.YAMLObject):
                                 is_human=config["is_human"] if "is_human" in config else False)
                 })
                 # copy the mesh files to the temporary combined model directory
-                for link in self.dep_models[name].links:
-                    for v in link.visuals + link.collisions:
-                        if isinstance(v.geometry, representation.Mesh):
-                            source = os.path.join(repo_path, os.path.dirname(self.dep_models[name].xmlfile),
-                                                  v.geometry.filename)
-                            target = os.path.join(os.path.dirname(self.basefile), v.geometry.filename)
-                            if not os.path.exists(target) or (os.path.exists(target) and filecmp.cmp(source, target)):
-                                misc.copy(self.pipeline, source, target)
-                            else:
-                                misc.copy(self.pipeline, source, target[:-4] + name + target[-4:])
-                                v.geometry.filename = v.geometry.filename[:-4] + name + v.geometry.filename[-4:]
 
         # now we can join theses models
         # 1. get root model
@@ -377,11 +358,12 @@ class BaseModel(yaml.YAMLObject):
         # 3. save combined_model to the temp directory
         assert len(combined_model.links) == len(combined_model.joints) + 1
         combined_model.name = "combined_model"
-        combined_model.full_export(self.basedir, check_submechs=False)
+        combined_model.export(outputdir=self.basedir, export_config=resources.get_default_export_config("minimal"),
+                              check_submechs=False)
 
     def recreate_sym_links(self):
         for mt, mp in self.export_meshes.items():
-            log.info('  Re-exporting meshes')
+            log.info('Re-creating mesh symlinks')
             misc.create_symlink(
                 self.pipeline, os.path.join(self.pipeline.temp_dir, str(mp)), os.path.join(self.exportdir, str(mp))
             )
@@ -389,6 +371,13 @@ class BaseModel(yaml.YAMLObject):
     def process(self):
         misc.recreate_dir(self.pipeline, self.tempdir)
         misc.recreate_dir(self.pipeline, self.exportdir)
+
+        # Make sure the mesh symlinks are set correctly
+        for mt, mp in self.export_meshes.items():
+            log.info('  Creating mesh symlinks')
+            misc.create_symlink(
+                self.pipeline, os.path.join(self.pipeline.temp_dir, str(mp)), os.path.join(self.exportdir, str(mp))
+            )
 
         self._join_to_basefile()
         self._load_robot()
@@ -480,7 +469,7 @@ class BaseModel(yaml.YAMLObject):
                 if self.robot.get_joint(jointname) is None and ("cut_joint" not in config or config["cut_joint"] is False):
                     faulty_joint_defs += [(jointname, [str(j) for j in self.robot.joints if jointname in str(j) or str(j) in jointname])]
                 elif self.robot.get_joint(jointname) is None and ("cut_joint" in config and config["cut_joint"] is True):  # cut_joint
-                    # [TODO pre_v2.0.0] Review and Check whether this works as expected
+                    # [TODO v2.0.0] Review and Check whether this works as expected
                     # Check whether everything is given and calculate origin and axis (?)
                     _joint = representation.Joint(**config)
                     assert "constraint_axes" in config
@@ -545,7 +534,7 @@ class BaseModel(yaml.YAMLObject):
                     for k, v in config.items():
                         if k not in ["min", "max", "eff", "vel", "movement_depends_on", "active"] + representation.Joint._class_variables:
                             joint.add_annotation(k, v, overwrite=True)
-                # [TODO pre_v2.0.0] Re-add transmission support
+                # [TODO v2.0.0] Re-add transmission support
                 joint.link_with_robot(self.robot)
             for joint in remove_joints:
                 self.robot.remove_joint(joint)
@@ -560,7 +549,7 @@ class BaseModel(yaml.YAMLObject):
                     and self.joints["$default"]["backup"]
             ) else None
         )
-
+        
         if hasattr(self, 'collisions'):
             for link in self.robot.links:
                 conf = deepcopy(self.collisions["$default"])
@@ -595,7 +584,7 @@ class BaseModel(yaml.YAMLObject):
                     # leads to problems in reusing identic meshes
                     # if conf["shape"] == "convex":
                     #     reduceMeshCollision(self.robot, link.name, reduction=0.3)
-
+            
             if "auto_bitmask" in self.collisions.keys() and \
                     self.collisions["auto_bitmask"] is True:
                 log.debug("         Setting auto bitmask")
@@ -621,49 +610,7 @@ class BaseModel(yaml.YAMLObject):
                             if key in conf:
                                 conf.pop(key)
                         coll.add_annotations(**conf)
-
-        # Re-export meshes
-        assert self.processed_meshes == []
-        for mt, mp in self.export_meshes.items():
-            log.info('  Re-exporting meshes')
-            misc.create_symlink(
-                self.pipeline, os.path.join(self.pipeline.temp_dir, str(mp)), os.path.join(self.exportdir, str(mp))
-            )
-            for link in self.robot.links:
-                v_c = 0
-                for v in link.visuals + link.collisions:
-                    if isinstance(v.geometry, representation.Mesh) and v.geometry.filename:
-                        v_c += 1
-                        if "mars_obj" in v.geometry.filename.lower() or v.geometry.filename.lower().endswith(".mars.obj"):
-                            mesh = v.geometry.load_mesh(urdf_path=os.path.dirname(self.basefile), mars_mesh=True)
-                        elif v.geometry.filename.lower().endswith("bobj"):
-                            raise NotImplementedError("Can't load bobj meshes!")
-                        else:
-                            if v.geometry.filename.lower().endswith("obj"):
-                                log.warning(f"Loading obj mesh {v.geometry.filename}, "
-                                            f"where the orientation convention might be unknown")
-                            mesh = v.geometry.load_mesh(urdf_path=os.path.dirname(self.basefile))
-                        meshexport = os.path.join(self.exportdir, mp, os.path.basename(v.geometry.filename)[:-3]) + mt.replace("_", ".")
-                        v.geometry.filename = v.geometry.filename.replace(" ", "_")
-                        v.geometry.filename = meshexport
-                        if mt == "mars_obj":
-                            export_mars_mesh(mesh, meshexport, urdf_path=self.export_xmlfile)
-                        elif mt == "bobj":
-                            export_bobj_mesh(mesh, meshexport, urdf_path=self.export_xmlfile)
-                        elif mt in ["obj", "stl"]:
-                            export_mesh(mesh, meshexport, urdf_path=self.export_xmlfile)
-                        elif mt == "dae":
-                            color = None
-                            for m in self.robot.materials:
-                                if str(m) != str(v.material):
-                                    continue
-                                else:
-                                    color = m.color.rgba
-                            export_mesh(mesh, urdf_path=self.export_xmlfile, dae_mesh_color=color)
-                        else:
-                            raise ValueError("Unknown mesh type: " + mt)
-                        self.processed_meshes.append(os.path.realpath(v.geometry._filename))
-
+        
         if hasattr(self, "exoskeletons") or hasattr(self, "submechanisms"):
             if hasattr(self, "exoskeletons"):
                 self.robot.load_submechanisms({"exoskeletons": deepcopy(self.exoskeletons)},
@@ -684,7 +631,7 @@ class BaseModel(yaml.YAMLObject):
         #     self.robot.define_submodel(name=self.export_total_submechanisms, start=root,
         #                                stop=tree.find_leaves(self.robot, spanningtree),
         #                                only_urdf=True)
-
+        
         if hasattr(self, "sensors"):
             multi_sensors = [x for x in dir(sensor_representations) if
                              not x.startswith("__") and x not in sensor_representations.__IMPORTS__ and
@@ -717,12 +664,12 @@ class BaseModel(yaml.YAMLObject):
                 if sensor_ is not None:
                     self.robot.add_sensor(sensor_)
                     log.debug('      Attached {} {}'.format(s["type"], s['name']))
-
+        
         if hasattr(self, "poses"):
             for (cn, config) in self.poses.items():
                 pose = poses.JointPoseSet(robot=self.robot, name=cn, configuration=config)
                 self.robot.add_pose(pose)
-
+        
         if hasattr(self, "annotations"):
             log.debug('  Adding further annotations.')
 
@@ -738,13 +685,15 @@ class BaseModel(yaml.YAMLObject):
                     self.robot.add_named_annotation(k, v)
 
         log.info('Finished processing')
-
         return True
 
     def export(self):
-        ros_pkg_name = self.robot.export(self.exportdir, self.export_meshes, self.export_config,
-                                         ros_pkg_later=True)
-
+        ros_pkg_name = self.robot.export(outputdir=self.exportdir, export_config=self.export_config,
+                                         rel_mesh_pathes=self.export_meshes, ros_pkg_later=True)
+        for vc in self.robot.collisions + self.robot.visuals:
+            if isinstance(vc.geometry, representation.Mesh):
+                self.processed_meshes = self.processed_meshes.union([os.path.realpath(f) for f in vc.geometry.exported.values()])
+                self.processed_meshes.add(os.path.realpath(vc.geometry.abs_filepath))
         if hasattr(self, "deployment") and "keep_files" in self.deployment:
             git.reset(self.targetdir, "autobuild", "master")
             misc.store_persisting_files(self.pipeline, self.targetdir, self.keep_files, self.exportdir)
