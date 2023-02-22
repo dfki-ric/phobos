@@ -145,6 +145,8 @@ def setJointConstraints(
     Returns:
 
     """
+    bpy.ops.object.select_all(action='DESELECT')
+    joint.select_set(True)
     if joint.phobostype != 'link':
         log("Cannot set joint constraints. Not a link: {}".format(joint), 'ERROR')
         return
@@ -155,16 +157,6 @@ def setJointConstraints(
     # remove existing constraints from bone
     for cons in joint.pose.bones[0].constraints:
         joint.pose.bones[0].constraints.remove(cons)
-
-    if axis is not None:
-        axis = (np.array(axis) / np.linalg.norm(axis)).tolist()
-        if np.linalg.norm(axis) != 0:
-            bpy.ops.object.mode_set(mode='EDIT')
-            editbone = joint.data.edit_bones[0]
-            length = editbone.length
-            axis = mathutils.Vector(tuple(axis))
-            editbone.tail = editbone.head + axis.normalized() * length
-            bpy.ops.object.mode_set(mode='POSE')
 
     # add spring & damping
     if jointtype in ['revolute', 'prismatic'] and (spring or damping):
@@ -177,10 +169,12 @@ def setJointConstraints(
 
         # TODO we should make sure that the rigid body constraints gets changed
         # if the values below are changed manually by the user
-        joint['joint/dynamics/springStiffness'] = spring
-        joint['joint/dynamics/springDamping'] = damping
+        joint['joint/dynamics/spring_stiffness'] = spring
+        joint['joint/dynamics/damping'] = damping
 
     # set constraints accordingly
+    joint.data.bones.active = joint.pose.bones[0].bone
+    joint.data.bones.active.select = True
     if jointtype == 'revolute':
         set_revolute(joint, lower, upper)
     elif jointtype == 'continuous':

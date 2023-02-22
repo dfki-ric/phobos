@@ -38,6 +38,7 @@ import phobos.blender.utils.naming as nUtils
 from phobos import defs as phobos_defs
 from phobos.blender import defs
 from phobos.blender import display
+import phobos.blender.utils.selection as sUtils
 
 from phobos.geometry.io import MESH_TYPES
 from phobos.utils.resources import get_blender_resources_path
@@ -701,7 +702,6 @@ class PhobosObjectInformationPanel(bpy.types.Panel):
         Returns:
 
         """
-        import phobos.blender.utils.selection as sUtils
 
         layout = self.layout
         obj = context.active_object
@@ -778,8 +778,6 @@ class PhobosModelWarningsPanel(bpy.types.Panel):
         Returns:
 
         """
-        import phobos.blender.utils.selection as sUtils
-
         layout = self.layout
         obj = context.active_object
 
@@ -951,7 +949,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
         # derive object information as dictionary
         joint = None
-        if obj.phobostype == 'link':
+        if obj.phobostype == 'link' and obj != sUtils.getRoot():
             obj_repr = blender2phobos.deriveLink(obj)
             joint = blender2phobos.deriveJoint(obj)
         else:

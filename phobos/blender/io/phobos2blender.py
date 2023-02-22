@@ -119,6 +119,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
         if hasattr(viscol, "material") and viscol.material is not None:
             assignMaterial(newgeom, viscol.material)
         else:
+            assignMaterial(newgeom, "phobos_visual")
             log('No material for visual {}.'.format(viscol.name), 'WARNING')
     else:
         assert geomsrc == 'collision'
@@ -276,12 +277,14 @@ def createJoint(joint: representation.Joint, linkobj=None):
     if joint.axis is not None:
         if mathutils.Vector(tuple(joint.axis)).length == 0.:
             log('Axis of joint {0} is of zero length: '.format(joint.name), 'ERROR')
-        else:
+        joint.axis = (np.array(joint.axis) / np.linalg.norm(joint.axis)).tolist()
+        if np.linalg.norm(joint.axis) != 0:
             bpy.ops.object.mode_set(mode='EDIT')
             editbone = linkobj.data.edit_bones[0]
             length = editbone.length
-            axis = mathutils.Vector(tuple(joint.axis))
-            editbone.tail = editbone.head + axis.normalized() * length
+            joint.axis = mathutils.Vector(tuple(joint.axis))
+            editbone.tail = editbone.head + joint.axis.normalized() * length
+            bpy.ops.object.mode_set(mode='OBJECT')
 
     # add constraints to the joint
     lower = -1e-5
@@ -294,7 +297,16 @@ def createJoint(joint: representation.Joint, linkobj=None):
                 linkobj["joint/limits/"+limit] = get_default_joint(joint.joint_type)[limit]
         lower = linkobj.get("joint/limits/lower")
         upper = linkobj.get("joint/limits/upper")
-    jointmodel.setJointConstraints(linkobj, joint.joint_type, lower, upper)
+    spring = 0
+    damping = 0
+    if joint.dynamics is not None:
+        for dyn in ["damping", "friction", "spring_stiffness", "spring_reference"]:
+            if getattr(joint.dynamics, dyn) is not None:
+                linkobj["joint/dynamics/"+dyn] = getattr(joint.dynamics, dyn)
+            # [TODO v2.0.0] REVIEW: Set default values ?
+            spring = linkobj.get("joint/dynamics/spring_stiffness", 0.0)
+            damping = linkobj.get("joint/dynamics/damping", 0.0)
+    jointmodel.setJointConstraints(linkobj, joint.joint_type, lower, upper, spring, damping, axis=joint.axis)
 
     # write generic custom properties
     for prop, value in joint.to_yaml().items():

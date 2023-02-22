@@ -160,15 +160,17 @@ class XMLDefinition(object):
         _smurffile = kwargs.get("smurffile", None)
         # value
         if self.xml_value is not None and xml.text is not None:
-            kwargs[self.xml_value] = self._deserialize(xml.text)
+            kwargs[self.xml_value] = self._deserialize(xml.text, key=xml.tag)
         # attributes
         for attname, varname in self.xml_attributes.items():
             if attname in xml.attrib:
-                kwargs[varname] = self._deserialize(xml.attrib[attname])
+                kwargs[varname] = self._deserialize(xml.attrib[attname], key=attname)
         for child in xml:
             if self.xml_value is not None:
                 # value
-                kwargs[self.xml_value] = self._deserialize(child.text)
+                kwargs[self.xml_value] = self._deserialize(
+                    child.text, key=child.tag
+                )
             if child.tag in self.xml_children.keys():
                 # normal children
                 if self.xml_children[child.tag]["varname"] not in kwargs:
@@ -180,13 +182,15 @@ class XMLDefinition(object):
                 # children that are created from a simple property and have only attributes
                 for attname, varname in self.xml_attribute_children[child.tag].items():
                     if attname in child.attrib.keys():
-                        kwargs[varname] = self._deserialize(child.attrib[attname])
+                        kwargs[varname] = self._deserialize(child.attrib[attname], key=attname)
             if child.tag in self.xml_value_children.keys():
                 # children that have the a value as text
-                kwargs[self.xml_value_children[child.tag]] = self._deserialize(child.text)
+                kwargs[self.xml_value_children[child.tag]] = self._deserialize(child.text, key=child.tag)
             if child.tag in self.xml_nested_children.keys():
                 # children that are nested in another element
-                _kwargs = self.xml_nested_children[child.tag].kwargs_from_xml(child, xmlfile=_xmlfile, smurffile=_smurffile)
+                _kwargs = self.xml_nested_children[child.tag].kwargs_from_xml(child,
+                                                                              xmlfile=_xmlfile,
+                                                                              smurffile=_smurffile)
                 for k, v in _kwargs.items():
                     if k in kwargs.keys() and v != kwargs[k]:
                         raise IndexError(
@@ -221,9 +225,9 @@ class XMLDefinition(object):
         else:
             return entry
 
-    def _deserialize(self, string: str):
+    def _deserialize(self, string: str, key=None):
         string = string.strip()
-        if " " in string:
+        if " " in string and not key in ["uri", "url", "file", "filepath", "filename"]:
             _list = string.split()
             if all([is_int(v) for v in _list]):
                 return [int(v) for v in _list]

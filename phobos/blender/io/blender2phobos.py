@@ -422,10 +422,10 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
             upper=obj.get("joint/limits/upper", None)
         ) if any([k.startswith("joint/limits/") for k in obj.keys()]) else None,
         dynamics=representation.JointDynamics(
-            damping=obj.get("joint/dynamics/springDamping", None),
+            damping=obj.get("joint/dynamics/damping", None),
             friction=obj.get("joint/dynamics/friction", None),
-            spring_stiffness=obj.get("joint/dynamics/springStiffness", None),
-            spring_reference=obj.get("joint/dynamics/springReference", None)
+            spring_stiffness=obj.get("joint/dynamics/spring_stiffness", None),
+            spring_reference=obj.get("joint/dynamics/spring_reference", None)
         ) if any([k.startswith("joint/dynamics/") for k in obj.keys()]) else None,
         # [TODO v2.1.0] Add possibility to depend on multiple joints
         mimic=representation.JointMimic(

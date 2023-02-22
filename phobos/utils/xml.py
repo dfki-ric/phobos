@@ -93,7 +93,8 @@ def read_relative_filename(filename, start_file_path):
             package_dir = os.path.dirname(start_file_path)  # /bla/blub/xyz -> /bla/blub
         else:
             raise IOError("Can't derive package_dir from " + start_file_path)
-        out = os.path.join(package_dir, filename[len("package://"):])
+        out = os.path.join(package_dir, filename[len("package://"):].split("/", 1)[-1])
+        assert os.path.exists(out), f"Couldn't identify file from {filename}. Tried {out} but it doesn't exist!"
     elif os.path.isabs(filename):
         out = filename
     else:  # normal urdf

@@ -436,6 +436,7 @@ class Mesh(Representation, SmurfBase):
         self.material = material
         if mesh is not None:
             assert meshname is not None
+            self.original_mesh_name = meshname
             self._mesh_object = mesh
             self.input_type = str(type(mesh))[8:-2]  # handle: <class 'the type name'>
             assert self.input_type in MESH_DATA_TYPES
@@ -459,12 +460,12 @@ class Mesh(Representation, SmurfBase):
             meshext = meshext[1:]  # remove the dot
             if meshname is None:
                 meshname = _meshname
+            self.original_mesh_name = _meshname
             self._mesh_object = None
             self.mesh_information = None  # this will get the raw information present from file
             self.input_type = "file_"+meshext.lower()
             self.input_file = filepath
             self.unique_name = meshname
-        self.original_mesh_name = deepcopy(self.unique_name)
         # [ToDo pre_v2.0.0] deal with different obj mesh axes during import and export
         # This is the default definition for stl and obj in general how the internal axis are defined
         # using this convention exporting stl/obj from blender will have the vertices on the same axes as defined by the link frames in urdf/sdf.
@@ -984,7 +985,7 @@ class Visual(Representation, SmurfBase):
         if name is None or len(name) == 0:
             if "_parent_xml" in kwargs:
                 link = kwargs["_parent_xml"].attrib["name"]
-                name = link + "_collision"
+                name = link + "_visual"
             else:
                 name = None
         self.name = name
@@ -1329,8 +1330,14 @@ class Joint(Representation, SmurfBase):
         assert self.child is not None
         self.joint_type = joint_type if joint_type is not None else (kwargs["type"] if "type" in kwargs else None)
         assert self.joint_type is not None, f"Joint type of {self.name} undefined!"
-        if axis is not None:
+        if axis is not None and np.linalg.norm(axis) != 0.:
             self.axis = (np.array(axis)/np.linalg.norm(axis)).tolist() if joint_type != "fixed" else None
+        elif axis is not None and np.linalg.norm(axis) == 0. and joint_type == "fixed":
+            log.error(f'Axis of joint {self.name} is of zero length, setting axis to None!')
+            self.axis = None
+        elif axis is not None and np.linalg.norm(axis) == 0. and joint_type == "fixed":
+            log.error(f'Axis of joint {self.name} is of zero length, setting axis to (0,0,1)!')
+            self.axis = [0, 0, 1]
         else:
             self.axis = None
         if origin is None and cut_joint is False:
