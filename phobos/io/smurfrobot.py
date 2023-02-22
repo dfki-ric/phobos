@@ -44,6 +44,7 @@ class SMURFRobot(XMLRobot):
         if inputfile is None and smurffile is not None:
             inputfile = smurffile
         if inputfile is not None:
+            inputfile = os.path.abspath(inputfile)
             if inputfile.lower().endswith(".smurf") and smurffile is None:
                 smurffile = inputfile
             elif inputfile.lower().endswith(".urdf") or inputfile.lower().endswith(".sdf") and xmlfile is None:
@@ -58,7 +59,7 @@ class SMURFRobot(XMLRobot):
                 elif "smurf" in content:
                     smurffiles = [f for f in os.listdir(os.path.join(inputfile, "smurf")) if f.endswith("smurf")]
                     if len(smurffiles) == 1:
-                        inputfile = os.path.join(inputfile, "smurf", smurffile[0])
+                        inputfile = os.path.join(inputfile, "smurf", smurffiles[0])
                         log.info(f"Found robot file {inputfile} in the input directory!")
                 elif "urdf" in content:
                     urdffiles = [f for f in os.listdir(os.path.join(inputfile, "urdf")) if f.endswith("urdf")]
