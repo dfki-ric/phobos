@@ -133,9 +133,12 @@ class Pose(Representation, SmurfBase):
         #                     self.rpy[i] = np.pi / div
 
     @property
+    def quaternion(self):
+        return matrix_to_quaternion(self._matrix[0:3, 0:3])
+
+    @property
     def angle_axis(self):
-        quat = matrix_to_quaternion(self._matrix[0:3, 0:3])
-        return quaternion_to_angle_axis(quat)
+        return quaternion_to_angle_axis(self.quaternion)
 
     @property
     def position(self):
