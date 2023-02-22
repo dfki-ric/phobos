@@ -901,6 +901,8 @@ class Mesh(Representation, SmurfBase):
             self.history.append(f"converted from {type(self.mesh_object)} to trimesh")
             self._mesh_object = mesh_io.as_trimesh(self.mesh_object)
 
+    # [TODO v2.1.0] Consider using this other shader for the x3d export
+    # shapes += "<CommonSurfaceShader ambientFactor='.588 .588 .588' diffuseFactor='{} {} {}' specularFactor='{} {} {}' shininessFactor='{}' normalScale='2 2 2' normalBias='-1 -1 1'>\n".format(diffuse[0], diffuse[1], diffuse[2], specular[0], specular[1], specular[2], shininess)
     @property
     def x3d_vertices(self):
         self.load_mesh()
