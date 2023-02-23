@@ -85,13 +85,14 @@ class Linkable(object):
                     if (hasattr(new_value, "is_delegate") and new_value.is_delegate()) or new_value.equivalent(existing):
                         setattr(self, "_" + attribute, existing)
                     else:
-                        new_mat_name = new_value.name
+                        new_name = new_value.name
                         index = 1
-                        while self._related_robot_instance.get_material(new_mat_name) is not None:
-                            new_mat_name = new_value.name + "_" + str(index)
+                        while self._related_robot_instance.get_aggregate(self.type_dict[attribute].lower(), new_name) is not None:
+                            new_name = str(new_value) + "_" + str(index)
                             index += 1
-                        log.warning(f"Ambiguous {type(new_value)} in {str(self)} renamed {new_value.name} to {new_mat_name}")
-                        new_value.name = new_mat_name
+                        log.warning(f"Ambiguous {type(new_value)} in {str(self)} renamed {new_value.name} to {new_name}")
+                        log.debug(f"Existing: {existing.__dict__}\nOld: {new_value.__dict__}")
+                        new_value.name = new_name
                     new_value.link_with_robot(self._related_robot_instance, check_linkage_later=True)
                     setattr(self, "_" + attribute, new_value)
             else:

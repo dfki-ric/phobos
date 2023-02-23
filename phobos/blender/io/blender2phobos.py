@@ -1,4 +1,5 @@
 import os
+import traceback
 
 import bpy
 import numpy as np
@@ -21,7 +22,7 @@ Factory functions for creating representation.* Instances from blender
 
 
 def deriveObjectPose(obj, logging=True):
-    effectiveparent = sUtils.getEffectiveParent(obj)
+    effectiveparent = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True)
     matrix = eUtils.getCombinedTransform(obj, effectiveparent)
 
     pose = representation.Pose.from_matrix(np.array(matrix))
@@ -325,7 +326,7 @@ def deriveLink(obj, objectlist=None, logging=True, errors=None):
 
     # gather all visual/collision objects for the link from the objectlist
     for part in [item for item in objectlist if item.phobostype in ['visual', 'collision', 'approxsphere']]:
-        effectiveparent = sUtils.getEffectiveParent(part)
+        effectiveparent = sUtils.getEffectiveParent(part, ignore_selection=True, include_hidden=True)
         if effectiveparent == obj:
             if logging:
                 log(
@@ -388,7 +389,10 @@ def deriveLink(obj, objectlist=None, logging=True, errors=None):
 
 @validate('joint')
 def deriveJoint(obj, logging=False, adjust=False, errors=None):
-
+    parent = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True)
+    if parent is None:
+        log(f"{obj.name} has no parent and therefore can not derive a joint.", "WARNING")
+        return None
     # further annotations
     annotations = {}
     for k, v in obj.items():
@@ -402,7 +406,6 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
                     annotations[k1] = {}
                 annotations[k1][k2] = v
 
-
     # motor
     motor_children = sUtils.getChildren(obj, phobostypes=["motor"])
     assert len(motor_children) <= 1, f"More than one motor defined for {obj.name}"
@@ -410,10 +413,10 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
 
     return representation.Joint(
         name=obj.get("joint/name", obj.name),
-        parent=sUtils.getEffectiveParent(obj).name,
+        parent=parent.name,
         child=obj.name,
         joint_type=obj["joint/type"],
-        axis=obj["joint/axis"],
+        axis=obj["joint/axis"] if obj["joint/type"] in ["revolute", "prismatic", "continuous"] else None,
         origin=deriveObjectPose(obj),
         limit=representation.JointLimit(
             effort=obj.get("joint/limits/effort", None),
@@ -433,7 +436,7 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
             multiplier=obj["joint/mimic/multiplier"],
             offset=obj["joint/mimic/offset"]
         ) if "joint/mimic/joint" in obj.keys() else None,
-        motor=motor.name
+        motor=motor.name if motor is not None else None
     )
 
 
@@ -496,7 +499,7 @@ def deriveSensor(obj, logging=False):
         )
 
     values = {k: v for k, v in obj.items() if k not in reserved_keys.INTERNAL_KEYS}
-    values["parent"] = sUtils.getEffectiveParent(obj).name
+    values["parent"] = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True).name
     sensor_type = values.pop("type")
 
     if sensor_type.upper() in ["CAMERASENSOR", "CAMERA"]:
@@ -511,7 +514,7 @@ def deriveSensor(obj, logging=False):
 
 
 def deriveMotor(obj):
-    parent = sUtils.getEffectiveParent(obj)
+    parent = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True)
     assert parent.phobostype == "link"
 
     # further annotations
@@ -607,8 +610,9 @@ def deriveRepresentation(obj, logging=True, adjust=True):
             repr_instance = deriveMotor(obj)
         elif obj.phobostype == 'annotation':
             repr_instance = deriveAnnotation(obj)
-    except KeyError:
-        log("A KeyError occurred due to missing data in object" + obj.name, "DEBUG")
+    except KeyError as e:
+        traceback.print_exc()
+        log("A KeyError occurred due to missing data in object " + obj.name, "DEBUG")
         return None
     return repr_instance
 
@@ -650,7 +654,7 @@ def deriveRobot(root, name='', objectlist=None):
     xml_robot = xmlrobot.XMLRobot(
         name=modelname,
         links=[deriveLink(obj) for obj in objectlist if obj.phobostype == 'link'],
-        joints=[deriveJoint(obj) for obj in objectlist if obj.phobostype == 'link' and sUtils.getEffectiveParent(obj) is not None],
+        joints=[deriveJoint(obj) for obj in objectlist if obj.phobostype == 'link' and sUtils.getEffectiveParent(obj, include_hidden=True) is not None],
         sensors=[deriveSensor(obj) for obj in objectlist if obj.phobostype == 'sensor'],
         # [TODO v2.1.0] Add transmission support
     )

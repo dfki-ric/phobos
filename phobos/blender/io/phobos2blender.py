@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy
 
 import bpy
 import mathutils
@@ -45,7 +46,7 @@ def createMaterial(material: representation.Material):
         diffuse_tex_node = newmat.node_tree.nodes.new('ShaderNodeTexImage')
         diffuse_tex_node.image = material.diffuseTexture.load_image()
         diffuse_tex_node.location = (-400, 0)
-        material.node_tree.links.new(diffuse_tex_node.outputs[0], shader_node.inputs[0])
+        newmat.node_tree.links.new(diffuse_tex_node.outputs[0], shader_node.inputs[0])
     shader_node.inputs['Base Color'].default_value = material.diffuse
 
     if material.normalTexture is not None:
@@ -89,6 +90,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
         else:
             log("Importing mesh for {0} element: '{1}".format(geomsrc, viscol.name), 'INFO')
             newgeom.data = geometry.load_mesh()
+        newgeom.scale = geometry.scale
     elif isinstance(geometry, representation.Box) or isinstance(geometry, representation.Cylinder) or isinstance(geometry, representation.Sphere):
         dimensions = None
         if isinstance(geometry, representation.Box):
@@ -119,7 +121,6 @@ def createGeometry(viscol, geomsrc, linkobj=None):
         if hasattr(viscol, "material") and viscol.material is not None:
             assignMaterial(newgeom, viscol.material)
         else:
-            assignMaterial(newgeom, "phobos_visual")
             log('No material for visual {}.'.format(viscol.name), 'WARNING')
     else:
         assert geomsrc == 'collision'
@@ -141,10 +142,6 @@ def createGeometry(viscol, geomsrc, linkobj=None):
     if linkobj:
         eUtils.parentObjectsTo(newgeom, linkobj)
         newgeom.matrix_local = mathutils.Matrix(viscol.origin.to_matrix())
-
-    # scale imported object
-    if hasattr(geometry, "scale"):
-        newgeom.scale = geometry.scale
 
     # # make object smooth
     # eUtils.smoothen_surface(newgeom)
@@ -235,7 +232,9 @@ def createLink(link):
     # parent geometries
     for newgeom, viscol in geometries:
         eUtils.parentObjectsTo(newgeom, newlink)
+        _scale = deepcopy(newgeom.scale)
         newgeom.matrix_local = mathutils.Matrix(viscol.origin.to_matrix())
+        newgeom.scale = _scale
 
     # create inertial
     if link.inertial is not None:
@@ -282,8 +281,7 @@ def createJoint(joint: representation.Joint, linkobj=None):
             bpy.ops.object.mode_set(mode='EDIT')
             editbone = linkobj.data.edit_bones[0]
             length = editbone.length
-            joint.axis = mathutils.Vector(tuple(joint.axis))
-            editbone.tail = editbone.head + joint.axis.normalized() * length
+            editbone.tail = editbone.head + mathutils.Vector(tuple(joint.axis)).normalized() * length
             bpy.ops.object.mode_set(mode='OBJECT')
 
     # add constraints to the joint

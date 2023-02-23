@@ -32,7 +32,7 @@ def generate_kccd_optimizer_ready_collision(robot, linkname, outputdir, join_fir
         out = []
         parent = robot.get_link(parent)
         for visual in parent.visuals:
-            m = io.as_trimesh(visual.geometry.load_mesh())
+            m = io.as_trimesh(visual.geometry.load_mesh(), silent=True)
             m.apply_transform(visual.origin.to_matrix())
             m.apply_transform(transform)
             if not join_first:
@@ -118,7 +118,7 @@ def join_collisions(robot, linkname, collisionnames=None, name_id=None, only_ret
             primitives += [e]
             continue
         else:
-            mesh = io.as_trimesh(e.geometry.load_mesh())
+            mesh = io.as_trimesh(e.geometry.load_mesh(), silent=True)
             name = e.name
             if name.lower().startswith("collision_"):
                 name = name[len("collision_"):]

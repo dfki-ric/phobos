@@ -250,7 +250,7 @@ def isRoot(obj, scene=None):
     Returns:
 
     """
-    rootdefinition = obj is not None and obj.phobostype in ['link', 'submodel']
+    rootdefinition = obj is not None and obj.phobostype == "link"
     parentless = not obj.parent or (scene is not None and obj.parent.name not in scene.objects)
 
     return rootdefinition and parentless
@@ -312,21 +312,22 @@ def getObjectByName(name, phobostypes=()):
       : bpy.types.Object or list - one or list of objects matching name
 
     """
-    objlist = []
+    found = None
     searchobjs = [
         obj for obj in bpy.context.scene.objects if obj.phobostype in phobostypes or not phobostypes
     ]
     for obj in searchobjs:
         if name == obj.name:
-            objlist.append(obj)
-        else:
-            for key in obj.keys():
-                try:
-                    if obj[key].endswith('/name') and name == obj[key]:
-                        objlist.append(obj)
-                except AttributeError:
-                    continue
-    return objlist[0] if len(objlist) == 1 else objlist
+            found = obj
+            break
+        # else:
+        #     for key in obj.keys():
+        #         try:
+        #             if obj[key].endswith('/name') and name == obj[key]:
+        #                 objlist.append(obj)
+        #         except AttributeError:
+        #             continue
+    return found
 
 
 def getObjectsByPattern(pattern, match_case=False):

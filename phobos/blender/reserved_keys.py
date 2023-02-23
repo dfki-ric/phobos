@@ -1,4 +1,4 @@
-JOINT_KEYS = ["name", "jointname", "axis", "type", "parent", "child",
+JOINT_KEYS = ["name", "axis", "type", "parent", "child",
               "limits/lower", "limits/upper", "limits/effort", "limits/velocity",
               "dynamics/friction", "dynamics/spring_stiffness", "dynamics/damping", "dynamics/spring_reference"]
 LINK_KEYS = ["name", "visuals", "collisions", "inertial", "inertia"]

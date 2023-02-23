@@ -158,6 +158,19 @@ def setJointConstraints(
     for cons in joint.pose.bones[0].constraints:
         joint.pose.bones[0].constraints.remove(cons)
 
+    # set axis
+    if axis is not None:
+        if mathutils.Vector(tuple(axis)).length == 0.:
+            log('Axis of joint {0} is of zero length: '.format(joint.name), 'ERROR')
+        axis = (np.array(axis) / np.linalg.norm(axis)).tolist()
+        if np.linalg.norm(axis) != 0:
+            bpy.ops.object.mode_set(mode='EDIT')
+            editbone = joint.data.edit_bones[0]
+            length = editbone.length
+            joint["joint/axis"] = mathutils.Vector(tuple(axis))
+            editbone.tail = editbone.head + mathutils.Vector(tuple(axis)).normalized() * length
+            bpy.ops.object.mode_set(mode='POSE')
+
     # add spring & damping
     if jointtype in ['revolute', 'prismatic'] and (spring or damping):
         try:
@@ -173,6 +186,8 @@ def setJointConstraints(
         joint['joint/dynamics/damping'] = damping
 
     # set constraints accordingly
+    joint['joint/limits/lower'] = lower
+    joint['joint/limits/upper'] = upper
     joint.data.bones.active = joint.pose.bones[0].bone
     joint.data.bones.active.select = True
     if jointtype == 'revolute':

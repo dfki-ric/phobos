@@ -52,6 +52,7 @@ class Pose(Representation, SmurfBase):
         SmurfBase.__init__(self, returns=["rotation", "position"])
         self.excludes += ["xyz", "rpy"]
         self.relative_to = relative_to
+        self._matrix = np.identity(4)
         if "matrix" in kwargs:
             self._matrix = kwargs["matrix"]
             return
@@ -251,9 +252,10 @@ class Texture(Representation):
             format = "JPG"
         assert format in ["JPG", "PNG"]
         ext = format.lower()
+        os.makedirs(targetpath, exist_ok=True)
         targetpath = os.path.join(targetpath, self.unique_name+"."+ext)
         if os.path.isfile(targetpath):
-            log.info(f"Texture fiel {targetpath} already exists, considering this as already exported")
+            log.info(f"Texture file {targetpath} already exists, considering this as already exported")
             self.exported = targetpath
             return
         if BPY_AVAILABLE and self.input_type == "img_bpy":
@@ -266,6 +268,12 @@ class Texture(Representation):
         self.exported = targetpath
         return
 
+    def equivalent(self, other):
+        return self == other or (
+            self.input_file == other.input_file or
+            self.abs_filepath == self.abs_filepath
+        )
+
 
 class Material(Representation, SmurfBase):
     _class_variables = ["name", "diffuse", "ambient", "emissive", "specular", "diffuseTexture", "normalTexture"]
@@ -276,8 +284,8 @@ class Material(Representation, SmurfBase):
         self.ambient = color_parser(rgba=ambient)
         self.specular = color_parser(rgba=specular)
         self.emissive = color_parser(rgba=emissive)
-        self.diffuseTexture = diffuseTexture
-        self.normalTexture = normalTexture
+        self.diffuseTexture = _singular(diffuseTexture)
+        self.normalTexture = _singular(normalTexture)
         self.transparency = transparency
         if self.transparency is None and self.diffuse is not None:
             self.transparency = 1-self.diffuse[3]
@@ -297,7 +305,10 @@ class Material(Representation, SmurfBase):
 
     def equivalent(self, other):
         # [TODO v2.0.0] REVIEW add other colors here
-        return other.diffuseTexture == self.diffuseTexture and other.diffuse == self.diffuse
+        return self == other or (
+                (self.diffuseTexture == other.diffuseTexture or (self.diffuseTexture is not None and self.diffuseTexture.equivalent(self.diffuseTexture))) and
+                other.diffuse == self.diffuse
+        )
 
     def is_delegate(self):
         # [TODO v2.0.0] REVIEW add other colors here
@@ -430,7 +441,9 @@ class Mesh(Representation, SmurfBase):
                  mesh_orientation=None,
                  **kwargs):
         SmurfBase.__init__(self)
-        self._scale = [1.0, 1.0, 1.0] if scale is None else scale
+        self._scale = [1.0, 1.0, 1.0]
+        if scale is not None:
+            self.scale = scale
         self.changed = False
         self.info_in_sync = True
         self.material = material
@@ -477,7 +490,7 @@ class Mesh(Representation, SmurfBase):
             "forward": "Y" if not mars_mesh else "-Z"
         } if mesh_orientation is None else mesh_orientation
         self.exported = {}
-        self.history = [f"Instantiated id:{id(self)} with filepath={filepath}->{self.input_file}, scale={scale}, mesh={mesh}, meshname={meshname}, "
+        self.history = [f"Instantiated with filepath={filepath}->{self.input_file}, scale={scale}, mesh={mesh}, meshname={meshname}, "
                         f"material={material}, mesh_orientation={mesh_orientation}, {kwargs}"]
 
     @property
@@ -563,7 +576,7 @@ class Mesh(Representation, SmurfBase):
 
     def has_enough_vertices(self):
         self.load_mesh()
-        mesh = deepcopy(mesh_io.as_trimesh(self.mesh_object))
+        mesh = deepcopy(mesh_io.as_trimesh(self.mesh_object, silent=True))
         zero_transform = create_transformation(xyz=-mesh.centroid)
         mesh.apply_transform(zero_transform)
         if len(mesh.vertices) <= 3:
@@ -585,7 +598,7 @@ class Mesh(Representation, SmurfBase):
             tuple of approx. volume (float) and approx. center of mass ((3, ) float)
         """
         self.load_mesh()
-        mesh = mesh_io.as_trimesh(self.mesh_object)
+        mesh = mesh_io.as_trimesh(self.mesh_object, silent=True)
         if not mesh.is_volume:
             mesh = improve_mesh(mesh)
         if mesh.is_volume:
@@ -595,7 +608,7 @@ class Mesh(Representation, SmurfBase):
 
     def equivalent(self, other):
         return (not self.changed and not other.changed and self.input_file == other.input_file) or\
-               identical(mesh_io.as_trimesh(self.mesh_object), mesh_io.as_trimesh(other.mesh_object))
+               identical(mesh_io.as_trimesh(self.mesh_object, silent=True), mesh_io.as_trimesh(other.mesh_object, silent=True))
 
     def load_mesh(self, reload=False):
         if self.mesh_object is not None and not reload:
@@ -653,8 +666,9 @@ class Mesh(Representation, SmurfBase):
             raise AssertionError("To export meshes you have to specify the format. (format=None)")
         assert os.path.isabs(targetpath)
         ext = format.lower()
+        os.makedirs(targetpath, exist_ok=True)
         targetpath = os.path.join(targetpath, self.unique_name+"."+ext)
-        self.history.append(f"trying export of {type(self.mesh_object)} to {targetpath}")
+        self.history.append(f"->trying export of {type(self.mesh_object)} to {targetpath}")
         # log.debug(f"Providing mesh {targetpath}...")
         # if there are no changes we can simply copy
         if "file_"+ext == self.input_type:
@@ -666,7 +680,6 @@ class Mesh(Representation, SmurfBase):
                 return
             elif not self.changed:
                 log.debug(f"Copying mesh {os.path.relpath(self.input_file, os.path.dirname(targetpath))} to {targetpath}...")
-                os.makedirs(os.path.dirname(targetpath), exist_ok=True)
                 shutil.copyfile(self.input_file, targetpath)
                 self.exported[ext] = targetpath
                 self.history.append(f"->copying {self.input_file} to {targetpath}")
@@ -679,7 +692,7 @@ class Mesh(Representation, SmurfBase):
             equiv_histories = False
             if o_history is not None:
                 equiv_histories = [x for x in o_history[1:] if not x.startswith("->")] == [x for x in self.history[1:] if not x.startswith("->")]
-            if existing_mesh is not None and (equiv_histories or mesh_io.identical(mesh_io.as_trimesh(self.mesh_object), existing_mesh)):
+            if existing_mesh is not None and (equiv_histories or mesh_io.identical(mesh_io.as_trimesh(self.mesh_object, silent=True), existing_mesh)):
                 log.debug(f"Skipping export of {targetpath } as the mesh file already exists and is identical")
                 self.exported[ext] = targetpath
                 self.write_history(targetpath)
@@ -788,9 +801,9 @@ class Mesh(Representation, SmurfBase):
 
     @scale.setter
     def scale(self, scale):
-        if type(scale) == list:
+        if type(scale) in [list, tuple]:
             assert len(scale) == 3
-            self._scale = [scale]
+            self._scale = scale
         elif type(scale) in [float, int]:
             self._scale = [scale, scale, scale]
         else:
@@ -910,19 +923,19 @@ class Mesh(Representation, SmurfBase):
     @property
     def x3d_vertices(self):
         self.load_mesh()
-        tm = mesh_io.as_trimesh(self.mesh_object)
+        tm = mesh_io.as_trimesh(self.mesh_object, silent=True)
         return np.array(tm.vertices).flatten()
 
     @property
     def x3d_face_normals(self):
         self.load_mesh()
-        tm = mesh_io.as_trimesh(self.mesh_object)
+        tm = mesh_io.as_trimesh(self.mesh_object, silent=True)
         return np.array(tm.face_normals).flatten()
 
     @property
     def x3d_faces(self):
         self.load_mesh()
-        tm = mesh_io.as_trimesh(self.mesh_object)
+        tm = mesh_io.as_trimesh(self.mesh_object, silent=True)
         faces = np.array(tm.faces)
         return np.c_[faces, [-1]*faces.shape[0]].flatten()
 
@@ -1331,7 +1344,7 @@ class Joint(Representation, SmurfBase):
         self.joint_type = joint_type if joint_type is not None else (kwargs["type"] if "type" in kwargs else None)
         assert self.joint_type is not None, f"Joint type of {self.name} undefined!"
         if axis is not None and np.linalg.norm(axis) != 0.:
-            self.axis = (np.array(axis)/np.linalg.norm(axis)).tolist() if joint_type != "fixed" else None
+            self.axis = (np.array(axis)/np.linalg.norm(axis)).tolist() if joint_type in ['revolute', 'continuous', 'prismatic'] else None
         elif axis is not None and np.linalg.norm(axis) == 0. and joint_type == "fixed":
             log.error(f'Axis of joint {self.name} is of zero length, setting axis to None!')
             self.axis = None

@@ -39,10 +39,11 @@ from phobos import defs as phobos_defs
 from phobos.blender import defs
 from phobos.blender import display
 import phobos.blender.utils.selection as sUtils
+from phobos.blender import reserved_keys
+from phobos.blender.phoboslog import log
 
 from phobos.geometry.io import MESH_TYPES
 from phobos.utils.resources import get_blender_resources_path
-
 from phobos.commandline_logging import setup_logger_level
 
 
@@ -98,8 +99,8 @@ class PhobosPrefs(AddonPreferences):
     logfile : StringProperty(name="logfile", subtype="FILE_PATH", default=".")
 
     loglevel : EnumProperty(
-        name="loglevel", items=tuple(((l,) * 3 for l in LOGLEVELS)), default="ERROR",
-        set=set_loglevel, get=lambda self: self["loglevel"] if "loglevel" in self else LOGLEVELS.index("ERROR")
+        name="loglevel", items=tuple(((l,) * 3 for l in LOGLEVELS)), default="WARNING",
+        set=set_loglevel, get=lambda self: self["loglevel"] if "loglevel" in self else LOGLEVELS.index("WARNING")
     )
 
     logtofile : BoolProperty(name="logtofile", default=False)
@@ -820,7 +821,7 @@ ignoredProps = set(
 )
 
 
-# [TODO v2.0.0] Repair
+# [TODO v2.0.0] Improve e.g. add edit tools
 class PhobosPropertyInformationPanel(bpy.types.Panel):
     """Contains all properties sorted in different categories"""
 
@@ -844,16 +845,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
         """
         # get the existing layout columns
-        left = layout[1]
-        right = layout[2]
-
-        # put the property in the left or right column?
-        if layout[3][0] <= layout[3][1]:
-            layout[3][0] += len(props)
-            column = left
-        else:
-            layout[3][1] += len(props)
-            column = right
+        column = layout[1]
 
         # add all properties in sequence
         for _, (prop, value, param) in enumerate(zip(props, values, guiparams)):
@@ -872,13 +864,13 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
             # show operators as button and other as label
             if 'operator' in param:
-                content.operator(param['operator'], text=str(value), **param['infoparams'])
+                content.operator(param['operator'], text=str(value))  # , **param['infoparams'])
             # show property as a customprop
             elif 'object' in param and 'customprop' in param:
                 content.prop(param['object'], '["{0}"]'.format(param['customprop']), text="")
             # just show it as text
             else:
-                content.label(text=str(value), **param['infoparams'])
+                content.label(text=str(value))  #, **param['infoparams'])
 
     def addObjLink(self, prop, value, column, guiparams):
         """Add an object link, which is a clickable goto button in the GUI.
@@ -898,31 +890,19 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
         label = [prop if prop in labels else ''][0]
 
+        subtable = column.split(factor=0.45)
+        descr = subtable.column()
+        content = subtable.column()
+
+        descr.label(text=prop)
         # use custom params (like icons etc) from the dictionary by passing **params
-        goto_op = column.operator(
+        goto_op = content.operator(
             'phobos.goto_object',
-            text=(label + [': ' if label else ''][0] + '{0}'.format(value.name)),
-            **guiparams['infoparams'],
+            text=value.name,
+            # **guiparams['infoparams'],
             icon='FILE_PARENT'
         )
         goto_op.objectname = value.name
-
-    def checkParams(self, item):
-        """Looks for a property name in the .. data:supportedProps.
-
-        If the property is not defined in .. data:supportedProps, the returned dictionary contains
-        empty information required for drawing.
-
-        Args:
-          item(str): property name to look for
-
-        Returns:
-          dict: entry in .. data:supportedProps
-
-        """
-        if item in supportedProps:
-            return supportedProps[item]
-        return {'infoparams': {}}
 
     def draw_header(self, context):
         """
@@ -949,21 +929,53 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
         # derive object information as dictionary
         joint = None
-        if obj.phobostype == 'link' and obj != sUtils.getRoot():
+        if obj.phobostype == 'link' and not sUtils.isRoot(obj):
             obj_repr = blender2phobos.deriveLink(obj)
             joint = blender2phobos.deriveJoint(obj)
         else:
             obj_repr = blender2phobos.deriveRepresentation(obj, logging=False, adjust=False)
 
-        # nothing to show
-        if not obj_repr:
-            return
-
         # categories saves the sublayouts as a dictionary, which contains this information:
         #  surrounding_box, left_column, right_column, [index_row, index_col]-> for next entry
         categories = {}
 
-        # [TODO v2.0.0] Repair
+        keys = getattr(reserved_keys, obj.phobostype.upper()+"_KEYS", None)
+        if keys is not None:
+            if obj.phobostype in supportedCategories:
+                layout.label(text=obj.phobostype[0].upper()+obj.phobostype[1:], icon=supportedCategories[obj.phobostype]['icon_value'])
+            else:
+                layout.label(text=obj.phobostype[0].upper()+obj.phobostype[1:])
+            box = layout.box()
+            row = box.split()
+            column = row.column()
+            guiparams = {'object': obj}
+            categories[obj.phobostype] = [box, column, [0, 0]]
+            for key in keys:
+                _key = key if obj.phobostype != "link" else "link/"+key
+                if _key in obj:
+                    self.addProp([key], [obj[_key]], categories[obj.phobostype], [guiparams])
+                elif hasattr(obj_repr, key) and type(getattr(obj_repr, key)) in [str, float, int]:
+                    self.addProp([key], [getattr(obj_repr, key)], categories[obj.phobostype], [guiparams])
+                else:
+                    log(f"PhobosPropertyInformationPanel: {str(obj.name)} has no entry for {key}", "DEBUG")
+
+        if obj.phobostype == "link" and not sUtils.isRoot(obj) and any([k.startswith("joint/") for k in obj.keys()]):
+            layout.label(text="Joint", icon=supportedCategories["joint"]['icon_value'])
+            box = layout.box()
+            row = box.split()
+            column = row.column()
+            categories["joint"] = [box, column, [0, 0]]
+            guiparams = {'object': obj}
+            for key in reserved_keys.JOINT_KEYS:
+                _key = "joint/" + key
+                if _key in obj:
+                    self.addProp([key], [obj[_key]], categories["joint"], [guiparams])
+                elif hasattr(joint, key) and key in ["parent", "child"] and sUtils.getObjectByName(getattr(joint, key)) is not None:
+                    self.addProp([key], [sUtils.getObjectByName(getattr(joint, key))], categories["joint"], [guiparams])
+                else:
+                    log(f"PhobosPropertyInformationPanel: {str(obj.name)} has no entry for {key}", "DEBUG")
+
+        # The following has been replaced and is obsolete
         # # generate general category only if needed
         # props = set([key for key in proplist if not isinstance(dictprops[key], dict)])
         # if props - ignoredProps:
@@ -1638,16 +1650,6 @@ def register():
     global phobostypeIcons
     pcoll = prev_collections["phobos"]
     phobostypeIcons = {}
-
-    # TODO is this used anyway?
-    # this needs to be registered after all contained data is set
-    global supportedProps
-    supportedProps = {
-        'phobostype': {'infoparams': {'icon_value': phobosIcon}},
-        'motor/type': {'operator': 'phobos.add_motor', 'infoparams': {'icon_value': phobosIcon}},
-        'joint/type': {'operator': 'phobos.define_joint_constraints', 'infoparams': {}},
-        'geometry/type': {'operator': 'phobos.define_geometry', 'infoparams': {}},
-    }
 
     #: contains categories which are supported by the Phobosgui (non-generic)
     #: Currently, only ``icon_value``s can be added (either as integer or string from Blender)

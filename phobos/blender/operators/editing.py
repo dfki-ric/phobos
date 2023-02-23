@@ -1544,25 +1544,24 @@ class DefineJointConstraintsOperator(Operator):
         if not self.joint_type == 'fixed':
             # [TODO v2.0.0] Create motor for active joints
             layout.prop(self, "passive", text="makes the joint passive (no actuation)")
-            if self.joint_type != "sphere":
+            if self.joint_type in ["revolute", "prismatic", "continuous"]:
                 layout.prop(self, "axis", text="Sets the joint axis")
             if self.joint_type == "revolute":
                 layout.prop(self, "useRadian", text="use radian")
-            if self.joint_type != 'fixed':
+            layout.prop(
+                self,
+                "maxeffort",
+                text="max effort ["
+                + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'),
+            )
+            if self.joint_type in ['revolute', 'continuous']:
                 layout.prop(
                     self,
-                    "maxeffort",
-                    text="max effort ["
-                    + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'),
+                    "maxvelocity",
+                    text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"),
                 )
-                if self.joint_type in ['revolute', 'continuous']:
-                    layout.prop(
-                        self,
-                        "maxvelocity",
-                        text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"),
-                    )
-                else:
-                    layout.prop(self, "maxvelocity", text="max velocity [m/s]")
+            else:
+                layout.prop(self, "maxvelocity", text="max velocity [m/s]")
             if self.joint_type == 'revolute':
                 layout.prop(self, "lower", text="lower [rad]" if self.useRadian else "lower [°]")
                 layout.prop(self, "upper", text="upper [rad]" if self.useRadian else "upper [°]")
@@ -1621,13 +1620,14 @@ class DefineJointConstraintsOperator(Operator):
         elif self.joint_type == "prismatic":
             lower = self.lower
             upper = self.upper
-
+        if self.joint_type in ["revolute", "prismatic", "continuous"]:
+            axis = self.axis
         # set properties for each joint
         for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
             context.view_layer.objects.active = joint
             jUtils.setJointConstraints(
                 joint, self.joint_type, lower, upper, self.spring, self.damping,
-                axis=(np.array(self.axis) / np.linalg.norm(self.axis)).tolist()
+                axis=(np.array(axis) / np.linalg.norm(axis)).tolist()
             )
 
             # TODO is this still needed? Or better move it to the utility function

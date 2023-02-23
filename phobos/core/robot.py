@@ -570,7 +570,9 @@ class Robot(SMURFRobot):
 
         return model_file
 
-    def export_smurf(self, outputdir=None, outputfile=None, robotfile=None, check_submechs=True, with_submodel_defs=False):
+    def export_smurf(self, outputdir=None, outputfile=None, robotfile=None,
+                     check_submechs=True, with_submodel_defs=False,
+                     with_meshes=True, mesh_format=None, additional_meshes=None, rel_mesh_pathes=None):
         """ Export self and all annotations inside a given folder with structure
         """
         # Convert to absolute path
@@ -589,6 +591,18 @@ class Robot(SMURFRobot):
         if len(self.submechanisms) > 0 or len(self.exoskeletons) > 0:
             if not os.path.exists(submech_dir):
                 os.makedirs(submech_dir)
+
+        # meshes
+        if with_meshes:
+            _mesh_format = mesh_format
+            if _mesh_format is None:
+                _mesh_format = self.mesh_format
+            assert _mesh_format is not None
+            if additional_meshes is None:
+                additional_meshes = []
+            meshes = [_mesh_format] + additional_meshes
+            for mf in [f.lower() for f in meshes]:
+                self.export_meshes(mesh_output_dir=os.path.join(outputdir, rel_mesh_pathes[mf]), format=mf)
 
         # Export the smurf files
         smurf_dir = os.path.join(outputdir, "smurf")
@@ -985,7 +999,7 @@ class Robot(SMURFRobot):
                 if export["name"] not in self.submodel_defs:
                     export_robot_instance = self.define_submodel(
                         name=export["name"],
-                        start=export["start"] if "start" in export else str(export_robot_instance.get_root()),
+                        start=export["start"] if "start" in export else str(self.get_root()),
                         stop=export["stop"] if "stop" in export else None,
                         include_unstopped_branches=export["include_unstopped_branches"] or "stop" not in export
                         if "include_unstopped_branches" in export else None,
@@ -1015,6 +1029,7 @@ class Robot(SMURFRobot):
             elif export["type"] == "pdf":
                 self.export_pdf(outputfile=os.path.join(outputdir, self.name + ".pdf"))
             elif export["type"] == "kccd":
+                export_robot_instance = self.duplicate()
                 export_robot_instance.export_kccd(
                     outputdir=outputdir,
                     rel_iv_meshes_path=rel_mesh_pathes["iv"],
@@ -1027,10 +1042,13 @@ class Robot(SMURFRobot):
                     kwargs["file_name"] = export["file_name"]
                 if "joints" in export:
                     kwargs["joint_desc"] = export["joints"]
-                export_robot_instance.export_joint_limits(
+                self.export_joint_limits(
                     outputdir=outputdir,
                     **kwargs
                 )
+            elif export["type"] == "smurf":
+                # will be exported by default
+                pass
             else:
                 log.error(f"Can't export according to following export configuration:\n{export}")
         # export smurf
@@ -1039,7 +1057,8 @@ class Robot(SMURFRobot):
                 outputdir=outputdir,
                 robotfile=xml_file_in_smurf,
                 check_submechs=check_submechs,
-                with_submodel_defs=True
+                with_submodel_defs=True,
+                with_meshes=False
             )
         # export ros package files
         if ros_pkg and not ros_pkg_later:

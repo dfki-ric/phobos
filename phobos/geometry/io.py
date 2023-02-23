@@ -24,7 +24,8 @@ def as_trimesh(scene_or_mesh, scale=None, silent=False):
     if hasattr(scene_or_mesh, "bounds") and scene_or_mesh.bounds is None:
         return None
     if isinstance(scene_or_mesh, trimesh.Scene):
-        log.error("Received a mesh with multiple materials, material information especially textures may be lost.")
+        if not silent:
+            log.error("Received a mesh with multiple materials, material information especially textures may be lost.")
         mesh = trimesh.util.concatenate([
             trimesh.Trimesh(vertices=m.vertices, faces=m.faces)
             for m in scene_or_mesh.geometry.values()])
@@ -76,27 +77,19 @@ def blender_2_mesh_info_dict(mesh):
         "faces": []
     }
 
-    uv_face_mapping = {}
-    numUVs = 1
     if write_uv:
-        n_info["texture_coords"] = []
-        for tri in mesh.loop_triangles:
-            uv_face_mapping[tri] = {}
-            for loop_index in tri.loops:
-                uv_face_mapping[tri][loop_index] = numUVs
-                numUVs += 1
-                n_info["texture_coords"].append(np.array(uv_layer.data[loop_index].uv))
+        n_info["texture_coords"] = np.ndarray(shape=(n_info["vertices"].shape[0], 2), dtype=np.single)
+        for loop in mesh.loops:
+            n_info["texture_coords"][loop.vertex_index, :] = uv_layer.data[loop.index].uv
 
     for tri in mesh.loop_triangles:
-        for i in range(len(tri.vertices)):
-            vIndex = tri.vertices[i]
-            n_info["faces"].append([])
+        n_info["faces"].append([])
+        for vIndex in tri.vertices:
+            assert vIndex < n_info["vertices"].shape[0]
             if write_uv:
-                uvIndex = tri.loops[i]
-                uvFace = uv_face_mapping[tri][uvIndex]
-                n_info["faces"][-1].append(np.array([vIndex + 1, uvFace, vIndex+1], dtype=np.intc))
+                n_info["faces"][-1].append(np.array([vIndex]*3, dtype=np.intc))
             else:
-                n_info["faces"][-1].append(np.array([vIndex + 1, 0, vIndex+1], dtype=np.intc))
+                n_info["faces"][-1].append(np.array([vIndex, -1, vIndex], dtype=np.intc))
 
     return n_info
 
@@ -159,7 +152,7 @@ def trimesh_2_mesh_info_dict(mesh):
         for v_index in face:
             assert v_index >= 0
             assert v_index < N
-            values2.append(np.array([v_index + 1]*3 if write_uv else [v_index + 1, 0, v_index + 1], dtype=np.intc))
+            values2.append(np.array([v_index ]*3 if write_uv else [v_index, -1, v_index], dtype=np.intc))
         assert len(values2) == 3
         out["faces"].append(values2)
 
@@ -223,7 +216,7 @@ def write_bobj(filepath, vertices=None, vertex_normals=None, faces=None, texture
 
     assert isinstance(vertices, np.ndarray) and vertices.dtype == np.single and vertices.shape[1] == 3
     assert isinstance(vertex_normals, np.ndarray) and vertices.dtype == np.single and vertices.shape[1] == 3
-    assert not write_uv or (isinstance(texture_coords, np.ndarray) and vertices.dtype == np.single and vertices.shape[1] == 2)
+    assert not write_uv or (isinstance(texture_coords, np.ndarray) and texture_coords.dtype == np.single and texture_coords.shape[1] == 2)
     assert type(faces) == list and type(faces[0]) == list and isinstance(faces[0][0], np.ndarray) and faces[0][0].dtype == np.intc
     with open(filepath, "wb") as out:
         # vertices
@@ -246,10 +239,14 @@ def write_bobj(filepath, vertices=None, vertex_normals=None, faces=None, texture
         out.write(np.c_[np.array([key]*N, dtype=np.single), vertex_normals].tobytes())
 
         # faces
-        key = struct.unpack("f", struct.pack("i", 4))  # data type trick for writing an int in a float array
+        key = struct.unpack("i", struct.pack("i", 4))  # data type trick for writing an int in a float array
+        N = len(faces)
+        out_faces = []
         for face in faces:
-            face = np.concatenate(face)
-            out.write(np.c_[np.array([key] * N, dtype=np.single), face].tobytes())
+            out_faces.append(np.concatenate(face))
+        out_faces = np.array(out_faces, dtype=np.intc)
+        out_faces = out_faces + np.ones(out_faces.shape, dtype=np.intc)
+        out.write(np.c_[np.array([key] * N, dtype=np.intc), np.array(out_faces, dtype=np.intc)].tobytes())
 
 
 def export_mesh(mesh, filepath, urdf_path=None, dae_mesh_color=None):
@@ -310,7 +307,11 @@ def import_mesh(filepath, urdf_path=None):
 
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"Mesh file {filepath} does not exist!")
-    out = as_trimesh(trimesh.load_mesh(filepath, maintain_order=True))
+    if filepath.endswith("bobj"):
+        mid = parse_bobj(filepath)
+        out = mesh_info_dict_2_trimesh(**mid)
+    else:
+        out = as_trimesh(trimesh.load_mesh(filepath, maintain_order=True))
     if out is None:
         log.info(f"{filepath} contains empty mesh!")
     return out
@@ -372,7 +373,7 @@ def parse_obj(filepath):
     }
     for key in [k for k in keys if k not in shapes.keys()]:
         if key == "f":
-            n_info[info_names[key]] = [[np.fromstring(corner.strip().replace("//", "/0/"), sep="/", dtype=np.intc) for corner in line.strip().split(" ")] for line in s_info[key]]
+            n_info[info_names[key]] = [[np.fromstring(corner.strip().replace("//", "/0/"), sep="/", dtype=np.intc) - np.ones(3, dtype=np.intc) for corner in line.strip().split(" ")] for line in s_info[key]]
         else:  # key == "l"
             n_info[info_names[key]] = [np.fromstring(line.strip(), sep=" ", dtype=np.intc) for line in s_info[key]]
     return n_info
@@ -410,7 +411,7 @@ def parse_bobj(filepath):
             elif i_key == 4:  # faces
                 if s_key not in info_dict:
                     info_dict[s_key] = []
-                info_dict[s_key].append([np.frombuffer(f.read(shapes[s_key][0]*4), dtype=np.intc) for _ in range(3)])
+                info_dict[s_key].append([np.frombuffer(f.read(shapes[s_key][0]*4), dtype=np.intc) - np.ones(3, dtype=np.intc) for _ in range(3)])
             else:
                 raise IOError("Unknown bobj format!")
             chunk = f.read(4)

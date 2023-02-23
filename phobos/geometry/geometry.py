@@ -99,7 +99,7 @@ def replace_geometry(element, shape='box', oriented=False, scale=1.0):
     if not isinstance(element.geometry, representation.Mesh):
         return
 
-    mesh = io.as_trimesh(element.geometry.load_mesh())
+    mesh = io.as_trimesh(element.geometry.load_mesh(), silent=True)
     mesh.apply_transform(element.origin.to_matrix())
 
     if oriented and not shape == 'convex':

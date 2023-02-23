@@ -178,7 +178,7 @@ class ExportModelOperator(Operator):
                     "link_in_smurf": getattr(ioUtils.getExpSettings(), 'export_smurf_xml_type') == fmt,
                     "ros_pathes": getattr(ioUtils.getExpSettings(), f'{fmt}OutputPathtype').startswith("ros_package"),
                     "enforce_zero": getattr(ioUtils.getExpSettings(), 'enforceZero'),
-                    "copy_with_other_pathes": "+" in getattr(ioUtils.getExpSettings(), f'{fmt}OutputPathtype')
+                    "copy_with_other_pathes": "+" in getattr(ioUtils.getExpSettings(), f'{fmt}OutputPathtype'),
                 })
             elif fmt == "joint_limits":
                 export_config.append({
@@ -200,8 +200,11 @@ class ExportModelOperator(Operator):
             #             "stop": sm["stop"]
             #         })
             elif fmt == "smurf":
-                # will be exported anyways
-                pass
+                # will be exported anyways, but we add it to export the meshes
+                export_config.append({
+                    "type": "smurf",
+                    "additional_meshes": [mt for mt in phobos_defs.MESH_TYPES if getattr(bpy.context.scene, "export_mesh_"+mt, False)]
+                })
             else:
                 raise ValueError(f"Can't export for given format: {fmt}")
         robot.export(
