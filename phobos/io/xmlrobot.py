@@ -42,7 +42,7 @@ class XMLRobot(Representation):
             self.name = name
 
         self.version = version
-        self.urdf_version = "1.0.0" if urdf_version is None else urdf_version
+        self.urdf_version = "1.0" if urdf_version is None else urdf_version
 
         if joints is not None:
             for joint in joints:
