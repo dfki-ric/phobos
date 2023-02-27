@@ -184,7 +184,6 @@ class Robot(SMURFRobot):
                    enforce_zero=False):
         """ Exports all model information stored inside this instance.
         """
-        assert self.check_linkage()
         outputdir = os.path.abspath(outputdir)
         if rel_mesh_pathes is None:
             rel_mesh_pathes = resources.get_default_rel_mesh_pathes()
@@ -265,7 +264,6 @@ class Robot(SMURFRobot):
             if not os.path.exists(submech_dir):
                 os.makedirs(submech_dir)
         self.link_entities()
-        self.check_linkage()
         # meshes
         if with_meshes:
             _mesh_format = mesh_format
@@ -305,9 +303,9 @@ class Robot(SMURFRobot):
                                                  only_return=True)
                 sm.file_path = f"../submechanisms/{str(sm)}.urdf"
                 if not os.path.isfile(sm.file_path):
-                    _submodel.export_urdf(outputfile=os.path.normpath(os.path.join(outputdir, sm.file_path)))
+                    _submodel.export_urdf(outputfile=os.path.normpath(os.path.join(outputdir, "submechanisms", f"{str(sm)}.urdf")))
                     _submodel.export_joint_limits(
-                        outputdir=os.path.normpath(os.path.join(outputdir, "../submechanisms")),
+                        outputdir=os.path.normpath(os.path.join(outputdir, "submechanisms")),
                         file_name=f"joint_limits_{str(sm)}.yml"
                     )
                 else:
@@ -342,8 +340,12 @@ class Robot(SMURFRobot):
 
         # submodel list
         if with_submodel_defs and len(self.submodel_defs) > 0:
+            out_submodel_defs = {}
+            for name, definition in self.submodel_defs.items():
+                out_submodel_defs[name] = deepcopy(definition)
+                out_submodel_defs[name]["export_dir"] = os.path.relpath(out_submodel_defs[name]["export_dir"], smurf_dir)
             with open(os.path.join(smurf_dir, "{}_submodels.yml".format(self.name)), "w+") as stream:
-                stream.write(dump_json({"submodels": self.submodel_defs}, default_style=False))
+                stream.write(dump_json({"submodels": out_submodel_defs}, default_style=False))
                 export_files.append(os.path.split(stream.name)[-1])
 
         for k, v in self.named_annotations.items():
@@ -1841,7 +1843,7 @@ class Robot(SMURFRobot):
         for link in self.links:
             for vc in link.collisions:
                 if isinstance(vc.geometry, representation.Mesh) and not vc.geometry.is_valid():
-                    log.warning(f"Mesh-Geometry {vc.name} {vc.geometry.input_file} is empty/to small; removing the corresponding {repr(type(vc)).split('.')[-1]}!")
+                    log.warning(f"Mesh-Geometry {vc.name} {vc.geometry.input_file} is empty/to small; removing the corresponding {repr(type(vc)).split('.')[-1][:-2]}!")
                     link.remove_aggregate(vc)
 
     def attach(self, other, joint, do_not_rename=False, name_prefix="", name_suffix="_2", link_other=False):

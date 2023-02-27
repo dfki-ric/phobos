@@ -469,7 +469,7 @@ class Mesh(Representation, SmurfBase):
             elif not os.path.isabs(filepath) and os.path.isfile(filepath):
                 filepath = os.path.abspath(filepath)
             elif not os.path.isabs(filepath):
-                raise AssertionError("Can't get the mesh data, as there is no valid file path given")
+                raise AssertionError(f"Can't get the mesh data, as there is no valid file path given. {kwargs}")
             _meshname, meshext = os.path.splitext(os.path.basename(filepath))
             meshext = meshext[1:]  # remove the dot
             if meshname is None:
@@ -1349,10 +1349,10 @@ class Joint(Representation, SmurfBase):
         if axis is not None and np.linalg.norm(axis) != 0.:
             self.axis = (np.array(axis)/np.linalg.norm(axis)).tolist() if joint_type in ['revolute', 'continuous', 'prismatic'] else None
         elif axis is not None and np.linalg.norm(axis) == 0. and joint_type == "fixed":
-            log.error(f'Axis of joint {self.name} is of zero length, setting axis to None!')
+            log.debug(f'Axis of fixed joint {self.name} is of zero length, setting axis to None!')
             self.axis = None
-        elif axis is not None and np.linalg.norm(axis) == 0. and joint_type == "fixed":
-            log.error(f'Axis of joint {self.name} is of zero length, setting axis to (0,0,1)!')
+        elif axis is not None and np.linalg.norm(axis) == 0. and joint_type != "fixed":
+            log.error(f'Axis of {joint_type} joint {self.name} is of zero length, setting axis to (0,0,1)!')
             self.axis = [0, 0, 1]
         else:
             self.axis = None

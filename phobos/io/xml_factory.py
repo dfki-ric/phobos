@@ -157,8 +157,8 @@ class XMLDefinition(object):
         return out
 
     def kwargs_from_xml(self, xml: ET.Element, **kwargs):
-        _xmlfile = kwargs.get("xmlfile", None)
-        _smurffile = kwargs.get("smurffile", None)
+        _xmlfile = kwargs.get("_xmlfile", None)
+        _smurffile = kwargs.get("_smurffile", None)
         # value
         if self.xml_value is not None and xml.text is not None:
             kwargs[self.xml_value] = self._deserialize(xml.text, key=xml.tag)
@@ -178,7 +178,7 @@ class XMLDefinition(object):
                     kwargs[self.xml_children[child.tag]["varname"]] = []
                 kwargs[self.xml_children[child.tag]["varname"]] += [
                     self.xml_children[child.tag]["class"].from_xml(
-                        child, self.dialect, _parent_xml=xml, xmlfile=_xmlfile, smurffile=_smurffile)]
+                        child, self.dialect, _parent_xml=xml, _xmlfile=_xmlfile, _smurffile=_smurffile)]
             if child.tag in self.xml_attribute_children.keys():
                 # children that are created from a simple property and have only attributes
                 for attname, varname in self.xml_attribute_children[child.tag].items():
@@ -190,8 +190,8 @@ class XMLDefinition(object):
             if child.tag in self.xml_nested_children.keys():
                 # children that are nested in another element
                 _kwargs = self.xml_nested_children[child.tag].kwargs_from_xml(child,
-                                                                              xmlfile=_xmlfile,
-                                                                              smurffile=_smurffile)
+                                                                              _xmlfile=_xmlfile,
+                                                                              _smurffile=_smurffile)
                 for k, v in _kwargs.items():
                     if k in kwargs.keys() and v != kwargs[k]:
                         raise IndexError(

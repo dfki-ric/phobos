@@ -56,22 +56,18 @@ class TestModel(object):
         return self.root
 
     @property
-    def submechanisms_file_path(self):
+    def submechanisms_file(self):
         if self.robot is not None:
             return self.robot.submechanisms_file
         return self.submechanisms_in_repo
 
-    def submechanisms_file(self):
-        if self.submechanisms_file_path is not None and os.path.isfile(self.submechanisms_file_path):
-            return load_json(open(os.path.join(self.root, self.submechanisms_file_path), "r").read())
-
     @property
     def floatingbase_submechanisms_file_path(self):
         if self._floatingbase_submechanisms_file_path is None:
-            try1 = self.submechanisms_file_path.replace("_submechanisms", "_floatingbase_submechanisms")
+            try1 = self.submechanisms_file.replace("_submechanisms", "_floatingbase_submechanisms")
             if os.path.exists(try1):
                 return try1
-            return self.submechanisms_file_path[:-4]+"_floatingbase.yml"
+            return self.submechanisms_file[:-4]+"_floatingbase.yml"
         else:
             return self._floatingbase_submechanisms_file_path
 

@@ -162,7 +162,7 @@ class Linkable(object):
             True if all references are python-references
         """
         linked = self._related_robot_instance is not None
-        assert linked, type(self)
+        assert linked is not None, type(self)
         _class_attributes = self._class_linkables
         if attribute is not None:
             _class_attributes = [var for var in self._class_linkables if var == attribute]

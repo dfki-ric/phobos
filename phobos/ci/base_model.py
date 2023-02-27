@@ -686,6 +686,7 @@ class BaseModel(yaml.YAMLObject):
         return True
 
     def export(self):
+        self.robot.relink_entities()
         ros_pkg_name = self.robot.export(outputdir=self.exportdir, export_config=self.export_config,
                                          rel_mesh_pathes=self.export_meshes, ros_pkg_later=True)
         for vc in self.robot.collisions + self.robot.visuals:
