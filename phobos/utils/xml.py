@@ -1,10 +1,12 @@
 import os
+
 import numpy as np
 
 from . import misc
+from ..commandline_logging import get_logger
 from ..defs import IMPORT_TYPES
 from ..io import representation
-from ..commandline_logging import get_logger
+
 log = get_logger(__name__)
 
 

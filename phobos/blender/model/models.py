@@ -13,9 +13,9 @@
 import bpy
 
 from .. import defs
+from ..phoboslog import log
 from ..utils import naming as nUtils
 from ..utils import selection as sUtils
-from ..phoboslog import log
 
 
 def recursive_dictionary_cleanup(dictionary):

@@ -14,16 +14,15 @@ Contains the functions for the mechanism entity.
 """
 
 import os
+
 import bpy
 import bpy.utils.previews
-from bpy.types import WindowManager
 from bpy.props import EnumProperty
+from bpy.types import WindowManager
 
 from .. import defs
 from ..phoboslog import log
-
 from ...utils.resources import get_blender_resources_path
-
 
 mechanismpreviewcollection = []
 

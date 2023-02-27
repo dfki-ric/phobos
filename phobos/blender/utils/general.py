@@ -13,10 +13,11 @@
 Contains the basic utility functions to round numbers, convert types etc.
 """
 
-import re
 import os
+import re
 import shutil
 from datetime import datetime
+
 import mathutils
 
 from ..phoboslog import log

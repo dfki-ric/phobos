@@ -9,16 +9,16 @@
 # -------------------------------------------------------------------------------
 
 import collections
-import bpy
+
 import bgl
 import blf
-from bpy_extras import view3d_utils
-from bpy.types import Operator
+import bpy
 from bpy.props import BoolProperty
+from bpy.types import Operator
+from bpy_extras import view3d_utils
 from mathutils import Vector
 
 from .utils import naming as nUtils
-
 
 progressinfo = None
 colors = {

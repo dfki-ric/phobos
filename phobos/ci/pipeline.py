@@ -1,17 +1,18 @@
 import os.path
 import sys
 import traceback
-from copy import deepcopy
+
 import yaml
 
-from ..defs import *
-from .test_model import TestModel
 from .base_model import BaseModel
-from .model_testing import ModelTest
 from .compare_model import CompareModel
+from .model_testing import ModelTest
+from .test_model import TestModel
 from .xtype_model import XTypeModel
-from ..utils import git, misc
 from ..commandline_logging import get_logger
+from ..defs import *
+from ..utils import git, misc
+
 log = get_logger(__name__)
 
 # Failure States:

@@ -21,7 +21,7 @@ def main(args):
     from phobos.utils.git import get_repo_data
     from phobos.utils.misc import create_dir, copy, regex_replace
     from phobos.utils.transform import order_angles
-    from phobos.defs import load_json, dump_json, dump_yaml
+    from phobos.defs import load_json
     from phobos.core import Robot
     from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 

@@ -14,13 +14,11 @@ INFO = 'Checks whether all meshes are available.'
 def main(args):
     print("\n--> Checking meshes!")
     import argparse
-    import sys
     import os.path as path
     from copy import deepcopy
-    from ..utils import xml
     from ..core.robot import Robot
     from ..io import representation
-    from ..defs import load_json, dump_json, dump_yaml
+    from ..defs import dump_json
     from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])

@@ -1,31 +1,24 @@
-import datetime
-import sys
 import os
-import traceback
-from typing import List, Any
+from copy import deepcopy
 
+import numpy as np
 import pkg_resources
 import pydot
-from copy import deepcopy, copy
-from scipy.spatial.transform import Rotation as scipy_rot
-import numpy as np
 
-from ..defs import load_json, dump_json, KINEMATIC_TYPES, MESH_TYPES
 from .. import geometry as pgu, utils
+from ..commandline_logging import get_logger
+from ..defs import load_json, dump_json, KINEMATIC_TYPES
 from ..geometry import get_reflection_matrix
 from ..io import representation, sensor_representations
-from ..io.hyrodyn import Submechanism, Exoskeleton
+from ..io.hyrodyn import Submechanism
 from ..io.poses import JointPoseSet
-from ..io.xmlrobot import XMLRobot
 from ..io.smurfrobot import SMURFRobot
-from ..utils import transform, xml, misc, git, resources
-from ..utils.misc import read_number_from_config, regex_replace, create_dir, edit_name_string, execute_shell_command, \
-    duplicate, color_parser
+from ..utils import transform, misc, git, resources
+from ..utils.misc import read_number_from_config, regex_replace, create_dir, edit_name_string, execute_shell_command
 from ..utils.transform import create_transformation, inv, get_adjoint, round_array
 from ..utils.tree import find_close_ancestor_links, get_joints
-from ..utils.xml import read_relative_filename, transform_object, get_joint_info_dict
+from ..utils.xml import transform_object, get_joint_info_dict
 
-from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 

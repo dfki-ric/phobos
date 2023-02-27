@@ -14,9 +14,8 @@ from copy import deepcopy as dc
 import bpy
 
 from .. import defs
-from ..utils import naming as nUtils
 from ..phoboslog import log
-
+from ..utils import naming as nUtils
 
 checkMessages = {"NoObject": []}
 

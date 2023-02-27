@@ -13,18 +13,15 @@
 Contains all Blender operators for naming of models/objects/properties.
 """
 
-import sys
-import inspect
-
 import bpy
+from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
-from bpy.props import BoolProperty, StringProperty, EnumProperty
 
-from ..utils import selection as sUtils
-from ..utils import naming as nUtils
-from ..utils import io as ioUtils
-from ..utils import validation as validation
 from ..phoboslog import log
+from ..utils import io as ioUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
+from ..utils import validation as validation
 
 
 # [TODO v2.1.0] REVIEW this

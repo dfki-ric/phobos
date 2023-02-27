@@ -1,13 +1,14 @@
 from xml.etree import ElementTree as ET
+
 import numpy as np
 
-from .base import Representation, Linkable
+from .base import Representation
 from .representation import Pose
 from .smurf_reflection import SmurfBase
+from .xml_factory import singular as _singular
+from ..commandline_logging import get_logger
 from ..io import representation
 from ..utils import transform
-from ..commandline_logging import get_logger
-from .xml_factory import singular as _singular, plural as _plural
 
 log = get_logger(__name__)
 

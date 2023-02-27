@@ -13,14 +13,14 @@
 Contains all functions to model links within Blender.
 """
 
-import bpy
-import mathutils
 import re
 
+import mathutils
+
+from ..phoboslog import log
+from ..utils import editing as eUtils
 from ..utils import naming as nUtils
 from ..utils import selection as sUtils
-from ..utils import editing as eUtils
-from ..phoboslog import log
 
 
 def getGeometricElements(link):

@@ -10,8 +10,8 @@
 # -------------------------------------------------------------------------------
 
 import os
-import bpy
 
+import bpy
 from bpy.props import (
     BoolProperty,
     IntProperty,
@@ -26,16 +26,15 @@ from bpy.types import AddonPreferences
 from . import display, defs, reserved_keys
 from .io import blender2phobos
 from .model import mechanisms
-from .utils import validation as validation
+from .phoboslog import log, LOGLEVELS
 from .utils import io as ioUtils
 from .utils import naming as nUtils
 from .utils import selection as sUtils
-from .phoboslog import log, LOGLEVELS
-
+from .utils import validation as validation
 from .. import defs as phobos_defs
+from ..commandline_logging import setup_logger_level
 from ..geometry.io import MESH_TYPES
 from ..utils.resources import get_blender_resources_path
-from ..commandline_logging import setup_logger_level
 
 
 class ModelPoseProp(bpy.types.PropertyGroup):
@@ -1626,7 +1625,6 @@ def register():
     #         setattr(bpy.types.Scene, typename, BoolProperty(name=scenetype, default=False))
 
     # Load custom icons
-    import os
 
     pcoll = bpy.utils.previews.new()
 

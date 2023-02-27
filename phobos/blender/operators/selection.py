@@ -13,18 +13,15 @@
 Contains all Blender operators used to select objects by different criteria.
 """
 
-import sys
-import inspect
-
 import bpy
-from bpy.types import Operator
 from bpy.props import EnumProperty, StringProperty
+from bpy.types import Operator
 
 from .. import defs as defs
-from ..utils import selection as sUtils
+from ..phoboslog import log
 from ..utils import blender as bUtils
 from ..utils import naming as nUtils
-from ..phoboslog import log
+from ..utils import selection as sUtils
 
 
 class SelectObjectsByPhobosType(Operator):

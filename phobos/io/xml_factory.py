@@ -4,9 +4,10 @@ except ImportError:
     from xml.etree import ElementTree as ET
 
 import json
+from typing import List
+
 import numpy as np
 import pkg_resources
-from typing import List
 
 from .base import Representation, Linkable
 from ..utils.misc import to_pretty_xml_string

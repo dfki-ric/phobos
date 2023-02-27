@@ -1,18 +1,17 @@
-import os
 import traceback
 
 import bpy
 import numpy as np
 
 from .. import reserved_keys
-from ..phoboslog import log
-from ..utils import selection as sUtils
-from ..utils import editing as eUtils
-from ..utils import naming as nUtils
-from ..utils import blender as bUtils
-from ..utils import io as ioUtils
-from ..utils.validation import validate
 from ..model import inertia as inertiamodel
+from ..phoboslog import log
+from ..utils import blender as bUtils
+from ..utils import editing as eUtils
+from ..utils import io as ioUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
+from ..utils.validation import validate
 
 from ... import core
 from ...io import representation, sensor_representations, xmlrobot

@@ -13,28 +13,21 @@
 Contains all Blender operators for import and export of models/files.
 """
 
-import os
-import json
-import sys
-import shutil
-
 import bpy
-import bgl
-import glob
+from bpy.props import EnumProperty, StringProperty, BoolProperty
 from bpy.types import Operator
-from bpy.props import EnumProperty, StringProperty, FloatProperty, IntProperty, BoolProperty
 
-from ..phoboslog import log
-from ..utils import selection as sUtils
-from ..utils import io as ioUtils
-from ..utils import blender as bUtils
-from ..utils import naming as nUtils
 from ..io.blender2phobos import deriveRobot
 from ..io.phobos2blender import createRobot
+from ..phoboslog import log
+from ..utils import blender as bUtils
+from ..utils import io as ioUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
 
-from ...utils.resources import get_default_rel_mesh_pathes
 from ... import core
 from ... import defs as phobos_defs
+from ...utils.resources import get_default_rel_mesh_pathes
 
 
 # [TODO v2.1.0] let this use the phobos API as well

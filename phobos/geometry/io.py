@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from copy import deepcopy
+import json
 import os
-import sys
+import struct
+from copy import deepcopy
+
 import numpy as np
 import trimesh
-import struct
-import json
 
-from . import geometry
-from .geometry import identical, improve_mesh
+from .geometry import identical
+from ..commandline_logging import get_logger
 from ..defs import BPY_AVAILABLE
 from ..utils import misc, xml as xml_utils
-from ..commandline_logging import get_logger
+
 log = get_logger(__name__)
 
 

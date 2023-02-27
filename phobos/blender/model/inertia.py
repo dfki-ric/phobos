@@ -13,19 +13,19 @@
 Contains all functions to model inertias within Blender.
 """
 
-import numpy
 import mathutils
+import numpy
 
 from .. import reserved_keys
 from ..phoboslog import log
 from ..utils import general as gUtils
 from ..utils import selection as sUtils
-from ..utils.validation import validate, validateInertiaData
 from ..utils.io import getExpSettings
+from ..utils.validation import validate, validateInertiaData
 
 from ...io import representation
-from ...utils.inertia import calculateBoxInertia, calculateCylinderInertia, calculateSphereInertia,\
-                             calculateEllipsoidInertia, calculateMeshInertia
+from ...utils.inertia import calculateBoxInertia, calculateCylinderInertia, calculateSphereInertia, \
+    calculateMeshInertia
 
 
 @validate('geometry_type')

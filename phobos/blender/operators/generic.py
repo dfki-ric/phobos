@@ -14,25 +14,19 @@ Contains the generic Blender operators for adding yaml parsed objects and simila
 """
 
 import bpy
-import mathutils
-from bpy.types import Operator, PropertyGroup
 from bpy.props import (
     BoolProperty,
-    IntProperty,
-    StringProperty,
     EnumProperty,
-    FloatProperty,
-    FloatVectorProperty,
-    BoolVectorProperty,
     CollectionProperty,
 )
+from bpy.types import Operator, PropertyGroup
 
 from .. import defs as defs
+from ..phoboslog import log
 from ..utils import blender as bUtils
-from ..utils import selection as sUtils
 from ..utils import editing as eUtils
 from ..utils import io as ioUtils
-from ..phoboslog import log
+from ..utils import selection as sUtils
 
 
 def linkObjectLists(annotation, objectlist):

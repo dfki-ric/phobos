@@ -13,17 +13,14 @@
 Contains all Blender operators for editing of Phobos models.
 """
 
+import json
 import math
 import os
-import json
-import inspect
-import sys
 from datetime import datetime
 
 import bpy
 import mathutils
 import numpy as np
-from bpy.types import Operator
 from bpy.props import (
     BoolProperty,
     IntProperty,
@@ -33,26 +30,26 @@ from bpy.props import (
     FloatVectorProperty,
     BoolVectorProperty,
 )
+from bpy.types import Operator
 from idprop.types import IDPropertyGroup
 
 from .. import defs as defs
 from .. import display as display
+from ..io import phobos2blender
+from ..model import controllers as controllermodel
 from ..model import inertia as inertialib
-from ..utils import selection as sUtils
-from ..utils import general as gUtils
-from ..utils import io as ioUtils
-from ..utils import blender as bUtils
-from ..utils import naming as nUtils
-from ..utils import editing as eUtils
-from ..utils import validation as vUtils
 from ..model import joints as jUtils
 from ..model import links as modellinks
-from ..io import blender2phobos, phobos2blender
-from ..model import controllers as controllermodel
 from ..operators.generic import addObjectFromYaml
-from ..phoboslog import log
 from ..phobosgui import prev_collections
-
+from ..phoboslog import log
+from ..utils import blender as bUtils
+from ..utils import editing as eUtils
+from ..utils import general as gUtils
+from ..utils import io as ioUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
+from ..utils import validation as vUtils
 from ...io import representation
 
 

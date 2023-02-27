@@ -1,10 +1,11 @@
-import sys
-import subprocess
 import os
+import subprocess
+import sys
 
-from ..core import Robot
-from ..defs import load_json, dump_json, dump_yaml
 from ..commandline_logging import get_logger
+from ..core import Robot
+from ..defs import load_json
+
 log = get_logger(__name__)
 
 

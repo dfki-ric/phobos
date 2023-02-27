@@ -2,9 +2,9 @@ import os.path
 from copy import deepcopy
 
 from .scene import Scene
-from ..utils import xml
+from ..defs import dump_json
 from ..io import representation
-from ..defs import dump_json, load_json, dump_yaml
+from ..utils import xml
 
 
 # [Todo v2.1.0] Test and fix this

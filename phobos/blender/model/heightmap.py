@@ -15,13 +15,13 @@ Contains the functions of the heightmap entity.
 
 import os
 import shutil
-import bpy
 
-from phobos.blender.io import blender2phobos
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.io as ioUtils
-from phobos.blender.utils.io import securepath
-from phobos.blender.phoboslog import log
+import bpy
+from ..utils import io as ioUtils
+from ..utils import selection as sUtils
+from ..io import blender2phobos
+from ..phoboslog import log
+from ..utils.io import securepath
 
 # information for structure export
 structure_subfolder = "heightmaps"

@@ -1,16 +1,14 @@
-import sys
 from copy import deepcopy
 import numpy as np
-import subprocess
-import os
 
+from ..commandline_logging import get_logger
 from ..defs import *
 from ..io import representation
 from ..io.representation import Pose
 from ..utils import xml
 from ..utils.hyrodyn import get_load_report, debug_report
 from ..utils.misc import execute_shell_command, list_files
-from ..commandline_logging import get_logger
+
 log = get_logger(__name__)
 
 

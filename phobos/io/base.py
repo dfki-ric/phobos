@@ -1,6 +1,8 @@
 import xml.etree.ElementTree as ET
 from copy import deepcopy
+
 from ..commandline_logging import get_logger
+
 log = get_logger(__name__)
 
 

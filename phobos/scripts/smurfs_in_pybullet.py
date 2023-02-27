@@ -39,7 +39,7 @@ def main(args):
     # noinspection SpellCheckingInspection
     from scipy.spatial.transform import Rotation as SciPyRot
 
-    from phobos.defs import load_json, dump_json, dump_yaml
+    from phobos.defs import load_json
 
     def parse_smurf(path, basedir):
         smurf_path = os.path.join(basedir, path)

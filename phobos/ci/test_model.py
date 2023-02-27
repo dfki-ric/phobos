@@ -1,7 +1,7 @@
 import os
 
-from phobos.core import Robot
-from phobos.defs import dump_json, load_json, dump_yaml
+from ..core import Robot
+from ..defs import load_json
 
 
 class TestModel(object):

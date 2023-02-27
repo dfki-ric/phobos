@@ -1,14 +1,14 @@
 import os
 import re
 import subprocess
-import numpy as np
-from numpy import pi
 from copy import deepcopy
 from xml.dom.minidom import parseString
 from xml.etree import ElementTree as ET
 
-from ..defs import dump_json
+import numpy as np
+
 from ..commandline_logging import get_logger
+
 log = get_logger(__name__)
 
 

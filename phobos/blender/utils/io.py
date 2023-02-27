@@ -10,18 +10,18 @@
 # -------------------------------------------------------------------------------
 
 import os
+
 import bpy
 
 from .. import defs
 from ..phoboslog import log
-from ..utils import selection as sUtils
-from ..utils import naming as nUtils
 from ..utils import blender as bUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
 
-from ...utils.resources import get_blender_resources_path
+from ...defs import EXPORT_TYPES, IMPORT_TYPES, SCENE_TYPES
 from ...geometry.io import mesh_types
-from ...defs import EXPORT_TYPES, IMPORT_TYPES, KINEMATIC_TYPES, SCENE_TYPES
-
+from ...utils.resources import get_blender_resources_path
 
 indent = '  '
 xmlHeader = '<?xml version="1.0"?>\n<!-- created with Phobos ' + defs.version + ' -->\n'

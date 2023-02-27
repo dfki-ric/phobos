@@ -1,21 +1,19 @@
 import os
-import sys
 import re
-import filecmp
-import pkg_resources
-import yaml
-import numpy as np
 from copy import deepcopy, copy
 
-from .. import defs
-from ..defs import load_json, dump_json, dump_yaml, KINEMATIC_TYPES
+import numpy as np
+import pkg_resources
+import yaml
 
-from ..core import Robot
-from ..geometry import replace_collision, join_collisions, remove_collision
-from ..io.hyrodyn import ConstraintAxis
-from ..utils import misc, git, xml, transform, tree, resources
-from ..io import representation, sensor_representations, poses
 from ..commandline_logging import get_logger
+from ..core import Robot
+from ..defs import load_json, dump_yaml, KINEMATIC_TYPES
+from ..geometry import replace_collision, join_collisions, remove_collision
+from ..io import representation, sensor_representations, poses
+from ..io.hyrodyn import ConstraintAxis
+from ..utils import misc, git, xml, transform, resources
+
 log = get_logger(__name__)
 
 SUBMECHS_VIA_ASSEMBLIES = False

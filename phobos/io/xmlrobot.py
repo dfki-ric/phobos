@@ -1,14 +1,15 @@
 import os
-from typing import List
 from copy import deepcopy
+from typing import List
 
 import numpy as np
 
 from . import representation, xml_factory, sensor_representations
 from .base import Representation
+from ..commandline_logging import get_logger
 from ..utils.transform import create_transformation, get_adjoint, inv
 from ..utils.tree import get_joints_depth_first
-from ..commandline_logging import get_logger
+
 log = get_logger(__name__)
 
 

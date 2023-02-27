@@ -14,10 +14,10 @@ Contains different definitions for Phobos. Additional defintions are parsed from
 added to this module at runtime.
 """
 
-import os
 import glob
-import re
 import json
+import os
+import re
 
 from . import phobossystem
 
@@ -168,7 +168,6 @@ def __evaluateString(s):
     """
     # TODO math is not needed anymore...
     # needed for evaluation of strings (see below)
-    import math
 
     p = re.compile('&.*&')
     for ma in p.findall(s):

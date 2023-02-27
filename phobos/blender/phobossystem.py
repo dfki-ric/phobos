@@ -9,8 +9,8 @@
 # If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 # -------------------------------------------------------------------------------
 
-import sys
 import os.path as path
+
 import bpy
 
 

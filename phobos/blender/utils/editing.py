@@ -13,16 +13,17 @@
 Contains the utility functions for editing objects and Phobos models.
 """
 
-import bpy
-import mathutils
 import math
 
+import bpy
+import mathutils
+
+from .. import defs
 from ..phoboslog import log
-from ..utils import selection as sUtils
-from ..utils import naming as nUtils
 from ..utils import blender as bUtils
 from ..utils import io as ioUtils
-from .. import defs
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
 
 
 def dissolveLink(obj, delete_other=False):

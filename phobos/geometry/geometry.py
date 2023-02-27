@@ -2,15 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from copy import deepcopy
-import os
-import numpy
-import trimesh
-import numpy as np
 
-from . import io
-from ..io import representation
-from ..utils import misc
+import numpy as np
+import trimesh
+
 from ..commandline_logging import get_logger
+from ..io import representation
+
 log = get_logger(__name__)
 
 
@@ -32,7 +30,7 @@ def create_box(mesh, oriented=True, scale=1.0):
     else:
         half_ext = mesh.bounding_box.primitive.extents
 
-    half_ext = numpy.array(half_ext) * scale
+    half_ext = np.array(half_ext) * scale
 
     return representation.Box(size=half_ext)
 
@@ -45,7 +43,7 @@ def create_sphere(mesh, oriented=True, scale=1.0):
     else:
         half_ext = mesh.bounding_box.primitive.extents
 
-    r = numpy.amax(half_ext)
+    r = np.amax(half_ext)
 
     return representation.Sphere(radius=r * 0.5 * scale)
 
@@ -74,57 +72,8 @@ def create_cylinder(mesh, oriented=True, scale=1.0):
     return representation.Cylinder(radius=radius, length=length)
 
 
-def get_reflection_matrix(point=numpy.array((0, 0, 0)), normal=numpy.array((0, 1, 0))):
+def get_reflection_matrix(point=np.array((0, 0, 0)), normal=np.array((0, 1, 0))):
     return trimesh.transformations.reflection_matrix(point, normal)
-
-
-def replace_geometry(element, shape='box', oriented=False, scale=1.0):
-    """
-    Replace the geometry of the element with an oriented shape. urdf_path is needed for mesh loading.
-    Args:
-        element: An geometry element representation.Visual or representation.Collision
-        shape: ['box', 'sphere', 'cylinder', 'convex']
-        oriented: Whether the bounding box should be oriented to have the minimum volume to cover the element
-        scale: whether the created shape shall be scaled by the given value
-
-    Returns:
-        None
-    """
-    if type(element) is list:
-        return [replace_geometry(e, shape, oriented, scale) for e in element]
-
-    if element is None:
-        return
-
-    if not isinstance(element.geometry, representation.Mesh):
-        return
-
-    mesh = io.as_trimesh(element.geometry.load_mesh(), silent=True)
-    mesh.apply_transform(element.origin.to_matrix())
-
-    if oriented and not shape == 'convex':
-        new_origin = representation.Pose.from_matrix(mesh.bounding_box_oriented.primitive.transform)
-    elif not shape == 'convex':
-        new_origin = representation.Pose.from_matrix(mesh.bounding_box.primitive.transform)
-    else:
-        new_origin = representation.Pose.from_matrix(numpy.eye(4))
-
-    if shape == 'sphere':
-        element.geometry = create_sphere(mesh, oriented=oriented, scale=scale)
-        element.origin = new_origin
-    elif shape == 'cylinder':
-        element.geometry = create_cylinder(mesh, oriented=oriented, scale=scale)
-        element.origin = new_origin
-    elif shape == 'box':
-        element.geometry = create_box(mesh, oriented=oriented, scale=scale)
-        element.origin = new_origin
-    elif shape == 'convex':
-        element.geometry.to_convex_hull()
-        element.geometry.scale = scale
-        element.origin = new_origin
-    else:
-        raise Exception('Shape {} not implemented. Please choose sphere, cylinder, box or convex.'.format(shape))
-    return
 
 
 def improve_mesh(mesh):

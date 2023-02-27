@@ -4,16 +4,16 @@ import bpy
 import mathutils
 import numpy as np
 
-from ..utils import selection as sUtils
-from ..utils import editing as eUtils
-from ..utils import naming as nUtils
-from ..utils import blender as bUtils
-from ..utils import io as ioUtils
+from .. import defs
+from .. import reserved_keys
 from ..model import joints as jointmodel
 from ..model.materials import assignMaterial
 from ..phoboslog import log
-from .. import defs
-from .. import reserved_keys
+from ..utils import blender as bUtils
+from ..utils import editing as eUtils
+from ..utils import io as ioUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
 
 from ... import core
 from ...io import representation, sensor_representations

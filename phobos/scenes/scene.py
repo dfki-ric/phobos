@@ -1,7 +1,9 @@
-import numpy as np
 import os
+
+import numpy as np
+
 from .entity import WORLD, PARENT, Entity, BaseEntity
-from ..defs import load_json, dump_json, dump_yaml
+from ..defs import load_json, dump_json
 
 
 class Scene(object):

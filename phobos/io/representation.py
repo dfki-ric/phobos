@@ -1,11 +1,11 @@
-import os
 import json
+import os
 import shutil
 from copy import deepcopy
 
 import numpy
-import trimesh
 import numpy as np
+import trimesh
 
 from .base import Representation
 from .smurf_reflection import SmurfBase
@@ -13,14 +13,12 @@ from .xml_factory import singular as _singular, plural as _plural
 from .yaml_reflection import to_yaml
 from ..defs import BPY_AVAILABLE
 from ..geometry import io as mesh_io
-from ..geometry.io import trimesh_2_mesh_info_dict, triangulate_faces_in_info_dict
-from ..utils import misc
-from ..utils.xml import read_relative_filename
 from ..geometry.geometry import identical, reduce_mesh, get_reflection_matrix, improve_mesh
-from ..utils.misc import trunc, execute_shell_command, to_hex_color, color_parser, edit_name_string
-from ..utils.transform import matrix_to_rpy, round_array, rpy_to_matrix, create_transformation, matrix_to_quaternion, \
-    quaternion_to_angle_axis
-from ..utils import xml as xml_utils, transform
+from ..utils import misc
+from ..utils import transform
+from ..utils.misc import execute_shell_command, to_hex_color, color_parser, edit_name_string
+from ..utils.transform import create_transformation, matrix_to_quaternion, quaternion_to_angle_axis
+from ..utils.xml import read_relative_filename
 
 MESH_INFO_KEYS = ["vertex_normals", "texture_coords", "vertices", "faces"]
 MESH_DATA_TYPES = ["trimesh.base.Trimesh", "trimesh.scene.scene.Scene", "file_obj", "file_stl", "file_dae", "file_iv"]

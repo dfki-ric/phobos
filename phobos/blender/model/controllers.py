@@ -13,13 +13,13 @@ import bpy
 import mathutils
 
 from .. import defs
+from ..model import models as models
 from ..phoboslog import log
 from ..utils import blender as bUtils
-from ..utils import selection as sUtils
-from ..utils import naming as nUtils
 from ..utils import editing as eUtils
 from ..utils import io as ioUtils
-from ..model import models as models
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
 
 
 def deriveController(obj):

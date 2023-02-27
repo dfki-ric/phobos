@@ -11,10 +11,10 @@
 
 import bpy
 
-from ..utils import editing as eUtils
-from ..utils import selection as sUtils
 from ..io import blender2phobos
 from ..phoboslog import log
+from ..utils import editing as eUtils
+from ..utils import selection as sUtils
 
 
 def deriveLight(light, outpath):
