@@ -16,9 +16,10 @@ Contains the functions required to model a joint within Blender.
 import bpy
 import mathutils
 import numpy as np
-from phobos.blender.phoboslog import log
-import phobos.blender.utils.io as ioUtils
-from phobos.blender.utils.validation import validate
+
+from ..phoboslog import log
+from ..utils import io as ioUtils
+from ..utils.validation import validate
 
 
 def getJointConstraints(joint):

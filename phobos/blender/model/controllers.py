@@ -11,13 +11,15 @@
 
 import bpy
 import mathutils
-from phobos.blender import defs
-from phobos.blender.phoboslog import log
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.utils.editing as eUtils
-import phobos.blender.utils.io as ioUtils
+
+from .. import defs
+from ..phoboslog import log
+from ..utils import blender as bUtils
+from ..utils import selection as sUtils
+from ..utils import naming as nUtils
+from ..utils import editing as eUtils
+from ..utils import io as ioUtils
+from ..model import models as models
 
 
 def deriveController(obj):
@@ -29,8 +31,6 @@ def deriveController(obj):
     Returns:
 
     """
-    import phobos.blender.model.models as models
-
     props = models.initObjectProperties(obj, phobostype='controller')
 
     # return None if no controller is found (there will always be at least a name in the props)

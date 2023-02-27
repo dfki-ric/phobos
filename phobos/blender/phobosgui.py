@@ -9,13 +9,9 @@
 # If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 # -------------------------------------------------------------------------------
 
-import sys
-import inspect
 import os
-
 import bpy
 
-# import bgl
 from bpy.props import (
     BoolProperty,
     IntProperty,
@@ -27,24 +23,19 @@ from bpy.props import (
 )
 from bpy.types import AddonPreferences
 
-from phobos.blender.io import blender2phobos
-from phobos.blender.io import scenes
-from phobos.blender.io import libraries
-from phobos.blender.phoboslog import LOGLEVELS
-import phobos.blender.utils.validation as validation
-import phobos.blender.utils.io as ioUtils
-import phobos.blender.utils.naming as nUtils
+from . import display, defs, reserved_keys
+from .io import blender2phobos
+from .model import mechanisms
+from .utils import validation as validation
+from .utils import io as ioUtils
+from .utils import naming as nUtils
+from .utils import selection as sUtils
+from .phoboslog import log, LOGLEVELS
 
-from phobos import defs as phobos_defs
-from phobos.blender import defs
-from phobos.blender import display
-import phobos.blender.utils.selection as sUtils
-from phobos.blender import reserved_keys
-from phobos.blender.phoboslog import log
-
-from phobos.geometry.io import MESH_TYPES
-from phobos.utils.resources import get_blender_resources_path
-from phobos.commandline_logging import setup_logger_level
+from .. import defs as phobos_defs
+from ..geometry.io import MESH_TYPES
+from ..utils.resources import get_blender_resources_path
+from ..commandline_logging import setup_logger_level
 
 
 class ModelPoseProp(bpy.types.PropertyGroup):
@@ -1628,10 +1619,11 @@ def register():
         else:
             setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, default=False))
 
-    for scenetype in scenes.scene_types:
-        if 'export' in scenes.scene_types[scenetype]:
-            typename = "export_scene_" + scenetype
-            setattr(bpy.types.Scene, typename, BoolProperty(name=scenetype, default=False))
+    # [TODO v2.1.0] Re-add scene export
+    # for scenetype in scenes.scene_types:
+    #     if 'export' in scenes.scene_types[scenetype]:
+    #         typename = "export_scene_" + scenetype
+    #         setattr(bpy.types.Scene, typename, BoolProperty(name=scenetype, default=False))
 
     # Load custom icons
     import os
@@ -1701,7 +1693,7 @@ def register():
     # TODO delete me?
     # Read in model and pose data from the respective folders
     # loadModelsAndPoses()
-    libraries.register()
+    mechanisms.register()
 
     print('  ... successful.')
 
@@ -1709,7 +1701,7 @@ def register():
 def unregister():
     """TODO Missing documentation"""
     print("Unregistering phobosgui...")
-    libraries.unregister()
+    mechanisms.unregister()
 
     print("Unregistering display...")
     display.unregister()

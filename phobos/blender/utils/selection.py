@@ -14,8 +14,8 @@ Contains the utility functions for selecting objects in Blender based on differe
 """
 
 import bpy
-import phobos.blender.defs as defs
-from phobos.blender.phoboslog import log
+
+from ..phoboslog import log
 
 
 def getLeaves(roots, objects=[]):

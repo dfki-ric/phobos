@@ -9,20 +9,13 @@
 # If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 # -------------------------------------------------------------------------------
 
-import os
-import copy
-from datetime import datetime
-import json
 
 import bpy
-import mathutils
 
-import phobos.blender.defs as defs
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.blender as bUtils
-from phobos.blender.phoboslog import log
-
+from .. import defs
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
+from ..phoboslog import log
 
 
 def recursive_dictionary_cleanup(dictionary):

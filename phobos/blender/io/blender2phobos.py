@@ -3,18 +3,19 @@ import traceback
 
 import bpy
 import numpy as np
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.editing as eUtils
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.io as ioUtils
-from phobos.blender.utils.validation import validate
-from phobos.blender.phoboslog import log
-import phobos.blender.model.inertia as inertiamodel
-from phobos.blender import reserved_keys
 
-from phobos.io import representation, sensor_representations, xmlrobot
-from phobos import core
+from .. import reserved_keys
+from ..phoboslog import log
+from ..utils import selection as sUtils
+from ..utils import editing as eUtils
+from ..utils import naming as nUtils
+from ..utils import blender as bUtils
+from ..utils import io as ioUtils
+from ..utils.validation import validate
+from ..model import inertia as inertiamodel
+
+from ... import core
+from ...io import representation, sensor_representations, xmlrobot
 
 """
 Factory functions for creating representation.* Instances from blender

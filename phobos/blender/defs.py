@@ -17,9 +17,9 @@ added to this module at runtime.
 import os
 import glob
 import re
-
 import json
-import phobos.blender.phobossystem as phobossystem
+
+from . import phobossystem
 
 # Phobos information
 version = '1.0.1 "Capricious Choutengan"'

@@ -1,27 +1,23 @@
-import os
 from copy import deepcopy
 
 import bpy
 import mathutils
 import numpy as np
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.editing as eUtils
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.io as ioUtils
-import phobos.blender.model.joints as jointmodel
-from phobos.blender.phoboslog import log
-import phobos.blender.defs as defs
-import phobos.blender.model.inertia as inertiamodel
-from phobos.blender import reserved_keys
-from phobos.blender.utils.validation import validate
 
-from phobos.io import representation, sensor_representations
-from phobos import core
+from ..utils import selection as sUtils
+from ..utils import editing as eUtils
+from ..utils import naming as nUtils
+from ..utils import blender as bUtils
+from ..utils import io as ioUtils
+from ..model import joints as jointmodel
+from ..model.materials import assignMaterial
+from ..phoboslog import log
+from .. import defs
+from .. import reserved_keys
 
-from phobos.blender.model.materials import assignMaterial
-
-from phobos.utils.resources import get_default_joint
+from ... import core
+from ...io import representation, sensor_representations
+from ...utils.resources import get_default_joint
 
 """
 Factory functions for creating blender Instances from phobos.io instance

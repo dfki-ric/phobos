@@ -21,15 +21,16 @@ import blf
 import bgl
 from bpy.props import StringProperty, FloatProperty, FloatVectorProperty, EnumProperty
 from bpy.types import Operator
-from phobos.blender.phoboslog import log
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.model.poses as poses
-import phobos.blender.model.models as models
+
+
+from ..utils import selection as sUtils
+from ..utils import blender as bUtils
+from ..utils import naming as nUtils
+from ..model import poses as poses
 
 # FIXME: this is ugly
 current_robot_name = ''
+
 
 # this is partly redundant, but currently only needed here
 def get_robot_names(scene, context):

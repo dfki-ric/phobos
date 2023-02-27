@@ -10,14 +10,14 @@
 
 import collections
 import bpy
-import mathutils
 import bgl
 import blf
 from bpy_extras import view3d_utils
 from bpy.types import Operator
 from bpy.props import BoolProperty
 from mathutils import Vector
-from phobos.blender.utils import naming as nUtils
+
+from .utils import naming as nUtils
 
 
 progressinfo = None

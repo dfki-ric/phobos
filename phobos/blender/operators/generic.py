@@ -27,12 +27,12 @@ from bpy.props import (
     CollectionProperty,
 )
 
-import phobos.blender.defs as defs
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.editing as eUtils
-import phobos.blender.utils.io as ioUtils
-from phobos.blender.phoboslog import log
+from .. import defs as defs
+from ..utils import blender as bUtils
+from ..utils import selection as sUtils
+from ..utils import editing as eUtils
+from ..utils import io as ioUtils
+from ..phoboslog import log
 
 
 def linkObjectLists(annotation, objectlist):

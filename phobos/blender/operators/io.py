@@ -24,23 +24,17 @@ import glob
 from bpy.types import Operator
 from bpy.props import EnumProperty, StringProperty, FloatProperty, IntProperty, BoolProperty
 
-import phobos.blender.defs as defs
-import phobos.blender.display as display
-from phobos.blender.phoboslog import log
-import phobos.blender.model.models as models
-import phobos.blender.model.links as links
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.editing as eUtils
-import phobos.blender.utils.io as ioUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.naming as nUtils
+from ..phoboslog import log
+from ..utils import selection as sUtils
+from ..utils import io as ioUtils
+from ..utils import blender as bUtils
+from ..utils import naming as nUtils
+from ..io.blender2phobos import deriveRobot
+from ..io.phobos2blender import createRobot
 
-from phobos import core
-from phobos.blender.io.blender2phobos import deriveRobot
-from phobos.blender.io.phobos2blender import createRobot
-from phobos.utils.resources import get_default_rel_mesh_pathes
-
-import phobos.defs as phobos_defs
+from ...utils.resources import get_default_rel_mesh_pathes
+from ... import core
+from ... import defs as phobos_defs
 
 
 # [TODO v2.1.0] let this use the phobos API as well

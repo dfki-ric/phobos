@@ -16,9 +16,13 @@ Contains the functions for the mechanism entity.
 import os
 import bpy
 import bpy.utils.previews
-import phobos.blender.defs as defs
-from phobos.utils.resources import get_blender_resources_path
-from phobos.blender.phoboslog import log
+from bpy.types import WindowManager
+from bpy.props import EnumProperty
+
+from .. import defs
+from ..phoboslog import log
+
+from ...utils.resources import get_blender_resources_path
 
 
 mechanismpreviewcollection = []
@@ -42,8 +46,6 @@ def getMechanismListForEnumProperty(self, context):
 
 def compileMechanismList():
     """TODO Missing documentation"""
-    from bpy.types import WindowManager
-    from bpy.props import EnumProperty
 
     # DOCU missing some docstring
 
@@ -88,9 +90,6 @@ def compileMechanismList():
 
 def register():
     """TODO Missing documentation"""
-    from bpy.types import WindowManager
-    from bpy.props import EnumProperty
-
     WindowManager.mechanismpreview = EnumProperty(
         items=getMechanismListForEnumProperty, name='Mechanism'
     )

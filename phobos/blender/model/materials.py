@@ -14,8 +14,9 @@ Contains the functions required to model a material in Blender.
 """
 
 import bpy
-import phobos.blender.defs as defs
-from phobos.blender.phoboslog import log
+
+from .. import defs
+from ..phoboslog import log
 
 
 def createPhobosMaterials():

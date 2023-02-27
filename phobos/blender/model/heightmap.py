@@ -27,7 +27,7 @@ from phobos.blender.phoboslog import log
 structure_subfolder = "heightmaps"
 
 
-def deriveEntity(entity, outpath):
+def deriveHeightmap(entity, outpath):
     """This function handles a heightmap entity in a scene to export it
 
     Args:
