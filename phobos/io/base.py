@@ -106,6 +106,7 @@ class Linkable(object):
         # if self._related_robot_instance is None:
         assert robot is not None
         self._related_robot_instance = robot
+        # log.debug(f"Linking {self.__class__} {id(self)}")
         for attribute in self._class_linkables:
             self._attr_set_name(attribute, getattr(self, "_" + attribute), no_check=True)
             # if getattr(self, "_" + attribute) is not None:
@@ -117,6 +118,7 @@ class Linkable(object):
             #                 v.link_with_robot(robot, check_linkage_later=True)
         for var in self._class_variables:
             if isinstance(getattr(self, var), Linkable):
+                # log.debug(f"Linking {var} of class {self.__class__} with id {id(getattr(self, var))}")
                 getattr(self, var).link_with_robot(robot, check_linkage_later=True)
             elif isinstance(getattr(self, var), list):
                 for v in getattr(self, var):

@@ -513,6 +513,7 @@ class Robot(SMURFRobot):
                    enforce_zero=False):
         """ Exports all model information stored inside this instance.
         """
+        assert self.check_linkage()
         outputdir = os.path.abspath(outputdir)
         if rel_mesh_pathes is None:
             rel_mesh_pathes = resources.get_default_rel_mesh_pathes()
@@ -575,6 +576,7 @@ class Robot(SMURFRobot):
                      with_meshes=True, mesh_format=None, additional_meshes=None, rel_mesh_pathes=None):
         """ Export self and all annotations inside a given folder with structure
         """
+        assert self.check_linkage()
         # Convert to absolute path
         if outputfile is not None:
             assert outputdir is None
@@ -591,7 +593,8 @@ class Robot(SMURFRobot):
         if len(self.submechanisms) > 0 or len(self.exoskeletons) > 0:
             if not os.path.exists(submech_dir):
                 os.makedirs(submech_dir)
-
+        self.link_entities()
+        self.check_linkage()
         # meshes
         if with_meshes:
             _mesh_format = mesh_format
@@ -949,6 +952,7 @@ class Robot(SMURFRobot):
 
     def export(self, outputdir, export_config, rel_mesh_pathes=None, ros_pkg_name=None, no_smurf=False,
                ros_pkg_later=False, check_submechs=True, with_meshes=True):
+        assert self.check_linkage()
         outputdir = os.path.abspath(outputdir)
         if rel_mesh_pathes is None:
             rel_mesh_pathes = resources.get_default_rel_mesh_pathes()

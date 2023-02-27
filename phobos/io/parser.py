@@ -38,13 +38,13 @@ def parse_xml(xml):
             file_type = "sdf"
             if len(xml_root.findall("./model")) > 1:
                 log.warning("Multiple robots detected in this sdf!")
-                return [XMLRobot.from_xml(x, dialect=file_type, xmlfile=xml_file) for x in xml_root.findall("./model")]
+                return [XMLRobot.from_xml(x, dialect=file_type, _xmlfile=xml_file) for x in xml_root.findall("./model")]
             else:
                 xml_root = xml_root.findall("./model")[0]
         elif xml_root.tag == "model":
             file_type = "sdf"
         elif xml_root.tag == "robot":
             file_type = "urdf"
-    return XMLRobot.from_xml(xml_root, dialect=file_type, xmlfile=xml_file)
+    return XMLRobot.from_xml(xml_root, dialect=file_type, _xmlfile=xml_file)
 
 

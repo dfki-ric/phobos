@@ -204,10 +204,10 @@ class Texture(Representation):
             self.input_type = "file"
             self.image = None
 
-        if not os.path.isabs(self.input_file) and "xmlfile" in kwargs and kwargs["xmlfile"] is not None:
-            self.input_file = os.path.join(os.path.dirname(kwargs["xmlfile"]), self.input_file)
-        elif not os.path.isabs(self.input_file) and "smurffile" in kwargs and kwargs["smurffile"] is not None:
-            self.input_file = os.path.join(os.path.dirname(kwargs["smurffile"]), self.input_file)
+        if not os.path.isabs(self.input_file) and "_xmlfile" in kwargs and kwargs["_xmlfile"] is not None:
+            self.input_file = os.path.join(os.path.dirname(kwargs["_xmlfile"]), self.input_file)
+        elif not os.path.isabs(self.input_file) and "_smurffile" in kwargs and kwargs["_smurffile"] is not None:
+            self.input_file = os.path.join(os.path.dirname(kwargs["_smurffile"]), self.input_file)
         if not os.path.isabs(self.input_file) or not os.path.isfile(self.input_file):
             raise IOError(f"Texture file {self.input_file} couldn't be found!")
 
@@ -237,6 +237,8 @@ class Texture(Representation):
     def filepath(self):
         if self._related_robot_instance is not None and self._related_robot_instance.xmlfile is not None:
             return os.path.relpath(self.abs_filepath, os.path.dirname(self._related_robot_instance.xmlfile))
+        elif self._related_robot_instance is not None and self._related_robot_instance.smurffile is not None:
+            return os.path.relpath(self.abs_filepath, os.path.dirname(self._related_robot_instance.smurffile))
         else:
             return self.abs_filepath
 
@@ -291,6 +293,7 @@ class Material(Representation, SmurfBase):
             self.transparency = 1-self.diffuse[3]
         self.shininess = shininess
         self.original_name = name
+        Representation.__init__(self)
         SmurfBase.__init__(self, returns=["name", "diffuseColor", "ambientColor", "specularColor", "emissionColor",
                                           "diffuseTexture", "normalTexture"], **kwargs)
         if name is None or len(name) == 0:
@@ -320,7 +323,7 @@ class Material(Representation, SmurfBase):
 
     @property
     def diffuseColor(self):
-        return self.diffuse
+        return {k: v for k, v in zip(["r", "g", "b", "a"], self.diffuse)}
 
     @diffuseColor.setter
     def diffuseColor(self, *args, rgba=None):
@@ -332,7 +335,7 @@ class Material(Representation, SmurfBase):
 
     @property
     def ambientColor(self):
-        return self.ambient
+        return {k: v for k, v in zip(["r", "g", "b", "a"], self.ambient)}
 
     @ambientColor.setter
     def ambientColor(self, *args, rgba=None):
@@ -344,7 +347,7 @@ class Material(Representation, SmurfBase):
 
     @property
     def specularColor(self):
-        return self.specular
+        return {k: v for k, v in zip(["r", "g", "b", "a"], self.specular)}
 
     @specularColor.setter
     def specularColor(self, *args, rgba=None):
@@ -356,7 +359,7 @@ class Material(Representation, SmurfBase):
 
     @property
     def emissionColor(self):
-        return self.emissive
+        return {k: v for k, v in zip(["r", "g", "b", "a"], self.emissive)}
 
     @emissionColor.setter
     def emissionColor(self, *args, rgba=None):
@@ -461,10 +464,10 @@ class Mesh(Representation, SmurfBase):
             elif BPY_AVAILABLE and isinstance(mesh, bpy.types.Mesh):
                 self.mesh_information = mesh_io.blender_2_mesh_info_dict(mesh)
         else:
-            if kwargs.get("xmlfile", None) is not None and not os.path.isabs(filepath):
-                filepath = read_relative_filename(filepath, kwargs["xmlfile"])
-            if kwargs.get("smurffile", None) is not None and not os.path.isabs(filepath):
-                filepath = read_relative_filename(filepath, kwargs["smurffile"])
+            if kwargs.get("_xmlfile", None) is not None and not os.path.isabs(filepath):
+                filepath = read_relative_filename(filepath, kwargs["_xmlfile"])
+            if kwargs.get("_smurffile", None) is not None and not os.path.isabs(filepath):
+                filepath = read_relative_filename(filepath, kwargs["_smurffile"])
             elif not os.path.isabs(filepath) and os.path.isfile(filepath):
                 filepath = os.path.abspath(filepath)
             elif not os.path.isabs(filepath):
@@ -550,6 +553,8 @@ class Mesh(Representation, SmurfBase):
     def filepath(self):
         if self._related_robot_instance is not None and self._related_robot_instance.xmlfile is not None:
             return os.path.relpath(self.abs_filepath, os.path.dirname(self._related_robot_instance.xmlfile))
+        elif self._related_robot_instance is not None and self._related_robot_instance.smurffile is not None:
+            return os.path.relpath(self.abs_filepath, os.path.dirname(self._related_robot_instance.smurffile))
         else:
             return self.abs_filepath
 
@@ -686,7 +691,7 @@ class Mesh(Representation, SmurfBase):
                 self.write_history(targetpath)
                 return
         # do nothing if the file is already there and identical
-        if os.path.isfile(targetpath):
+        if os.path.isfile(targetpath) and not self.changed:
             existing_mesh = mesh_io.import_mesh(targetpath)
             o_history = self.read_history(targetpath)
             equiv_histories = False
