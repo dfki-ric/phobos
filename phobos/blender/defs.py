@@ -212,6 +212,6 @@ def __parseAllYAML(path):
 
 
 # Update definitions from files
-definitionpath = os.path.join(phobossystem.getConfigPath() + '/definitions')
+definitionpath = os.path.join(phobossystem.getConfigPath() + 'definitions')
 print("Parsing definitions from:", definitionpath)
 updateDefs(definitionpath)

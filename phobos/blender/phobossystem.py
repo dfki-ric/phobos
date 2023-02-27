@@ -41,7 +41,7 @@ def getConfigPath():
 
     """
     configpath = path.normpath(
-        path.join(bpy.utils.user_resource(resource_type='SCRIPTS', path="addons"), "phobos", "config")
+        path.join(bpy.utils.user_resource(resource_type='SCRIPTS', path="addons"), "phobos", "data", "blender")
     )
     return configpath
 
