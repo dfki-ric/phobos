@@ -323,7 +323,7 @@ class Material(Representation, SmurfBase):
 
     @property
     def diffuseColor(self):
-        return {k: v for k, v in zip(["r", "g", "b", "a"], self.diffuse)}
+        return {k: v for k, v in zip(["r", "g", "b", "a"], self.diffuse)} if self.diffuse is not None else None
 
     @diffuseColor.setter
     def diffuseColor(self, *args, rgba=None):
@@ -335,7 +335,7 @@ class Material(Representation, SmurfBase):
 
     @property
     def ambientColor(self):
-        return {k: v for k, v in zip(["r", "g", "b", "a"], self.ambient)}
+        return {k: v for k, v in zip(["r", "g", "b", "a"], self.ambient)} if self.ambient is not None else None
 
     @ambientColor.setter
     def ambientColor(self, *args, rgba=None):
@@ -347,7 +347,7 @@ class Material(Representation, SmurfBase):
 
     @property
     def specularColor(self):
-        return {k: v for k, v in zip(["r", "g", "b", "a"], self.specular)}
+        return {k: v for k, v in zip(["r", "g", "b", "a"], self.specular)} if self.specular is not None else None
 
     @specularColor.setter
     def specularColor(self, *args, rgba=None):
@@ -359,7 +359,7 @@ class Material(Representation, SmurfBase):
 
     @property
     def emissionColor(self):
-        return {k: v for k, v in zip(["r", "g", "b", "a"], self.emissive)}
+        return {k: v for k, v in zip(["r", "g", "b", "a"], self.emissive)} if self.emissive is not None else None
 
     @emissionColor.setter
     def emissionColor(self, *args, rgba=None):
