@@ -68,7 +68,7 @@ def blender_2_mesh_info_dict(mesh):
     mesh.calc_normals()
 
     uv_layer = mesh.uv_layers.active
-    write_uv = uv_layer is not None
+    write_uv = uv_layer is not None and len(uv_layer.data) > 0
 
     # prepare info dict
     n_info = {
@@ -339,15 +339,6 @@ def import_mars_mesh(filepath, urdf_path=None):
         pass
 
     return m
-
-
-mesh_types = {
-    "stl": {"export": export_mesh, "import": None, "extension": "stl"},
-    "obj": {"export": export_mesh, "import": None, "extension": "obj"},
-    "dae": {"export": export_mesh, "import": None, "extension": "dae"},
-    "bobj": {"export": export_mesh, "import": None, "extension": "bobj"},
-}
-MESH_TYPES = ["stl", "obj", "dae", "bobj"]
 
 
 def parse_obj(filepath):

@@ -50,7 +50,9 @@ from ..utils import io as ioUtils
 from ..utils import naming as nUtils
 from ..utils import selection as sUtils
 from ..utils import validation as vUtils
+
 from ...io import representation
+from ...utils import resources
 
 
 class SafelyRemoveObjectsFromSceneOperator(Operator):
@@ -1485,8 +1487,8 @@ class DefineJointConstraintsOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     # [TODO v2.0.0] Create motor for active joints
-    passive : BoolProperty(
-        name='Passive', default=False, description='Make the joint passive (no actuation)'
+    active : BoolProperty(
+        name='Active', default=False, description='Add an motor to the joint'
     )
 
     useRadian : BoolProperty(
@@ -1540,8 +1542,7 @@ class DefineJointConstraintsOperator(Operator):
 
         # enable/disable optional parameters
         if not self.joint_type == 'fixed':
-            # [TODO v2.0.0] Create motor for active joints
-            layout.prop(self, "passive", text="makes the joint passive (no actuation)")
+            layout.prop(self, "active", text="Active (adds a default motor you can adapt later)")
             if self.joint_type in ["revolute", "prismatic", "continuous"]:
                 layout.prop(self, "axis", text="Sets the joint axis")
             if self.joint_type == "revolute":
@@ -1600,6 +1601,7 @@ class DefineJointConstraintsOperator(Operator):
         lower = 0
         upper = 0
         velocity = self.maxvelocity
+        effort = self.maxeffort
 
         # lower and upper limits
         if self.joint_type in ["revolute", "continuous", "sphere"]:
@@ -1618,32 +1620,39 @@ class DefineJointConstraintsOperator(Operator):
         elif self.joint_type == "prismatic":
             lower = self.lower
             upper = self.upper
+        axis = None
         if self.joint_type in ["revolute", "prismatic", "continuous"]:
             axis = self.axis
         # set properties for each joint
         for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
             context.view_layer.objects.active = joint
             jUtils.setJointConstraints(
-                joint, self.joint_type, lower, upper, self.spring, self.damping,
-                axis=(np.array(axis) / np.linalg.norm(axis)).tolist()
+                joint=joint,
+                jointtype=self.joint_type,
+                lower=lower,
+                upper=upper,
+                velocity=velocity,
+                effort=effort,
+                spring=self.spring,
+                damping=self.damping,
+                axis=(np.array(axis) / np.linalg.norm(axis)).tolist() if axis is not None else None
             )
 
-            # TODO is this still needed? Or better move it to the utility function
-            if self.joint_type != 'fixed':
-                joint['joint/limits/effort'] = self.maxeffort
-                joint['joint/limits/velocity'] = velocity
-            else:
-                if "joint/limits/effort" in joint:
-                    del joint["joint/limits/effort"]
-                if "joint/limits/velocity" in joint:
-                    del joint["joint/limits/velocity"]
+            if "joint/name" not in joint:
+                joint["joint/name"] = joint.name + "_joint"
 
-            # [TODO v2.0.0] Create motor for active joints
-            # if self.passive:
-            #     joint['joint/passive'] = "$true"
-            # else:
-            #     # TODO show up in text edit which joints are to change?
-            #     log("Please add motor to active joint in " + joint.name, "INFO")
+            motor_name = joint.get("joint/name", joint.name) + "_motor"
+            if self.active and not any([child.phobostype == "motor" for child in sUtils.getImmediateChildren(joint)])\
+                    and sUtils.getObjectByName(motor_name) is None:
+                phobos2blender.createMotor(
+                    motor=representation.Motor(
+                        name=motor_name,
+                        joint=joint.get("joint/name", joint.name),
+                        **resources.get_default_motor()
+                    ),
+                    linkobj=joint
+                )
+
         return {'FINISHED'}
 
     @classmethod
@@ -2087,7 +2096,10 @@ def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args
         newlink = modellinks.createLink(
             {'scale': 1., 'name': 'link_' + sensor_dict['name'], 'matrix': active_obj.matrix_world}
         )
-        jUtils.setJointConstraints(newlink, 'fixed', 0., 0., 0., 0.)
+        jUtils.setJointConstraints(
+            joint=newlink,
+            jointtype='fixed'
+        )
 
     # we don't need to check the parentlink, as the calling operator
     # does make sure it exists (or a new link is created instead)

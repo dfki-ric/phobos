@@ -317,16 +317,9 @@ def getObjectByName(name, phobostypes=()):
         obj for obj in bpy.context.scene.objects if obj.phobostype in phobostypes or not phobostypes
     ]
     for obj in searchobjs:
-        if name == obj.name:
+        if name == obj.name or "joint/name" in obj and obj["joint/name"] == name:
             found = obj
             break
-        # else:
-        #     for key in obj.keys():
-        #         try:
-        #             if obj[key].endswith('/name') and name == obj[key]:
-        #                 objlist.append(obj)
-        #         except AttributeError:
-        #             continue
     return found
 
 

@@ -31,9 +31,9 @@ from .utils import io as ioUtils
 from .utils import naming as nUtils
 from .utils import selection as sUtils
 from .utils import validation as validation
+
 from .. import defs as phobos_defs
 from ..commandline_logging import setup_logger_level
-from ..geometry.io import MESH_TYPES
 from ..utils.resources import get_blender_resources_path
 
 
@@ -211,7 +211,7 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
         """
         # DOCU missing description
-        return [(mt,) * 3 for mt in MESH_TYPES]
+        return [(mt,) * 3 for mt in phobos_defs.MESH_TYPES]
 
     path : StringProperty(
         name='path',
@@ -839,11 +839,15 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
         # add all properties in sequence
         for _, (prop, value, param) in enumerate(zip(props, values, guiparams)):
-
             # objects are shown as goto operator
             if isinstance(value, bpy.types.Object):
                 self.addObjLink(prop, value, column, param)
                 continue
+            elif prop in ["link", "joint", "motor", "parent", "child"] and type(value) == str:
+                obj_value = sUtils.getObjectByName(value)
+                if obj_value is not None:
+                    self.addObjLink(prop, obj_value, column, param, label=value)
+                    continue
 
             subtable = column.split(factor=0.45)
             descr = subtable.column()
@@ -862,7 +866,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
             else:
                 content.label(text=str(value))  #, **param['infoparams'])
 
-    def addObjLink(self, prop, value, column, guiparams):
+    def addObjLink(self, prop, value, column, param, label=None):
         """Add an object link, which is a clickable goto button in the GUI.
 
         Args:
@@ -876,10 +880,6 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
         """
         # this list is used to force labelling of special keywords
-        labels = ['joint', 'child']
-
-        label = [prop if prop in labels else ''][0]
-
         subtable = column.split(factor=0.45)
         descr = subtable.column()
         content = subtable.column()
@@ -888,7 +888,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
         # use custom params (like icons etc) from the dictionary by passing **params
         goto_op = content.operator(
             'phobos.goto_object',
-            text=value.name,
+            text=value.name if label is None else label,
             # **guiparams['infoparams'],
             icon='FILE_PARENT'
         )
@@ -1276,7 +1276,7 @@ class PhobosExportPanel(bpy.types.Panel):
 
         cmesh = inlayout.column(align=True)
         cmesh.label(text="Meshes")
-        for meshtype in MESH_TYPES:
+        for meshtype in phobos_defs.MESH_TYPES:
             typename = "export_mesh_" + meshtype
             cmesh.prop(bpy.context.scene, typename)
 
@@ -1607,7 +1607,7 @@ def register():
     )
 
     # add i/o settings to scene to preserve settings for every model
-    for meshtype in MESH_TYPES:
+    for meshtype in phobos_defs.MESH_TYPES:
         typename = "export_mesh_" + meshtype
         setattr(bpy.types.Scene, typename, BoolProperty(name=meshtype, default=False))
 

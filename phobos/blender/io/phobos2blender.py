@@ -281,26 +281,17 @@ def createJoint(joint: representation.Joint, linkobj=None):
             bpy.ops.object.mode_set(mode='OBJECT')
 
     # add constraints to the joint
-    lower = -1e-5
-    upper = 1e-5
-    if joint.limit is not None:
-        for limit in ["upper", "lower", "velocity", "effort"]:
-            if getattr(joint.limit, limit) is not None:
-                linkobj["joint/limits/"+limit] = getattr(joint.limit, limit)
-            elif joint.joint_type in ["revolute", "prismatic"]:
-                linkobj["joint/limits/"+limit] = get_default_joint(joint.joint_type)[limit]
-        lower = linkobj.get("joint/limits/lower")
-        upper = linkobj.get("joint/limits/upper")
-    spring = 0
-    damping = 0
-    if joint.dynamics is not None:
-        for dyn in ["damping", "friction", "spring_stiffness", "spring_reference"]:
-            if getattr(joint.dynamics, dyn) is not None:
-                linkobj["joint/dynamics/"+dyn] = getattr(joint.dynamics, dyn)
-            # [TODO v2.0.0] REVIEW: Set default values ?
-            spring = linkobj.get("joint/dynamics/spring_stiffness", 0.0)
-            damping = linkobj.get("joint/dynamics/damping", 0.0)
-    jointmodel.setJointConstraints(linkobj, joint.joint_type, lower, upper, spring, damping, axis=joint.axis)
+    jointmodel.setJointConstraints(
+        joint=linkobj,
+        jointtype=joint.joint_type,
+        lower=getattr(joint.limit, "lower", None),
+        upper=getattr(joint.limit, "upper", None),
+        velocity=getattr(joint.limit, "velocity", None),
+        effort=getattr(joint.limit, "effort", None),
+        spring=getattr(joint.dynamics, "spring", None),
+        damping=getattr(joint.dynamics, "damping", None),
+        axis=joint.axis
+    )
 
     # write generic custom properties
     for prop, value in joint.to_yaml().items():
@@ -405,37 +396,36 @@ def createSensor(sensor: sensor_representations.Sensor, linkobj=None):
     return newsensor
 
 
-def createMotor(motor: representation.Motor, linkobj):
+def createMotor(motor: representation.Motor, linkobj: bpy.types.Object):
     bUtils.toggleLayer('motor', value=True)
 
     # create motor object
+    psize=(max(np.array(linkobj.bound_box).flatten().tolist()),) * 3
     newmotor = bUtils.createPrimitive(
         motor.name,
         'box',
-        (max(linkobj.bound_box),) * 3,
+        psize,
         [],
         phobostype='motor',
     )
     # use resource name provided as: "resource:whatever_name"
-    resource_obj = ioUtils.getResource(['motor'] + motor.type)
+    resource_obj = ioUtils.getResource(['motor'] + [motor.type.lower()])
     if resource_obj:
         log("Assigned resource mesh and materials to new motor object.", 'DEBUG')
         newmotor.data = resource_obj.data
-        newmotor.scale = (max(linkobj.bound_box),) * 3
     else:
         log("Could not use resource mesh for motor. Default cube used instead.", 'WARNING')
 
     # assign the parent if available
-    if linkobj is not None:
-        eUtils.parentObjectsTo(newmotor, linkobj)
-        newmotor.matrix_local = mathutils.Matrix.identity(4)
-
+    eUtils.parentObjectsTo(newmotor, linkobj)
+    newmotor.matrix_local = mathutils.Matrix(np.identity(4))
+    newmotor.scale = psize
     # set motor properties
     newmotor.phobostype = 'motor'
 
     # write generic custom properties
-    for prop, value in motor.to_yaml().items():
-        if prop not in reserved_keys.MOTOR_KEYS:
+    for prop, value in motor.__dict__.items():
+        if prop in motor.get_refl_vars() and prop not in reserved_keys.MOTOR_KEYS:
             if type(value) == dict:
                 for k, v in value.items():
                     newmotor[f"{prop}/{k}"] = v

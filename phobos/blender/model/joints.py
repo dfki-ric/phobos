@@ -118,8 +118,10 @@ def setJointConstraints(
     jointtype,
     lower=0.0,
     upper=0.0,
-    spring=0.0,
-    damping=0.0,
+    spring=None,
+    damping=None,
+    velocity=None,
+    effort=None,
     maxeffort_approximation=None,
     maxspeed_approximation=None,
     axis = None
@@ -138,6 +140,8 @@ def setJointConstraints(
       jointtype(str): joint type (revolute, continuous, prismatic, fixed, floating, planar)
       lower(float, optional): lower limit of the constraint (defaults to 0.)
       upper(float, optional): upper limit of the constraint (defaults to 0.)
+      velocity(float, optional): velocity limit of the constraint (defaults to 0.)
+      effort(float, optional): effort limit of the constraint (defaults to 0.)
       spring(float, optional): spring stiffness for the joint (Default value = 0.0)
       damping(float, optional): spring damping for the joint (Default value = 0.0)
       maxeffort_approximation(dict, optional): function and coefficients for maximum effort (Default value = None)
@@ -146,6 +150,19 @@ def setJointConstraints(
     Returns:
 
     """
+    if lower is None:
+        lower = 0.0
+    if upper is None:
+        upper = 0.0
+    if velocity is None:
+        velocity = 0.0
+    if effort is None:
+        effort = 0.0
+    if spring is None:
+        spring = 0.0
+    if damping is None:
+        damping = 0.0
+
     bpy.ops.object.select_all(action='DESELECT')
     joint.select_set(True)
     if joint.phobostype != 'link':
@@ -211,6 +228,8 @@ def setJointConstraints(
 
     # check for approximation functions of effort and speed
     if jointtype in ['revolute', 'continuous', 'prismatic']:
+        joint['joint/velocity'] = velocity
+        joint['joint/effort'] = effort
         if maxeffort_approximation:
             if all(elem in ['function', 'coefficients'] for elem in maxeffort_approximation):
                 joint['joint/maxeffort_approximation'] = maxeffort_approximation['function']

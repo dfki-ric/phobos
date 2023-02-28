@@ -1590,22 +1590,22 @@ class Motor(Representation, SmurfBase):
     _class_variables = ["name", "joint"]
 
     def __init__(self, name=None, joint=None, **kwargs):
-        SmurfBase.__init__(self, name=name, joint=joint, type="dc", **kwargs)
+        SmurfBase.__init__(self, name=name, joint=joint, **kwargs)
         # This is hardcoded information
         assert self.joint is not None
         self._maxEffort = None
         self._maxSpeed = None
         self._maxValue = None
         self._minValue = None
-        self.type = type
+        self.type = kwargs.get("type", None)
         self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue']
 
     @property
     def maxEffort(self):
-        if self._joint:
+        if self._related_robot_instance is not None:
             return self._joint.limit.effort if self._joint.limit else 0
         else:
-            return 0
+            return self._maxEffort
 
     @maxEffort.setter
     def maxEffort(self, effort):
@@ -1625,10 +1625,10 @@ class Motor(Representation, SmurfBase):
 
     @property
     def maxValue(self):
-        if self._joint:
+        if self._related_robot_instance is not None:
             return self._joint.limit.upper if self._joint.limit else 0
         else:
-            return 0
+            return self._maxValue
 
     @maxValue.setter
     def maxValue(self, maxval):
@@ -1648,10 +1648,10 @@ class Motor(Representation, SmurfBase):
 
     @property
     def minValue(self):
-        if self._joint:
+        if self._related_robot_instance is not None:
             return self._joint.limit.lower if self._joint.limit else 0
         else:
-            return 0
+            return self._minValue
 
     @minValue.setter
     def minValue(self, minval):
@@ -1671,10 +1671,10 @@ class Motor(Representation, SmurfBase):
 
     @property
     def maxSpeed(self):
-        if self._joint:
+        if self._related_robot_instance is not None:
             return self._joint.limit.velocity if self._joint.limit else 0
         else:
-            return 0
+            return self._maxSpeed
 
     @maxSpeed.setter
     def maxSpeed(self, speedval):
@@ -1694,8 +1694,9 @@ class Motor(Representation, SmurfBase):
 
     @property
     def mimic_motor(self):
-        if self._joint.mimic is not None:
+        if self._related_robot_instance is not None and self._joint.mimic is not None:
             return self._joint.mimic.joint
+        return None
 
     @mimic_motor.setter
     def mimic_motor(self, val):
@@ -1703,8 +1704,9 @@ class Motor(Representation, SmurfBase):
 
     @property
     def mimic_multiplier(self):
-        if self._joint.mimic is not None:
+        if self._related_robot_instance is not None and self._joint.mimic is not None:
             return self._joint.mimic.multiplier
+        return None
 
     @mimic_multiplier.setter
     def mimic_multiplier(self, val):
@@ -1712,8 +1714,9 @@ class Motor(Representation, SmurfBase):
 
     @property
     def mimic_offset(self):
-        if self._joint.mimic is not None:
+        if self._related_robot_instance is not None and self._joint.mimic is not None:
             return self._joint.mimic.offset
+        return None
 
     @mimic_offset.setter
     def mimic_offset(self, val):

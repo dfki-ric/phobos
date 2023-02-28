@@ -4,6 +4,6 @@ JOINT_KEYS = ["name", "axis", "type", "parent", "child",
 LINK_KEYS = ["name", "visuals", "collisions", "inertial", "inertia"]
 VISUAL_KEYS = COLLISION_KEYS = VISCOL_KEYS = ["name", "origin", "material", "geometry", "bitmask", "geometry/type"]
 INERTIAL_KEYS = ["inertia", "mass"]
-MOTOR_KEYS = ["name", "type", "joint"]
+MOTOR_KEYS = ["name", "type", "joint", "maxSpeed", "maxValue", "maxEffort", "minValue"]
 INTERFACE_KEYS = ["name", "type", "direction", "parent", "origin"]
 INTERNAL_KEYS = ["phobostype", "phobosmatrixinfo"]

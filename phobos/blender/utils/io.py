@@ -19,51 +19,8 @@ from ..utils import blender as bUtils
 from ..utils import naming as nUtils
 from ..utils import selection as sUtils
 
-from ...defs import EXPORT_TYPES, IMPORT_TYPES, SCENE_TYPES
-from ...geometry.io import mesh_types
+from ...defs import EXPORT_TYPES, IMPORT_TYPES, SCENE_TYPES, MESH_TYPES
 from ...utils.resources import get_blender_resources_path
-
-indent = '  '
-xmlHeader = '<?xml version="1.0"?>\n<!-- created with Phobos ' + defs.version + ' -->\n'
-
-
-def xmlline(ind, tag, names, values):
-    """Generates an xml line with specified values.
-    To use this function you need to know the indentation level you need for this line.
-    Make sure the names and values list have the correct order.
-
-    Args:
-      ind(int >= 0): Indentation level
-      tag(String): xml element tag
-      names(list (same order as for values): Names of xml element's attributes
-      values(list (same order as for names): Values of xml element's attributes
-
-    Returns:
-      : String -- Generated xml line.
-
-    """
-    line = [indent * max(0, ind) + '<' + tag]
-    for i in range(len(names)):
-        line.append(' ' + names[i] + '="' + str(values[i]) + '"')
-    line.append('/>\n')
-    return ''.join(line)
-
-
-def l2str(items, start=0, end=None):
-    """Generates string from (part of) a list.
-
-    Args:
-      items(list): List from which the string is derived (elements need to implement str())
-      start(int, optional): Inclusive start index for iteration (Default value = 0)
-      end(int, optional): Exclusive end index for iteration (Default value = None)
-
-    Returns:
-      : str - Generated string.
-
-    """
-    start = max(start, 0)
-    end = end if end else len(items)
-    return ' '.join([str(i) for i in items[start:end]])
 
 
 def securepath(path):
@@ -240,20 +197,12 @@ def getSceneTypesForImport():
 
 def getMeshTypesForExport():
     """Returns list of mesh types available for export"""
-    return [
-        typename
-        for typename in sorted(mesh_types)
-        if 'export' in mesh_types[typename] and 'extensions' in mesh_types[typename]
-    ]
+    return MESH_TYPES
 
 
 def getMeshTypesForImport():
     """Returns list of mesh types available for import"""
-    return [
-        typename
-        for typename in sorted(mesh_types)
-        if 'import' in mesh_types[typename] and 'extensions' in mesh_types[typename]
-    ]
+    return MESH_TYPES
 
 
 def getExportPath():
@@ -380,7 +329,7 @@ def importResources(restuple, filepath=None):
 
     # import new objects from resources.blend
     if new_objects:
-        with bpy.data.mechanisms.load(filepath) as (data_from, data_to):
+        with bpy.data.libraries.load(filepath) as (data_from, data_to):
             objects = [{'name': name} for name in new_objects if name in data_from.objects]
             if objects:
                 bpy.ops.wm.append(directory=filepath + "/Object/", files=objects)
