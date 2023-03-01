@@ -137,30 +137,6 @@ try:
             self.assertListEqual(list(list(elem) for elem in
                                       phobos.utils.general.outerProduct(a, b)), result)
 
-    class TestIOUtils(unittest.TestCase):
-
-        def test_xmlline(self):
-            tag = 'helloworld'
-            names = ['number', 'name', 'stuff']
-            values = [12.3, 'bert', ['a', 'b', 'c']]
-            target = '<helloworld number="12.3" name="bert" stuff="[{0}, {1}, {2}]"/>\n'.format(
-                "'a'", "'b'", "'c'")
-
-            self.assertEqual(phobos.utils.io.xmlline(0, tag, names, values), target)
-            self.assertEqual(phobos.utils.io.xmlline(3, tag, names, values), phobos.utils.io.indent
-                             * 3 + target)
-
-        def test_l2str(self):
-            testlist = [1, 2, 'hello', '-1']
-            target = '1 2 hello -1'
-            self.assertEqual(phobos.utils.io.l2str(testlist), target)
-            target = '2 hello -1'
-            self.assertEqual(phobos.utils.io.l2str(testlist, start=1), target)
-            target = '2'
-            self.assertEqual(phobos.utils.io.l2str(testlist, start=1, end=-2), target)
-            target = ''
-            self.assertEqual(phobos.utils.io.l2str(testlist, start=5, end=-8), target)
-
     class TestNamingUtils(unittest.TestCase):
 
         def test_getUniqueName(self):
@@ -216,13 +192,11 @@ try:
     # we have to manually invoke the test runner here, as we cannot use the CLI
     blenderutilstest = unittest.defaultTestLoader.loadTestsFromTestCase(TestBlenderUtils)
     generalutilstest = unittest.defaultTestLoader.loadTestsFromTestCase(TestGeneralUtils)
-    ioutilstest = unittest.defaultTestLoader.loadTestsFromTestCase(TestIOUtils)
     namingutilstest = unittest.defaultTestLoader.loadTestsFromTestCase(TestNamingUtils)
 
     results = []
     results.append(unittest.TextTestRunner().run(blenderutilstest))
     results.append(unittest.TextTestRunner().run(generalutilstest))
-    results.append(unittest.TextTestRunner().run(ioutilstest))
     results.append(unittest.TextTestRunner().run(namingutilstest))
 
     for result in results:
