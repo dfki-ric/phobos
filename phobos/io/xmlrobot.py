@@ -1,14 +1,15 @@
 import os
-from typing import List
 from copy import deepcopy
+from typing import List
 
 import numpy as np
 
 from . import representation, xml_factory, sensor_representations
 from .base import Representation
+from ..commandline_logging import get_logger
 from ..utils.transform import create_transformation, get_adjoint, inv
 from ..utils.tree import get_joints_depth_first
-from ..commandline_logging import get_logger
+
 log = get_logger(__name__)
 
 
@@ -19,7 +20,7 @@ class XMLRobot(Representation):
                  joints: List[representation.Joint] = None,
                  materials: List[representation.Material] = None,
                  transmissions: List[representation.Transmission] = None,
-                 sensors=None, xmlfile=None, is_human=False, urdf_version=None):
+                 sensors=None, is_human=False, urdf_version=None, xmlfile=None, _xmlfile=None):
         super().__init__()
         self.joints = []
         self.links = []
@@ -28,21 +29,21 @@ class XMLRobot(Representation):
         self.materials = []
         self.transmissions = []
         self.sensors = []
-        self.xmlfile = xmlfile
+        self.xmlfile =xmlfile if xmlfile is not None else _xmlfile
 
         # Default export mesh format from phobos.defs.MESH_TYPES
         self.mesh_format = "stl"
 
         if name is None or len(name) == 0:
             if self.xmlfile is not None:
-                self.name, _ = os.path.splitext(xmlfile)
+                self.name, _ = os.path.splitext(_xmlfile)
             else:
                 self.name = None
         else:
             self.name = name
 
         self.version = version
-        self.urdf_version = "1.0.0" if urdf_version is None else urdf_version
+        self.urdf_version = "1.0" if urdf_version is None else urdf_version
 
         if joints is not None:
             for joint in joints:
@@ -78,21 +79,25 @@ class XMLRobot(Representation):
         for entity in self.links + self.joints + self.sensors + self.materials:
             entity.link_with_robot(self, check_linkage_later=True)
         if not check_linkage_later:
-            self.check_linkage()
+            assert self.check_linkage()
 
     def unlink_entities(self, check_linkage_later=False):
         for entity in self.links + self.joints + self.sensors + self.materials:
             entity.unlink_from_robot(check_linkage_later=True)
         if not check_linkage_later:
-            self.check_unlinkage()
+            assert self.check_unlinkage()
 
     def check_linkage(self):
+        out = True
         for entity in self.links + self.joints + self.sensors + self.materials:
-            entity.check_linkage()
+            out &= entity.check_linkage()
+        return out
 
     def check_unlinkage(self):
+        out = True
         for entity in self.links + self.joints + self.sensors + self.materials:
-            entity.check_unlinkage()
+            out &= entity.check_unlinkage()
+        return out
 
     def relink_entities(self):
         self.unlink_entities()

@@ -1,31 +1,24 @@
-import datetime
-import sys
 import os
-import traceback
-from typing import List, Any
+from copy import deepcopy
 
+import numpy as np
 import pkg_resources
 import pydot
-from copy import deepcopy, copy
-from scipy.spatial.transform import Rotation as scipy_rot
-import numpy as np
 
-from ..defs import load_json, dump_json, KINEMATIC_TYPES, MESH_TYPES
 from .. import geometry as pgu, utils
+from ..commandline_logging import get_logger
+from ..defs import load_json, dump_json, KINEMATIC_TYPES
 from ..geometry import get_reflection_matrix
 from ..io import representation, sensor_representations
-from ..io.hyrodyn import Submechanism, Exoskeleton
+from ..io.hyrodyn import Submechanism
 from ..io.poses import JointPoseSet
-from ..io.xmlrobot import XMLRobot
 from ..io.smurfrobot import SMURFRobot
-from ..utils import transform, xml, misc, git, resources
-from ..utils.misc import read_number_from_config, regex_replace, create_dir, edit_name_string, execute_shell_command, \
-    duplicate, color_parser
+from ..utils import transform, misc, git, resources
+from ..utils.misc import read_number_from_config, regex_replace, create_dir, edit_name_string, execute_shell_command
 from ..utils.transform import create_transformation, inv, get_adjoint, round_array
 from ..utils.tree import find_close_ancestor_links, get_joints
-from ..utils.xml import read_relative_filename, transform_object, get_joint_info_dict
+from ..utils.xml import transform_object, get_joint_info_dict
 
-from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
 
@@ -45,328 +38,6 @@ class Robot(SMURFRobot):
         if name is not None:
             self.name = name
         self.submodel_defs = {}
-
-    def get_blender_model_dictionary(self):
-        from phobos.blender import defs
-        from phobos.blender.utils import naming as nUtils
-        import mathutils
-        model = {
-            'links': {},
-            'joints': {},
-            'sensors': {},
-            'motors': {},
-            'controllers': {},
-            'materials': {},
-            'interfaces': {},
-            'meshes': {},
-            'lights': {},
-            'groups': {},
-            'chains': {},
-            'date': datetime.datetime.now().strftime("%Y%m%d_%H:%M"),
-            'name': self.name,
-            'version': self.version,
-            'description': self.description,
-        }
-        for material in self.materials:
-            model["materials"][material.name] = {
-                "name": material.name,
-            }
-            for key, value in material.to_yaml().items():
-                if key.endswith("Color"):
-                    model["materials"][material.name][key[:-5]] = color_parser(value)
-
-        for link in self.links:
-            model["links"][link.name] = {
-                "name": link.name,
-                "children": self.get_children(link.name, targettype="link"),
-                "parent": self.get_parent(link.name, targettype="link"),
-                "visual": {},
-                "collision": {}
-            }
-            if link.inertial is not None:
-                model["links"][link.name]["inertial"] = {
-                    "pose": {'translation': link.inertial.origin.xyz,
-                             'rotation_euler': link.inertial.origin.rpy,
-                            },
-                    "mass": link.inertial.mass,
-                    "inertia": link.inertial.inertia.to_list(),
-                    "name": f"inertial_{link.name}"
-                }
-
-            for obj in link.visuals + link.collisions:
-                geometry_entry = {}
-                if type(obj.geometry) == representation.Mesh:
-                    geometry_entry["type"] = "mesh"
-                    geometry_entry["filename"] = obj.geometry.filepath
-                    geometry_entry["filepath"] = obj.geometry.filepath
-                    geometry_entry["scale"] = obj.geometry.scale
-                elif type(obj.geometry) == representation.Sphere:
-                    geometry_entry["type"] = "sphere"
-                    geometry_entry["radius"] = obj.geometry.radius
-                elif type(obj.geometry) == representation.Cylinder:
-                    geometry_entry["type"] = "cylinder"
-                    geometry_entry["radius"] = obj.geometry.radius
-                    geometry_entry["length"] = obj.geometry.length
-                elif type(obj.geometry) == representation.Box:
-                    geometry_entry["type"] = "box"
-                    geometry_entry["size"] = obj.geometry.size
-                model["links"][link.name]["visual" if type(obj) == representation.Visual else "collision"][obj.name] = {
-                    "name": obj.name,
-                    "pose": {'translation': obj.origin.xyz,
-                             'rotation_euler': obj.origin.rpy,
-                            },
-                    "geometry": geometry_entry
-                }
-                if type(obj) == representation.Visual and obj.material is not None:
-                    model["links"][link.name]["visual"][obj.name]["material"] = obj.material
-
-        for joint in self.joints:
-            model["joints"][joint.name] = {"name": joint.name,
-                                           "type": joint.joint_type,
-                                           "parent": joint.parent,
-                                           "child": joint.child,
-                                           }
-            if joint.axis is not None and joint.joint_type != "fixed":
-                model["joints"][joint.name]["axis"] = joint.axis
-            if joint.limit is not None:
-                model["joints"][joint.name]["limits"] = {
-                    "lower": joint.limit.lower,
-                    "upper": joint.limit.upper,
-                    "effort": joint.limit.effort,
-                    "velocity": joint.limit.velocity
-                }
-            if joint.mimic is not None:
-                for k, v in joint.mimic.to_yaml().items():
-                    model["joints"][joint.name]["mimic_"+k] = v
-            model["links"][joint.child]["pose"] = {'translation': joint.origin.xyz,
-                                                   'rotation_euler': joint.origin.rpy,
-                                                  }
-
-        for link in model["links"].keys():
-            if 'pose' not in model["links"][link]:
-                model["links"][link]['pose'] = {'translation': [0, 0, 0], 'rotation_euler': [0, 0, 0]}
-
-        for sensor in self.sensors:
-            model["sensors"][sensor.name] = {
-                "name": sensor.name,
-                "props": sensor.to_yaml(),
-                "type": sensor.type,
-                "material": None,
-                "shape": None,
-                "size": None,
-            }
-            if hasattr(sensor, "origin"):
-                location = mathutils.Matrix.Translation(tuple(sensor.origin.xyz) if sensor.origin.xyz is not None else (0,0,0))
-                rotation = (
-                    mathutils.Euler(tuple(sensor.origin.rpy) if sensor.origin.rpy is not None else (0,0,0), 'XYZ').to_matrix().to_4x4()
-                )
-                model["sensors"][sensor.name]["origin"] = location @ rotation
-            if 'material' in defs.def_settings['sensors'][sensor.blender_type]:
-                model["sensors"][sensor.name]["material"] = defs.def_settings['sensors'][sensor.blender_type]['material']
-            if 'shape' in defs.def_settings['sensors'][sensor.blender_type]:
-                model["sensors"][sensor.name]["shape"] = defs.def_settings['sensors'][sensor.blender_type]['shape']
-            if 'size' in defs.def_settings['sensors'][sensor.blender_type]:
-                model["sensors"][sensor.name]["size"] = defs.def_settings['sensors'][sensor.blender_type]['size']
-            if "parent" in model["sensors"][sensor.name]["props"]:
-                model["sensors"][sensor.name]["parent"] = model["sensors"][sensor.name]["props"]["parent"]
-            else:
-                if "link" in model["sensors"][sensor.name]["props"]:
-                    model["sensors"][sensor.name]["parent"] = model["sensors"][sensor.name]["props"]["link"]
-                elif "joint" in model["sensors"][sensor.name]["props"]:
-                    model["sensors"][sensor.name]["parent"] = nUtils.getObjectName(str(self.get_joint(model["sensors"][sensor.name]["props"]["joint"]).child))
-                else:
-                    model["sensors"][sensor.name]["parent"] = nUtils.getObjectName(str(self.get_root()))
-
-        # print(defs.def_settings['motors'])
-        for motor in self.motors:
-            model["motors"][motor.name] = {
-                "name": motor.name,
-                "props": motor.to_yaml(),
-                "material": None,
-                "shape": "resource://dc",
-                "size": 0.25,
-                "joint": str(motor.joint),
-                "parent": self.get_joint(motor.joint).child
-            }
-
-        for interface in self.interfaces:
-            model["interfaces"][interface.name] = interface.to_yaml()
-            if hasattr(interface, "origin"):
-                location = mathutils.Matrix.Translation(
-                    tuple(interface.origin.xyz) if interface.origin.xyz is not None else (0, 0, 0))
-                rotation = (
-                    mathutils.Euler(tuple(interface.origin.rpy) if interface.origin.rpy is not None else (0, 0, 0),
-                                    'XYZ').to_matrix().to_4x4()
-                )
-                model["interfaces"][interface.name]["origin"] = location @ rotation
-
-        model['lights'] = self.annotations.get('lights')
-        model['groups'] = self.annotations.get('groups')
-        model['chains'] = self.annotations.get('chains')
-
-        return model
-
-    @classmethod
-    def get_robot_from_blender_dict(cls, name='', objectlist=[], blender_model=None, xmlfile=None):
-        """
-        Uses blender workflow to access internal dictionary to call robot
-        representation. Idea is to use cli methods and formats for imports and
-        exports
-        """
-        import bpy
-        import phobos.blender.utils.selection as sUtils
-        from phobos.blender.model.models import deriveModelDictionary
-
-        if blender_model is None:
-            root = sUtils.getRoot(bpy.context.selected_objects[0])
-            blender_model = deriveModelDictionary(root, name, objectlist)
-            if blender_model is None:
-                log.warning("Warning name your model and assign a version, otherwise blender-dictionary is None")
-        try:
-            cli_joints = []
-            for key, values in blender_model['joints'].items():
-                if not values['type'] == 'fixed' and values.get("limits") is not None:
-                    cli_limit = representation.JointLimit(effort=values['limits'].get('effort'),
-                                                          velocity=values['limits'].get('velocity'),
-                                                          lower=values['limits'].get('lower'),
-                                                          upper=values['limits'].get('upper'))
-                else:
-                    cli_limit = None
-                mimic_dict = {}
-                for k, v in values.items():  # [TODO v2.0.0] this doesn't work, it seems phobos input dictionary is differently handled than the output dict
-                    if k.startswith("mimic_"):
-                        mimic_dict[k[len("mimic_"):]] = v
-
-                if "$dynamics" in values:
-                    values["dynamics"] = values.pop("$dynamics")
-                cli_joints.append(representation.Joint(
-                    name=values['name'],
-                    parent=values['parent'],
-                    child=values['child'],
-                    joint_type=values['type'],
-                    axis=values.get('axis'),
-                    origin=representation.Pose.from_matrix(np.array(values['pose']['rawmatrix'])),
-                    limit=cli_limit,
-                    springStiffness=values["dynamics"]["springStiffness"] if "dynamics" in values else None,
-                    damping=values["dynamics"]["springDamping"] if "dynamics" in values else None,
-                    safety_controller=None,
-                    calibration=None,
-                    mimic=representation.JointMimic(**mimic_dict) if len(mimic_dict) > 0 else None,
-                ))
-
-            cli_links = []
-            for key, values in blender_model['links'].items():
-                inert_entry = values.get('inertial')
-                pose_entry = inert_entry.get('pose')
-                inertia_val = inert_entry.get('inertia')
-                if inertia_val is not None:
-                    inert = representation.Inertial(mass=inert_entry['mass'],
-                                                    inertia=representation.Inertia(*inertia_val),
-                                                    origin=representation.Pose(
-                                                        xyz=pose_entry['translation'],
-                                                        rpy=pose_entry['rotation_euler']
-                                                    ))
-                else:
-                    inert = None
-                colls = []
-                for key2, entry in values["collision"].items():
-                    try:
-                        colls.append(representation.Collision(
-                            geometry=representation.GeometryFactory.create(**entry["geometry"]),
-                            origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
-                            name=entry["name"]))
-                    except TypeError:
-                        raise TypeError("You have probably not defined the geometry type for all collisions!")
-                vis = []
-                for key2, entry in values["visual"].items():
-                    try:
-                        vis.append(representation.Visual(geometry=representation.GeometryFactory.create(**entry["geometry"]),
-                                                         material=entry.get("material"),
-                                                         origin=representation.Pose.from_matrix(np.array(entry["pose"]['rawmatrix'])),
-                                                         name=entry["name"]))
-                    except TypeError:
-                        raise TypeError("You have probably not defined the geometry type for all visuals!")
-
-                cli_links.append(representation.Link(
-                    name=values['name'],
-                    visuals=vis,
-                    inertial=inert,
-                    collisions=colls
-                ))
-            mats = []
-            for key, value in blender_model['materials'].items():
-                mats.append(representation.Material(name=value.pop('name'),
-                                                    **value))
-            if blender_model['version'] != '1.0':
-                log.info(f"Versionscheck übersprungen. Version ist : {blender_model['version']}")
-            cli_robot = XMLRobot(
-                name=blender_model['name'],
-                version=None,
-                links=cli_links,
-                joints=cli_joints,
-                materials=mats,
-                xmlfile=xmlfile
-            )
-            new_robot = Robot()
-            new_robot.__dict__.update(cli_robot.__dict__)
-            new_robot.description = blender_model["description"]
-            new_robot.relink_entities()
-
-            if "sensors" in blender_model:
-                for key, values in blender_model['sensors'].items():
-                    # [TODO v2.0.0] "type" Abfragen an die verschiedenen User-Präferenzen angleichen
-                    if values.get('id') is not None:
-                        values['targets'] = [
-                            x for x in values['id'] if (
-                                    new_robot.get_joint(x) is not None or
-                                    new_robot.get_link(x) is not None or
-                                    new_robot.get_collision_by_name(x) is not None or
-                                    new_robot.get_visual_by_name(x) is not None
-                            )
-                        ]
-                        values.pop('id')
-                    if values["type"].upper() in ["CAMERASENSOR", "CAMERA"]:
-                        new_robot.add_sensor(
-                            sensor_representations.CameraSensor(
-                                         hud_height=240 if values.get('hud_height') is None else values.pop('hud_height'),
-                                         hud_width=0 if values.get('hud_width') is None else values.pop('hud_width'),
-                                         origin=None if values.get('origin') is None else representation.Pose(**values.pop("origin")),
-                                         **values))
-                    else:
-                        new_robot.add_sensor(getattr(sensor_representations, values["type"])(**values))
-
-            if "motors" in blender_model:
-                motors = blender_model["motors"]
-                for key, value in motors.items():
-                    name = value.pop('name')
-                    joint = value.pop('joint')
-                    new_robot.add_motor(representation.Motor(name=name, joint=new_robot.get_joint(joint), **value))
-
-            if "interfaces" in blender_model:
-                interfaces = blender_model["interfaces"]
-                for key, value in interfaces.items():
-                    parent = value.pop('parent')
-                    pose = value.pop('pose')
-                    new_robot.add_aggregate("interfaces", representation.Interface(
-                        parent=new_robot.get_link(parent),
-                        origin=representation.Pose.from_matrix(np.array(pose['rawmatrix'])),
-                        **value
-                    ))
-
-            additional_info = {'lights': blender_model.get('lights'),
-                               'groups': blender_model.get('groups'),
-                               'chains': blender_model.get('chains'),
-                               # 'date': blender_model.get('date')
-                               }
-
-            for key, value in additional_info.items():
-                if value is not None and key not in new_robot.named_annotations.keys():
-                    new_robot.add_named_annotation(key, additional_info[key])
-            new_robot.relink_entities()
-        except Exception as e:
-            print(blender_model)
-            raise e
-        return new_robot
 
     # export methods
     def export_meshes(self, mesh_output_dir, format=None):
@@ -570,9 +241,12 @@ class Robot(SMURFRobot):
 
         return model_file
 
-    def export_smurf(self, outputdir=None, outputfile=None, robotfile=None, check_submechs=True, with_submodel_defs=False):
+    def export_smurf(self, outputdir=None, outputfile=None, robotfile=None,
+                     check_submechs=True, with_submodel_defs=False,
+                     with_meshes=True, mesh_format=None, additional_meshes=None, rel_mesh_pathes=None):
         """ Export self and all annotations inside a given folder with structure
         """
+        assert self.check_linkage()
         # Convert to absolute path
         if outputfile is not None:
             assert outputdir is None
@@ -589,6 +263,18 @@ class Robot(SMURFRobot):
         if len(self.submechanisms) > 0 or len(self.exoskeletons) > 0:
             if not os.path.exists(submech_dir):
                 os.makedirs(submech_dir)
+        self.link_entities()
+        # meshes
+        if with_meshes:
+            _mesh_format = mesh_format
+            if _mesh_format is None:
+                _mesh_format = self.mesh_format
+            assert _mesh_format is not None
+            if additional_meshes is None:
+                additional_meshes = []
+            meshes = [_mesh_format] + additional_meshes
+            for mf in [f.lower() for f in meshes]:
+                self.export_meshes(mesh_output_dir=os.path.join(outputdir, rel_mesh_pathes[mf]), format=mf)
 
         # Export the smurf files
         smurf_dir = os.path.join(outputdir, "smurf")
@@ -617,9 +303,9 @@ class Robot(SMURFRobot):
                                                  only_return=True)
                 sm.file_path = f"../submechanisms/{str(sm)}.urdf"
                 if not os.path.isfile(sm.file_path):
-                    _submodel.export_urdf(outputfile=os.path.normpath(os.path.join(outputdir, sm.file_path)))
+                    _submodel.export_urdf(outputfile=os.path.normpath(os.path.join(outputdir, "submechanisms", f"{str(sm)}.urdf")))
                     _submodel.export_joint_limits(
-                        outputdir=os.path.normpath(os.path.join(outputdir, "../submechanisms")),
+                        outputdir=os.path.normpath(os.path.join(outputdir, "submechanisms")),
                         file_name=f"joint_limits_{str(sm)}.yml"
                     )
                 else:
@@ -654,8 +340,12 @@ class Robot(SMURFRobot):
 
         # submodel list
         if with_submodel_defs and len(self.submodel_defs) > 0:
+            out_submodel_defs = {}
+            for name, definition in self.submodel_defs.items():
+                out_submodel_defs[name] = deepcopy(definition)
+                out_submodel_defs[name]["export_dir"] = os.path.relpath(out_submodel_defs[name]["export_dir"], smurf_dir)
             with open(os.path.join(smurf_dir, "{}_submodels.yml".format(self.name)), "w+") as stream:
-                stream.write(dump_json({"submodels": self.submodel_defs}, default_style=False))
+                stream.write(dump_json({"submodels": out_submodel_defs}, default_style=False))
                 export_files.append(os.path.split(stream.name)[-1])
 
         for k, v in self.named_annotations.items():
@@ -935,6 +625,7 @@ class Robot(SMURFRobot):
 
     def export(self, outputdir, export_config, rel_mesh_pathes=None, ros_pkg_name=None, no_smurf=False,
                ros_pkg_later=False, check_submechs=True, with_meshes=True):
+        assert self.check_linkage()
         outputdir = os.path.abspath(outputdir)
         if rel_mesh_pathes is None:
             rel_mesh_pathes = resources.get_default_rel_mesh_pathes()
@@ -985,7 +676,7 @@ class Robot(SMURFRobot):
                 if export["name"] not in self.submodel_defs:
                     export_robot_instance = self.define_submodel(
                         name=export["name"],
-                        start=export["start"] if "start" in export else str(export_robot_instance.get_root()),
+                        start=export["start"] if "start" in export else str(self.get_root()),
                         stop=export["stop"] if "stop" in export else None,
                         include_unstopped_branches=export["include_unstopped_branches"] or "stop" not in export
                         if "include_unstopped_branches" in export else None,
@@ -1015,6 +706,7 @@ class Robot(SMURFRobot):
             elif export["type"] == "pdf":
                 self.export_pdf(outputfile=os.path.join(outputdir, self.name + ".pdf"))
             elif export["type"] == "kccd":
+                export_robot_instance = self.duplicate()
                 export_robot_instance.export_kccd(
                     outputdir=outputdir,
                     rel_iv_meshes_path=rel_mesh_pathes["iv"],
@@ -1027,10 +719,13 @@ class Robot(SMURFRobot):
                     kwargs["file_name"] = export["file_name"]
                 if "joints" in export:
                     kwargs["joint_desc"] = export["joints"]
-                export_robot_instance.export_joint_limits(
+                self.export_joint_limits(
                     outputdir=outputdir,
                     **kwargs
                 )
+            elif export["type"] == "smurf":
+                # will be exported by default
+                pass
             else:
                 log.error(f"Can't export according to following export configuration:\n{export}")
         # export smurf
@@ -1039,7 +734,8 @@ class Robot(SMURFRobot):
                 outputdir=outputdir,
                 robotfile=xml_file_in_smurf,
                 check_submechs=check_submechs,
-                with_submodel_defs=True
+                with_submodel_defs=True,
+                with_meshes=False
             )
         # export ros package files
         if ros_pkg and not ros_pkg_later:
@@ -2147,7 +1843,7 @@ class Robot(SMURFRobot):
         for link in self.links:
             for vc in link.collisions:
                 if isinstance(vc.geometry, representation.Mesh) and not vc.geometry.is_valid():
-                    log.warning(f"Mesh-Geometry {vc.name} {vc.geometry.input_file} is empty/to small; removing the corresponding {repr(type(vc)).split('.')[-1]}!")
+                    log.warning(f"Mesh-Geometry {vc.name} {vc.geometry.input_file} is empty/to small; removing the corresponding {repr(type(vc)).split('.')[-1][:-2]}!")
                     link.remove_aggregate(vc)
 
     def attach(self, other, joint, do_not_rename=False, name_prefix="", name_suffix="_2", link_other=False):

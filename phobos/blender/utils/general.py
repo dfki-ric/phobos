@@ -13,12 +13,15 @@
 Contains the basic utility functions to round numbers, convert types etc.
 """
 
-import re
 import os
+import re
 import shutil
 from datetime import datetime
+
 import mathutils
-from phobos.blender.phoboslog import log
+
+from ..phoboslog import log
+from ..utils import naming as nUtils
 
 
 def is_float(text):
@@ -234,8 +237,6 @@ def calculateSum(objects, numeric_prop):
                 "WARNING",
             )
         except TypeError:
-            import phobos.blender.utils.naming as nUtils
-
             log(
                 "Could not add this type to the sum: "
                 + str(type(obj[numeric_prop]))

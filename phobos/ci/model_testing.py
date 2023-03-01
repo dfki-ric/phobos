@@ -1,16 +1,15 @@
-import sys
 from copy import deepcopy
 import numpy as np
-import subprocess
 import os
 
+from ..commandline_logging import get_logger
 from ..defs import *
 from ..io import representation
 from ..io.representation import Pose
 from ..utils import xml
 from ..utils.hyrodyn import get_load_report, debug_report
 from ..utils.misc import execute_shell_command, list_files
-from ..commandline_logging import get_logger
+
 log = get_logger(__name__)
 
 
@@ -34,7 +33,7 @@ class ModelTest(object):
                 self.new_sm_hml_test += [{
                     "name": au["name"],
                     "urdf": os.path.join(sm_path, au["name"], "urdf", au["name"] + ".urdf"),
-                    "submech": os.path.join(sm_path, au["name"], "smurf", au["name"] + "_submechanisms.yml")
+                    "submech": os.path.normpath(os.path.join(sm_path, au["name"], "smurf", au["name"] + "_submechanisms.yml"))
                 }]
                 self.new_sm_hml_test[-1]["report"] = get_load_report(
                     self.new_sm_hml_test[-1]["urdf"],
@@ -55,8 +54,8 @@ class ModelTest(object):
                     "Trying to load old model in hyrodyn:",
                     self.old.xmlfile,
                     "(file exists)" if os.path.exists(self.old.xmlfile) else "(does not exist)",
-                    os.path.join(self.old.submechanisms_file),
-                    "(file exists)" if os.path.exists(os.path.join(self.old.submechanisms_file))
+                    self.old.submechanisms_file,
+                    "(file exists)" if os.path.exists(self.old.submechanisms_file)
                     else "(does not exist)",
                     flush=True
                 )
@@ -83,9 +82,9 @@ class ModelTest(object):
         if not HYRODYN_AVAILABLE:
             log.warning('Info procedure swing_my_robot not possible: Hyrodyn not present')
             return
-        submech_file = self.new.submechanisms_file_path
+        submech_file = self.new.submechanisms_file
         cmd = "swing_my_robot.py"
-        if self.new.submechanisms_file is not None and os.path.exists(self.new.submechanisms_file):
+        if submech_file is not None and os.path.exists(submech_file):
             log.info(f'Submechs: {submech_file} {"exists!" if os.path.isfile(submech_file) else "does not exist!"}')
             cmd += " --submechanism_yml " + submech_file
         limits_file = os.path.join(self.new.modeldir, "submechanisms/joint_limits.yml")
@@ -130,7 +129,7 @@ class ModelTest(object):
                 success &= joint_name not in joint_names
         # [TODO later] check the others
         # check if meshes are there
-        log.debug(f"Checking meshes for {self.new.robot.xmlfil}")
+        log.debug(f"Checking meshes for {self.new.robot.xmlfile}")
         for link in self.new.robot.links:
             for mesh in [c.geometry.filepath for c in link.collisions+link.visuals if isinstance(c.geometry, representation.Mesh)]:
                 mesh_path = xml.read_relative_filename(mesh, self.new.robot.xmlfile)

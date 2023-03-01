@@ -16,9 +16,10 @@ Contains the functions required to model a joint within Blender.
 import bpy
 import mathutils
 import numpy as np
-from phobos.blender.phoboslog import log
-import phobos.blender.utils.io as ioUtils
-from phobos.blender.utils.validation import validate
+
+from ..phoboslog import log
+from ..utils import io as ioUtils
+from ..utils.validation import validate
 
 
 def getJointConstraints(joint):
@@ -117,8 +118,10 @@ def setJointConstraints(
     jointtype,
     lower=0.0,
     upper=0.0,
-    spring=0.0,
-    damping=0.0,
+    spring=None,
+    damping=None,
+    velocity=None,
+    effort=None,
     maxeffort_approximation=None,
     maxspeed_approximation=None,
     axis = None
@@ -137,6 +140,8 @@ def setJointConstraints(
       jointtype(str): joint type (revolute, continuous, prismatic, fixed, floating, planar)
       lower(float, optional): lower limit of the constraint (defaults to 0.)
       upper(float, optional): upper limit of the constraint (defaults to 0.)
+      velocity(float, optional): velocity limit of the constraint (defaults to 0.)
+      effort(float, optional): effort limit of the constraint (defaults to 0.)
       spring(float, optional): spring stiffness for the joint (Default value = 0.0)
       damping(float, optional): spring damping for the joint (Default value = 0.0)
       maxeffort_approximation(dict, optional): function and coefficients for maximum effort (Default value = None)
@@ -145,6 +150,21 @@ def setJointConstraints(
     Returns:
 
     """
+    if lower is None:
+        lower = 0.0
+    if upper is None:
+        upper = 0.0
+    if velocity is None:
+        velocity = 0.0
+    if effort is None:
+        effort = 0.0
+    if spring is None:
+        spring = 0.0
+    if damping is None:
+        damping = 0.0
+
+    bpy.ops.object.select_all(action='DESELECT')
+    joint.select_set(True)
     if joint.phobostype != 'link':
         log("Cannot set joint constraints. Not a link: {}".format(joint), 'ERROR')
         return
@@ -156,14 +176,17 @@ def setJointConstraints(
     for cons in joint.pose.bones[0].constraints:
         joint.pose.bones[0].constraints.remove(cons)
 
+    # set axis
     if axis is not None:
+        if mathutils.Vector(tuple(axis)).length == 0.:
+            log('Axis of joint {0} is of zero length: '.format(joint.name), 'ERROR')
         axis = (np.array(axis) / np.linalg.norm(axis)).tolist()
         if np.linalg.norm(axis) != 0:
             bpy.ops.object.mode_set(mode='EDIT')
             editbone = joint.data.edit_bones[0]
             length = editbone.length
-            axis = mathutils.Vector(tuple(axis))
-            editbone.tail = editbone.head + axis.normalized() * length
+            joint["joint/axis"] = mathutils.Vector(tuple(axis))
+            editbone.tail = editbone.head + mathutils.Vector(tuple(axis)).normalized() * length
             bpy.ops.object.mode_set(mode='POSE')
 
     # add spring & damping
@@ -177,10 +200,14 @@ def setJointConstraints(
 
         # TODO we should make sure that the rigid body constraints gets changed
         # if the values below are changed manually by the user
-        joint['joint/dynamics/springStiffness'] = spring
-        joint['joint/dynamics/springDamping'] = damping
+        joint['joint/dynamics/spring_stiffness'] = spring
+        joint['joint/dynamics/damping'] = damping
 
     # set constraints accordingly
+    joint['joint/limits/lower'] = lower
+    joint['joint/limits/upper'] = upper
+    joint.data.bones.active = joint.pose.bones[0].bone
+    joint.data.bones.active.select = True
     if jointtype == 'revolute':
         set_revolute(joint, lower, upper)
     elif jointtype == 'continuous':
@@ -201,6 +228,8 @@ def setJointConstraints(
 
     # check for approximation functions of effort and speed
     if jointtype in ['revolute', 'continuous', 'prismatic']:
+        joint['joint/velocity'] = velocity
+        joint['joint/effort'] = effort
         if maxeffort_approximation:
             if all(elem in ['function', 'coefficients'] for elem in maxeffort_approximation):
                 joint['joint/maxeffort_approximation'] = maxeffort_approximation['function']

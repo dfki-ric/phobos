@@ -1,21 +1,19 @@
 import os
-import sys
 import re
-import filecmp
-import pkg_resources
-import yaml
-import numpy as np
 from copy import deepcopy, copy
 
-from .. import defs
-from ..defs import load_json, dump_json, dump_yaml, KINEMATIC_TYPES
+import numpy as np
+import pkg_resources
+import yaml
 
-from ..core import Robot
-from ..geometry import replace_collision, join_collisions, remove_collision
-from ..io.hyrodyn import ConstraintAxis
-from ..utils import misc, git, xml, transform, tree, resources
-from ..io import representation, sensor_representations, poses
 from ..commandline_logging import get_logger
+from ..core import Robot
+from ..defs import load_json, dump_yaml, KINEMATIC_TYPES
+from ..geometry import replace_collision, join_collisions, remove_collision
+from ..io import representation, sensor_representations, poses
+from ..io.hyrodyn import ConstraintAxis
+from ..utils import misc, git, xml, transform, resources
+
 log = get_logger(__name__)
 
 SUBMECHS_VIA_ASSEMBLIES = False
@@ -688,6 +686,7 @@ class BaseModel(yaml.YAMLObject):
         return True
 
     def export(self):
+        self.robot.relink_entities()
         ros_pkg_name = self.robot.export(outputdir=self.exportdir, export_config=self.export_config,
                                          rel_mesh_pathes=self.export_meshes, ros_pkg_later=True)
         for vc in self.robot.collisions + self.robot.visuals:

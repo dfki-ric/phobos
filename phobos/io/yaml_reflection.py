@@ -1,4 +1,3 @@
-import json
 from xml.etree import ElementTree as ET
 
 from .base import Linkable

@@ -9,8 +9,8 @@
 # If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 # -------------------------------------------------------------------------------
 
-import sys
 import os.path as path
+
 import bpy
 
 
@@ -41,7 +41,7 @@ def getConfigPath():
 
     """
     configpath = path.normpath(
-        path.join(bpy.utils.user_resource(resource_type='SCRIPTS', path="addons"), "phobos", "config")
+        path.join(bpy.utils.user_resource(resource_type='SCRIPTS', path="addons"), "phobos", "data", "blender")
     )
     return configpath
 

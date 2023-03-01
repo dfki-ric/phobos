@@ -13,17 +13,14 @@
 Contains all Blender operators for editing of Phobos models.
 """
 
+import json
 import math
 import os
-import json
-import inspect
-import sys
 from datetime import datetime
 
 import bpy
 import mathutils
 import numpy as np
-from bpy.types import Operator
 from bpy.props import (
     BoolProperty,
     IntProperty,
@@ -33,26 +30,29 @@ from bpy.props import (
     FloatVectorProperty,
     BoolVectorProperty,
 )
+from bpy.types import Operator
 from idprop.types import IDPropertyGroup
 
-import phobos.blender.defs as defs
-import phobos.blender.display as display
-import phobos.blender.model.inertia as inertialib
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.general as gUtils
-import phobos.blender.utils.io as ioUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.utils.editing as eUtils
-import phobos.blender.utils.validation as vUtils
-import phobos.blender.model.joints as jUtils
-import phobos.blender.model.links as modellinks
-from phobos.blender.io import blender2phobos, phobos2blender
-import phobos.blender.model.controllers as controllermodel
-from phobos.blender.operators.generic import addObjectFromYaml
-from phobos.blender.phoboslog import log
+from .. import defs as defs
+from .. import display as display
+from ..io import phobos2blender
+from ..model import controllers as controllermodel
+from ..model import inertia as inertialib
+from ..model import joints as jUtils
+from ..model import links as modellinks
+from ..operators.generic import addObjectFromYaml
+from ..phobosgui import prev_collections
+from ..phoboslog import log
+from ..utils import blender as bUtils
+from ..utils import editing as eUtils
+from ..utils import general as gUtils
+from ..utils import io as ioUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
+from ..utils import validation as vUtils
 
-from phobos.io import representation
+from ...io import representation
+from ...utils import resources
 
 
 class SafelyRemoveObjectsFromSceneOperator(Operator):
@@ -1487,8 +1487,8 @@ class DefineJointConstraintsOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     # [TODO v2.0.0] Create motor for active joints
-    passive : BoolProperty(
-        name='Passive', default=False, description='Make the joint passive (no actuation)'
+    active : BoolProperty(
+        name='Active', default=False, description='Add an motor to the joint'
     )
 
     useRadian : BoolProperty(
@@ -1542,27 +1542,25 @@ class DefineJointConstraintsOperator(Operator):
 
         # enable/disable optional parameters
         if not self.joint_type == 'fixed':
-            # [TODO v2.0.0] Create motor for active joints
-            layout.prop(self, "passive", text="makes the joint passive (no actuation)")
-            if self.joint_type != "sphere":
+            layout.prop(self, "active", text="Active (adds a default motor you can adapt later)")
+            if self.joint_type in ["revolute", "prismatic", "continuous"]:
                 layout.prop(self, "axis", text="Sets the joint axis")
             if self.joint_type == "revolute":
                 layout.prop(self, "useRadian", text="use radian")
-            if self.joint_type != 'fixed':
+            layout.prop(
+                self,
+                "maxeffort",
+                text="max effort ["
+                + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'),
+            )
+            if self.joint_type in ['revolute', 'continuous']:
                 layout.prop(
                     self,
-                    "maxeffort",
-                    text="max effort ["
-                    + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'),
+                    "maxvelocity",
+                    text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"),
                 )
-                if self.joint_type in ['revolute', 'continuous']:
-                    layout.prop(
-                        self,
-                        "maxvelocity",
-                        text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"),
-                    )
-                else:
-                    layout.prop(self, "maxvelocity", text="max velocity [m/s]")
+            else:
+                layout.prop(self, "maxvelocity", text="max velocity [m/s]")
             if self.joint_type == 'revolute':
                 layout.prop(self, "lower", text="lower [rad]" if self.useRadian else "lower [°]")
                 layout.prop(self, "upper", text="upper [rad]" if self.useRadian else "upper [°]")
@@ -1603,6 +1601,7 @@ class DefineJointConstraintsOperator(Operator):
         lower = 0
         upper = 0
         velocity = self.maxvelocity
+        effort = self.maxeffort
 
         # lower and upper limits
         if self.joint_type in ["revolute", "continuous", "sphere"]:
@@ -1621,31 +1620,39 @@ class DefineJointConstraintsOperator(Operator):
         elif self.joint_type == "prismatic":
             lower = self.lower
             upper = self.upper
-
+        axis = None
+        if self.joint_type in ["revolute", "prismatic", "continuous"]:
+            axis = self.axis
         # set properties for each joint
         for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
             context.view_layer.objects.active = joint
             jUtils.setJointConstraints(
-                joint, self.joint_type, lower, upper, self.spring, self.damping,
-                axis=(np.array(self.axis) / np.linalg.norm(self.axis)).tolist()
+                joint=joint,
+                jointtype=self.joint_type,
+                lower=lower,
+                upper=upper,
+                velocity=velocity,
+                effort=effort,
+                spring=self.spring,
+                damping=self.damping,
+                axis=(np.array(axis) / np.linalg.norm(axis)).tolist() if axis is not None else None
             )
 
-            # TODO is this still needed? Or better move it to the utility function
-            if self.joint_type != 'fixed':
-                joint['joint/limits/effort'] = self.maxeffort
-                joint['joint/limits/velocity'] = velocity
-            else:
-                if "joint/limits/effort" in joint:
-                    del joint["joint/limits/effort"]
-                if "joint/limits/velocity" in joint:
-                    del joint["joint/limits/velocity"]
+            if "joint/name" not in joint:
+                joint["joint/name"] = joint.name + "_joint"
 
-            # [TODO v2.0.0] Create motor for active joints
-            # if self.passive:
-            #     joint['joint/passive'] = "$true"
-            # else:
-            #     # TODO show up in text edit which joints are to change?
-            #     log("Please add motor to active joint in " + joint.name, "INFO")
+            motor_name = joint.get("joint/name", joint.name) + "_motor"
+            if self.active and not any([child.phobostype == "motor" for child in sUtils.getImmediateChildren(joint)])\
+                    and sUtils.getObjectByName(motor_name) is None:
+                phobos2blender.createMotor(
+                    motor=representation.Motor(
+                        name=motor_name,
+                        joint=joint.get("joint/name", joint.name),
+                        **resources.get_default_motor()
+                    ),
+                    linkobj=joint
+                )
+
         return {'FINISHED'}
 
     @classmethod
@@ -2089,7 +2096,10 @@ def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args
         newlink = modellinks.createLink(
             {'scale': 1., 'name': 'link_' + sensor_dict['name'], 'matrix': active_obj.matrix_world}
         )
-        jUtils.setJointConstraints(newlink, 'fixed', 0., 0., 0., 0.)
+        jUtils.setJointConstraints(
+            joint=newlink,
+            jointtype='fixed'
+        )
 
     # we don't need to check the parentlink, as the calling operator
     # does make sure it exists (or a new link is created instead)
@@ -2174,7 +2184,6 @@ class AddSensorOperator(Operator):
         Returns:
 
         """
-        from phobos.blender.phobosgui import prev_collections
 
         phobosIcon = prev_collections["phobos"]["phobosIcon"].icon_id
         categories = [t for t in defs.def_subcategories['sensors']]
@@ -2379,7 +2388,6 @@ class AddControllerOperator(Operator):
         Returns:
 
         """
-        from phobos.blender.phobosgui import prev_collections
 
         phobosIcon = prev_collections["phobos"]["phobosIcon"].icon_id
         categories = [t for t in defs.def_subcategories['controllers']]

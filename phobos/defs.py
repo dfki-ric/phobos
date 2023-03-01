@@ -7,6 +7,7 @@ MESH_TYPES = ["dae", "stl", "obj", "bobj"]
 EXPORT_TYPES = ["smurf", "urdf", "sdf", "joint_limits", "pdf"]
 IMPORT_TYPES = ["smurf", "urdf", "sdf"]
 KINEMATIC_TYPES = ["urdf", "sdf"]
+SCENE_TYPES = ["smurfs", "sdf"]
 
 HYRODYN_AVAILABLE = False
 BASE_LOG_LEVEL = None

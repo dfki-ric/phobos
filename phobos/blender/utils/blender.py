@@ -14,14 +14,14 @@ Contains all utility functions that are connected to Blender functionality first
 """
 
 import os
+
 import bpy
 import mathutils
-import phobos.blender.defs as defs
-import phobos.blender.model.materials as materials
-from phobos.blender.phoboslog import log
-from phobos.blender.phobossystem import getConfigPath
-from . import selection as sUtils
+
 from . import naming as nUtils
+from . import selection as sUtils
+from ..model import materials
+from ..phoboslog import log
 
 
 def update():

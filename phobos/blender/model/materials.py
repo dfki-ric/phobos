@@ -14,8 +14,9 @@ Contains the functions required to model a material in Blender.
 """
 
 import bpy
-import phobos.blender.defs as defs
-from phobos.blender.phoboslog import log
+
+from .. import defs
+from ..phoboslog import log
 
 
 def createPhobosMaterials():
@@ -25,14 +26,14 @@ def createPhobosMaterials():
         mat = defs.definitions['materials'][materialname]
         mat['name'] = materialname
         if materialname not in materials:
-            mat = bpy.data.materials.new(mat['name'])
-            mat.diffuse_color = tuple(mat['diffuse'])
+            new_material = bpy.data.materials.new(mat['name'])
+            new_material.diffuse_color = tuple(mat['diffuse'])
             if 'specular' in mat:
-                mat.specular_color = tuple(mat['specular'][:3])
-                mat.specular_intensity = 0.5
+                new_material.specular_color = tuple(mat['specular'][:3])
+                new_material.specular_intensity = 0.5
 
 
-def assignMaterial(obj, materialname):
+def assignMaterial(obj, materialname, override=True):
     """Assigns a material by name to an object.
     
     This avoids creating multiple copies and also omits duplicate material slots in the specified
@@ -51,6 +52,9 @@ def assignMaterial(obj, materialname):
         else:
             log("Material '" + materialname + "' is not defined.", "ERROR")
             return None
+
+    if override and len(obj.data.materials) >= 1:
+        obj.data.materials.clear()
 
     # add material slot never twice
     if materialname not in obj.data.materials:

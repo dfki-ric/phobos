@@ -13,23 +13,20 @@
 Contains the Blender operators used to edit/add poses for Phobos models.
 """
 
-import sys
-import inspect
-
-import bpy
-import blf
 import bgl
-from bpy.props import StringProperty, FloatProperty, FloatVectorProperty, EnumProperty
+import blf
+import bpy
+from bpy.props import StringProperty, EnumProperty
 from bpy.types import Operator
-from phobos.blender.phoboslog import log
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.model.poses as poses
-import phobos.blender.model.models as models
+
+from ..model import poses as poses
+from ..utils import blender as bUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
 
 # FIXME: this is ugly
 current_robot_name = ''
+
 
 # this is partly redundant, but currently only needed here
 def get_robot_names(scene, context):

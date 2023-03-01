@@ -13,8 +13,9 @@
 Contains the utility functions to rename objects, add/remove namespaces etc.
 """
 
-import bpy
 import re
+
+import bpy
 
 
 def getUniqueName(newname, names):

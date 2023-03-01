@@ -13,7 +13,6 @@ INFO = 'Converts the given input robot file to SDF/URDF/PDF/SMURF.'
 
 def main(args):
     import argparse
-    import sys
     import os.path as path
     from ..core.robot import Robot
     from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL

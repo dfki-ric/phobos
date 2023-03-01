@@ -13,18 +13,20 @@
 Contains all functions to model poses in Blender.
 """
 
-import os
 import json
+import os
+
 import bpy
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.editing as eUtils
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.general as gUtils
-import phobos.blender.utils.io as ioUtils
-from phobos.blender.utils.validation import validate
-from phobos.blender.phoboslog import log
-from phobos.blender.utils.io import securepath
+
+from ..phoboslog import log
+from ..utils import blender as bUtils
+from ..utils import editing as eUtils
+from ..utils import general as gUtils
+from ..utils import io as ioUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
+from ..utils.io import securepath
+from ..utils.validation import validate
 
 
 @validate('object_pose')

@@ -1,18 +1,16 @@
-from copy import deepcopy, copy
 import os
+from copy import deepcopy
 
-
-from .poses import JointPoseSet
-from ..io import sensor_representations
-from ..io import representation
-from ..io.xmlrobot import XMLRobot
-from ..io.parser import parse_xml
 from .hyrodyn import Submechanism, Exoskeleton
-from ..geometry import import_mesh
-from ..utils import tree
-from ..defs import load_json, dump_json, dump_yaml
-from ..utils.transform import inv
+from .poses import JointPoseSet
 from ..commandline_logging import get_logger
+from ..defs import load_json
+from ..io import representation
+from ..io import sensor_representations
+from ..io.parser import parse_xml
+from ..io.xmlrobot import XMLRobot
+from ..utils import tree
+
 log = get_logger(__name__)
 
 
@@ -124,24 +122,26 @@ class SMURFRobot(XMLRobot):
         for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
             entity.link_with_robot(self, check_linkage_later=True)
         if not check_linkage_later:
-            self.check_linkage()
+            assert self.check_linkage()
 
     def unlink_entities(self, check_linkage_later=False):
         super(SMURFRobot, self).unlink_entities(check_linkage_later=True)
         for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
             entity.unlink_from_robot(check_linkage_later=True)
         if not check_linkage_later:
-            self.check_unlinkage()
+            assert self.check_unlinkage()
 
     def check_linkage(self):
-        super(SMURFRobot, self).check_linkage()
+        out = super(SMURFRobot, self).check_linkage()
         for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
-            entity.check_linkage()
+            out &= entity.check_linkage()
+        return out
 
     def check_unlinkage(self):
-        super(SMURFRobot, self).check_unlinkage()
+        out = super(SMURFRobot, self).check_unlinkage()
         for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
-            entity.check_unlinkage()
+            out &= entity.check_unlinkage()
+        return out
 
     def read_smurffile(self, smurffile):
         if smurffile is not None:
@@ -156,9 +156,13 @@ class SMURFRobot(XMLRobot):
                     if not os.path.isabs(f):
                         self.inputfiles[i] = os.path.join(os.path.dirname(self.smurffile), f)
         if self.inputfiles is not None:
+            xml_found = False
             for f in self.inputfiles:
                 # Get abs
-                if f.lower().endswith('.urdf'):
+                if f.lower().endswith('urdf') or f.lower().endswith('sdf'):
+                    if xml_found:
+                        raise AssertionError("Multiple kinematics-XML-files (SDF/URDF) given in SMURF-file")
+                    xml_found = True
                     self.xmlfile = os.path.abspath(f)
                     self.inputfiles.remove(f)
 

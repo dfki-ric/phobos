@@ -3,8 +3,8 @@ from copy import deepcopy
 
 import numpy as np
 
-from ..io.smurf_reflection import SmurfBase
 from ..core.robot import Robot
+from ..io.smurf_reflection import SmurfBase
 from ..utils.transform import rpy_to_matrix, quaternion_to_matrix
 
 WORLD = "world"

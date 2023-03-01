@@ -12,10 +12,10 @@
 from copy import deepcopy as dc
 
 import bpy
-import phobos.blender.defs as defs
-import phobos.blender.utils.naming as nUtils
-from phobos.blender.phoboslog import log
 
+from .. import defs
+from ..phoboslog import log
+from ..utils import naming as nUtils
 
 checkMessages = {"NoObject": []}
 

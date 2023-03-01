@@ -14,12 +14,12 @@ Contains different definitions for Phobos. Additional defintions are parsed from
 added to this module at runtime.
 """
 
-import os
 import glob
+import json
+import os
 import re
 
-import json
-import phobos.blender.phobossystem as phobossystem
+from . import phobossystem
 
 # Phobos information
 version = '1.0.1 "Capricious Choutengan"'
@@ -168,7 +168,6 @@ def __evaluateString(s):
     """
     # TODO math is not needed anymore...
     # needed for evaluation of strings (see below)
-    import math
 
     p = re.compile('&.*&')
     for ma in p.findall(s):
@@ -212,6 +211,6 @@ def __parseAllYAML(path):
 
 
 # Update definitions from files
-definitionpath = os.path.join(phobossystem.getConfigPath() + '/definitions')
+definitionpath = os.path.join(phobossystem.getConfigPath() + 'definitions')
 print("Parsing definitions from:", definitionpath)
 updateDefs(definitionpath)

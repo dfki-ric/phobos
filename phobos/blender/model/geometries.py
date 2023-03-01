@@ -9,19 +9,6 @@
 # If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 # -------------------------------------------------------------------------------
 
-import os
-import bpy
-import mathutils
-import phobos.blender.defs as defs
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.editing as eUtils
-import phobos.blender.io.meshes.meshes as meshes
-from phobos.blender.model.materials import assignMaterial
-from phobos.blender.phoboslog import log
-from phobos.blender.utils.validation import validate
-
 
 def getLargestDimension(geometry):
     """

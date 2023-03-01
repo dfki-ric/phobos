@@ -1,26 +1,23 @@
-import os
+from copy import deepcopy
 
 import bpy
 import mathutils
 import numpy as np
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.editing as eUtils
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.io as ioUtils
-import phobos.blender.model.joints as jointmodel
-from phobos.blender.phoboslog import log
-import phobos.blender.defs as defs
-import phobos.blender.model.inertia as inertiamodel
-from phobos.blender import reserved_keys
-from phobos.blender.utils.validation import validate
 
-from phobos.io import representation, sensor_representations
-from phobos import core
+from .. import defs
+from .. import reserved_keys
+from ..model import joints as jointmodel
+from ..model.materials import assignMaterial
+from ..phoboslog import log
+from ..utils import blender as bUtils
+from ..utils import editing as eUtils
+from ..utils import io as ioUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
 
-from phobos.blender.model.materials import assignMaterial
-
-from phobos.utils.resources import get_default_joint
+from ... import core
+from ...io import representation, sensor_representations
+from ...utils.resources import get_default_joint
 
 """
 Factory functions for creating blender Instances from phobos.io instance
@@ -45,7 +42,7 @@ def createMaterial(material: representation.Material):
         diffuse_tex_node = newmat.node_tree.nodes.new('ShaderNodeTexImage')
         diffuse_tex_node.image = material.diffuseTexture.load_image()
         diffuse_tex_node.location = (-400, 0)
-        material.node_tree.links.new(diffuse_tex_node.outputs[0], shader_node.inputs[0])
+        newmat.node_tree.links.new(diffuse_tex_node.outputs[0], shader_node.inputs[0])
     shader_node.inputs['Base Color'].default_value = material.diffuse
 
     if material.normalTexture is not None:
@@ -89,6 +86,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
         else:
             log("Importing mesh for {0} element: '{1}".format(geomsrc, viscol.name), 'INFO')
             newgeom.data = geometry.load_mesh()
+        newgeom.scale = geometry.scale
     elif isinstance(geometry, representation.Box) or isinstance(geometry, representation.Cylinder) or isinstance(geometry, representation.Sphere):
         dimensions = None
         if isinstance(geometry, representation.Box):
@@ -140,10 +138,6 @@ def createGeometry(viscol, geomsrc, linkobj=None):
     if linkobj:
         eUtils.parentObjectsTo(newgeom, linkobj)
         newgeom.matrix_local = mathutils.Matrix(viscol.origin.to_matrix())
-
-    # scale imported object
-    if hasattr(geometry, "scale"):
-        newgeom.scale = geometry.scale
 
     # # make object smooth
     # eUtils.smoothen_surface(newgeom)
@@ -234,7 +228,9 @@ def createLink(link):
     # parent geometries
     for newgeom, viscol in geometries:
         eUtils.parentObjectsTo(newgeom, newlink)
+        _scale = deepcopy(newgeom.scale)
         newgeom.matrix_local = mathutils.Matrix(viscol.origin.to_matrix())
+        newgeom.scale = _scale
 
     # create inertial
     if link.inertial is not None:
@@ -276,25 +272,26 @@ def createJoint(joint: representation.Joint, linkobj=None):
     if joint.axis is not None:
         if mathutils.Vector(tuple(joint.axis)).length == 0.:
             log('Axis of joint {0} is of zero length: '.format(joint.name), 'ERROR')
-        else:
+        joint.axis = (np.array(joint.axis) / np.linalg.norm(joint.axis)).tolist()
+        if np.linalg.norm(joint.axis) != 0:
             bpy.ops.object.mode_set(mode='EDIT')
             editbone = linkobj.data.edit_bones[0]
             length = editbone.length
-            axis = mathutils.Vector(tuple(joint.axis))
-            editbone.tail = editbone.head + axis.normalized() * length
+            editbone.tail = editbone.head + mathutils.Vector(tuple(joint.axis)).normalized() * length
+            bpy.ops.object.mode_set(mode='OBJECT')
 
     # add constraints to the joint
-    lower = -1e-5
-    upper = 1e-5
-    if joint.limit is not None:
-        for limit in ["upper", "lower", "velocity", "effort"]:
-            if getattr(joint.limit, limit) is not None:
-                linkobj["joint/limits/"+limit] = getattr(joint.limit, limit)
-            elif joint.joint_type in ["revolute", "prismatic"]:
-                linkobj["joint/limits/"+limit] = get_default_joint(joint.joint_type)[limit]
-        lower = linkobj.get("joint/limits/lower")
-        upper = linkobj.get("joint/limits/upper")
-    jointmodel.setJointConstraints(linkobj, joint.joint_type, lower, upper)
+    jointmodel.setJointConstraints(
+        joint=linkobj,
+        jointtype=joint.joint_type,
+        lower=getattr(joint.limit, "lower", None),
+        upper=getattr(joint.limit, "upper", None),
+        velocity=getattr(joint.limit, "velocity", None),
+        effort=getattr(joint.limit, "effort", None),
+        spring=getattr(joint.dynamics, "spring", None),
+        damping=getattr(joint.dynamics, "damping", None),
+        axis=joint.axis
+    )
 
     # write generic custom properties
     for prop, value in joint.to_yaml().items():
@@ -399,37 +396,36 @@ def createSensor(sensor: sensor_representations.Sensor, linkobj=None):
     return newsensor
 
 
-def createMotor(motor: representation.Motor, linkobj):
+def createMotor(motor: representation.Motor, linkobj: bpy.types.Object):
     bUtils.toggleLayer('motor', value=True)
 
     # create motor object
+    psize=(max(np.array(linkobj.bound_box).flatten().tolist()),) * 3
     newmotor = bUtils.createPrimitive(
         motor.name,
         'box',
-        (max(linkobj.bound_box),) * 3,
+        psize,
         [],
         phobostype='motor',
     )
     # use resource name provided as: "resource:whatever_name"
-    resource_obj = ioUtils.getResource(['motor'] + motor.type)
+    resource_obj = ioUtils.getResource(['motor'] + [motor.type.lower()])
     if resource_obj:
         log("Assigned resource mesh and materials to new motor object.", 'DEBUG')
         newmotor.data = resource_obj.data
-        newmotor.scale = (max(linkobj.bound_box),) * 3
     else:
         log("Could not use resource mesh for motor. Default cube used instead.", 'WARNING')
 
     # assign the parent if available
-    if linkobj is not None:
-        eUtils.parentObjectsTo(newmotor, linkobj)
-        newmotor.matrix_local = mathutils.Matrix.identity(4)
-
+    eUtils.parentObjectsTo(newmotor, linkobj)
+    newmotor.matrix_local = mathutils.Matrix(np.identity(4))
+    newmotor.scale = psize
     # set motor properties
     newmotor.phobostype = 'motor'
 
     # write generic custom properties
-    for prop, value in motor.to_yaml().items():
-        if prop not in reserved_keys.MOTOR_KEYS:
+    for prop, value in motor.__dict__.items():
+        if prop in motor.get_refl_vars() and prop not in reserved_keys.MOTOR_KEYS:
             if type(value) == dict:
                 for k, v in value.items():
                     newmotor[f"{prop}/{k}"] = v

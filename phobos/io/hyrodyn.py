@@ -1,13 +1,12 @@
-from copy import copy
-
 import numpy
 
+from .representation import ConstraintAxis
 from .smurf_reflection import SmurfBase
-from .representation import JointMimic, ConstraintAxis
-from ..utils import tree
-from ..utils.transform import matrix_to_quaternion, quaternion_to_rpy
 from .xml_factory import plural as _plural
 from ..commandline_logging import get_logger
+from ..utils import tree
+from ..utils.transform import matrix_to_quaternion
+
 log = get_logger(__name__)
 
 __IMPORTS__ = [x for x in dir() if not x.startswith("__")]

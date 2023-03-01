@@ -1,14 +1,14 @@
 import os
 import re
 import subprocess
-import numpy as np
-from numpy import pi
 from copy import deepcopy
 from xml.dom.minidom import parseString
 from xml.etree import ElementTree as ET
 
-from ..defs import dump_json
+import numpy as np
+
 from ..commandline_logging import get_logger
+
 log = get_logger(__name__)
 
 
@@ -220,9 +220,9 @@ def color_parser(*args, rgba=None):
     elif count == 0:
         out = None
     if out is not None:
-        if len(out) == 3 and type(args) == list:
+        if len(out) == 3 and type(out) == list:
             out += [1.]
-        elif len(out) == 3 and type(args) == tuple:
+        elif len(out) == 3 and type(out) == tuple:
             out += (1.,)
             out = list(out)
         if len(out) != 4:

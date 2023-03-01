@@ -2,11 +2,12 @@
 # -*- coding: utf-8 -*-
 
 import os
-import trimesh
-import numpy as np
 
-from . import io
+import numpy as np
+import trimesh
+
 from . import geometry
+from . import io
 from ..io import representation
 
 
@@ -32,7 +33,7 @@ def generate_kccd_optimizer_ready_collision(robot, linkname, outputdir, join_fir
         out = []
         parent = robot.get_link(parent)
         for visual in parent.visuals:
-            m = io.as_trimesh(visual.geometry.load_mesh())
+            m = io.as_trimesh(visual.geometry.load_mesh(), silent=True)
             m.apply_transform(visual.origin.to_matrix())
             m.apply_transform(transform)
             if not join_first:
@@ -97,6 +98,55 @@ def find_zero_pose_collisions(robot):
     return zero_pose_colls if colls_exist else None
 
 
+def replace_geometry(element, shape='box', oriented=False, scale=1.0):
+    """
+    Replace the geometry of the element with an oriented shape. urdf_path is needed for mesh loading.
+    Args:
+        element: An geometry element representation.Visual or representation.Collision
+        shape: ['box', 'sphere', 'cylinder', 'convex']
+        oriented: Whether the bounding box should be oriented to have the minimum volume to cover the element
+        scale: whether the created shape shall be scaled by the given value
+
+    Returns:
+        None
+    """
+    if type(element) is list:
+        return [replace_geometry(e, shape, oriented, scale) for e in element]
+
+    if element is None:
+        return
+
+    if not isinstance(element.geometry, representation.Mesh):
+        return
+
+    mesh = io.as_trimesh(element.geometry.load_mesh(), silent=True)
+    mesh.apply_transform(element.origin.to_matrix())
+
+    if oriented and not shape == 'convex':
+        new_origin = representation.Pose.from_matrix(mesh.bounding_box_oriented.primitive.transform)
+    elif not shape == 'convex':
+        new_origin = representation.Pose.from_matrix(mesh.bounding_box.primitive.transform)
+    else:
+        new_origin = representation.Pose.from_matrix(np.eye(4))
+
+    if shape == 'sphere':
+        element.geometry = geometry.create_sphere(mesh, oriented=oriented, scale=scale)
+        element.origin = new_origin
+    elif shape == 'cylinder':
+        element.geometry = geometry.create_cylinder(mesh, oriented=oriented, scale=scale)
+        element.origin = new_origin
+    elif shape == 'box':
+        element.geometry = geometry.create_box(mesh, oriented=oriented, scale=scale)
+        element.origin = new_origin
+    elif shape == 'convex':
+        element.geometry.to_convex_hull()
+        element.geometry.scale = scale
+        element.origin = new_origin
+    else:
+        raise Exception('Shape {} not implemented. Please choose sphere, cylinder, box or convex.'.format(shape))
+    return
+
+
 def join_collisions(robot, linkname, collisionnames=None, name_id=None, only_return=False):
     """Replaces a series of visuals/collisions with a joined version of those given"""
     link = robot.get_link(linkname)
@@ -118,7 +168,7 @@ def join_collisions(robot, linkname, collisionnames=None, name_id=None, only_ret
             primitives += [e]
             continue
         else:
-            mesh = io.as_trimesh(e.geometry.load_mesh())
+            mesh = io.as_trimesh(e.geometry.load_mesh(), silent=True)
             name = e.name
             if name.lower().startswith("collision_"):
                 name = name[len("collision_"):]

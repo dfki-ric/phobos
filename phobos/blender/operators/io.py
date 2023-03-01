@@ -13,34 +13,21 @@
 Contains all Blender operators for import and export of models/files.
 """
 
-import os
-import json
-import sys
-import shutil
-
 import bpy
-import bgl
-import glob
+from bpy.props import EnumProperty, StringProperty, BoolProperty
 from bpy.types import Operator
-from bpy.props import EnumProperty, StringProperty, FloatProperty, IntProperty, BoolProperty
 
-import phobos.blender.defs as defs
-import phobos.blender.display as display
-from phobos.blender.phoboslog import log
-import phobos.blender.model.models as models
-import phobos.blender.model.links as links
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.editing as eUtils
-import phobos.blender.utils.io as ioUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.naming as nUtils
+from ..io.blender2phobos import deriveRobot
+from ..io.phobos2blender import createRobot
+from ..phoboslog import log
+from ..utils import blender as bUtils
+from ..utils import io as ioUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
 
-from phobos import core
-from phobos.blender.io.blender2phobos import deriveRobot
-from phobos.blender.io.phobos2blender import createRobot
-from phobos.utils.resources import get_default_rel_mesh_pathes
-
-import phobos.defs as phobos_defs
+from ... import core
+from ... import defs as phobos_defs
+from ...utils.resources import get_default_rel_mesh_pathes
 
 
 # [TODO v2.1.0] let this use the phobos API as well
@@ -178,7 +165,7 @@ class ExportModelOperator(Operator):
                     "link_in_smurf": getattr(ioUtils.getExpSettings(), 'export_smurf_xml_type') == fmt,
                     "ros_pathes": getattr(ioUtils.getExpSettings(), f'{fmt}OutputPathtype').startswith("ros_package"),
                     "enforce_zero": getattr(ioUtils.getExpSettings(), 'enforceZero'),
-                    "copy_with_other_pathes": "+" in getattr(ioUtils.getExpSettings(), f'{fmt}OutputPathtype')
+                    "copy_with_other_pathes": "+" in getattr(ioUtils.getExpSettings(), f'{fmt}OutputPathtype'),
                 })
             elif fmt == "joint_limits":
                 export_config.append({
@@ -200,8 +187,11 @@ class ExportModelOperator(Operator):
             #             "stop": sm["stop"]
             #         })
             elif fmt == "smurf":
-                # will be exported anyways
-                pass
+                # will be exported anyways, but we add it to export the meshes
+                export_config.append({
+                    "type": "smurf",
+                    "additional_meshes": [mt for mt in phobos_defs.MESH_TYPES if getattr(bpy.context.scene, "export_mesh_"+mt, False)]
+                })
             else:
                 raise ValueError(f"Can't export for given format: {fmt}")
         robot.export(

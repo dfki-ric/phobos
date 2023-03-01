@@ -1,6 +1,8 @@
 import xml.etree.ElementTree as ET
 from copy import deepcopy
+
 from ..commandline_logging import get_logger
+
 log = get_logger(__name__)
 
 
@@ -85,13 +87,14 @@ class Linkable(object):
                     if (hasattr(new_value, "is_delegate") and new_value.is_delegate()) or new_value.equivalent(existing):
                         setattr(self, "_" + attribute, existing)
                     else:
-                        new_mat_name = new_value.name
+                        new_name = new_value.name
                         index = 1
-                        while self._related_robot_instance.get_material(new_mat_name) is not None:
-                            new_mat_name = new_value.name + "_" + str(index)
+                        while self._related_robot_instance.get_aggregate(self.type_dict[attribute].lower(), new_name) is not None:
+                            new_name = str(new_value) + "_" + str(index)
                             index += 1
-                        log.warning(f"Ambiguous {type(new_value)} in {str(self)} renamed {new_value.name} to {new_mat_name}")
-                        new_value.name = new_mat_name
+                        log.warning(f"Ambiguous {type(new_value)} in {str(self)} renamed {new_value.name} to {new_name}")
+                        log.debug(f"Existing: {existing.__dict__}\nOld: {new_value.__dict__}")
+                        new_value.name = new_name
                     new_value.link_with_robot(self._related_robot_instance, check_linkage_later=True)
                     setattr(self, "_" + attribute, new_value)
             else:
@@ -105,6 +108,7 @@ class Linkable(object):
         # if self._related_robot_instance is None:
         assert robot is not None
         self._related_robot_instance = robot
+        # log.debug(f"Linking {self.__class__} {id(self)}")
         for attribute in self._class_linkables:
             self._attr_set_name(attribute, getattr(self, "_" + attribute), no_check=True)
             # if getattr(self, "_" + attribute) is not None:
@@ -116,6 +120,7 @@ class Linkable(object):
             #                 v.link_with_robot(robot, check_linkage_later=True)
         for var in self._class_variables:
             if isinstance(getattr(self, var), Linkable):
+                # log.debug(f"Linking {var} of class {self.__class__} with id {id(getattr(self, var))}")
                 getattr(self, var).link_with_robot(robot, check_linkage_later=True)
             elif isinstance(getattr(self, var), list):
                 for v in getattr(self, var):
@@ -157,7 +162,7 @@ class Linkable(object):
             True if all references are python-references
         """
         linked = self._related_robot_instance is not None
-        assert linked, type(self)
+        assert linked is not None, type(self)
         _class_attributes = self._class_linkables
         if attribute is not None:
             _class_attributes = [var for var in self._class_linkables if var == attribute]
