@@ -78,7 +78,7 @@ class Pose(Representation, SmurfBase):
     # Aliases for backwards compatibility
     @property
     def xyz(self):
-        return self.position
+        return np.array(self.position).tolist()
 
     @xyz.setter
     def xyz(self, value):
@@ -86,7 +86,7 @@ class Pose(Representation, SmurfBase):
 
     @property
     def rpy(self):
-        return self.rotation
+        return np.array(self.rotation).tolist()
 
     @rpy.setter
     def rpy(self, value):
@@ -887,6 +887,8 @@ class Mesh(Representation, SmurfBase):
         self.load_mesh()
         if mirror_transform is None:
             mirror_transform = get_reflection_matrix()
+        if not any([x < 0 for x in mirror_transform.diagonal()]):
+            raise AssertionError
         if name_replacements is None:
             name_replacements = {}
         if isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene):

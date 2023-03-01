@@ -213,11 +213,11 @@ class ModelTest(object):
             if k not in root2old_links.keys():
                 log.info("%s doesn't exist in compare model" % link_name)
                 _temp_pose = Pose.from_matrix(root2new_links[k])
-                log.info("root2link: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple(_temp_pose.xyz.tolist() + _temp_pose.rpy.tolist()))
+                log.info("root2link: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple(_temp_pose.xyz + _temp_pose.rpy))
                 continue
             diff = np.linalg.inv(root2old_links[k]).dot(root2new_links[k])
             diff_o = representation.Pose.from_matrix(diff)
-            outmsg = "%s Difference: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple([link_name] + diff_o.xyz.tolist() + diff_o.rpy.tolist())
+            outmsg = "%s Difference: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple([link_name] + diff_o.xyz + diff_o.rpy)
             if np.linalg.norm(diff[0:3, 3]) > self.new.test["tolerances"]["distance"] or \
                any(abs(diff_o.rpy) > [self.new.test["tolerances"]["rad"]]*3):
                 if np.linalg.norm(diff[0:3, 3]) > self.new.test["tolerances"]["distance"]:

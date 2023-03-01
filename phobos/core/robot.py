@@ -933,7 +933,7 @@ class Robot(SMURFRobot):
                                          include_unstopped_branches=include_unstopped_branches)
 
     def get_links_and_joints_in_subtree(self, start, stop=None, include_unstopped_branches=False):
-        assert self.get_link(start, verbose=True) is not None
+        assert self.get_link(start, verbose=True) is not None, f"Link {start} does not exist"
         if stop is None:
             # Collect all links on the way to the leaves
             parents, children = self._get_children_lists([start], [])
@@ -944,7 +944,7 @@ class Robot(SMURFRobot):
             linknames = set()
             _stop = list(set(stop))
             if include_unstopped_branches:
-                _stop = self.get_leaves(start)
+                _stop = self.get_leaves(start, stop=_stop)
             for leave in _stop:
                 linknames = linknames.union(self.get_chain(start, leave, joints=False))
             linknames = list(linknames)
@@ -986,7 +986,7 @@ class Robot(SMURFRobot):
 
         submodel = type(self)(name=definition["robotname"])
         if include_unstopped_branches is None:
-            include_unstopped_branches = False
+            include_unstopped_branches = definition.get("include_unstopped_branches", False)
 
         linknames, jointnames = self.get_links_and_joints_in_subtree(
             start=definition["start"], stop=definition["stop"],
@@ -2144,12 +2144,18 @@ class Robot(SMURFRobot):
 
         # reflection matrix
         T_R = pgu.get_reflection_matrix(normal=np.array(mirror_plane))
+        print("mirror_plane", mirror_plane)
+        print("TR", T_R)
 
         # copy kinematic
         def recursive_link_transform(link_, T_root_to_link):
             link_ = self.get_link(link_)
             T_link = self.get_transformation(link_.name)
             new_link = link_.duplicate()
+
+            T_flip = np.eye(4)
+            # All frames are mirrored using least-maintain-axis as flip axis
+            T_flip[flip_axis, flip_axis] *= -1
 
             # transform link information to root and mirror
 
@@ -2170,7 +2176,7 @@ class Robot(SMURFRobot):
 
             for vis in new_link.visuals:
                 T = T_R.dot(T_link.dot(vis.origin.to_matrix()))
-                vis.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T))
+                vis.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T.dot(T_flip)))
                 if isinstance(vis.geometry, representation.Mesh) and not (
                         (vis.geometry.original_mesh_name in exclude_meshes or "ALL" in exclude_meshes)):
                     vis.geometry.mirror(mirror_transform=inv(T_root_to_link.dot(vis.origin.to_matrix())).dot(T),
@@ -2178,7 +2184,7 @@ class Robot(SMURFRobot):
 
             for col in new_link.collisions:
                 T = T_R.dot(T_link.dot(col.origin.to_matrix()))
-                col.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T))
+                col.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T.dot(T_flip)))
                 if isinstance(col.geometry, representation.Mesh) and not (
                         (col.geometry.original_mesh_name in exclude_meshes or "ALL" in exclude_meshes)):
                     col.geometry.mirror(mirror_transform=inv(T_root_to_link.dot(col.origin.to_matrix())).dot(T),
@@ -2191,10 +2197,6 @@ class Robot(SMURFRobot):
                 joint_ = self.get_joint(jointname)
                 new_joint = joint_.duplicate()
 
-                T_flip = np.eye(4)
-
-                # All frames are mirrored using least-maintain-axis as flip axis
-                T_flip[flip_axis, flip_axis] *= -1
                 # now we transform the local coordinate system using t_flip to make it right handed
                 new_root_to_joint = T_R.dot(T_link.dot(joint_.origin.to_matrix().dot(T_flip)))
                 new_joint.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(new_root_to_joint))
@@ -2261,15 +2263,22 @@ class Robot(SMURFRobot):
             links_to_cut = [str(l) for l in link_to_cut]
 
         # Create new robot
-        before = self.instantiate_submodel(definition={
-            "name": self.name,
-            "start": self.get_root(),
-            "stop": links_to_cut
-        })
-        beyond = {new_root: self.instantiate_submodel(definition={
-            "name": self.name,
-            "start": new_root
-        }) for new_root in links_to_cut}
+        before = self.instantiate_submodel(
+            definition={
+                "name": self.name,
+                "start": self.get_root(),
+                "stop": links_to_cut
+            },
+            include_unstopped_branches=True
+        )
+        beyond = {
+            new_root: self.instantiate_submodel(
+                definition={
+                    "name": self.name,
+                    "start": new_root
+                },
+                include_unstopped_branches=True
+            ) for new_root in links_to_cut}
         return before, beyond
 
     def get_before(self, link_to_cut):

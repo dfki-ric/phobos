@@ -83,7 +83,10 @@ def find_zero_pose_collisions(robot):
         T = robot.get_transformation(link.name)
         for coll in link.collisions:
             if isinstance(coll.geometry, representation.Mesh):
-                mesh = io.import_mesh(coll.geometry.filepath, urdf_path=robot.xmlfile).convex_hull
+                mesh = coll.geometry.load_mesh()
+                if not isinstance(mesh, trimesh.Trimesh) and not isinstance(mesh, trimesh.Scene):
+                    mesh = io.as_trimesh(mesh)
+                mesh = mesh.convex_hull
             elif isinstance(coll.geometry, representation.Box):
                 mesh = trimesh.creation.box(coll.geometry.size)
             elif isinstance(coll.geometry, representation.Sphere):

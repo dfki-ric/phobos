@@ -227,6 +227,8 @@ class BaseModel(yaml.YAMLObject):
         if "take_leaf" in self.assemble.keys():
             assert type(self.assemble["take_leaf"]) == str
             combined_model = combined_model.get_beyond(self.assemble["take_leaf"])
+            assert self.assemble["take_leaf"] in combined_model, f"{combined_model}"
+            combined_model = combined_model[self.assemble["take_leaf"]]
 
         if "mirror" in self.assemble.keys():
             combined_model.mirror_model(
@@ -324,7 +326,8 @@ class BaseModel(yaml.YAMLObject):
                     raise AssertionError(
                         "Problem with assembling joint " + child["joint"]["parent"] + " -> " + child["joint"]["child"]
                         + ": the child link doesn't exist! (Further info above)")
-                assert att_model.get_joint(child["joint"]["name"]) is None and parent.get_joint(child["joint"]["name"]) is None, f'Can not join using joint name {child["joint"]["name"]} as this name already exists.'
+                assert att_model.get_joint(child["joint"]["name"]) is None and parent.get_joint(child["joint"]["name"]) is None,\
+                    f'Can not join using joint name {child["joint"]["name"]} as this name already exists.'
                 joint = representation.Joint(
                     name=child["joint"]["name"],
                     parent=parent.get_link(child["joint"]["parent"]).name,
