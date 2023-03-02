@@ -1490,6 +1490,7 @@ class DefineJointConstraintsOperator(Operator):
     active : BoolProperty(
         name='Active', default=False, description='Add an motor to the joint'
     )
+    added_motor = False
 
     useRadian : BoolProperty(
         name='Use Radian', default=True, description='Use degrees or rad for joints'
@@ -1652,6 +1653,8 @@ class DefineJointConstraintsOperator(Operator):
                     ),
                     linkobj=joint
                 )
+            elif not self.active and self.added_motor and sUtils.getObjectByName(motor_name) is not None:
+                bpy.data.object.remove(sUtils.getObjectByName(motor_name))
 
         return {'FINISHED'}
 

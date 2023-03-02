@@ -108,15 +108,15 @@ def deriveGeometry(obj, **kwargs):
 
 
 def deriveCollision(obj, **kwargs):
-    # bitmask
+    # bitmask (will deprecate with MARS2.0)
     bitmask = None
     # the bitmask is cut to length = 16 and reverted for int parsing
-    if 'collision_groups' in dir(obj.rigid_body):
+    if hasattr(obj.rigid_body, "collision_collections"):
         bitmask = int(
-            ''.join(['1' if group else '0' for group in obj.rigid_body.collision_groups[:16]])[::-1],
+            ''.join(['1' if group else '0' for group in obj.rigid_body.collision_collections[:16]])[::-1],
             2,
         )
-        for group in obj.rigid_body.collision_groups[16:]:
+        for group in obj.rigid_body.collision_collections[16:]:
             if group:
                 log(f"Object {obj.name} is on a collision layer higher than 16. These layers are ignored when exporting."
                     'WARNING',)
@@ -660,9 +660,11 @@ def deriveRobot(root, name='', objectlist=None):
     )
 
     # Full robot
+    xml_robot.unlink_entities()
     robot = core.Robot()
     robot.__dict__.update(xml_robot.__dict__)
     robot.description = bUtils.readTextFile('README.md')
+    robot.link_entities()
 
     for motor in [deriveMotor(obj) for obj in objectlist if obj.phobostype == 'motor']:
         robot.add_motor(motor)

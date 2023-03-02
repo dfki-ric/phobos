@@ -228,12 +228,12 @@ def setJointConstraints(
 
     # check for approximation functions of effort and speed
     if jointtype in ['revolute', 'continuous', 'prismatic']:
-        joint['joint/velocity'] = velocity
-        joint['joint/effort'] = effort
+        joint['joint/limits/velocity'] = velocity
+        joint['joint/limits/effort'] = effort
         if maxeffort_approximation:
             if all(elem in ['function', 'coefficients'] for elem in maxeffort_approximation):
-                joint['joint/maxeffort_approximation'] = maxeffort_approximation['function']
-                joint['joint/maxeffort_coefficients'] = maxeffort_approximation['coefficients']
+                joint['joint/limits/maxeffort_approximation'] = maxeffort_approximation['function']
+                joint['joint/limits/maxeffort_coefficients'] = maxeffort_approximation['coefficients']
             else:
                 log(
                     "Approximation for max effort ill-defined in joint object {}.".format(
@@ -243,8 +243,8 @@ def setJointConstraints(
                 )
         if maxspeed_approximation:
             if all(elem in ['function', 'coefficients'] for elem in maxspeed_approximation):
-                joint['joint/maxspeed_approximation'] = maxspeed_approximation['function']
-                joint['joint/maxspeed_coefficients'] = maxspeed_approximation['coefficients']
+                joint['joint/limits/maxspeed_approximation'] = maxspeed_approximation['function']
+                joint['joint/limits/maxspeed_coefficients'] = maxspeed_approximation['coefficients']
             else:
                 log(
                     "Approximation for max speed ill-defined in joint object {}.".format(
