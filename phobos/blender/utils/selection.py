@@ -176,6 +176,7 @@ def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, object
     while (
         parent
         and parent in objectlist
+        and parent.phobostype != "link"
         and (
             (parent.hide_viewport and not include_hidden)
             or (
@@ -183,7 +184,6 @@ def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, object
                 and bpy.context.scene.phobosexportsettings.selectedOnly
                 and not ignore_selection
             )
-            or parent.phobostype != 'link'
         )
     ):
         parent = parent.parent

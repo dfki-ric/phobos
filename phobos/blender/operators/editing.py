@@ -35,7 +35,7 @@ from idprop.types import IDPropertyGroup
 
 from .. import defs as defs
 from .. import display as display
-from ..io import phobos2blender
+from ..io import phobos2blender, blender2phobos
 from ..model import controllers as controllermodel
 from ..model import inertia as inertialib
 from ..model import joints as jUtils
@@ -53,6 +53,7 @@ from ..utils import validation as vUtils
 
 from ...io import representation
 from ...utils import resources
+from ...utils.transform import create_transformation
 
 
 class SafelyRemoveObjectsFromSceneOperator(Operator):
@@ -1153,15 +1154,25 @@ class GenerateInertialObjectsOperator(Operator):
             if self.derive_inertia_from_geometry:
                 if "mass" in obj:
                     mass = obj["mass"]
-                inertia = inertialib.calculateInertia(obj, mass, adjust=True, logging=True)
-                pose = obj.matrix_local.to_translation()
+                geometry = blender2phobos.deriveGeometry(obj)
+                inertia = inertialib.calculateInertia(obj, mass, geometry, adjust=True, logging=True)
+                if isinstance(geometry, representation.Mesh):
+                    _, pose = geometry.approx_volume_and_com()
+                    pose = np.array(obj.matrix_local).dot(create_transformation(xyz=pose))[0:3, 3]
+                else:
+                    pose = obj.matrix_local.to_translation()
             else:
                 inertia = [1e-3, 0., 0., 1e-3, 0., 1e-3]
                 pose = mathutils.Vector((0.0, 0.0, 0.0))
 
             # create object from dictionary
-            inertialdict = {'mass': mass, 'inertia': inertia, 'pose': {'translation': pose}}
-            newinertial = inertialib.createInertial(inertialdict, obj, adjust=True, logging=True)
+            inertial = representation.Inertial(
+                mass=mass,
+                inertia=representation.Inertia(*inertia),
+                origin=representation.Pose(xyz=pose)
+            )
+            print(pose)
+            newinertial = phobos2blender.createInertial(inertial, sUtils.getEffectiveParent(obj), adjust=True, logging=True)
 
             if newinertial:
                 new_inertial_objects.append(newinertial)

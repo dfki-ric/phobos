@@ -165,12 +165,14 @@ def createInertial(inertial: representation.Inertial, newlink: bpy.types.Object,
         pmaterial='phobos_inertial',
         phobostype='inertial',
     )
+    eUtils.parentObjectsTo(inertialobject, newlink)
+    inertialobject.matrix_local.translation = origin
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
 
     # write generic custom properties
     for prop, value in inertial.to_yaml().items():
-        if prop not in reserved_keys.LINK_KEYS:
+        if prop not in reserved_keys.INERTIAL_KEYS:
             if type(value) == dict:
                 for k, v in value.items():
                     inertialobject[f"{prop}/{k}"] = v
