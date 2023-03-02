@@ -910,7 +910,11 @@ class Mesh(Representation, SmurfBase):
             name_replacements = {}
         if isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene):
             self._mesh_object = self.mesh_object.apply_transform(mirror_transform)
-            self.mesh_object.fix_normals()
+            try:
+                self.mesh_object.fix_normals()
+            except AttributeError:
+                # [TODO v2.1.0] It seems there is an issue in trimesh, which we have to escape here
+                pass
             self.mesh_information = mesh_io.trimesh_2_mesh_info_dict(self.mesh_object)
             self.changed = True
             self.info_in_sync = False
