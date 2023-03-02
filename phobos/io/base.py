@@ -17,6 +17,7 @@ class Linkable(object):
     _related_robot_instance = None
     # _class_variables contains those properties which have to be scanned for linkables
     _class_variables = []
+    _handle_ambiguous = True
 
     def __init__(self):
         self._class_linkables = [var for var in self._class_variables if var in self.type_dict.keys() and not var.startswith("_")]
@@ -92,8 +93,13 @@ class Linkable(object):
                         while self._related_robot_instance.get_aggregate(self.type_dict[attribute].lower(), new_name) is not None:
                             new_name = str(new_value) + "_" + str(index)
                             index += 1
-                        log.warning(f"Ambiguous {type(new_value)} in {str(self)} renamed {new_value.name} to {new_name}")
+                        try:
+                            this_name = str(self)
+                        except NotImplementedError:
+                            this_name = str(type(self))
+                        log.warning(f"Ambiguous {type(new_value)} in {this_name} renamed {new_value.name} to {new_name}")
                         log.debug(f"Existing: {existing.__dict__}\nOld: {new_value.__dict__}")
+                        assert self._handle_ambiguous
                         new_value.name = new_name
                     new_value.link_with_robot(self._related_robot_instance, check_linkage_later=True)
                     setattr(self, "_" + attribute, new_value)

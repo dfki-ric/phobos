@@ -14,18 +14,25 @@ __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 
 # This class is only for smurf formatting and isn't used for data storage
 class LoopConstraint(SmurfBase):
-    _class_variables = ["cut_joint", "predecessor_body", "successor_body"]
+    _class_variables = ["joint", "predecessor_body", "successor_body"]
+    _type_dict = {
+        "joint": "joints",
+        "predecessor_body": "links",
+        "successor_body": "links"
+    }
+    _handle_ambiguous = False
 
     def __init__(self, cut_joint, predecessor_body=None, successor_body=None, constraint_axes=None, **kwargs):
         self.joint = cut_joint
-        if type(self.joint) == str:
-            assert predecessor_body is not None
-            assert successor_body is not None
-            assert constraint_axes is not None
-            self._predecessor_body = predecessor_body
-            self._successor_body = successor_body
-            self._constraint_axes = [ConstraintAxis(**ca) for ca in _plural(constraint_axes)]
-        super(LoopConstraint, self).__init__(
+        assert self.joint is not None
+        assert predecessor_body is not None
+        assert successor_body is not None
+        assert constraint_axes is not None
+        self.predecessor_body = predecessor_body
+        self.successor_body = successor_body
+        self._constraint_axes = [ConstraintAxis(**ca) for ca in _plural(constraint_axes)]
+        SmurfBase.__init__(
+            self,
             returns=["cut_joint", "predecessor_body", "successor_body", "constraint_axes"],
             **kwargs
         )
@@ -34,18 +41,6 @@ class LoopConstraint(SmurfBase):
     @property
     def cut_joint(self):
         return self.joint
-
-    @property
-    def predecessor_body(self):
-        if type(self.joint) == str:
-            return self._predecessor_body
-        return self.joint.parent
-
-    @property
-    def successor_body(self):
-        if type(self.joint) == str:
-            return self._successor_body
-        return self.joint.child
 
     @property
     def constraint_axes(self):
@@ -210,7 +205,7 @@ class HyrodynAnnotation(SmurfBase):
 
 
 class Submechanism(HyrodynAnnotation):
-    _class_variables = ["name", "jointnames", "jointnames_spanningtree", "jointnames_active", "jointnames_independent"]
+    _class_variables = ["name", "jointnames", "jointnames_spanningtree", "jointnames_active", "jointnames_independent", "loop_constraints"]
 
     def __init__(self, name, contextual_name,
                  jointnames_spanningtree, jointnames_active, jointnames_independent, jointnames=None,
@@ -252,34 +247,8 @@ class Submechanism(HyrodynAnnotation):
         if self._related_robot_instance is None:
             self._multi_joint_dependencies = value
         else:
-            # [ToDo v2.1.0] do this from here
+            # [ToDo v2.1.0] set the joint dependencies from here
             raise RuntimeError("Please set the joint_dependencies of the corresponding joint.")
-
-    @property
-    def loop_constraints(self):
-        if self._related_robot_instance is not None:
-            links = self.get_relative_links(self._related_robot_instance)
-            loop_closure_joints = []
-            for lcj in self._related_robot_instance.get_loop_closure_joints():
-                if lcj.child in links:
-                    assert lcj.parent in links
-                    loop_closure_joints.append(lcj)
-            for joint in loop_closure_joints:
-                if joint.cut_joint:
-                    self._loop_constraints.append(LoopConstraint(joint))
-        if self._loop_constraints is not None and len(self._loop_constraints) > 0:
-            return self._loop_constraints
-        else:
-            return []
-
-    @loop_constraints.setter
-    def loop_constraints(self, value):
-        if self._related_robot_instance is None:
-            assert all([isinstance(v, LoopConstraint) for v in value])
-            self._loop_constraints = value
-        else:
-            raise RuntimeError("Please set the cut_joint and constraint_axes of the corresponding joint instance!"
-                               "Loop constraints will be filled automatically")
 
     def link_with_robot(self, robot, check_linkage_later=False):
         super(Submechanism, self).link_with_robot(robot, check_linkage_later=True)
@@ -289,24 +258,13 @@ class Submechanism(HyrodynAnnotation):
                 joint.joint_dependencies = []
                 for jd in mjd["depends_on"]:
                     joint.joint_dependencies = joint.joint_dependencies + [jd]
-        if self._loop_constraints is not None and len(self._loop_constraints) > 0:
-            for lc in self._loop_constraints:
-                joint = robot.get_joint(lc.cut_joint)
-                if not joint.cut_joint or len(joint.constraint_axes) == 0:
-                    joint.cut_joint = True
-                    joint.constraint_axes = []
-                    for ax in lc.constraint_axes:
-                        joint.constraint_axes.append(ax)
-            self._loop_constraints = []
         if not check_linkage_later:
             assert self.check_linkage()
 
     def unlink_from_robot(self, check_linkage_later=False):
         mjd = self.multi_joint_dependencies
-        lc = self.loop_constraints
         super(Submechanism, self).unlink_from_robot()
         self._multi_joint_dependencies = mjd
-        self._loop_constraints = lc
         if not check_linkage_later:
             assert self.check_unlinkage()
 

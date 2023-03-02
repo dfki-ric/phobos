@@ -637,7 +637,24 @@ class Mesh(Representation, SmurfBase):
             elif self.input_type == "file_dae":
                 bpy.ops.wm.collada_import(filepath=self.input_file)
                 self.mesh_information = mesh_io.parse_dae(self.input_file)
+                self._mesh_object = None
+                delete_objects = []
+                mesh_objects = []
+                for obj in bpy.context.selected_objects:
+                    if obj.type == "MESH":
+                        mesh_objects.append(obj)
+                    delete_objects.append(obj)
+                bpy.ops.object.select_all(action='DESELECT')
+                for obj in mesh_objects:
+                    obj.select_set(True)
+                bpy.context.view_layer.objects.active = mesh_objects[0]
+                if len(mesh_objects) > 1:
+                    bpy.ops.object.join()
                 self._mesh_object = bpy.context.object.data
+                bpy.ops.object.select_all(action='DESELECT')
+                for obj in delete_objects:
+                    obj.select_set(True)
+                bpy.context.view_layer.objects.active = delete_objects[0]
             elif self.input_type == "file_bobj":
                 self.mesh_information = mesh_io.parse_bobj(self.input_file)
                 self._mesh_object = mesh_io.mesh_info_dict_2_blender(self.unique_name, **self.mesh_information)
@@ -1386,8 +1403,29 @@ class Joint(Representation, SmurfBase):
         if self.cut_joint and self.origin is None:
             self.origin = Pose.from_matrix(self._related_robot_instance.get_transformation(self.child, self.parent),
                                            relative_to=self.parent)
+        for jd in self._joint_dependencies:
+            jd.link_with_robot(robot, check_linkage_later=True)
         if not check_linkage_later:
             self.check_linkage()
+
+    def check_linkage(self, attribute=None):
+        out = super(Joint, self).check_linkage(attribute=attribute)
+        for jd in self._joint_dependencies:
+            out &= jd.check_linkage(attribute=attribute)
+        return out
+
+    def check_unlinkage(self, attribute=None):
+        out = super(Joint, self).check_unlinkage(attribute=attribute)
+        for jd in self._joint_dependencies:
+            out &= jd.check_unlinkage(attribute=attribute)
+        return out
+
+    def unlink_from_robot(self, check_linkage_later=False):
+        super(Joint, self).unlink_from_robot(check_linkage_later=True)
+        for jd in self._joint_dependencies:
+            jd.unlink_from_robot(check_linkage_later=True)
+        if not check_linkage_later:
+            assert self.check_unlinkage()
 
     def check_valid(self):
         return (self.joint_type in self.TYPES + self.ADVANCED_TYPES, "Invalid joint type: {}".format(self.joint_type) and  # noqa

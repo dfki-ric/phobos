@@ -91,7 +91,7 @@ def read_relative_filename(filename, start_file_path):
     if start_file_path.split(".")[-1] in IMPORT_TYPES:
         start_file_path = os.path.dirname(start_file_path)  # /bla/blub/xyz/blib.xyz -> /bla/blub/xyz
     if filename.startswith("package://"):  # ROS Package
-        if os.path.basename(start_file_path) in IMPORT_TYPES:
+        if os.path.basename(start_file_path) in IMPORT_TYPES+["xacro"]:
             package_dir = os.path.dirname(start_file_path)  # /bla/blub/xyz -> /bla/blub
         else:
             raise IOError("Can't derive package_dir from " + start_file_path)

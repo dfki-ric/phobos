@@ -413,5 +413,6 @@ def parse_bobj(filepath):
 
 
 def parse_dae(filepath):
-    # [TODO pre_v2.0.0]
-    raise NotImplementedError
+    # [TODO v2.1.0]
+    log.warning("mesh_info dict can currently not perfectly be parsed from dae")
+    return trimesh_2_mesh_info_dict(import_mesh(filepath))

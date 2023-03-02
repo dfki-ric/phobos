@@ -2141,11 +2141,10 @@ class Robot(SMURFRobot):
         if not target_urdf:
             target_urdf = self.xmlfile
         robot.xmlfile = target_urdf
+        robot.unlink_entities()
 
         # reflection matrix
         T_R = pgu.get_reflection_matrix(normal=np.array(mirror_plane))
-        print("mirror_plane", mirror_plane)
-        print("TR", T_R)
 
         # copy kinematic
         def recursive_link_transform(link_, T_root_to_link):
@@ -2217,7 +2216,6 @@ class Robot(SMURFRobot):
         recursive_link_transform(self.get_root(), np.eye(4))
 
         robot.link_entities()
-        self.link_entities()
 
         robot.rename("link", robot.links, replacements=name_replacements)
         robot.rename("joint", robot.joints, replacements=name_replacements)
@@ -2245,6 +2243,7 @@ class Robot(SMURFRobot):
 
         if only_return:
             return robot
+
         for k, v in robot.__dict__.items():
             setattr(self, k, v)
         self.relink_entities()
