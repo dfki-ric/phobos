@@ -191,7 +191,10 @@ def deriveVisual(obj, logging=True, **kwargs):
 
 @validate('inertia_data')
 def deriveInertial(obj, logging=True, **kwargs):
-    inertia = representation.Inertia(*obj["inertia"][0])
+    if "inertia" in obj:
+        inertia = representation.Inertia(*(obj["inertia"][0] if type(obj["inertia"][0]) in [tuple, list] else obj["inertia"]))
+    else:
+        inertia = None
 
     # further annotations
     annotations = {}
@@ -206,7 +209,7 @@ def deriveInertial(obj, logging=True, **kwargs):
                 annotations[k1][k2] = v
 
     return representation.Inertial(
-        mass=obj["mass"],
+        mass=obj["mass"] if "mass" in obj else 0.0,
         inertia=inertia,
         origin=deriveObjectPose(obj),
         **annotations

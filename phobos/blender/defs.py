@@ -127,6 +127,7 @@ def updateDefs(defsFolderPath):
     Returns:
 
     """
+    assert os.path.isdir(defsFolderPath)
     dicts = __parseAllYAML(defsFolderPath)
     for diction in dicts:
         for category in diction:
@@ -211,6 +212,6 @@ def __parseAllYAML(path):
 
 
 # Update definitions from files
-definitionpath = os.path.join(phobossystem.getConfigPath() + 'definitions')
+definitionpath = os.path.join(phobossystem.getConfigPath(), 'definitions')
 print("Parsing definitions from:", definitionpath)
 updateDefs(definitionpath)

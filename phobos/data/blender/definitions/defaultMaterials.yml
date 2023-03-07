@@ -93,10 +93,10 @@
     },
     "phobos_collision": {
       "diffuse": [
-        1,
-        0.84,
+        0.8,
+        0.64,
         0,
-        0.5
+        0.3
       ],
       "specular": [
         1,
@@ -104,7 +104,8 @@
         1,
         1
       ],
-      "diffuse_intensity": 1.0
+      "diffuse_intensity": 1.0,
+      "transparency": 0.3
     },
     "phobos_controller": {
       "diffuse": [

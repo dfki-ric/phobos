@@ -120,7 +120,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
             log('No material for visual {}.'.format(viscol.name), 'WARNING')
     else:
         assert geomsrc == 'collision'
-        assignMaterial(newgeom, "phobos_collision")
+        # assignMaterial(newgeom, "phobos_collision")
 
     # write generic custom properties
     for prop, value in viscol.to_yaml().items():
@@ -169,6 +169,9 @@ def createInertial(inertial: representation.Inertial, newlink: bpy.types.Object,
     inertialobject.matrix_local.translation = origin
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
     bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
+
+    inertialobject["inertia"] = inertial.inertia.to_list()
+    inertialobject["mass"] = inertial.mass
 
     # write generic custom properties
     for prop, value in inertial.to_yaml().items():

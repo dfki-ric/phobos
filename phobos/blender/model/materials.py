@@ -24,13 +24,14 @@ def createPhobosMaterials():
     materials = bpy.data.materials.keys()
     for materialname in defs.definitions['materials']:
         mat = defs.definitions['materials'][materialname]
-        mat['name'] = materialname
         if materialname not in materials:
-            new_material = bpy.data.materials.new(mat['name'])
+            new_material = bpy.data.materials.new(materialname)
             new_material.diffuse_color = tuple(mat['diffuse'])
             if 'specular' in mat:
                 new_material.specular_color = tuple(mat['specular'][:3])
                 new_material.specular_intensity = 0.5
+            if "transparency" in mat and hasattr(new_material, "transparency"):
+                new_material.transparency = mat["transparency"]
 
 
 def assignMaterial(obj, materialname, override=True):

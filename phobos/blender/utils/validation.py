@@ -642,13 +642,19 @@ def validateInertiaData(obj, *args, adjust=False):
         )
 
     # check dictionary parameters (most of the time pre object creation)
+    inertia = (1e-3, 0., 0., 1e-3, 0., 1e-3)
+    mass = 1e-3
     if isinstance(obj, dict):
         missing = []
         if 'inertia' not in obj:
             missing.append('inertia')
+        else:
+            inertia = obj['inertia']
 
         if 'mass' not in obj:
             missing.append('mass')
+        else:
+            mass = obj['mass']
 
         if missing:
             errors.append(
@@ -664,16 +670,9 @@ def validateInertiaData(obj, *args, adjust=False):
                     },
                 )
             )
-
-            if 'inertia' in missing:
-                obj['inertia'] = (1e-3, 0., 0., 1e-3, 0., 1e-3)
-            if 'mass' in missing:
-                obj['mass'] = 1e-3
-
-        inertia = obj['inertia']
-        mass = obj['mass']
     # check existing object properties
     elif isinstance(obj, bpy.types.Object):
+        missing = []
         if 'inertia' not in obj:
             errors.append(
                 ValidateMessage(
@@ -684,7 +683,7 @@ def validateInertiaData(obj, *args, adjust=False):
                     {'log_info': "Set to default 1e-3."},
                 )
             )
-            obj['inertia'] = (1e-3, 0., 0., 1e-3, 0., 1e-3)
+            missing.append('inertia')
 
         if 'mass' not in obj:
             errors.append(
@@ -696,9 +695,8 @@ def validateInertiaData(obj, *args, adjust=False):
                     {'log_info': "Set to default 1e-3."},
                 )
             )
-            obj['mass'] = 1e-3
-        inertia = obj['inertia']
-        mass = obj['mass']
+            missing.append('mass')
+
     else:
         raise AssertionError(type(obj))
 
