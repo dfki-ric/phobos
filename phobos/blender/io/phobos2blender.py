@@ -99,7 +99,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
             dimensions = geometry.radius
             geometry_type = "sphere"
         log("Creating primitive for {0}: {1}".format(type(geometry), viscol.name), 'INFO')
-        newgeom = bUtils.createPrimitive(viscol.name, geometry_type, dimensions, phobostype=geomsrc)
+        newgeom = bUtils.createPrimitive(viscol.name, geometry_type, dimensions, phobostype=geomsrc, pmaterial="phobos_collision")
         newgeom.select_set(True)
     else:
         log(
@@ -118,9 +118,6 @@ def createGeometry(viscol, geomsrc, linkobj=None):
             assignMaterial(newgeom, viscol.material)
         else:
             log('No material for visual {}.'.format(viscol.name), 'WARNING')
-    else:
-        assert geomsrc == 'collision'
-        # assignMaterial(newgeom, "phobos_collision")
 
     # write generic custom properties
     for prop, value in viscol.to_yaml().items():
