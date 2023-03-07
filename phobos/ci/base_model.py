@@ -107,9 +107,9 @@ class BaseModel(yaml.YAMLObject):
             elif "repo" in v.keys():
                 repo_path = os.path.join(self.tempdir, "repo", os.path.basename(self.input_models["repo"]["git"]))
                 git.clone(
-                    self,
-                    self.input_models["repo"]["git"],
-                    repo_path,
+                    pipeline = self,
+                    repo=self.input_models["repo"]["git"],
+                    target=repo_path,
                     commit_id=self.input_models["repo"]["commit"],
                     recursive=True,
                     ignore_failure=True
@@ -181,10 +181,10 @@ class BaseModel(yaml.YAMLObject):
             elif "repo" in config.keys():
                 repo_path = os.path.join(self.tempdir, "repo", os.path.basename(config["repo"]["git"]))
                 git.clone(
-                    self.pipeline,
-                    config["repo"]["git"],
-                    repo_path,
-                    config["repo"]["commit"],
+                    pipeline=self.pipeline,
+                    repo=config["repo"]["git"],
+                    target=repo_path,
+                    branch=config["repo"]["commit"],
                     recursive=True,
                     ignore_failure=True
                 )
@@ -827,7 +827,13 @@ class BaseModel(yaml.YAMLObject):
         if hasattr(self, "deployment") and "mirror" in self.deployment:
             log.info(f"Deploying to mirror:\n {dump_yaml(self.deployment['mirror'], default_flow_style=False)}")
             mirror_dir = os.path.join(self.tempdir, "deploy_mirror")
-            git.clone(self.pipeline, self.deployment["mirror"]["repo"], mirror_dir, branch="master", shallow=False)
+            git.clone(
+                pipeline=self.pipeline,
+                repo=self.deployment["mirror"]["repo"],
+                target=mirror_dir,
+                branch="master",
+                shallow=False
+            )
             git.update(mirror_dir, update_remote="origin", update_target_branch=self.deployment["mirror"]["branch"])
             git.clear_repo(mirror_dir)
             submodule_dict = {}

@@ -280,9 +280,9 @@ class Pipeline(yaml.YAMLObject):
                     # Load compare model
                     compare_model_path = os.path.join(model.tempdir, "compare_model")
                     git.clone(
-                        self,
-                        model.test["compare_model"]["git"],
-                        compare_model_path,
+                        pipeline=self,
+                        repo=model.test["compare_model"]["git"],
+                        target=compare_model_path,
                         branch=model.test["compare_model"]["branch"],
                         recursive=True,
                         ignore_failure=False

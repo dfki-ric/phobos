@@ -30,11 +30,11 @@ class MergeRequest(object):
         return options
 
 
-def clone(pipeline, repo, target, branch=None, cwd=None, recursive=False, ignore_failure=False, commit_id=None,
-          shallow=1):
+def clone(repo, target, branch=None, cwd=None, recursive=False, ignore_failure=False, commit_id=None,
+          shallow=1, pipeline=None):
     execute_shell_command("git lfs install || true", cwd)
     if os.path.exists(target):
-        log.info(f"Deleting {pipeline.relpath(target)}")
+        log.info(f"Deleting {pipeline.relpath(target) if pipeline is not None else target}")
         os.system("rm -rf {}".format(target))
     cmd = "git clone"
     if branch is not None:
@@ -46,7 +46,7 @@ def clone(pipeline, repo, target, branch=None, cwd=None, recursive=False, ignore
         if recursive:
             cmd += " --shallow-submodules "
     cmd += " " + repo + " " + target  # not loading with --recursive as we don't need the meshes submodule
-    if cwd is None:
+    if cwd is None and pipeline is not None:
         cwd = pipeline.root
     if ignore_failure:
         cmd += " || true"
@@ -171,6 +171,20 @@ def install_lfs(repo, track):
                 execute_shell_command("git lfs track '" + t.upper() + "' || true", repo, silent=True)
     execute_shell_command("git remote rename origin autobuild || true", repo)
     execute_shell_command("git add .gitattributes || true", repo)
+
+
+def ignore(repo, ignore):
+    ign_file = os.path.join(repo, ".gitignore")
+    if type(ignore) == str:
+        ignore = ignore.split()
+    content = []
+    if os.path.isfile(ign_file):
+        with open(ign_file, "r") as f:
+            content = [l if not l.endswith("\n") else l[:-1] for l in f.readlines()]
+    with open(".gitignore", "a") as f:
+        for i in ignore:
+            if i not in content:
+                f.write(i+"\n")
 
 
 def get_repo_data(directory):
