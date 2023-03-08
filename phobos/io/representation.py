@@ -54,8 +54,6 @@ class Pose(Representation, SmurfBase):
         if "matrix" in kwargs:
             self._matrix = kwargs["matrix"]
             return
-        xyz = xyz
-        rpy = rpy
         if vec is not None:
             assert xyz is None and rpy is None
             assert "rotation" not in kwargs and "position" not in kwargs
@@ -65,10 +63,13 @@ class Pose(Representation, SmurfBase):
             else:
                 self.from_vec(vec)
                 return
-        if xyz is None and "position" in kwargs:
+        if xyz is not None:
+            self.position = xyz
+        elif "position" in kwargs:
             self.position = kwargs["position"]
-        self._matrix = create_transformation(xyz=xyz, rpy=rpy)
-        if rpy is None and "rotation" in kwargs:
+        if rpy is not None:
+            self.rotation = rpy
+        elif "rotation" in kwargs:
             self.rotation = kwargs["rotation"]
 
     def check_valid(self):
@@ -169,11 +170,17 @@ class Pose(Representation, SmurfBase):
     def to_matrix(self):
         return self._matrix
 
-    def transform(self, T):
+    def transform(self, T, relative_to=None):
         """T.dot(this)"""
         return Pose.from_matrix(
             T.dot(self._matrix),
-            self.relative_to
+            relative_to
+        )
+
+    def dot(self, other):
+        return Pose.from_matrix(
+            self._matrix.dot(other.to_matrix()),
+            relative_to=other.relative_to
         )
 
     def stringable(self):
