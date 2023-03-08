@@ -34,6 +34,10 @@ def get_default_ci_test_definition():
     return DEFAULTS["ci_test"]
 
 
+def get_default_ci_deploy_definition():
+    return DEFAULTS["ci_deploy"]
+
+
 def get_default_export_config(version="default"):
     return DEFAULTS["export_config"][version]
 

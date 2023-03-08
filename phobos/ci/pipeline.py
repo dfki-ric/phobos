@@ -463,16 +463,6 @@ class Pipeline(yaml.YAMLObject):
                 }
             })
             git.add_remote(repo, self.remote_base + "/" + path)
-            # mr = git.MergeRequest()
-            # mr.target = self.mr_target_branch
-            # mr.title = self.mr_title
-            # mr.description = self.mr_description
-            # if hasattr(self, "mr_mention"):
-            #     mr.mention = self.mr_mention
-            # for m in self.models:
-            #     if hasattr(m, "mr_mention"):
-            #         mr.mention += " "+m.mr_mention
-            # git.push(repo, merge_request=mr)
             git.push(repo, branch="$CI_MESH_UPDATE_TARGET_BRANCH")
         for model in self.models:
             fstate = self._get_model_failure_state(model.modelname)

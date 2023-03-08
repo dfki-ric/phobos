@@ -49,8 +49,12 @@ class BaseModel(yaml.YAMLObject):
         assert hasattr(self, "export_config") and len(self.export_config) >= 1
         assert hasattr(self, "test") and len(self.test) >= 1
         self.test = misc.merge_default(
-          self.test,
-          self.pipeline.default_test if hasattr(pipeline, "default_test") else resources.get_default_ci_test_definition()
+            self.test,
+            self.pipeline.default_test if hasattr(pipeline, "default_test") else resources.get_default_ci_test_definition()
+        )
+        self.deployment = misc.merge_default(
+            self.deployment if hasattr(self, "deployment") else {},
+            self.pipeline.default_deployment if hasattr(pipeline, "default_deployment") else resources.get_default_ci_deploy_definition()
         )
 
         # get directories for this model
@@ -696,7 +700,7 @@ class BaseModel(yaml.YAMLObject):
             if isinstance(vc.geometry, representation.Mesh):
                 self.processed_meshes = self.processed_meshes.union([os.path.realpath(f) for f in vc.geometry.exported.values()])
                 self.processed_meshes.add(os.path.realpath(vc.geometry.abs_filepath))
-        if hasattr(self, "deployment") and "keep_files" in self.deployment:
+        if "keep_files" in self.deployment:
             git.reset(self.targetdir, "autobuild", "master")
             misc.store_persisting_files(self.pipeline, self.targetdir, self.keep_files, self.exportdir)
 
@@ -727,7 +731,7 @@ class BaseModel(yaml.YAMLObject):
             misc.store_persisting_files(self.pipeline, self.targetdir, self.keep_files, self.exportdir)
 
     def deploy(self, mesh_commit, failed_model=False, uses_lfs=False):
-        if hasattr(self, "deployment") and "do_not_deploy" in self.deployment and self.deployment["do_not_deploy"] is True:
+        if "do_not_deploy" in self.deployment and self.deployment["do_not_deploy"] is True:
             return "deployment suppressed in cfg"
         if not os.path.exists(self.targetdir):
             raise Exception("The result directory " + self.targetdir + " doesn't exist:\n" +
@@ -777,7 +781,7 @@ class BaseModel(yaml.YAMLObject):
                     readme.write(open(pkg_resources.resource_filename("phobos", "data/GitLFS_README.md.in")).read())
 
         # update additional submodules
-        if hasattr(self, "deployment") and "submodules" in self.deployment:
+        if "submodules" in self.deployment:
             for subm in self.deployment["submodules"]:
                 git.add_submodule(
                     repo,
@@ -801,14 +805,14 @@ class BaseModel(yaml.YAMLObject):
 
         # now we move back to the push repo
         misc.copy(self.pipeline, self.exportdir + "/*", self.targetdir)
-        if hasattr(self, "deployment") and "keep_files" in self.deployment:
+        if "keep_files" in self.deployment:
             misc.restore_persisting_files(self.pipeline, repo, self.deployment["keep_files"], os.path.join(self.tempdir, "_sustain"))
         git.commit(repo, origin_repo=os.path.abspath(self.pipeline.configdir))
         git.add_remote(repo, self.pipeline.remote_base + "/" + self.modelname)
         mr = git.MergeRequest()
-        mr.target = self.pipeline.mr_target_branch if "mr_target_branch" not in self.deployment else self.deployment["mr_target_branch"]
-        mr.title = self.pipeline.mr_title if "mr_title" not in self.deployment else self.deployment["mr_title"]
-        mr.description = self.pipeline.mr_description
+        mr.target = self.deployment["mr_target_branch"]
+        mr.title = self.deployment["mr_title"]
+        mr.description = self.deployment["mr_description"]
         if os.path.isfile(self.pipeline.test_protocol):
             log.info("Appending test_protocol to MR description")
             with open(self.pipeline.test_protocol, "r") as f:
@@ -818,13 +822,13 @@ class BaseModel(yaml.YAMLObject):
         else:
             log.warning(f"Did not find test_protocol file at: {self.pipeline.test_protocol}")
         if failed_model:
-            if hasattr(self.pipeline, "mr_mention") or "mr_mention" in self.deployment:
-                mr.mention = self.pipeline.mr_mention if "mr_mention" not in self.deployment else self.deployment["mr_mention"]
+            if "mr_mention" in self.deployment:
+                mr.mention = self.deployment["mr_mention"]
             return_msg = "pushed to " + git.push(repo, merge_request=mr)
         else:
             return_msg = "pushed to " + git.push(repo, branch="master")
             # deploy to mirror
-        if hasattr(self, "deployment") and "mirror" in self.deployment:
+        if "mirror" in self.deployment:
             log.info(f"Deploying to mirror:\n {dump_yaml(self.deployment['mirror'], default_flow_style=False)}")
             mirror_dir = os.path.join(self.tempdir, "deploy_mirror")
             git.clone(
