@@ -213,7 +213,7 @@ class XMLDefinition(object):
         assert entry is not None
         if hasattr(entry, "tolist"):
             entry = entry.tolist()
-        if type(entry) == list:
+        if type(entry) in [list, tuple, np.array]:
             if any([type(v) in [int, np.int64] for v in entry]):
                 entry = [str(v) for v in entry]
             elif any([type(v) in [float, np.float64] for v in entry]):
