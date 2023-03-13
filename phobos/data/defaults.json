@@ -217,6 +217,11 @@
         "file_name": "joint_limits.yml"
       },
       {
+        "type": "submodel",
+        "name": "abstract_model",
+        "abstract_model": true
+      },
+      {
         "type": "pdf"
       }
     ],

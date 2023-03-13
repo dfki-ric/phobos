@@ -160,13 +160,6 @@ class HyrodynAnnotation(SmurfBase):
     def link_with_robot(self, robot, check_linkage_later=False):
         super(HyrodynAnnotation, self).link_with_robot(robot)
 
-    def get_submodel(self, robot):
-        return robot.instantiate_submodel(definition={
-                "name": str(self),
-                "start": self.get_root(robot), "stop": self.get_leaves(robot)
-            },
-            include_unstopped_branches=False)
-
     def regenerate(self, robot, absorb_fixed_upwards=False, absorb_fixed_downwards=False):
         raise NotImplementedError
 

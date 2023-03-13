@@ -297,10 +297,10 @@ class Robot(SMURFRobot):
                 raise AssertionError(f"The following joints are multiply defined in the submechanisms definition: \n{double_joints}")
         for sm in self.submechanisms + self.exoskeletons:
             if hasattr(sm, "file_path"):
-                _submodel = self.define_submodel(name="#sub_mech#", start=sm.get_root(self),
-                                                 stop=sm.get_leaves(self), robotname=str(sm),
-                                                 no_submechanisms=True, include_unstopped_branches=False,
-                                                 only_return=True)
+                _submodel = self.instantiate_submodel(
+                    name=str(sm), start=sm.get_root(self), stop=sm.get_leaves(self), robotname=str(sm),
+                    no_submechanisms=True, include_unstopped_branches=False
+                )
                 sm.file_path = f"../submechanisms/{str(sm)}.urdf"
                 if not os.path.isfile(sm.file_path):
                     _submodel.export_urdf(outputfile=os.path.normpath(os.path.join(outputdir, "submechanisms", f"{str(sm)}.urdf")))
@@ -478,7 +478,7 @@ class Robot(SMURFRobot):
                     kwargs["simplify_swept_from"]) > 0:
                 for link in kwargs["simplify_swept_from"]:
                     assert kccd_robot.get_link(link) is not None
-                    subtree = kccd_robot.define_submodel(name="kccd_subtree", start=link, stop=None, only_return=True)
+                    subtree = kccd_robot.instantiate_submodel(name="kccd_subtree", start=link, stop=None)
                     order0 = [joint.name for joint in subtree.joints if joint.name in kccd_kinematics.keys()]
                     if len(order0) > 0:
                         block += "\nOVERWRITE " + " ".join(order0) + " WITH ORDER 0 END"
@@ -672,6 +672,10 @@ class Robot(SMURFRobot):
                     assert xml_file_in_smurf is None, "Only one xml file can be linked in the SMURF"
                     xml_file_in_smurf = xml_file
             elif export["type"] == "submodel":
+                if export["name"] == "abstract_model" and export.get("abstract_model", False) and \
+                        (len(self.submechanisms) == 0 or all([sm.type == "serial" for sm in self.submechanisms])):
+                    log.debug("Skipping export of submodel abstract_model, as the robot is already abstract.")
+                    continue
                 log.debug(f"Exporting submodel {export['name']}")
                 if export["name"] not in self.submodel_defs:
                     export_robot_instance = self.define_submodel(
@@ -687,7 +691,7 @@ class Robot(SMURFRobot):
                     assert export["stop"] == self.submodel_defs["stop"]
                     assert export["include_unstopped_branches"] == self.submodel_defs["include_unstopped_branches"]
                     assert export["no_submechanisms"] == self.submodel_defs["no_submechanisms"]
-                    export_robot_instance = self.instantiate_submodel(export["name"])
+                    export_robot_instance = self.instantiate_submodel(**export)
                 if "add_floating_base" in export and export["add_floating_base"]:
                     export_robot_instance.add_floating_base()
                 _export_config = None
@@ -906,31 +910,34 @@ class Robot(SMURFRobot):
         joint.origin = representation.Pose.from_matrix(inv(T0_newp).dot(T0_old))
         joint.parent = new_parent_name
 
-    def define_submodel(self, name, start, stop=None, robotname=None, only_urdf=False, only_return=False,
-                        overwrite=False, no_submechanisms=False, include_unstopped_branches=False):
+    def define_submodel(self, name, start=None, stop=None, robotname=None, only_urdf=False, abstract_model=False,
+                        remove_joints=None, no_submechanisms=False, include_unstopped_branches=False,
+                        move_joint_axis_to_intersection=None, include_human_in_abstract=False,
+                        overwrite=False):
         """Defines a submodel from a given starting link.
         If stop is provided than the chain from start to stop is used.
         """
+        if remove_joints is None:
+            remove_joints = []
         assert stop is None or type(stop) == list
-        assert type(start) == str
         definition = {
             "name": name,
             "robotname": robotname,
-            "start": start,
+            "start": str(start) if start is not None else str(self.get_root()),
             "stop": stop,
             "only_urdf": only_urdf,
+            "abstract_model": abstract_model,
+            "remove_joints": remove_joints,
+            "move_joint_axis_to_intersection": move_joint_axis_to_intersection,
             "include_unstopped_branches": include_unstopped_branches,
-            "no_submechanisms": no_submechanisms
+            "no_submechanisms": no_submechanisms,
+            "include_human_in_abstract": include_human_in_abstract
         }
-        if only_return:
-            return self.instantiate_submodel(definition=definition, no_submechanisms=no_submechanisms,
-                                             include_unstopped_branches=include_unstopped_branches)
         if name in self.submodel_defs.keys() and not overwrite:
             raise NameError("A submodel with the given name is already defined")
         else:
             self.submodel_defs[name] = definition
-        return self.instantiate_submodel(name, no_submechanisms=no_submechanisms,
-                                         include_unstopped_branches=include_unstopped_branches)
+        return self.instantiate_submodel(**definition)
 
     def get_links_and_joints_in_subtree(self, start, stop=None, include_unstopped_branches=False):
         assert self.get_link(start, verbose=True) is not None, f"Link {start} does not exist"
@@ -955,42 +962,33 @@ class Robot(SMURFRobot):
 
         return linknames, jointnames
 
-    def instantiate_submodel(self, name=None, definition=None,
-                             include_unstopped_branches=None,
-                             no_submechanisms=False):
+    def instantiate_submodel(self, name=None, start=None, stop=None, robotname=None, include_unstopped_branches=None,
+                             no_submechanisms=False, abstract_model=False, remove_joints=None,
+                             move_joint_axis_to_intersection=None, include_human_in_abstract=False,
+                             **ignored_kwargs):
         """
         Instantiates a submodel by it's definition. Takes either name or definition. If both are given, the submodel
         definition with the given name will be updated including renaming it
-        :param name: name of the already defined submodel
-        :param definition: definition of a submodel
+        See define_submodel for the params. Call by robot.instantiate_submodel(**robot.submodel_defs[name])
         :return: the submodel
         """
-        assert name is not None or definition is not None
-        if name is not None and definition is None:
-            definition = self.submodel_defs[name]
-            if include_unstopped_branches is None:
-                include_unstopped_branches = definition["include_unstopped_branches"]
-        elif name is not None and definition is not None:
-            assert definition["name"] not in self.submodel_defs.keys()
-            if name != definition["name"]:
-                self.remove_submodel(name)
-            self.define_submodel(**definition)
-        elif name is None and definition is None:
-            raise AssertionError("No args given!")
+        if remove_joints is None:
+            remove_joints = []
+        if start is None:
+            start = self.get_root()
 
-        if "stop" not in definition.keys():
-            definition["stop"] = None
-        assert all([x in definition.keys() for x in ["name", "start", "stop"]])
-        if "robotname" not in definition.keys() or definition["robotname"] is None:
-            definition["robotname"] = definition["name"]
+        if robotname is None and name is not None:
+            robotname = name
+        # elif name is None and robotname is not None:  # name is not used here otherwise
+        #     name = robotname
+        elif name is None and robotname is None:
+            raise ValueError("Neither name nor robotname given")
 
-        submodel = type(self)(name=definition["robotname"])
-        if include_unstopped_branches is None:
-            include_unstopped_branches = definition.get("include_unstopped_branches", False)
+        submodel = type(self)(name=robotname)
 
         linknames, jointnames = self.get_links_and_joints_in_subtree(
-            start=definition["start"], stop=definition["stop"],
-            include_unstopped_branches=include_unstopped_branches)
+            start=start, stop=stop, include_unstopped_branches=include_unstopped_branches
+        )
 
         links = self.get_link(linknames)
         materials = set()
@@ -1008,8 +1006,8 @@ class Robot(SMURFRobot):
         for joint in _joints:
             if any([jd.joint not in jointnames for jd in joint.joint_dependencies]):
                 _joint = joint.duplicate()
-                log.debug(f"Removing mimic relation in submodel {definition['robotname']} for {_joint.name} (mimiced "
-                            f"{_joint.mimic.joint})!")
+                log.debug(f"Removing mimic relation in submodel {robotname} for {_joint.name} (mimiced "
+                          f"{_joint.mimic.joint})!")
                 _joint.joint_dependencies = [jd for jd in _joint.joint_dependencies if jd.joint in jointnames]
                 joints.append(_joint)
             else:
@@ -1068,6 +1066,24 @@ class Robot(SMURFRobot):
                 submodel.__dict__[k] = v
 
         submodel.relink_entities()
+
+        if abstract_model:
+            abstract_joints = [str(j) for j in self.joints
+                               if j.joint_type == "fixed"]
+            for sm in self.submechanisms:
+                abstract_joints += [str(j) for j in sm.jointnames_independent]
+            if not include_human_in_abstract:
+                for sm in self.exoskeletons:
+                    abstract_joints += [str(j) for j in sm.jointnames_dependent]
+
+            remove_joints += [str(j) for j in self.joints
+                              if str(j) not in abstract_joints]
+
+        submodel.remove_joint(remove_joints)
+
+        if move_joint_axis_to_intersection is not None:
+            for jointname, intersecting in move_joint_axis_to_intersection.items():
+                submodel.move_joint_to_intersection(jointname, intersecting)
 
         return submodel
 
@@ -1419,6 +1435,7 @@ class Robot(SMURFRobot):
         :param other_joints: the joints with which the axis of "joint" intersects
         :return: None
         """
+        assert len(other_joints) == 2
         mj_name = joint
         tjj_names = other_joints
 
@@ -2263,19 +2280,15 @@ class Robot(SMURFRobot):
 
         # Create new robot
         before = self.instantiate_submodel(
-            definition={
-                "name": self.name,
-                "start": self.get_root(),
-                "stop": links_to_cut
-            },
+            name=self.name,
+            start=self.get_root(),
+            stop=links_to_cut,
             include_unstopped_branches=True
         )
         beyond = {
             new_root: self.instantiate_submodel(
-                definition={
-                    "name": self.name,
-                    "start": new_root
-                },
+                name=self.name,
+                start=new_root,
                 include_unstopped_branches=True
             ) for new_root in links_to_cut}
         return before, beyond
