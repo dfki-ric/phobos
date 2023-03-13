@@ -53,6 +53,15 @@ If you are on the hunt for a BiBTeX entry, check out the [FAQ section](https://g
 ## Installation
 
 ### Blender
+Phobos has several python dependencies, those have to be installed in blender before you can use phobos. There are two ways of doing this:
+
+>NOTE: If you are using blender under windows, make sure you have the latest version of [Microsoft Visual C++ Redistributable](https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170) installed.  Otherwise blenders python won't work properly.
+
+Before installing the phobos.zip you can run the script install_requirements.py with the blender python.
+```bash
+${BLENDER_EXECUTABLE} -b --python install_requirements.py
+```
+
 Just zip the `phobos` subfolder: `zip -r phobos.zip phobos` and install it via Blender: `blender->edit->preferences->addons->install`
 
 After installation the phobos main menu can be found on the right hand side of the 3D Viewport. If not already visible, one can find a very small arrow to open the Blender toolbar (purple circle showing it in the image).
@@ -62,7 +71,13 @@ After installation the phobos main menu can be found on the right hand side of t
 Phobos is currently tested and running with Blender v3.3 LTS.
 
 ### CLI
-Just install it using pip:
+Install the requirements by executing `install_requirements.py` with the python you want to install phobos to:
+```bash
+cd phobos
+python3 install_requirements.py
+```
+
+Then just install it using pip:
 ```bash
 cd phobos
 pip install .

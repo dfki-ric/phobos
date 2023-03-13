@@ -14,7 +14,6 @@ Handles different import attempts to cope with Blender's *Reload script* functio
 """
 import sys
 
-REQUIREMENTS_HAVE_BEEN_CHECKED = False
 BPY_AVAILABLE = False
 try:
     import bpy
@@ -27,7 +26,7 @@ bl_info = {
     "description": "A toolbox to enable editing of robot models in Blender.",
     "author": "Kai von Szadkowski, Henning Wiedemann, Malte Langosz, Simon Reichel, Julius Martensen, et. al.",
     "version": (2, 0, 0),
-    "blender": (3, 3, 1),
+    "blender": (3, 3, 4),
     "location": "Phobos adds a number of custom tool panels.",
     "warning": "",
     "wiki_url": "https://github.com/dfki-ric/phobos/wiki",
@@ -35,87 +34,6 @@ bl_info = {
     "tracker_url": "https://github.com/dfki-ric/phobos/issues",
     "category": "Development",
 }
-
-# [TODO v2.1.0] fill this automatically
-requirements = {
-    "yaml": "pyyaml",
-    "numpy": "numpy",
-    "scipy": "scipy",
-    "pkg_resources": "setuptools",
-    "collada": "pycollada",
-    "pydot": "pydot"
-}
-
-optional_requirements = {
-    "lxml": "lxml",
-    "networkx": "networkx",  # optional for blender
-    "trimesh": "trimesh",  # optional for blender
-}
-
-extra_requirements = {
-    "pybullet": "pybullet",  # optional for blender
-    "open3d": "open3d",  # optional for blender
-    "python-fcl": "python-fcl",  # optional for blender,
-    "PIL": "Pillow"  # optional for blender,
-
-}
-
-
-def install_requirement(package_name, upgrade_pip=False, lib=None, ensure_pip=True):
-    import subprocess
-    import sys
-    if lib is None and BPY_AVAILABLE:
-        lib = bpy.utils.user_resource("SCRIPTS", path="modules")
-    if ensure_pip:
-        # Ensure pip is installed
-        subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
-    # Update pip (not mandatory)
-    if upgrade_pip:
-        print("  Upgrading pip...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
-    # Install package
-    print("  Installing package", package_name)
-    if lib is None:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", package_name])
-    else:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", f"--target={str(lib)}", package_name])
-
-
-def check_requirements(optional=False, extra=False, force=False, upgrade_pip=False, lib=None):
-    global REQUIREMENTS_HAVE_BEEN_CHECKED
-    if REQUIREMENTS_HAVE_BEEN_CHECKED and not force:
-        return
-    print("Checking requirements:")
-    import importlib
-    import subprocess
-    import sys
-    # Ensure pip is installed
-    subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
-    reqs = [requirements]
-    if optional:
-        reqs += [optional_requirements]
-    if extra:
-        reqs += [extra_requirements]
-    if upgrade_pip:
-        print("  Upgrading pip...")
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
-    for r in reqs:
-        for import_name, req_name in r.items():
-            print("  Checking", import_name)
-            try:
-                if importlib.util.find_spec(import_name) is None:
-                    install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
-            except AttributeError:  # when using importlib before v3.4
-                loader = importlib.find_loader(import_name)
-                if not issubclass(type(loader), importlib.machinery.SourceFileLoader):
-                    install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
-            except subprocess.CalledProcessError as e:
-                if import_name in optional_requirements.keys():
-                    print(f"Couldn't install optional_requirement {import_name} ({req_name})")
-                else:
-                    raise e
-    importlib.invalidate_caches()
-    REQUIREMENTS_HAVE_BEEN_CHECKED = True
 
 
 def register():
@@ -128,9 +46,6 @@ def register():
     Returns:
 
     """
-    import sys
-    if not sys.platform.startswith("win"):
-        check_requirements(optional=True, upgrade_pip=True)
     from . import defs
     from . import io
     from . import core
@@ -221,9 +136,6 @@ if not "blender" in sys.executable.lower() and not BPY_AVAILABLE:
         __version__ = ".".join([str(x) for x in bl_info["version"]])
     finally:
         del get_distribution, DistributionNotFound
-else:
-    if not sys.platform.startswith("win"):
-        check_requirements(optional=True, upgrade_pip=True)
 
 from . import defs
 from . import io
