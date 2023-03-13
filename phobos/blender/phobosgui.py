@@ -1309,15 +1309,15 @@ class PhobosExportPanel(bpy.types.Panel):
             layout.separator()
             box = layout.box()
             box.label(text='URDF export')
+            box.prop(ioUtils.getExpSettings(), 'urdfDecimalPlaces')
             box.prop(ioUtils.getExpSettings(), 'export_urdf_mesh_type')
-            box.prop(ioUtils.getExpSettings(), 'urdf_DecimalPlaces')
             box.prop(bpy.context.scene.phobosexportsettings, 'urdfOutputPathtype')
         if getattr(bpy.context.scene, 'export_entity_sdf', False):
             layout.separator()
             box = layout.box()
             box.label(text='SDF export')
+            box.prop(ioUtils.getExpSettings(), 'sdfDecimalPlaces')
             box.prop(ioUtils.getExpSettings(), 'export_sdf_mesh_type')
-            box.prop(ioUtils.getExpSettings(), 'sdf_DecimalPlaces')
             box.prop(bpy.context.scene.phobosexportsettings, 'sdfOutputPathtype')
             # doesn't work properly therefore excluded
             # box.prop(ioUtils.getExpSettings(), 'export_sdf_model_config', icon='RENDERLAYERS')
