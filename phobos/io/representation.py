@@ -468,6 +468,7 @@ class Mesh(Representation, SmurfBase):
                 self.mesh_information = mesh_io.trimesh_2_mesh_info_dict(mesh)
             elif BPY_AVAILABLE and isinstance(mesh, bpy.types.Mesh):
                 self.mesh_information = mesh_io.blender_2_mesh_info_dict(mesh)
+                self.changed = True
         else:
             if kwargs.get("_xmlfile", None) is not None and not os.path.isabs(filepath):
                 filepath = read_relative_filename(filepath, kwargs["_xmlfile"])
@@ -721,7 +722,7 @@ class Mesh(Representation, SmurfBase):
             if o_history is not None:
                 equiv_histories = [x for x in o_history[1:] if not x.startswith("->")] == [x for x in self.history[1:] if not x.startswith("->")]
             if existing_mesh is not None and (equiv_histories or mesh_io.identical(mesh_io.as_trimesh(self.mesh_object, silent=True), existing_mesh)):
-                log.debug(f"Skipping export of {targetpath } as the mesh file already exists and is identical")
+                log.debug(f"Skipping export of {targetpath} as the mesh file already exists and is identical")
                 self.exported[ext] = targetpath
                 self.write_history(targetpath)
                 return
