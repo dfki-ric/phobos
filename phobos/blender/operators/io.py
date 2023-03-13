@@ -166,6 +166,8 @@ class ExportModelOperator(Operator):
                     "ros_pathes": getattr(ioUtils.getExpSettings(), f'{fmt}OutputPathtype').startswith("ros_package"),
                     "enforce_zero": getattr(ioUtils.getExpSettings(), 'enforceZero'),
                     "copy_with_other_pathes": "+" in getattr(ioUtils.getExpSettings(), f'{fmt}OutputPathtype'),
+                    "float_fmt_dict": {"default": "%."+str(getattr(ioUtils.getExpSettings(), f'{fmt}DecimalPlaces'))+"f"},
+                    "correct_inertials": getattr(ioUtils.getExpSettings(), 'ensurePositiveSemiDefinite')
                 })
             elif fmt == "joint_limits":
                 export_config.append({

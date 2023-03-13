@@ -181,7 +181,7 @@ class Robot(SMURFRobot):
     def export_xml(self, outputdir=None, format="urdf", filename=None, float_fmt_dict=None, no_format_dir=False,
                    ros_pkg=False, copy_with_other_pathes=None, ros_pkg_name=None,
                    with_meshes=True, mesh_format=None, additional_meshes=None, rel_mesh_pathes=None,
-                   enforce_zero=False):
+                   enforce_zero=False, correct_inertials=False):
         """ Exports all model information stored inside this instance.
         """
         outputdir = os.path.abspath(outputdir)
@@ -223,6 +223,8 @@ class Robot(SMURFRobot):
         _export_robot = self.duplicate()
         if enforce_zero:
             _export_robot.enforce_zero()
+        if correct_inertials:
+            _export_robot.correct_inertials()
         assert len(self.links) == len(self.joints) + 1
         if format == "urdf":
             _export_robot.export_urdf(
@@ -665,7 +667,8 @@ class Robot(SMURFRobot):
                     mesh_format=export["mesh_format"],
                     additional_meshes=export["additional_meshes"] if "additional_meshes" in export else None,
                     rel_mesh_pathes=rel_mesh_pathes,
-                    enforce_zero=export.get("enforce_zero", False)
+                    enforce_zero=export.get("enforce_zero", False),
+                    correct_inertials=export.get("correct_inertials", False)
                 )
                 ros_pkg |= export["ros_pathes"] if "ros_pathes" in export else None
                 if export["link_in_smurf"]:
@@ -1151,7 +1154,7 @@ class Robot(SMURFRobot):
         Correct all inertials of the robot.
         """
         for link in self.links:
-            # [TODO v2.0.0] check if the I is basically zero and then recreate the inertial using the collision
+            # [TODO v2.1.0] check if the I is basically zero and then recreate the inertial using the collision
             if link.inertial:
                 M = self.get_inertial(link.name).to_mass_matrix()
                 origin = link.inertial.origin

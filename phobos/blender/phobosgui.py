@@ -224,8 +224,19 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
     selectedOnly : BoolProperty(
         name="Selected only", default=True, description="Export only selected objects"
     )
-    decimalPlaces : IntProperty(
-        name="decimals", description="Number of " + "decimal places to export", default=5, min=3
+    # smurfDecimalPlaces : IntProperty(
+    #     name="decimals", description="Number of " + "decimal places to export in smurf", default=5, min=3
+    # )
+    urdfDecimalPlaces : IntProperty(
+        name="decimals", description="Number of " + "decimal places to export in urdf", default=5, min=3
+    )
+    sdfDecimalPlaces : IntProperty(
+        name="decimals", description="Number of " + "decimal places to export in sdf", default=5, min=3
+    )
+    ensurePositiveSemiDefinite: BoolProperty(
+        name="Ensure Positive-Semi-Definite Inertias",
+        description="Ensure that the Inertia matrices are positive semi definite, forces diagonal of zero-matrices to 1e-5",
+        default=False
     )
     enforceZero: BoolProperty(
         name="Force almost zero to zero",
@@ -251,6 +262,7 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         name='file path',
         description="Defines how pathes are generated in " + "entity/scene files.",
     )
+
     # prefixExport : StringProperty(
     #     name='prefix export',
     #     default="",
@@ -1261,7 +1273,7 @@ class PhobosExportPanel(bpy.types.Panel):
         g1.prop(expsets, "exportTextures")
         g1.prop(expsets, "selectedOnly")
         g2 = ginlayout.column(align=True)
-        g2.prop(expsets, "decimalPlaces")
+        g2.prop(expsets, "ensurePositiveSemiDefinite")
         g2.prop(expsets, "enforceZero")
 
         layout.separator()
@@ -1292,17 +1304,20 @@ class PhobosExportPanel(bpy.types.Panel):
             box = layout.box()
             box.label(text='SMURF export')
             box.prop(ioUtils.getExpSettings(), 'export_smurf_xml_type')
+            # box.prop(ioUtils.getExpSettings(), 'smurfDecimalPlaces')
         if getattr(bpy.context.scene, 'export_entity_urdf', False):
             layout.separator()
             box = layout.box()
             box.label(text='URDF export')
             box.prop(ioUtils.getExpSettings(), 'export_urdf_mesh_type')
+            box.prop(ioUtils.getExpSettings(), 'urdf_DecimalPlaces')
             box.prop(bpy.context.scene.phobosexportsettings, 'urdfOutputPathtype')
         if getattr(bpy.context.scene, 'export_entity_sdf', False):
             layout.separator()
             box = layout.box()
             box.label(text='SDF export')
             box.prop(ioUtils.getExpSettings(), 'export_sdf_mesh_type')
+            box.prop(ioUtils.getExpSettings(), 'sdf_DecimalPlaces')
             box.prop(bpy.context.scene.phobosexportsettings, 'sdfOutputPathtype')
             # doesn't work properly therefore excluded
             # box.prop(ioUtils.getExpSettings(), 'export_sdf_model_config', icon='RENDERLAYERS')

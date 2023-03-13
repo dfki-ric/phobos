@@ -85,14 +85,14 @@ class XMLDefinition(object):
         for attname, varname in self.xml_attributes.items():
             val = getattr(object, varname)
             if val is not None:
-                attrib[attname] = self._serialize(val, float_fmt=float_fmt_dict[attname] if attname in float_fmt_dict else None)
+                attrib[attname] = self._serialize(val, float_fmt=float_fmt_dict.get(attname, float_fmt_dict.get("default", None)))
         out = ET.Element(self.xml_tag, attrib=attrib)
         # value
         if self.xml_value is not None:
             assert all([x == {} for x in [self.xml_children, self.xml_value_children, self.xml_attribute_children,
                                           self.xml_nested_children]])
             val = getattr(object, self.xml_value)
-            out.text = self._serialize(val, float_fmt=float_fmt_dict[self.xml_tag] if self.xml_tag in float_fmt_dict else None)
+            out.text = self._serialize(val, float_fmt=float_fmt_dict.get(self.xml_tag, float_fmt_dict.get("default", None)))
             if val is not None:
                 return out
             else:
@@ -121,7 +121,7 @@ class XMLDefinition(object):
                     raise error
         # children that are created from a simple property and have only attributes
         for tag, attribute_map in self.xml_attribute_children.items():
-            _attrib = {attname: self._serialize(getattr(object, varname), float_fmt=float_fmt_dict[tag] if tag in float_fmt_dict else None)
+            _attrib = {attname: self._serialize(getattr(object, varname), float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)))
                        for attname, varname in attribute_map.items() if getattr(object, varname) is not None}
             if len(_attrib) == 0:
                 continue
@@ -134,7 +134,7 @@ class XMLDefinition(object):
                 if type(val) == list and all([not is_int(v) and not is_float(v) and type(v) == str for v in val]):
                     for v in val:
                         e = ET.Element(tag)
-                        _t = self._serialize(v, float_fmt=float_fmt_dict[tag] if float_fmt_dict is not None and tag in float_fmt_dict else None)
+                        _t = self._serialize(v, float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)))
                         try:
                             e.text = _t
                         except TypeError as error:
@@ -143,7 +143,7 @@ class XMLDefinition(object):
                         out.append(e)
                 else:
                     e = ET.Element(tag)
-                    _t = self._serialize(val, float_fmt=float_fmt_dict[tag] if float_fmt_dict is not None and tag in float_fmt_dict else None)
+                    _t = self._serialize(val, float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)))
                     try:
                         e.text = _t
                     except TypeError as error:
