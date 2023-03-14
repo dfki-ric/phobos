@@ -1372,6 +1372,7 @@ class Joint(Representation, SmurfBase):
         self.returns = ['name']
         assert parent is not None
         assert child is not None
+        assert str(parent) != str(child)
         self.parent = parent if type(parent) == str else parent.name
         assert self.parent is not None
         self.child = child if type(child) == str else child.name

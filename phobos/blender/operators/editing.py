@@ -1638,6 +1638,8 @@ class DefineJointConstraintsOperator(Operator):
         # set properties for each joint
         for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
             context.view_layer.objects.active = joint
+            assert joint.parent is not None and joint.parent.phobostype == "link", \
+                f"You need to have a link parented to {joint.name} before you can create a joint"
             jUtils.setJointConstraints(
                 joint=joint,
                 jointtype=self.joint_type,
