@@ -166,6 +166,7 @@ class SMURFRobot(XMLRobot):
                     self.xmlfile = os.path.abspath(f)
                     self.inputfiles.remove(f)
 
+    # [TODO v2.0.0] Remove annotations that are included in entities
     def _parse_annotations(self, annotationfile):
         # Load the file
         with open(annotationfile, 'r') as stream:
