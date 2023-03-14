@@ -1,1 +1,1 @@
-from .pipeline import Pipeline, TestingPipeline, XTypePipeline
+from .pipeline import Pipeline, TestingPipeline

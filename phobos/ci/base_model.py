@@ -39,8 +39,8 @@ class BaseModel(yaml.YAMLObject):
         kwargs = {}
         if 'model' in self.cfg.keys():
             kwargs = self.cfg['model']
-        elif 'xtype_model' in self.cfg.keys():
-            kwargs = self.cfg['xtype_model']
+        # elif 'xtype_model' in self.cfg.keys():
+        #     kwargs = self.cfg['xtype_model']
         for (k, v) in kwargs.items():
             setattr(self, k, v)
         # check whether all necessary configurations are there

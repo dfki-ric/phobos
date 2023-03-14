@@ -41,14 +41,6 @@ try:
 except ImportError:
     log.info("Pybullet tests not available.")
 
-DEIMOS_AVAILABLE = False
-try:
-    from deimos.deimos import Deimos
-    DEIMOS_AVAILABLE = True
-    log.info("Deimos available.")
-except ImportError:
-    log.info("Deimos not available.")
-
 XDBI_AVAILABLE = False
 try:
     import xtypes_py

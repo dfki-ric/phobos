@@ -8,7 +8,6 @@ from .base_model import BaseModel
 from .compare_model import CompareModel
 from .model_testing import ModelTest
 from .test_model import TestModel
-from .xtype_model import XTypeModel
 from ..commandline_logging import get_logger
 from ..defs import *
 from ..utils import git, misc
@@ -103,8 +102,8 @@ class Pipeline(yaml.YAMLObject):
                 try:
                     if list(cfg.keys())[0] == "model":
                         self.models += [BaseModel(os.path.join(self.configdir, md), self, self.processed_model_exists)]
-                    elif list(cfg.keys())[0] == "xtype_model":
-                        self.models += [XTypeModel(os.path.join(self.configdir, md), self, self.processed_model_exists)]
+                    # elif list(cfg.keys())[0] == "xtype_model":
+                    #     self.models += [XTypeModel(os.path.join(self.configdir, md), self, self.processed_model_exists)]
                     else:
                         self.processing_failed[md[:-4]]["load"] = f"Skipping {md} as it is no valid model definition!\n"
                         log.error(self.processing_failed[md[:-4]]["load"])
@@ -730,185 +729,185 @@ class TestingPipeline(Pipeline):
         return state
 
 
-# [TODO v2.1.0] use inheritance to remove redundant code
-class XTypePipeline(yaml.YAMLObject):
-    def __init__(self, configfile, processed_model_exists, only_create=False):
-        self.processing_failed = {}
-        self.test_results = {}
-        self.configdir = os.path.dirname(configfile)
-        self.processed_model_exists = processed_model_exists
-        if not os.path.isfile(configfile):
-            raise Exception('{} not found!'.format(configfile))
-        self.configfile = configfile
-        kwargs = load_json(open(configfile, 'r'))['assemble']
-
-        self.modeltypes = {"xtype": kwargs}
-
-        for (k, v) in kwargs.items():
-            setattr(self, k, v)
-
-        self.root = os.getcwd()
-        print("Working from", self.root)
-        self.git_rev = git.revision(os.path.abspath(self.configdir))
-        self.temp_dir = os.path.join(self.root, "temp")
-        self.faillog = os.path.join(self.temp_dir, "failures.txt")
-        self.test_protocol = os.path.join(self.temp_dir, "test_protocol.txt")
-        if os.path.isfile(self.faillog) and processed_model_exists:
-            with open(self.faillog, "r") as f:
-                self.processing_failed = load_json(f.read())
-
-        self.meshespath = self.meshes[self.output_mesh_format]
-
-        print("Finished reading config", configfile)
-
-        self.model = None
-        imported_meshes = []
-
-        self.processing_failed = {"load": "N/A", "process": "N/A", "test": "N/A", "deploy": "N/A"}
-        try:
-            load_json(open(configfile, "r").read())["xtype_model"]
-        except KeyError as e:
-            self.processing_failed["load"] = ''.join(traceback.format_exception(None, e, e.__traceback__))
-            log.error("Could not load model config!")
-            traceback.print_exc()
-        fstate = self._get_model_failure_state()
-        self.processing_failed["load"] = ""
-        if bool(fstate & (F_PROC | NA_PROC)) and processed_model_exists:
-            log.warning("Model was not successfully processed")
-            self.processing_failed["load"] += \
-                "Model was not successfully processed!\n"
-        elif bool(fstate & (F_PROC | NA_PROC)):
-            # reset processing error
-            self.processing_failed["process"] = "N/A"
-        try:
-            self.model = XTypeModel(configfile, self, self.processed_model_exists, only_create=only_create)
-            self.model.typedef["meshespath"] = self.meshespath
-            for m in self.model.get_input_meshes():
-                for m2 in imported_meshes:
-                    if os.path.basename(m) == os.path.basename(m2) and os.path.dirname(m) != os.path.dirname(m):
-                        raise ("You can not import two different meshes with the same name!\n"
-                               "In the model you tried to import:\n  {} but\n  {} already exists!".format(m, m2))
-            imported_meshes += self.model.get_input_meshes()
-            self.processing_failed["load"] = "Good"
-        except Exception as e:
-            self.processing_failed["load"] += "Loading failed with the following error:" + ''.join(
-                traceback.format_exception(None, e, e.__traceback__))
-            log.error(self.processing_failed["load"])
-        if os.path.exists(os.path.join(self.temp_dir)):
-            with open(self.faillog, "w") as f:
-                f.write(dump_json(self.processing_failed, default_flow_style=False))
-
-    def _get_model_failure_state(self):
-        state = 0
-        if not self.processing_failed["load"].upper().startswith("GOOD") and\
-           not self.processing_failed["load"].upper().startswith("N/A"):
-            state += F_LOAD
-        if not self.processing_failed["process"].upper().startswith("GOOD") and\
-           not self.processing_failed["process"].upper().startswith("N/A"):
-            state += F_PROC
-        if not self.processing_failed["test"].upper().startswith("GOOD") and\
-           not self.processing_failed["test"].upper().startswith("N/A"):
-            state += F_TEST
-        if not self.processing_failed["deploy"].upper().startswith("GOOD") and\
-           not self.processing_failed["deploy"].upper().startswith("N/A"):
-            state += F_DEPL
-        if self.processing_failed["load"].upper().startswith("N/A"):
-            state += NA_LOAD
-        if self.processing_failed["process"].upper().startswith("N/A"):
-            state += NA_PROC
-        if self.processing_failed["test"].upper().startswith("N/A"):
-            state += NA_TEST
-        if self.processing_failed["deploy"].upper().startswith("N/A"):
-            state += NA_DEPL
-        return state
-
-    def has_failure(self):
-        return self._get_model_failure_state() & (F_LOAD | F_PROC | F_TEST | F_DEPL)
-
-    def get_coverage(self, phases=None):
-        if phases is None:
-            phases = []
-        if len(phases) == 0:
-            phases = ["process", "test", "deploy"]
-        log = load_json(open(self.faillog, "r").read())
-        all_models = float(len(log.keys()))
-        fails = 0.0
-        all_models *= len(phases)
-        for p in phases:
-            fails += not log[p].upper().startswith("GOOD")
-        return 1 - fails / all_models
-
-    def print_fail_log(self, file=sys.stdout):
-        log = load_json(open(self.faillog, "r").read())
-        print("\nPipeline Report:\n---------------------", file=file)
-        report = log
-        order_val = ["load", "process", "test", "deploy"]
-        if len(report) == 0:
-            print("Nothing done that could be reported!", file=file)
-        print(self.model.modelname + ":", file=file)
-        values = [(k, v) for k, v in report.items()]
-        values = sorted(values, key=lambda x: order_val.index(x[0]))
-        for v in values:
-            print("  " + v[0] + ": \t",
-                  str(v[1]) if v[1].upper().startswith("GOOD") or v[1].upper().startswith("N/A") else "Error",
-                  file=file)
-            if not v[1].upper().startswith("GOOD") and not v[1].upper().startswith("N/A"):
-                for line in v[1].split("\n"):
-                    print("    " + line, file=file)
-
-    def process_models(self):
-        # delete the temp_dir if there is already one
-        misc.recreate_dir(self, self.temp_dir)
-        with open(self.faillog, "w") as f:
-            f.write(dump_json(self.processing_failed, default_flow_style=False))
-
-        # create the central mesh folders
-        misc.create_dir(self, os.path.join(self.temp_dir, self.meshespath))
-        if hasattr(self, "also_export_bobj") and self.also_export_bobj is True:
-            misc.create_dir(self, os.path.join(self.temp_dir, self.meshes["bobj"]))
-        if hasattr(self, "export_kccd") and self.export_kccd:
-            misc.create_dir(self, os.path.join(self.temp_dir, self.meshes["iv"]))
-        log.info("\nProcessing model...")
-        if self._get_model_failure_state() & (F_LOAD | NA_LOAD):
-            self.processing_failed["process"] = "Skipping as it model definition file wasn't loaded successfully!"
-            log.warning(self.processing_failed["process"])
-        else:
-            try:
-                self.model.process()
-                self.model.export()
-                os.remove(os.path.join(self.model.exportdir, self.model.typedef["meshespath"]))
-                os.rename(
-                    os.path.join(self.temp_dir, self.model.typedef["meshespath"]),
-                    os.path.join(self.model.exportdir, self.model.typedef["meshespath"]))
-                if len(os.listdir(os.path.dirname(os.path.join(self.temp_dir, self.model.typedef["meshespath"])))) == 0:
-                    os.removedirs(os.path.dirname(os.path.join(self.temp_dir, self.model.typedef["meshespath"])))
-                if self.model.typedef["also_export_bobj"] is True:
-                    os.remove(os.path.join(self.model.exportdir, self.meshes["bobj"]))
-                    os.rename(
-                        os.path.join(self.temp_dir, self.meshes["bobj"]),
-                        os.path.join(self.model.exportdir, self.meshes["bobj"]))
-                    if len(os.listdir(os.path.dirname(os.path.join(self.temp_dir, self.meshes["bobj"])))) == 0:
-                        os.removedirs(os.path.dirname(os.path.join(self.temp_dir, self.meshes["bobj"])))
-                if hasattr(self.model, "export_kccd") and self.model.export_kccd:
-                    os.remove(os.path.join(self.model.exportdir, self.meshes["iv"]))
-                    os.rename(
-                        os.path.join(self.temp_dir, self.meshes["iv"]),
-                        os.path.join(self.model.exportdir, self.meshes["iv"]))
-                    if len(os.listdir(os.path.dirname(os.path.join(self.temp_dir, self.meshes["iv"])))) == 0:
-                        os.removedirs(os.path.dirname(os.path.join(self.temp_dir, self.meshes["iv"])))
-                self.processing_failed["process"] = "Good"
-            except Exception as e:
-                log.error(f"\nFailed processing model with the following error and skipped to next:\n {e}")
-                self.processing_failed["process"] = ''.join(traceback.format_exception(None, e, e.__traceback__))
-                traceback.print_exc()
-        with open(self.faillog, "w") as f:
-            f.write(dump_json(self.processing_failed, default_flow_style=False))
-
-    def test_models(self):
-        raise NotImplementedError
-
-    def deploy_models(self):
-        raise NotImplementedError
-
-    def relpath(self, path):
-        return os.path.relpath(path, self.root)
+# # [TODO v2.1.0] use inheritance to remove redundant code
+# class XTypePipeline(yaml.YAMLObject):
+#     def __init__(self, configfile, processed_model_exists, only_create=False):
+#         self.processing_failed = {}
+#         self.test_results = {}
+#         self.configdir = os.path.dirname(configfile)
+#         self.processed_model_exists = processed_model_exists
+#         if not os.path.isfile(configfile):
+#             raise Exception('{} not found!'.format(configfile))
+#         self.configfile = configfile
+#         kwargs = load_json(open(configfile, 'r'))['assemble']
+#
+#         self.modeltypes = {"xtype": kwargs}
+#
+#         for (k, v) in kwargs.items():
+#             setattr(self, k, v)
+#
+#         self.root = os.getcwd()
+#         print("Working from", self.root)
+#         self.git_rev = git.revision(os.path.abspath(self.configdir))
+#         self.temp_dir = os.path.join(self.root, "temp")
+#         self.faillog = os.path.join(self.temp_dir, "failures.txt")
+#         self.test_protocol = os.path.join(self.temp_dir, "test_protocol.txt")
+#         if os.path.isfile(self.faillog) and processed_model_exists:
+#             with open(self.faillog, "r") as f:
+#                 self.processing_failed = load_json(f.read())
+#
+#         self.meshespath = self.meshes[self.output_mesh_format]
+#
+#         print("Finished reading config", configfile)
+#
+#         self.model = None
+#         imported_meshes = []
+#
+#         self.processing_failed = {"load": "N/A", "process": "N/A", "test": "N/A", "deploy": "N/A"}
+#         try:
+#             load_json(open(configfile, "r").read())["xtype_model"]
+#         except KeyError as e:
+#             self.processing_failed["load"] = ''.join(traceback.format_exception(None, e, e.__traceback__))
+#             log.error("Could not load model config!")
+#             traceback.print_exc()
+#         fstate = self._get_model_failure_state()
+#         self.processing_failed["load"] = ""
+#         if bool(fstate & (F_PROC | NA_PROC)) and processed_model_exists:
+#             log.warning("Model was not successfully processed")
+#             self.processing_failed["load"] += \
+#                 "Model was not successfully processed!\n"
+#         elif bool(fstate & (F_PROC | NA_PROC)):
+#             # reset processing error
+#             self.processing_failed["process"] = "N/A"
+#         try:
+#             self.model = XTypeModel(configfile, self, self.processed_model_exists, only_create=only_create)
+#             self.model.typedef["meshespath"] = self.meshespath
+#             for m in self.model.get_input_meshes():
+#                 for m2 in imported_meshes:
+#                     if os.path.basename(m) == os.path.basename(m2) and os.path.dirname(m) != os.path.dirname(m):
+#                         raise ("You can not import two different meshes with the same name!\n"
+#                                "In the model you tried to import:\n  {} but\n  {} already exists!".format(m, m2))
+#             imported_meshes += self.model.get_input_meshes()
+#             self.processing_failed["load"] = "Good"
+#         except Exception as e:
+#             self.processing_failed["load"] += "Loading failed with the following error:" + ''.join(
+#                 traceback.format_exception(None, e, e.__traceback__))
+#             log.error(self.processing_failed["load"])
+#         if os.path.exists(os.path.join(self.temp_dir)):
+#             with open(self.faillog, "w") as f:
+#                 f.write(dump_json(self.processing_failed, default_flow_style=False))
+#
+#     def _get_model_failure_state(self):
+#         state = 0
+#         if not self.processing_failed["load"].upper().startswith("GOOD") and\
+#            not self.processing_failed["load"].upper().startswith("N/A"):
+#             state += F_LOAD
+#         if not self.processing_failed["process"].upper().startswith("GOOD") and\
+#            not self.processing_failed["process"].upper().startswith("N/A"):
+#             state += F_PROC
+#         if not self.processing_failed["test"].upper().startswith("GOOD") and\
+#            not self.processing_failed["test"].upper().startswith("N/A"):
+#             state += F_TEST
+#         if not self.processing_failed["deploy"].upper().startswith("GOOD") and\
+#            not self.processing_failed["deploy"].upper().startswith("N/A"):
+#             state += F_DEPL
+#         if self.processing_failed["load"].upper().startswith("N/A"):
+#             state += NA_LOAD
+#         if self.processing_failed["process"].upper().startswith("N/A"):
+#             state += NA_PROC
+#         if self.processing_failed["test"].upper().startswith("N/A"):
+#             state += NA_TEST
+#         if self.processing_failed["deploy"].upper().startswith("N/A"):
+#             state += NA_DEPL
+#         return state
+#
+#     def has_failure(self):
+#         return self._get_model_failure_state() & (F_LOAD | F_PROC | F_TEST | F_DEPL)
+#
+#     def get_coverage(self, phases=None):
+#         if phases is None:
+#             phases = []
+#         if len(phases) == 0:
+#             phases = ["process", "test", "deploy"]
+#         log = load_json(open(self.faillog, "r").read())
+#         all_models = float(len(log.keys()))
+#         fails = 0.0
+#         all_models *= len(phases)
+#         for p in phases:
+#             fails += not log[p].upper().startswith("GOOD")
+#         return 1 - fails / all_models
+#
+#     def print_fail_log(self, file=sys.stdout):
+#         log = load_json(open(self.faillog, "r").read())
+#         print("\nPipeline Report:\n---------------------", file=file)
+#         report = log
+#         order_val = ["load", "process", "test", "deploy"]
+#         if len(report) == 0:
+#             print("Nothing done that could be reported!", file=file)
+#         print(self.model.modelname + ":", file=file)
+#         values = [(k, v) for k, v in report.items()]
+#         values = sorted(values, key=lambda x: order_val.index(x[0]))
+#         for v in values:
+#             print("  " + v[0] + ": \t",
+#                   str(v[1]) if v[1].upper().startswith("GOOD") or v[1].upper().startswith("N/A") else "Error",
+#                   file=file)
+#             if not v[1].upper().startswith("GOOD") and not v[1].upper().startswith("N/A"):
+#                 for line in v[1].split("\n"):
+#                     print("    " + line, file=file)
+#
+#     def process_models(self):
+#         # delete the temp_dir if there is already one
+#         misc.recreate_dir(self, self.temp_dir)
+#         with open(self.faillog, "w") as f:
+#             f.write(dump_json(self.processing_failed, default_flow_style=False))
+#
+#         # create the central mesh folders
+#         misc.create_dir(self, os.path.join(self.temp_dir, self.meshespath))
+#         if hasattr(self, "also_export_bobj") and self.also_export_bobj is True:
+#             misc.create_dir(self, os.path.join(self.temp_dir, self.meshes["bobj"]))
+#         if hasattr(self, "export_kccd") and self.export_kccd:
+#             misc.create_dir(self, os.path.join(self.temp_dir, self.meshes["iv"]))
+#         log.info("\nProcessing model...")
+#         if self._get_model_failure_state() & (F_LOAD | NA_LOAD):
+#             self.processing_failed["process"] = "Skipping as it model definition file wasn't loaded successfully!"
+#             log.warning(self.processing_failed["process"])
+#         else:
+#             try:
+#                 self.model.process()
+#                 self.model.export()
+#                 os.remove(os.path.join(self.model.exportdir, self.model.typedef["meshespath"]))
+#                 os.rename(
+#                     os.path.join(self.temp_dir, self.model.typedef["meshespath"]),
+#                     os.path.join(self.model.exportdir, self.model.typedef["meshespath"]))
+#                 if len(os.listdir(os.path.dirname(os.path.join(self.temp_dir, self.model.typedef["meshespath"])))) == 0:
+#                     os.removedirs(os.path.dirname(os.path.join(self.temp_dir, self.model.typedef["meshespath"])))
+#                 if self.model.typedef["also_export_bobj"] is True:
+#                     os.remove(os.path.join(self.model.exportdir, self.meshes["bobj"]))
+#                     os.rename(
+#                         os.path.join(self.temp_dir, self.meshes["bobj"]),
+#                         os.path.join(self.model.exportdir, self.meshes["bobj"]))
+#                     if len(os.listdir(os.path.dirname(os.path.join(self.temp_dir, self.meshes["bobj"])))) == 0:
+#                         os.removedirs(os.path.dirname(os.path.join(self.temp_dir, self.meshes["bobj"])))
+#                 if hasattr(self.model, "export_kccd") and self.model.export_kccd:
+#                     os.remove(os.path.join(self.model.exportdir, self.meshes["iv"]))
+#                     os.rename(
+#                         os.path.join(self.temp_dir, self.meshes["iv"]),
+#                         os.path.join(self.model.exportdir, self.meshes["iv"]))
+#                     if len(os.listdir(os.path.dirname(os.path.join(self.temp_dir, self.meshes["iv"])))) == 0:
+#                         os.removedirs(os.path.dirname(os.path.join(self.temp_dir, self.meshes["iv"])))
+#                 self.processing_failed["process"] = "Good"
+#             except Exception as e:
+#                 log.error(f"\nFailed processing model with the following error and skipped to next:\n {e}")
+#                 self.processing_failed["process"] = ''.join(traceback.format_exception(None, e, e.__traceback__))
+#                 traceback.print_exc()
+#         with open(self.faillog, "w") as f:
+#             f.write(dump_json(self.processing_failed, default_flow_style=False))
+#
+#     def test_models(self):
+#         raise NotImplementedError
+#
+#     def deploy_models(self):
+#         raise NotImplementedError
+#
+#     def relpath(self, path):
+#         return os.path.relpath(path, self.root)
