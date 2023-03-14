@@ -139,7 +139,7 @@ class Robot(SMURFRobot):
         log.info("SDF written to {}".format(outputfile))
         return
 
-    def export_x3d(self, outputfile, float_fmt_dict=None):  #, ros_pkg=False, copy_with_other_pathes=None, ros_pkg_name=None, mesh_format=None):
+    def export_x3d(self, outputfile, float_fmt_dict=None, reduce_meshes=0):  #, ros_pkg=False, copy_with_other_pathes=None, ros_pkg_name=None, mesh_format=None):
         """Export the mechanism to the given output file.
         If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
         If export_collisions is set to to True, all collisions will be exported. Otherwise no collision get exported.
@@ -149,31 +149,29 @@ class Robot(SMURFRobot):
 
         outputfile = os.path.abspath(outputfile)
 
-        xml_string = '<?xml version="1.0" encoding="UTF-8"?>\n'+\
-                     '<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 3.3//EN" "http://www.web3d.org/specifications/x3d-3.3.dtd">\n'+\
-                     "<X3D profile='Interchange' version='3.3' xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance' xsd:noNamespaceSchemaLocation='http://www.web3d.org/specifications/x3d-3.3.xsd'>"+\
-                     '<head><!-- All "meta" from this section you will found in <Scene> node as MetadataString nodes. --></head>\n'+\
-                     '<Scene>\n'+self.to_x3d_string(float_fmt_dict=float_fmt_dict)+'</Scene>\n</X3D>\n'
+        export_instance = self.duplicate()
+        for vis in export_instance.visuals:
+            if isinstance(vis.geometry, representation.Mesh):
+                vis.geometry.apply_scale()
 
-        # if ros_pkg is True:
-        #     xml_string = regex_replace(xml_string, {'<uri>../': '<uri>package://' if ros_pkg_name is None else f'<uri>package://{ros_pkg_name}/'})
+        if reduce_meshes > 0:
+            for vis in export_instance.visuals:
+                if isinstance(vis.geometry, representation.Mesh):
+                    n_vertices = len(vis.geometry.x3d_vertices)/3
+                    if n_vertices > reduce_meshes:
+                        vis.geometry.reduce_mesh(reduce_meshes/n_vertices)
+
+        xml_string = '<?xml version="1.0" encoding="UTF-8"?>\n'+ \
+                     '<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 3.3//EN" "http://www.web3d.org/specifications/x3d-3.3.dtd">\n'+ \
+                     "<X3D profile='Interchange' version='3.3' xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance' xsd:noNamespaceSchemaLocation='http://www.web3d.org/specifications/x3d-3.3.xsd'>"+ \
+                     '<head><!-- All "meta" from this section you will found in <Scene> node as MetadataString nodes. --></head>\n'+ \
+                     '<Scene>\n'+export_instance.to_x3d_string(float_fmt_dict=float_fmt_dict)+'</Scene>\n</X3D>\n'
 
         if not os.path.exists(os.path.dirname(os.path.abspath(outputfile))):
             os.makedirs(os.path.dirname(outputfile))
         with open(outputfile, "w") as f:
             f.write(xml_string)
             f.close()
-
-        # if copy_with_other_pathes and not ros_pkg:
-        #     xml_string = regex_replace(xml_string, {'<uri>../': '<uri>package://'})
-        #     f = open(outputfile[:-4] + "_ros.sdf", "w")
-        #     f.write(xml_string)
-        #     f.close()
-        # elif copy_with_other_pathes and ros_pkg:
-        #     xml_string = regex_replace(xml_string, {'<uri>package://': '<uri>../'})
-        #     f = open(outputfile[:-4] + "_relpath.sdf", "w")
-        #     f.write(xml_string)
-        #     f.close()
 
         log.info("X3D written to {}".format(outputfile))
         return
