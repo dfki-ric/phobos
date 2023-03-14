@@ -111,7 +111,8 @@ def execute_shell_command(cmd, cwd=None, dry_run=False, silent=False):
         log.error(out.decode('UTF-8'))
         log.error(err.decode('UTF-8'))
         raise Exception("Subprocess failed! Return code:"+str(proc.returncode) +
-                        " Command was: "+cmd+"\nError:"+err.decode('UTF-8'))
+                        " Command was: "+cmd+" Executed in: "+cwd+
+                        "\nError:"+err.decode('UTF-8'))
     return out.decode('UTF-8'), err.decode('UTF-8')
 
 
