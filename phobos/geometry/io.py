@@ -18,14 +18,16 @@ log = get_logger(__name__)
 
 
 def as_trimesh(scene_or_mesh, scale=None, silent=False):
+    assert scene_or_mesh is not None
     if scale is None:
         scale = [1.0, 1.0, 1.0]
     scale = np.asarray(scale)
-    if hasattr(scene_or_mesh, "bounds") and scene_or_mesh.bounds is None:
-        return None
+
     if isinstance(scene_or_mesh, trimesh.Scene):
         if not silent:
             log.error("Received a mesh with multiple materials, material information especially textures may be lost.")
+        if len(scene_or_mesh.geometry.values()) == 0:
+            raise IOError(f"{scene_or_mesh.file_name} seems to be an invalid mesh_file")
         mesh = trimesh.util.concatenate([
             trimesh.Trimesh(vertices=m.vertices, faces=m.faces)
             for m in scene_or_mesh.geometry.values()])
@@ -49,6 +51,9 @@ def as_trimesh(scene_or_mesh, scale=None, silent=False):
     else:
         mesh = scene_or_mesh
     assert isinstance(mesh, trimesh.Trimesh), f"Can't convert {type(scene_or_mesh)} to trimesh.Trimesh!"
+    if hasattr(mesh, "bounds") and mesh.bounds is None:
+        log.debug(f"Given {type(scene_or_mesh)} has bounds == None, this mesh seems empty.")
+        return None
     return mesh
 
 
@@ -307,11 +312,11 @@ def import_mesh(filepath, urdf_path=None):
 
     if not os.path.exists(filepath):
         raise FileNotFoundError(f"Mesh file {filepath} does not exist!")
-    if filepath.endswith("bobj"):
+    if filepath.endswith(".bobj"):
         mid = parse_bobj(filepath)
         out = mesh_info_dict_2_trimesh(**mid)
     else:
-        out = as_trimesh(trimesh.load_mesh(filepath, maintain_order=True))
+        out = trimesh.load_mesh(filepath, maintain_order=True)
     if out is None:
         log.info(f"{filepath} contains empty mesh!")
     return out
@@ -357,7 +362,7 @@ def parse_obj(filepath):
         for line in f.readlines():
             for key in keys:
                 if line.startswith(key):
-                    s_info[key].append(line[len(key)+1:].strip())
+                    s_info[key].append(line[len(key):].strip())
     n_info = {
         info_names[k]: np.fromstring("\n".join(s_info[k]), sep=" ", dtype=np.single).reshape((-1, shapes[k]))
         for k in shapes.keys()

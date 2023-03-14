@@ -958,18 +958,24 @@ class Mesh(Representation, SmurfBase):
     @property
     def x3d_vertices(self):
         self.load_mesh()
+        if self.mesh_object is None:
+            return None
         tm = mesh_io.as_trimesh(self.mesh_object, silent=True)
         return np.array(tm.vertices).flatten()
 
     @property
     def x3d_face_normals(self):
         self.load_mesh()
+        if self.mesh_object is None:
+            return None
         tm = mesh_io.as_trimesh(self.mesh_object, silent=True)
         return np.array(tm.face_normals).flatten()
 
     @property
     def x3d_faces(self):
         self.load_mesh()
+        if self.mesh_object is None:
+            return None
         tm = mesh_io.as_trimesh(self.mesh_object, silent=True)
         faces = np.array(tm.faces)
         return np.c_[faces, [-1]*faces.shape[0]].flatten()
