@@ -139,16 +139,7 @@ class Robot(SMURFRobot):
         log.info("SDF written to {}".format(outputfile))
         return
 
-    def export_x3d(self, outputfile, float_fmt_dict=None, reduce_meshes=0):  #, ros_pkg=False, copy_with_other_pathes=None, ros_pkg_name=None, mesh_format=None):
-        """Export the mechanism to the given output file.
-        If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
-        If export_collisions is set to to True, all collisions will be exported. Otherwise no collision get exported.
-        """
-        if float_fmt_dict is None:
-            float_fmt_dict = {}
-
-        outputfile = os.path.abspath(outputfile)
-
+    def to_x3d_string(self, float_fmt_dict=None, reduce_meshes=0):
         export_instance = self.duplicate()
         for vis in export_instance.visuals:
             if isinstance(vis.geometry, representation.Mesh):
@@ -161,11 +152,23 @@ class Robot(SMURFRobot):
                     if n_vertices > reduce_meshes:
                         vis.geometry.reduce_mesh(reduce_meshes/n_vertices)
 
+        return super(Robot, export_instance).to_x3d_string(float_fmt_dict=float_fmt_dict)
+
+    def export_x3d(self, outputfile, float_fmt_dict=None, reduce_meshes=1000):  #, ros_pkg=False, copy_with_other_pathes=None, ros_pkg_name=None, mesh_format=None):
+        """Export the mechanism to the given output file.
+        If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
+        If export_collisions is set to to True, all collisions will be exported. Otherwise no collision get exported.
+        """
+        if float_fmt_dict is None:
+            float_fmt_dict = {}
+
+        outputfile = os.path.abspath(outputfile)
+
         xml_string = '<?xml version="1.0" encoding="UTF-8"?>\n'+ \
                      '<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 3.3//EN" "http://www.web3d.org/specifications/x3d-3.3.dtd">\n'+ \
                      "<X3D profile='Interchange' version='3.3' xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance' xsd:noNamespaceSchemaLocation='http://www.web3d.org/specifications/x3d-3.3.xsd'>"+ \
                      '<head><!-- All "meta" from this section you will found in <Scene> node as MetadataString nodes. --></head>\n'+ \
-                     '<Scene>\n'+export_instance.to_x3d_string(float_fmt_dict=float_fmt_dict)+'</Scene>\n</X3D>\n'
+                     '<Scene>\n'+self.to_x3d_string(float_fmt_dict=float_fmt_dict, reduce_meshes=reduce_meshes)+'</Scene>\n</X3D>\n'
 
         if not os.path.exists(os.path.dirname(os.path.abspath(outputfile))):
             os.makedirs(os.path.dirname(outputfile))
