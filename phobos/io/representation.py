@@ -859,7 +859,7 @@ class Mesh(Representation, SmurfBase):
     def apply_scale(self):
         self.load_mesh()
         if isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene):
-            self.mesh_object.scale(self.scale)
+            self.mesh_object.apply_transform(np.diag(list(self.scale) + [1]))
             self.history.append(f"applied scale {self.scale}")
             self.changed = True
             self.scale = 1
