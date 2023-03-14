@@ -317,8 +317,8 @@ def import_mesh(filepath, urdf_path=None):
         out = mesh_info_dict_2_trimesh(**mid)
     else:
         out = trimesh.load_mesh(filepath, maintain_order=True)
-    if out is None:
-        log.info(f"{filepath} contains empty mesh!")
+    if out.bounds is None:
+        raise IOError(f"{filepath} seems to contain an invalid mesh!")
     return out
 
 
