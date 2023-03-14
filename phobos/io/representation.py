@@ -574,15 +574,20 @@ class Mesh(Representation, SmurfBase):
     def available(self):
         return self.file_exists() or self.mesh_object is not None
 
+    def is_lfs_checked_out(self):
+        if self.input_file is not None and os.path.isfile(self.input_file):
+            with open(os.path.realpath(self.input_file), "r") as f:
+                if f.read().startswith("version https://git-lfs"):
+                    log.error(f"LFS not properly checked out. (Mesh {self.input_file})")
+                    return False
+        return True
+
     def is_valid(self):
         if self.input_file is None or not os.path.isfile(self.input_file):
             log.error(f"Mesh {self.input_file} does not exist")
             return False
-        if self.input_file is not None and os.path.isfile(self.input_file) and self.mesh_object is None:
-            with open(os.path.realpath(self.input_file), "rb") as f:
-                if b'\0' not in f.read():
-                    log.error(f"LFS not properly checked out. (Mesh {self.input_file})")
-                    return False
+        if not self.is_lfs_checked_out():
+            return False
         return self.has_enough_vertices()
 
     def has_enough_vertices(self):
@@ -626,6 +631,7 @@ class Mesh(Representation, SmurfBase):
         if self.mesh_object is not None and not reload:
             return self.mesh_object
         assert os.path.isfile(self.input_file), f"Mesh with path {self.input_file} wasn't found!"
+        assert self.is_lfs_checked_out(), f"LFS file {self.input_file} not properly checked out!"
         if BPY_AVAILABLE:
             bpy.ops.object.select_all(action='DESELECT')
             if self.input_type == "file_stl":
