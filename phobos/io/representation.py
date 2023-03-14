@@ -576,6 +576,8 @@ class Mesh(Representation, SmurfBase):
 
     def is_lfs_checked_out(self):
         if self.input_file is not None and os.path.isfile(self.input_file):
+            if misc.is_binary_file(self.input_file):
+                return True
             with open(os.path.realpath(self.input_file), "r") as f:
                 if f.read().startswith("version https://git-lfs"):
                     log.error(f"LFS not properly checked out. (Mesh {self.input_file})")

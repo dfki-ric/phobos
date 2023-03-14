@@ -93,6 +93,13 @@ def append_string(s, *args, **kwargs):
     return s + new
 
 
+def is_binary_file(filepath):
+    # adapted from https://stackoverflow.com/a/7392391/14537313
+    textchars = bytearray({7, 8, 9, 10, 12, 13, 27} | set(range(0x20, 0x100)) - {0x7f})
+    with open(filepath, "rb") as f:
+        return bool(f.read(256).translate(None, textchars))
+
+
 def execute_shell_command(cmd, cwd=None, dry_run=False, silent=False):
     if cwd is None:
         cwd = os.getcwd()
