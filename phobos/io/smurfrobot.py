@@ -51,34 +51,34 @@ class SMURFRobot(XMLRobot):
                 relevant_files = []
                 content = os.listdir(inputfile)
                 relevant_files += [f for f in content if f.rsplit(".", 1)[-1].lower() in ["smurf", "urdf", "sdf"]]
-                if any([f for f in relevant_files if f.endswith("smurf")]) == 1:
-                    inputfile = os.path.join(inputfile, [f for f in relevant_files if f.endswith("smurf")][0])
-                    log.info(f"Found robot file {inputfile} in the input directory!")
+                if any([f for f in relevant_files if f.endswith(".smurf")]) == 1:
+                    smurffile = os.path.join(inputfile, [f for f in relevant_files if f.endswith(".smurf")][0])
+                    log.info(f"Found smurf file {smurffile} in the input directory!")
                 elif "smurf" in content:
                     smurffiles = [f for f in os.listdir(os.path.join(inputfile, "smurf")) if f.endswith("smurf")]
                     if len(smurffiles) == 1:
-                        inputfile = os.path.join(inputfile, "smurf", smurffiles[0])
-                        log.info(f"Found robot file {inputfile} in the input directory!")
+                        smurffile = os.path.join(inputfile, "smurf", smurffiles[0])
+                        log.info(f"Found smurf directory with {smurffile} in the input directory!")
                 elif "urdf" in content:
                     urdffiles = [f for f in os.listdir(os.path.join(inputfile, "urdf")) if f.endswith("urdf")]
                     if len(urdffiles) == 1:
-                        inputfile = os.path.join(inputfile, "urdf", urdffiles[0])
-                        log.info(f"Found robot file {inputfile} in the input directory!")
+                        xmlfile = os.path.join(inputfile, "urdf", urdffiles[0])
+                        log.info(f"Found urdf directory with {xmlfile} in the input directory!")
                 elif "sdf" in content:
                     sdffiles = [f for f in os.listdir(os.path.join(inputfile, "sdf")) if f.endswith("sdf")]
                     if len(sdffiles) == 1:
-                        inputfile = os.path.join(inputfile, "sdf", sdffiles[0])
-                        log.info(f"Found robot file {inputfile} in the input directory!")
-                elif any([f for f in relevant_files if f.endswith("urdf")]) == 1:
-                    inputfile = os.path.join(inputfile, [f for f in relevant_files if f.endswith("urdf")][0])
-                    log.info(f"Found robot file {inputfile} in the input directory!")
-                elif any([f for f in relevant_files if f.endswith("sdf")]) == 1:
-                    inputfile = os.path.join(inputfile, [f for f in relevant_files if f.endswith("sdf")][0])
-                    log.info(f"Found robot file {inputfile} in the input directory!")
+                        xmlfile = os.path.join(inputfile, "sdf", sdffiles[0])
+                        log.info(f"Found sdf directory with {xmlfile} in the input directory!")
+                elif any([f for f in relevant_files if f.endswith(".urdf")]) == 1:
+                    xmlfile = os.path.join(inputfile, [f for f in relevant_files if f.endswith("urdf")][0])
+                    log.info(f"Found urdf file {xmlfile} in the input directory!")
+                elif any([f for f in relevant_files if f.endswith(".sdf")]) == 1:
+                    xmlfile = os.path.join(inputfile, [f for f in relevant_files if f.endswith("sdf")][0])
+                    log.info(f"Found sdf file {xmlfile} in the input directory!")
                 if inputfile is None:
                     raise ValueError("Couldn't find a valid input file in the given directory!")
             else:
-                raise ValueError("Can't parse robot format: "+inputfile.lower().split(".")[-1])
+                raise ValueError("Can't parse robot from: "+inputfile + ("(can't parse)" if os.path.exists(inputfile) else "(not found)"))
 
         super(SMURFRobot, self).__init__(is_human=is_human)
         self.xmlfile = xmlfile
