@@ -22,7 +22,7 @@ def main(args):
     parser.add_argument('config_file', type=str, help='Path to the pipeline configfile', default="pipeline.yml")
     parser.add_argument('-p', '--process', help='Process Models', action='store_true', default=False)
     parser.add_argument('-t', '--test', help='Test Models', action='store_true', default=False)
-    parser.add_argument('-d', '--deploy', help='Deploy Models', action='store_true', default=False)
+    parser.add_argument('-d', '--deploy', help='Deploy Models (This is made for usage in the phobos-CI-docker rather than local/manual usage)', action='store_true', default=False)
     parser.add_argument('-v', '--verify',
                         help='Verify Success. Lets the process finish with exit code != 0 if a job has failed',
                         action='store_true', default=False)
