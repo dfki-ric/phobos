@@ -21,10 +21,6 @@ import re
 
 from . import phobossystem
 
-# Phobos information
-version = '1.0.1 "Capricious Choutengan"'
-repository = 'https://github.com/dfki-ric/phobos'
-
 # definitions of which elements are assigned to which default layers
 layerTypes = {
     "link": 0,

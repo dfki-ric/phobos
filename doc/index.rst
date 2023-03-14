@@ -26,6 +26,15 @@ Please contact `Henning Wiedemann <https://robotik.dfki-bremen.de/de/ueber-uns/m
 
 This page provides the code documentation of Phobos.
 
+Release "Perilled Pangolin"
+------------------------------
+Phobos version 2.0 is named after the tree pangolin (Phataginus tricuspis) to draw attention to one more endangered species.
+
+.. image:: img/pangolin.jpeg
+  :width: 240
+  :alt: Image of a Saiga (source wikimedia.org)
+(source wikimedia.org)
+
 Module overview
 ---------------
 
