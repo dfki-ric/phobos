@@ -1292,7 +1292,7 @@ class PhobosExportPanel(bpy.types.Panel):
             typename = "export_mesh_" + meshtype
             cmesh.prop(bpy.context.scene, typename)
 
-        # TODO make this work again
+        # [TODO v2.1.0] make this work again in an extra Phobos Scenes tab
         # cscene = inlayout.column(align=True)
         # cscene.label(text="Scenes")
         # for scenetype in ioUtils.getSceneTypesForExport():
@@ -1351,7 +1351,8 @@ class PhobosExportPanel(bpy.types.Panel):
         #)
         c2.label(text="Export")
         c2.operator("phobos.export_model", icon="EXPORT")
-        #c2.operator("phobos.export_scene", icon="WORLD_DATA") # doesn't work properly therefore excluded
+        # [TODO v2.1.0] make this work again in an extra Phobos Scenes tab
+        # c2.operator("phobos.export_scene", icon="WORLD_DATA") # doesn't work properly therefore excluded
 
     def check(self, context):
         """
