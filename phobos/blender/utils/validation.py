@@ -630,7 +630,8 @@ def validateInertiaData(obj, *args, adjust=False):
 
     errors = []
 
-    expsetting = 10**(-getExpSettings().decimalPlaces)
+    # [TODO v2.1.0] REVIEW this
+    expsetting = 10**(-getExpSettings().urdfDecimalPlaces)
 
     if obj.phobostype != 'inertial':
         errors.append(

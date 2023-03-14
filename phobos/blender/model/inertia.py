@@ -123,7 +123,7 @@ def fuse_inertia_data(inertials):
     """
 
 
-    expsetting = 10**(-getExpSettings().decimalPlaces)
+    expsetting = 1e-10
 
     # Find objects who have some inertial data
     inertials = [obj for obj in inertials if any([key in reserved_keys.INERTIAL_KEYS for key in obj.keys()])]

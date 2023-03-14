@@ -190,7 +190,8 @@ def storePose(root, posename):
                 'Bone'
             ].rotation_euler.y
         bpy.ops.object.mode_set(mode='OBJECT')
-        posedict = gUtils.roundFloatsInDict(posedict, ioUtils.getExpSettings().decimalPlaces)
+        # [TODO v2.1.0] REVIEW this
+        posedict = gUtils.roundFloatsInDict(posedict, ioUtils.getExpSettings().urdfDecimalPlaces)
         bUtils.updateTextFile(filename, json.dumps(posedict))
     else:
         log("No model root provided to store the pose for", "ERROR")
