@@ -702,7 +702,7 @@ class BaseModel(yaml.YAMLObject):
                 self.processed_meshes.add(os.path.realpath(vc.geometry.abs_filepath))
         if "keep_files" in self.deployment:
             git.reset(self.targetdir, "autobuild", "master")
-            misc.store_persisting_files(self.pipeline, self.targetdir, self.keep_files, self.exportdir)
+            misc.store_persisting_files(self.pipeline, self.targetdir, self.deployment["keep_files"], self.exportdir)
 
         log.info('Finished export of the new model')
         self.processed_model_exists = True
@@ -726,9 +726,9 @@ class BaseModel(yaml.YAMLObject):
             )
 
         # REVIEW are the following lines here obsolete?
-        if hasattr(self, "keep_files"):
+        if "keep_files" in self.deployment:
             git.reset(self.targetdir, "autobuild", "master")
-            misc.store_persisting_files(self.pipeline, self.targetdir, self.keep_files, self.exportdir)
+            misc.store_persisting_files(self.pipeline, self.targetdir, self.deployment["keep_files"], self.exportdir)
 
     def deploy(self, mesh_commit, failed_model=False, uses_lfs=False):
         if "do_not_deploy" in self.deployment and self.deployment["do_not_deploy"] is True:
@@ -739,8 +739,8 @@ class BaseModel(yaml.YAMLObject):
                             " repo to the manifest.xml or spelled it wrong.")
         repo = self.targetdir
         git.reset(self.targetdir, "autobuild", "master")
-        if hasattr(self, "keep_files"):
-            misc.store_persisting_files(self.pipeline, repo, self.keep_files, os.path.join(self.tempdir, "_sustain"))
+        if "keep_files" in self.deployment:
+            misc.store_persisting_files(self.pipeline, repo, self.deployment["keep_files"], os.path.join(self.tempdir, "_sustain"))
         git.update(repo, update_target_branch="$CI_UPDATE_TARGET_BRANCH" if failed_model else "master")
         git.clear_repo(repo)
         # add manifest.xml if necessary
