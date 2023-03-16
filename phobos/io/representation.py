@@ -14,10 +14,7 @@ from .yaml_reflection import to_yaml
 from ..defs import BPY_AVAILABLE
 from ..geometry import io as mesh_io
 from ..geometry.geometry import identical, reduce_mesh, get_reflection_matrix, improve_mesh
-from ..utils import misc
-from ..utils import transform
-from ..utils.misc import execute_shell_command, to_hex_color, color_parser, edit_name_string
-from ..utils.transform import create_transformation, matrix_to_quaternion, quaternion_to_angle_axis
+from ..utils import misc, git, transform
 from ..utils.xml import read_relative_filename
 
 MESH_INFO_KEYS = ["vertex_normals", "texture_coords", "vertices", "faces"]
@@ -134,11 +131,11 @@ class Pose(Representation, SmurfBase):
 
     @property
     def quaternion(self):
-        return matrix_to_quaternion(self._matrix[0:3, 0:3])
+        return transform.matrix_to_quaternion(self._matrix[0:3, 0:3])
 
     @property
     def angle_axis(self):
-        return quaternion_to_angle_axis(self.quaternion)
+        return transform.quaternion_to_angle_axis(self.quaternion)
 
     @property
     def position(self):
@@ -287,10 +284,10 @@ class Material(Representation, SmurfBase):
 
     def __init__(self, name=None, diffuse=None, ambient=None, specular=None, emissive=None,
                  diffuseTexture=None, normalTexture=None, transparency=None, shininess=None, **kwargs):
-        self.diffuse = color_parser(rgba=diffuse)
-        self.ambient = color_parser(rgba=ambient)
-        self.specular = color_parser(rgba=specular)
-        self.emissive = color_parser(rgba=emissive)
+        self.diffuse = misc.color_parser(rgba=diffuse)
+        self.ambient = misc.color_parser(rgba=ambient)
+        self.specular = misc.color_parser(rgba=specular)
+        self.emissive = misc.color_parser(rgba=emissive)
         self.diffuseTexture = _singular(diffuseTexture)
         self.normalTexture = _singular(normalTexture)
         self.transparency = transparency
@@ -302,7 +299,7 @@ class Material(Representation, SmurfBase):
         SmurfBase.__init__(self, returns=["name", "diffuseColor", "ambientColor", "specularColor", "emissionColor",
                                           "diffuseTexture", "normalTexture"], **kwargs)
         if name is None or len(name) == 0:
-            name = to_hex_color(self.diffuse) + (os.path.basename(self.diffuseTexture) if diffuseTexture is not None else "")
+            name = misc.to_hex_color(self.diffuse) + (os.path.basename(self.diffuseTexture) if diffuseTexture is not None else "")
         self.name = name
         self.excludes += ["diffuse", "ambient", "specular", "emissive", "original_name", "users"]
 
@@ -332,7 +329,7 @@ class Material(Representation, SmurfBase):
 
     @diffuseColor.setter
     def diffuseColor(self, *args, rgba=None):
-        self.diffuse = color_parser(*args, rgba=rgba)
+        self.diffuse = misc.color_parser(*args, rgba=rgba)
 
     @property
     def ambient_rgb(self):
@@ -344,7 +341,7 @@ class Material(Representation, SmurfBase):
 
     @ambientColor.setter
     def ambientColor(self, *args, rgba=None):
-        self.ambient = color_parser(*args, rgba=rgba)
+        self.ambient = misc.color_parser(*args, rgba=rgba)
 
     @property
     def specular_rgb(self):
@@ -356,7 +353,7 @@ class Material(Representation, SmurfBase):
 
     @specularColor.setter
     def specularColor(self, *args, rgba=None):
-        self.specular = color_parser(*args, rgba=rgba)
+        self.specular = misc.color_parser(*args, rgba=rgba)
 
     @property
     def emissive_rgb(self):
@@ -368,7 +365,7 @@ class Material(Representation, SmurfBase):
 
     @emissionColor.setter
     def emissionColor(self, *args, rgba=None):
-        self.emissive = color_parser(*args, rgba=rgba)
+        self.emissive = misc.color_parser(*args, rgba=rgba)
 
 
 class Box(Representation):
@@ -595,7 +592,7 @@ class Mesh(Representation, SmurfBase):
     def has_enough_vertices(self):
         self.load_mesh()
         mesh = deepcopy(mesh_io.as_trimesh(self.mesh_object, silent=True))
-        zero_transform = create_transformation(xyz=-mesh.centroid)
+        zero_transform = transform.create_transformation(xyz=-mesh.centroid)
         mesh.apply_transform(zero_transform)
         if len(mesh.vertices) <= 3:
             log.debug(f"Mesh {self.unique_name} has less than 4 vertices")
@@ -1216,7 +1213,7 @@ class KCCDHull(Representation, SmurfBase):
             self._npoints = npoints
             self.points = []
             log.info(f"Covering {iv_mesh} of {self.frame} with {self._npoints}")
-            out, _ = execute_shell_command(f"kccdcoveriv {iv_mesh} {self._npoints} {self.frame}",
+            out, _ = misc.execute_shell_command(f"kccdcoveriv {iv_mesh} {self._npoints} {self.frame}",
                                            cwd=kccd_path, silent=True)
             block_lines = out.split("\n")
             for line in block_lines:
