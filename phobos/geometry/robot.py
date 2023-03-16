@@ -125,26 +125,19 @@ def replace_geometry(element, shape='box', oriented=False, scale=1.0):
     mesh = io.as_trimesh(element.geometry.load_mesh(), silent=True)
     mesh.apply_transform(element.origin.to_matrix())
 
-    if oriented and not shape == 'convex':
-        new_origin = representation.Pose.from_matrix(mesh.bounding_box_oriented.primitive.transform)
-    elif not shape == 'convex':
-        new_origin = representation.Pose.from_matrix(mesh.bounding_box.primitive.transform)
-    else:
-        new_origin = representation.Pose.from_matrix(np.eye(4))
-
     if shape == 'sphere':
-        element.geometry = geometry.create_sphere(mesh, oriented=oriented, scale=scale)
-        element.origin = new_origin
+        element.geometry, transform = geometry.create_sphere(mesh, scale=scale)
+        element.origin = representation.Pose.from_matrix(transform)
     elif shape == 'cylinder':
-        element.geometry = geometry.create_cylinder(mesh, oriented=oriented, scale=scale)
-        element.origin = new_origin
+        element.geometry, transform = geometry.create_cylinder(mesh, scale=scale)
+        element.origin = representation.Pose.from_matrix(transform)
     elif shape == 'box':
-        element.geometry = geometry.create_box(mesh, oriented=oriented, scale=scale)
-        element.origin = new_origin
+        element.geometry, transform = geometry.create_box(mesh, oriented=oriented, scale=scale)
+        element.origin = representation.Pose.from_matrix(transform)
     elif shape == 'convex':
         element.geometry.to_convex_hull()
         element.geometry.scale = scale
-        element.origin = new_origin
+        element.origin = representation.Pose.from_matrix(np.identity(4))
     else:
         raise Exception('Shape {} not implemented. Please choose sphere, cylinder, box or convex.'.format(shape))
     return

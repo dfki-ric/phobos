@@ -289,46 +289,6 @@ class ValidateMessage:
             return False
 
 
-def validateObjectNames(obj):
-    """Check for naming errors of the specified object.
-    
-    This checks:
-        - the *phobostype*/names
-
-    Args:
-      obj(bpy.types.Object): object to be checked
-
-    Returns:
-      list: :class:ValidateMessage list
-
-    """
-    phobtype = obj.phobostype
-    objname = obj.name
-    errors = []
-
-    if phobtype + '/name' in obj:
-        nameset = set([ptype[0] for ptype in defs.phobostypes if ptype[0] + '/name' in obj])
-
-        # links are allowed to contain additional joint information
-        if phobtype == 'link' and 'joint' in nameset:
-            nameset = nameset.difference(set(['joint']))
-        nameset = nameset.difference(set([phobtype]))
-
-        for key in nameset:
-            errors.append(
-                ValidateMessage(
-                    "Redundant name: '" + key + "/name'!",
-                    "WARNING",
-                    obj,
-                    "phobos.fix_object_names",
-                    key + '/name',
-                )
-            )
-
-    # TODO add unique name checks etc
-    return errors
-
-
 def validateJoint(link, adjust=False):
     """Checks for errors in the joint definitions of the specified link.
     

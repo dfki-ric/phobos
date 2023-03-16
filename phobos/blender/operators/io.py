@@ -106,7 +106,6 @@ class ExportSceneOperator(Operator):
         return {'FINISHED'}
 
 
-# [TODO v2.0.0] REVIEW this
 class ExportModelOperator(Operator):
     """Export the selected model"""
 

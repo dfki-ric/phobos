@@ -22,54 +22,60 @@ def get_vertex_id(x, vertices):
 
 
 def create_box(mesh, oriented=True, scale=1.0):
-    """Create a box element.
     """
+    Create a box element.
+    """
+    # scale the mesh
+    mesh = deepcopy(mesh)
+    mesh.apply_transform(np.diag((scale if type(scale) == list else [scale]*3) + [1]))
 
     if oriented:
-        half_ext = mesh.bounding_box_oriented.primitive.extents
+        half_ext = mesh.bounding_box_oriented.extents
+        transform = mesh.bounding_box_oriented.transform
     else:
-        half_ext = mesh.bounding_box.primitive.extents
+        half_ext = mesh.bounding_box.extents
+        transform = mesh.bounding_box.transform
 
-    half_ext = np.array(half_ext) * scale
-
-    return representation.Box(size=half_ext)
+    return representation.Box(size=half_ext), transform
 
 
-def create_sphere(mesh, oriented=True, scale=1.0):
+def create_sphere(mesh, scale=1.0):
     """ Create a sphere """
+    # scale the mesh
+    mesh = deepcopy(mesh)
+    mesh.apply_transform(np.diag((scale if type(scale) == list else [scale]*3) + [1]))
 
-    if oriented:
-        half_ext = mesh.bounding_box_oriented.primitive.extents
-    else:
-        half_ext = mesh.bounding_box.primitive.extents
+    half_ext = mesh.bounding_box.extents
+    transform = mesh.bounding_box.transform
 
     r = np.amax(half_ext)
 
-    return representation.Sphere(radius=r * 0.5 * scale)
+    return representation.Sphere(radius=r * 0.5), transform
 
 
-def create_cylinder(mesh, oriented=True, scale=1.0):
+def create_cylinder(mesh, scale=1.0):
     """Create a cylinder.
     """
+    # scale the mesh
+    mesh = deepcopy(mesh)
+    mesh.apply_transform(np.diag((scale if type(scale) == list else [scale]*3) + [1]))
 
-    if oriented:
-        half_ext = deepcopy(mesh.bounding_box_oriented.primitive.extents)
-    else:
-        half_ext = deepcopy(mesh.bounding_box.primitive.extents)
+    c = mesh.bounding_cylinder
+    transform = mesh.bounding_cylinder.transform
 
     # Find the length and the axis
-    axis = 'x'
-    length = 2.0 * half_ext[0] * scale
-    for (i, ax) in enumerate(['y', 'z']):
-        if half_ext[i + 1] * 2.0 > length:
-            length = half_ext[i + 1]
-            axis = ax
+    axis = mesh.bounding_cylinder.direction
+    orthogonal = axis
+    if axis[0] != 0.0:
+        orthogonal[0] = -axis[0]
+    elif axis[1] != 0.0:
+        orthogonal[1] = -axis[1]
+    elif axis[2] != 0.0:
+        orthogonal[2] = -axis[2]
+    length = np.abs(c.direction).dot(c.extents)
+    diameter = np.cross(axis, orthogonal).dot(c.extents)
 
-    # Get the second largest
-    half_ext.sort()
-    radius = half_ext[1] * 0.5 * scale
-
-    return representation.Cylinder(radius=radius, length=length)
+    return representation.Cylinder(radius=diameter/2, length=length), transform
 
 
 def get_reflection_matrix(point=np.array((0, 0, 0)), normal=np.array((0, 1, 0))):

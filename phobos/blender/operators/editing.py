@@ -52,6 +52,7 @@ from ..utils import selection as sUtils
 from ..utils import validation as vUtils
 
 from ...io import representation
+from ...geometry import io as mesh_io, geometry as geo
 from ...utils import resources
 from ...utils.transform import create_transformation
 
@@ -658,7 +659,6 @@ class CreateInterfaceOperator(Operator):
             return True
 
 
-# [TODO v2.0.0] REVIEW this
 class CopyCustomProperties(Operator):
     """Copy custom properties of selected object(s)"""
 
@@ -680,8 +680,9 @@ class CopyCustomProperties(Operator):
         slaves = context.selected_objects
         master = context.active_object
         slaves.remove(master)
-        props = bUtils.cleanObjectProperties(dict(master.items()))
+        master_props = bUtils.cleanObjectProperties(dict(master.items()), phobostype=master.phobostype)
         for obj in slaves:
+            props = bUtils.cleanObjectProperties(master_props, phobostype=obj.phobostype)
             if self.empty_properties:
                 for key in obj.keys():
                     del (obj[key])
@@ -704,7 +705,6 @@ class CopyCustomProperties(Operator):
         return len(obs) > 0 and ob is not None and ob.mode == 'OBJECT'
 
 
-# [TODO v2.0.0] REVIEW this
 class RenameCustomProperty(Operator):
     """Rename custom property of selected object(s)"""
 
@@ -841,7 +841,6 @@ class SetGeometryType(Operator):
         return context.window_manager.invoke_props_dialog(self, width=200)
 
 
-# [TODO v2.0.0] REVIEW this
 class SmoothenSurfaceOperator(Operator):
     """Smoothen surface of selected objects"""
 
@@ -1203,77 +1202,6 @@ class GenerateInertialObjectsOperator(Operator):
         )
 
 
-# [TODO v2.0.0] REVIEW this
-class EditYAMLDictionary(Operator):
-    """Edit object dictionary as YAML"""
-
-    bl_idname = 'phobos.edityamldictionary'
-    bl_label = "Edit Object Dictionary"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        ob = context.active_object
-        textfilename = ob.name + datetime.now().strftime("%Y%m%d_%H:%M")
-        variablename = (
-            ob.name.translate({ord(c): "_" for c in "!@#$%^&*()[]{};:,./<>?\|`~-=+"}) + "_data"
-        )
-        tmpdict = dict(ob.items())
-
-        # write object properties to short python script
-        for key in tmpdict:
-            # transform Blender id_arrays into lists
-            if hasattr(tmpdict[key], 'to_list'):
-                tmpdict[key] = list(tmpdict[key])
-        cleandict = bUtils.cleanObjectProperties(tmpdict)
-        # convert to python key value pairs
-        tmpdict = {}
-        for key,value in cleandict.items():
-            if not isinstance(value, IDPropertyGroup):
-                tmpdict[key] = value
-        contents = [
-            variablename + ' = """',
-            json.dumps(tmpdict, indent=2) + '"""\n',
-            "# ------- Hit 'Run Script' to save your changes --------",
-            "import json",
-            "import bpy",
-            "tmpdata = json.loads(" + variablename + ")",
-            "for key in dict(bpy.context.active_object.items()):",
-            "   if key not in ['phobostype', 'startChain', 'endChain', '_RNA_UI', 'cycles_visibility', 'masschanged']:",
-            "       if type(bpy.context.active_object[key]) != 'IDPropertyGroup':",
-            "           del bpy.context.active_object[key]",
-            "for key, value in tmpdata.items():",
-            "    bpy.context.active_object[key] = value",
-            "bpy.ops.text.unlink()",
-        ]
-
-        # show python script to user
-        bUtils.createNewTextfile(textfilename, '\n'.join(contents))
-        bUtils.openScriptInEditor(textfilename)
-        return {'FINISHED'}
-
-    @classmethod
-    def poll(cls, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        ob = context.active_object
-        return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
-
-
-# [TODO v2.0.0] REVIEW this
 class CreateCollisionObjects(Operator):
     """Create collision objects for all selected visual objects"""
 
@@ -1310,75 +1238,44 @@ class CreateCollisionObjects(Operator):
         # create collision objects for each visual
         for vis in visuals:
             # build object names
-            nameparts = vis.name.split('_')
-            if nameparts[0] == 'visual':
-                nameparts[0] = 'collision'
-            collname = '_'.join(nameparts)
+            if "visual" in vis.name.lower():
+                collname = vis.name.split('_').replace("visual", "collision").replace("Visual", "Collision").replace("VISUAL", "COLLISION")
+            else:
+                collname = vis.name + "_collision"
+
             materialname = vis.data.materials[0].name if len(vis.data.materials) > 0 else "None"
 
-            # get bounding box
-            bBox = vis.bound_box
-            center = gUtils.calcBoundingBoxCenter(bBox)
-            rotation = mathutils.Matrix.Identity(4)
-            size = list(vis.dimensions)
-
-            # calculate size for cylinder or sphere
-            if self.property_colltype in ['cylinder']:
-                if size[0] == size[1]:
-                    mainaxis = 'Z'
-                    length = size[2]
-                elif size[1] == size[2]:
-                    mainaxis = 'X'
-                    length = size[0]
-                else:
-                    mainaxis = 'Y'
-                    length = size[1]
-
-                radii = [s for s in size if s != length]
-                radius = max(radii) / 2 if radii != [] else length / 2
-                size = (radius, length)
-
-                # rotate cylinder to match longest side
-                if mainaxis == 'X':
-                    rotation = mathutils.Matrix.Rotation(math.pi / 2, 4, 'Y')
-                elif mainaxis == 'Y':
-                    rotation = mathutils.Matrix.Rotation(math.pi / 2, 4, 'X')
-                    # FIXME: apply rotation for moved cylinder object?
-
-            elif self.property_colltype == 'sphere':
-                size = max(size) / 2
-
-            # combine bbox center with the object transformation
-            center = (vis.matrix_world @ mathutils.Matrix.Translation(center)).to_translation()
-            # combine center with optional rotation (cylinder) and object transformation
-            rotation_euler = (
-                vis.matrix_world @ rotation @ mathutils.Matrix.Translation(center)
-            ).to_euler()
+            phobos_vis = blender2phobos.deriveVisual(vis)
 
             # create Mesh
             if self.property_colltype != 'mesh':
-                ob = bUtils.createPrimitive(
-                    collname,
-                    self.property_colltype,
-                    size,
-                    pmaterial=materialname,
-                    plocation=center,
-                    protation=rotation_euler,
-                    phobostype='collision',
+                geometry = None
+                if self.property_colltype == "box":
+                    geometry = geo.create_box(mesh_io.as_trimesh(vis.data), scale=phobos_vis.scale)
+                elif self.property_colltype == "cylinder":
+                    geometry = geo.create_cylinder(mesh_io.as_trimesh(vis.data), scale=phobos_vis.scale)
+                elif self.property_colltype == "sphere":
+                    geometry = geo.create_sphere(mesh_io.as_trimesh(vis.data), scale=phobos_vis.scale)
+                elif self.property_colltype == "convex":
+                    geometry = blender2phobos.deriveGeometry(vis, duplicate_mesh=True)
+                    geometry.to_convex_hull()
+                    geometry.apply_scale()
+                representation.Collision(
+                    name=collname,
+                    link=sUtils.getEffectiveParent(vis),
+                    geometry=geometry,
+                    origin=vis.origin
                 )
+                ob = phobos2blender.createGeometry(geometry)
             elif self.property_colltype == 'mesh':
-                # FIXME: currently we just take a copy of the original mesh, because collision
-                # scale can not be used with URDF. However, the mesh should be checked for scaling
-                # issues on export and then applied properly, so we should solve this in the URDF
-                # export functions.
                 ob = bUtils.createPrimitive(
                     collname,
                     'cylinder',
                     (1., 1., 1.),
                     defs.layerTypes['collision'],
                     materialname,
-                    center,
-                    rotation_euler,
+                    phobos_vis.origin.position,
+                    phobos_vis.origin.rotation,
                     'collision'
                 )
                 ob.scale = vis.scale
@@ -1497,11 +1394,9 @@ class DefineJointConstraintsOperator(Operator):
     bl_label = "Define Joint(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    # [TODO v2.0.0] Create motor for active joints
     active : BoolProperty(
         name='Active', default=False, description='Add an motor to the joint'
     )
-    added_motor = False
 
     useRadian : BoolProperty(
         name='Use Radian', default=True, description='Use degrees or rad for joints'
@@ -1666,7 +1561,7 @@ class DefineJointConstraintsOperator(Operator):
                     ),
                     linkobj=joint
                 )
-            elif not self.active and self.added_motor and sUtils.getObjectByName(motor_name) is not None:
+            elif not self.active and sUtils.getObjectByName(motor_name) is not None:
                 bpy.data.object.remove(sUtils.getObjectByName(motor_name))
 
         return {'FINISHED'}
@@ -3566,7 +3461,6 @@ classes = (
     SmoothenSurfaceOperator,
     EditInertialData,
     GenerateInertialObjectsOperator,
-    EditYAMLDictionary,
     CreateCollisionObjects,
     SetCollisionGroupOperator,
     DefineJointConstraintsOperator,

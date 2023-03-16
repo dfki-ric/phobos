@@ -20,6 +20,7 @@ import mathutils
 
 from . import naming as nUtils
 from . import selection as sUtils
+from .. import reserved_keys
 from ..model import materials
 from ..phoboslog import log
 
@@ -301,7 +302,7 @@ def openScriptInEditor(scriptname):
         log("There is no script named " + scriptname + "!", "ERROR")
 
 
-def cleanObjectProperties(props):
+def cleanObjectProperties(props, phobostype=None):
     """Cleans a predefined list of Blender-specific or other properties from the dictionary.
 
     Args:
@@ -318,6 +319,8 @@ def cleanObjectProperties(props):
         'endChain',
         'masschanged',
     ]
+    if phobostype is not None and hasattr(reserved_keys, phobostype.upper()+"_KEYS"):
+        getridof += getattr(reserved_keys, phobostype.upper()+"_KEYS")
     if props:
         for key in getridof:
             if key in props:

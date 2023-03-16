@@ -84,7 +84,7 @@ def deriveMaterial(mat, logging=False, errors=None):
 
 
 @validate('geometry_type')
-def deriveGeometry(obj, **kwargs):
+def deriveGeometry(obj, duplicate_mesh=False, **kwargs):
     gtype = obj['geometry/type']
     if gtype == 'box':
         return representation.Box(size=list(obj.dimensions))
@@ -98,16 +98,17 @@ def deriveGeometry(obj, **kwargs):
             radius=obj.dimensions[0] / 2
         )
     elif gtype == 'mesh':
+        blender_mesh = obj.data.copy() if duplicate_mesh else obj.data
         return representation.Mesh(
             scale=list(obj.matrix_world.to_scale()),
-            mesh=obj.data,
-            meshname=obj.data.name
+            mesh=blender_mesh,
+            meshname=blender_mesh
         )
     else:
         raise ValueError(f"Unknown geometry type: {gtype}")
 
 
-def deriveCollision(obj, **kwargs):
+def deriveCollision(obj, duplicat_mesh=False,  **kwargs):
     # bitmask (will deprecate with MARS2.0)
     bitmask = None
     # the bitmask is cut to length = 16 and reverted for int parsing
@@ -136,7 +137,7 @@ def deriveCollision(obj, **kwargs):
 
     return representation.Collision(
         name=obj.name,
-        geometry=deriveGeometry(obj),
+        geometry=deriveGeometry(obj, duplicate_mesh),
         origin=deriveObjectPose(obj),
         bitmask=bitmask,
         **annotations
@@ -144,7 +145,7 @@ def deriveCollision(obj, **kwargs):
 
 
 @validate('visual')
-def deriveVisual(obj, logging=True, **kwargs):
+def deriveVisual(obj, logging=True, duplicate_mesh=False, **kwargs):
     # [TODO v2.1.0] REVIEW this was commented, is this applicable?
     # todo2.9: if obj.lod_levels:
     #     if 'lodmaxdistances' in obj:
@@ -182,7 +183,7 @@ def deriveVisual(obj, logging=True, **kwargs):
 
     return representation.Visual(
         name=obj.name,
-        geometry=deriveGeometry(obj),
+        geometry=deriveGeometry(obj, duplicate_mesh),
         origin=deriveObjectPose(obj),
         material=material,
         **annotations
@@ -456,7 +457,6 @@ def deriveInterface(obj):
                     annotations[k1] = {}
                 annotations[k1][k2] = v
 
-    # [TODO v2.0.0] validate direction
     return representation.Interface(
         name=obj.name,
         origin=deriveObjectPose(obj),

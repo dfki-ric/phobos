@@ -186,7 +186,6 @@ class SetModelVersionOperator(Operator):
         return {'FINISHED'}
 
 
-# [TODO v2.0.0] Review this
 class BatchRename(Operator):
     """Replace part of the name of selected object(s)"""
 
@@ -206,12 +205,6 @@ class BatchRename(Operator):
         description="Add any string by representing the old name with '*'.",
     )
 
-    include_properties : BoolProperty(
-        name="Include Properties",
-        default=False,
-        description="Replace names stored in '*/name' properties?",
-    )
-
     def execute(self, context):
         """
 
@@ -223,10 +216,9 @@ class BatchRename(Operator):
         """
         for obj in context.selected_objects:
             obj.name = self.add.replace('*', obj.name.replace(self.find, self.replace))
-            if self.include_properties:
-                for key in obj.keys():
-                    if key.endswith('/name'):
-                        obj[key] = self.add.replace('*', obj[key].replace(self.find, self.replace))
+            for key in obj.keys():
+                if key == 'joint/name':
+                    obj[key] = self.add.replace('*', obj[key].replace(self.find, self.replace))
         return {'FINISHED'}
 
     @classmethod
@@ -240,46 +232,6 @@ class BatchRename(Operator):
 
         """
         return len(context.selected_objects) > 0
-
-
-# [TODO v2.0.0] Review this
-class FixObjectNames(Operator):
-    """Cleans up the redundant names of the active object"""
-
-    bl_idname = "phobos.fix_object_names"
-    bl_label = "Rename Object"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        """
-
-        Args:
-          context: 
-
-        Returns:
-
-        """
-        obj = context.active_object
-        errors = validation.validateObjectNames(obj)
-
-        for error in errors:
-            if error.message[:9] == 'Redundant':
-                log("Deleting redundant name '" + error.information + "'.", 'INFO')
-                del obj[error.information]
-
-        return {'FINISHED'}
-
-    @classmethod
-    def poll(cls, context):
-        """
-
-        Args:
-          context: 
-
-        Returns:
-
-        """
-        return context.active_object
 
 
 class ChangeObjectName(Operator):
@@ -317,10 +269,6 @@ class ChangeObjectName(Operator):
                 'INFO',
             )
             nUtils.safelyName(obj, self.newname)
-        elif self.newname == '':
-            log("Removing custom name from " + obj.phobostype + " '" + obj.name + "'.", 'INFO')
-            if obj.phobostype + '/name' in obj:
-                del obj[obj.phobostype + '/name']
 
         # only links have joint names
         if obj.phobostype == 'link':
@@ -407,7 +355,6 @@ classes = (
     NameModelOperator,
     SetModelVersionOperator,
     BatchRename,
-    FixObjectNames,
     ChangeObjectName,
 )
 
