@@ -626,7 +626,7 @@ class CreateInterfaceOperator(Operator):
                         name=self.interface_name,
                         parent=link.name,
                         type=self.interface_type,
-                        direction=self.direction
+                        direction=self.interface_direction
                     ),
                     link
                 )
@@ -636,7 +636,7 @@ class CreateInterfaceOperator(Operator):
                         name=self.interface_name,
                         parent=context.object.name,
                         type=self.interface_type,
-                        direction=self.direction
+                        direction=self.interface_direction
                     ),
                 context.object
             )

@@ -674,12 +674,13 @@ class Mesh(Representation, SmurfBase):
             bpy.ops.object.select_all(action='DESELECT')
             if self.input_type == "file_stl":
                 bpy.ops.import_mesh.stl(filepath=self.input_file)
-                self._mesh_object = bpy.context.object.data
+                self._mesh_object = bpy.data.meshes.new_from_object(bpy.context.object)
+                bpy.ops.object.delete()
             elif self.input_type == "file_obj":
                 bpy.ops.import_scene.obj(filepath=self.input_file,
                                          axis_forward=self.mesh_orientation["forward"],
                                          axis_up=self.mesh_orientation["up"])
-                self._mesh_object = bpy.context.object.data
+                self._mesh_object = bpy.data.meshes.new_from_object(bpy.context.object)
                 # with obj file import, blender only turns the object, not the vertices,
                 # leaving a rotation in the matrix_basis, which we here get rid of
                 bpy.ops.object.transform_apply(rotation=True)
@@ -687,34 +688,36 @@ class Mesh(Representation, SmurfBase):
                     self._mesh_information = mesh_io.parse_obj(self.input_file)
                 else:
                     log.debug(f"{self.input_file} can't be converted to bobj")
+                bpy.ops.object.delete()
             elif self.input_type == "file_dae":
                 bpy.ops.wm.collada_import(filepath=self.input_file)
-                self._mesh_information = mesh_io.parse_dae(self.input_file)
-                self._mesh_object = None
+                self.mesh_information = mesh_io.parse_dae(self.input_file)
                 delete_objects = []
                 mesh_objects = []
                 for obj in bpy.context.selected_objects:
                     if obj.type == "MESH":
                         mesh_objects.append(obj)
-                    delete_objects.append(obj)
+                    else:
+                        delete_objects.append(obj)
                 bpy.ops.object.select_all(action='DESELECT')
                 for obj in mesh_objects:
                     obj.select_set(True)
                 bpy.context.view_layer.objects.active = mesh_objects[0]
                 if len(mesh_objects) > 1:
                     bpy.ops.object.join()
-                self._mesh_object = bpy.context.object.data
+                self._mesh_object = bpy.data.meshes.new_from_object(bpy.context.object)
                 bpy.ops.object.select_all(action='DESELECT')
                 for obj in delete_objects:
                     obj.select_set(True)
                 bpy.context.view_layer.objects.active = delete_objects[0]
+                bpy.ops.object.delete()
             elif self.input_type == "file_bobj":
-                self._mesh_information = mesh_io.parse_bobj(self.input_file)
-                self._mesh_object = mesh_io.mesh_info_dict_2_blender(self.unique_name, **self._mesh_information)
+                self.mesh_information = mesh_io.parse_bobj(self.input_file)
+                self._mesh_object = mesh_io.mesh_info_dict_2_blender(self.unique_name, **self.mesh_information)
                 bpy.context.view_layer.objects.active = bpy.data.objects.new(self.unique_name, self.mesh_object)
             bpy.ops.object.delete()
             self._operations.append("_loaded_in_blender")
-            self._changed = True  # as we there might be unnoticed changes by blender
+            self.changed = True  # as we there might be unnoticed changes by blender
         else:
             if self.input_type == "file_stl":
                 self._mesh_object = mesh_io.import_mesh(self.input_file)
