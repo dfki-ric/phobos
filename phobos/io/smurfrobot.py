@@ -18,7 +18,7 @@ class SMURFRobot(XMLRobot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
                  inputfile=None, description=None, autogenerate_submechanisms=None, is_human=False):
         self.smurf_annotation_keys = [
-            'motors', 'sensors', 'materials', "joints", "links", 'collisions', 'poses',
+            'motors', 'sensors', 'materials', "joints", "links", 'collisions', 'visuals', 'poses',
             "submechanisms", "exoskeletons", "interfaces"
         ]
 
@@ -166,7 +166,7 @@ class SMURFRobot(XMLRobot):
                     self.xmlfile = os.path.abspath(f)
                     self.inputfiles.remove(f)
 
-    # [TODO v2.0.0] Remove annotations that are included in entities
+    # [TODO v2.1.0] Refactor this
     def _parse_annotations(self, annotationfile):
         # Load the file
         with open(annotationfile, 'r') as stream:
@@ -178,6 +178,7 @@ class SMURFRobot(XMLRobot):
             except Exception as exc:
                 log.error(exc)
 
+    # [TODO v2.1.0] Refactor this
     def _init_annotations(self):
         if 'motors' in self.annotations:
             for motor in self.annotations['motors']:
@@ -206,8 +207,8 @@ class SMURFRobot(XMLRobot):
                 sensor = getattr(sensor_representations, sensor_def["type"])(**sensor_def)
                 if existing is not None and not existing.equivalent(sensor):
                     log.debug(f"Replacing existing sensor with name {sensor_def['name']}\n"
-                                f"existing: {existing.to_yaml()}\n"
-                                f"new: {sensor.to_yaml()}")
+                              f"existing: {existing.to_yaml()}\n"
+                              f"new: {sensor.to_yaml()}")
                     self.remove_aggregate("sensors", existing)
                     self.add_sensor(sensor)
                 elif existing is None:
@@ -237,6 +238,22 @@ class SMURFRobot(XMLRobot):
                 mat_instance = self.get_material(material['name'])
                 if mat_instance is not None:
                     mat_instance.add_annotations(overwrite=False, **material)
+
+        if 'visuals' in self.annotations:
+            for visual in self.annotations['visuals']:
+                vis_instance = self.get_visual(visual['name'])
+                # [TODO v2.1.0] We should prefer this over the URDF Mesh and also fill the meshes annotation
+                visual.pop("geometry")
+                if vis_instance is not None:
+                    vis_instance.add_annotations(overwrite=False, **visual)
+                    
+        if 'collisions' in self.annotations:
+            for collision in self.annotations['collisions']:
+                coll_instance = self.get_collision(collision['name'])
+                # [TODO v2.1.0] We should prefer this over the URDF Mesh and also fill the meshes annotation
+                collision.pop("geometry")
+                if coll_instance is not None:
+                    coll_instance.add_annotations(overwrite=False, **collision)
 
         if 'submechanisms' in self.annotations:
             for submech in self.annotations['submechanisms']:

@@ -48,4 +48,3 @@ class YamlReflection(SelectiveReflection):
     def to_yaml(self):
         raw = dict((var, getattr(self, var)) for var in self.get_refl_vars())
         return to_yaml(raw)
-

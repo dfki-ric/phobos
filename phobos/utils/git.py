@@ -30,6 +30,14 @@ class MergeRequest(object):
         return options
 
 
+def get_root(cwd):
+    try:
+        root_path, _ = execute_shell_command("git rev-parse --show-toplevel", cwd=cwd, silent=True)
+        return root_path.strip()
+    except Exception:
+        return None
+
+
 def clone(repo, target, branch=None, cwd=None, recursive=False, ignore_failure=False, commit_id=None,
           shallow=1, pipeline=None):
     execute_shell_command("git lfs install || true", cwd)

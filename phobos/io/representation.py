@@ -445,12 +445,13 @@ class Mesh(Representation, SmurfBase):
     def __init__(self, filepath=None, scale=None, mesh=None, meshname=None, material=None,
                  mesh_orientation=None,
                  **kwargs):
-        SmurfBase.__init__(self)
+        SmurfBase.__init__(self, returns=["scale", "exported", "unique_name", "imported"])
+        self._operations = []
         self._scale = [1.0, 1.0, 1.0]
-        if scale is not None:
+        if scale is not None and scale != self.scale:
             self.scale = scale
-        self.changed = False
-        self.info_in_sync = True
+        self._changed = False
+        self._info_in_sync = True
         self.material = material
         if mesh is not None:
             assert meshname is not None
@@ -460,12 +461,13 @@ class Mesh(Representation, SmurfBase):
             assert self.input_type in MESH_DATA_TYPES
             self.input_file = None
             self.unique_name = meshname
-            self.mesh_information = None
+            self._mesh_information = None
             if isinstance(mesh, trimesh.Trimesh):
-                self.mesh_information = mesh_io.trimesh_2_mesh_info_dict(mesh)
+                self._mesh_information = mesh_io.trimesh_2_mesh_info_dict(mesh)
             elif BPY_AVAILABLE and isinstance(mesh, bpy.types.Mesh):
-                self.mesh_information = mesh_io.blender_2_mesh_info_dict(mesh)
-                self.changed = True
+                self._mesh_information = mesh_io.blender_2_mesh_info_dict(mesh)
+                self._operations.append("_initiated_in_blender")
+                self._changed = True
         else:
             if kwargs.get("_xmlfile", None) is not None and not os.path.isabs(filepath):
                 filepath = read_relative_filename(filepath, kwargs["_xmlfile"])
@@ -481,7 +483,7 @@ class Mesh(Representation, SmurfBase):
                 meshname = _meshname
             self.original_mesh_name = _meshname
             self._mesh_object = None
-            self.mesh_information = None  # this will get the raw information present from file
+            self._mesh_information = None  # this will get the raw information present from file
             self.input_type = "file_"+meshext.lower()
             self.input_file = filepath
             self.unique_name = meshname
@@ -495,9 +497,10 @@ class Mesh(Representation, SmurfBase):
             "up": "Z" if not mars_mesh else "Y",
             "forward": "Y" if not mars_mesh else "-Z"
         } if mesh_orientation is None else mesh_orientation
-        self.exported = {}
+        self._exported = {}
         self.history = [f"Instantiated with filepath={filepath}->{self.input_file}, scale={scale}, mesh={mesh}, meshname={meshname}, "
                         f"material={material}, mesh_orientation={mesh_orientation}, {kwargs}"]
+        self.excludes += ["history", "input_type", "input_file", "original_mesh_name", "mesh_object"]
 
     @property
     def mesh_object(self):
@@ -507,10 +510,11 @@ class Mesh(Representation, SmurfBase):
     def mesh_object(self, value):
         assert isinstance(value, trimesh.Trimesh) or isinstance(value, trimesh.Scene) or isinstance(value, bpy.types.Mesh)
         self.history.append(f"manually setting mesh_object by value of {type(value)}")
-        self.changed = True
-        self.info_in_sync = False
+        self._operations.append("_manual_override")
+        self._changed = True
+        self._info_in_sync = False
         self._mesh_object = value
-        self.mesh_information = None
+        self._mesh_information = None
 
     def stringable(self):
         # [TODO v2.1.0]
@@ -524,6 +528,7 @@ class Mesh(Representation, SmurfBase):
 
     def set_unique_name(self, value):
         self.unique_name = value
+        self._operations.append({"set_unique_name": [value]})
 
     def write_history(self, targetpath):
         # log.debug(f"Writing history to {targetpath}_history.log")
@@ -543,14 +548,14 @@ class Mesh(Representation, SmurfBase):
 
     @property
     def abs_filepath(self):
-        if len(self.exported) == 0:
+        if len(self._exported) == 0:
             return self.input_file
         else:
             assert self._related_robot_instance is not None
             assert self._related_robot_instance.mesh_format is not None
-            if self._related_robot_instance.mesh_format not in self.exported:
+            if self._related_robot_instance.mesh_format not in self._exported:
                 raise IOError(f"The mesh {self.unique_name} with the required mesh format ({self._related_robot_instance.mesh_format}) has not yet been exported.")
-            return self.exported[self._related_robot_instance.mesh_format]
+            return self._exported[self._related_robot_instance.mesh_format]["filepath"]
 
     @property
     def filepath(self):
@@ -560,6 +565,40 @@ class Mesh(Representation, SmurfBase):
             return os.path.relpath(self.abs_filepath, os.path.dirname(self._related_robot_instance.smurffile))
         else:
             return self.abs_filepath
+
+    @property
+    def exported(self):
+        if self._related_robot_instance is not None:
+            out = {}
+            for fmt, value in self._exported.items():
+                out[fmt] = {
+                    k: (
+                        v if k != "filepath" else
+                        os.path.relpath(v, os.path.dirname(self._related_robot_instance.smurffile))
+                    ) for k, v in value.items()
+                }
+            return out
+        else:
+            return self._exported
+
+    @property
+    def imported(self):
+        if self.input_file is not None:
+            git_root = git.get_root(os.path.dirname(self.input_file))
+            if git_root is not None:
+                _, _, url = git.get_repo_data(git_root)
+                out = {
+                    "remote": url,
+                    "commit": git.revision(git_root),
+                    "filepath": os.path.relpath(self.input_file, git_root)
+                }
+            else:
+                out = {
+                    "filepath": self.input_file
+                }
+        else:
+            out = "input file not known"
+        return out
 
     @property
     def input_file_name(self):
@@ -623,7 +662,7 @@ class Mesh(Representation, SmurfBase):
             return mesh.convex_hull.volume, mesh.centroid
 
     def equivalent(self, other):
-        return (not self.changed and not other.changed and self.input_file == other.input_file) or\
+        return (not self._changed and not other._changed and self.input_file == other.input_file) or \
                identical(mesh_io.as_trimesh(self.mesh_object, silent=True), mesh_io.as_trimesh(other.mesh_object, silent=True))
 
     def load_mesh(self, reload=False):
@@ -645,12 +684,12 @@ class Mesh(Representation, SmurfBase):
                 # leaving a rotation in the matrix_basis, which we here get rid of
                 bpy.ops.object.transform_apply(rotation=True)
                 if isinstance(mesh_io.import_mesh(self.input_file), trimesh.Trimesh):
-                    self.mesh_information = mesh_io.parse_obj(self.input_file)
+                    self._mesh_information = mesh_io.parse_obj(self.input_file)
                 else:
                     log.debug(f"{self.input_file} can't be converted to bobj")
             elif self.input_type == "file_dae":
                 bpy.ops.wm.collada_import(filepath=self.input_file)
-                self.mesh_information = mesh_io.parse_dae(self.input_file)
+                self._mesh_information = mesh_io.parse_dae(self.input_file)
                 self._mesh_object = None
                 delete_objects = []
                 mesh_objects = []
@@ -670,26 +709,27 @@ class Mesh(Representation, SmurfBase):
                     obj.select_set(True)
                 bpy.context.view_layer.objects.active = delete_objects[0]
             elif self.input_type == "file_bobj":
-                self.mesh_information = mesh_io.parse_bobj(self.input_file)
-                self._mesh_object = mesh_io.mesh_info_dict_2_blender(self.unique_name, **self.mesh_information)
+                self._mesh_information = mesh_io.parse_bobj(self.input_file)
+                self._mesh_object = mesh_io.mesh_info_dict_2_blender(self.unique_name, **self._mesh_information)
                 bpy.context.view_layer.objects.active = bpy.data.objects.new(self.unique_name, self.mesh_object)
             bpy.ops.object.delete()
-            self.changed = True  # as we there might be unnoticed changes by blender
+            self._operations.append("_loaded_in_blender")
+            self._changed = True  # as we there might be unnoticed changes by blender
         else:
             if self.input_type == "file_stl":
                 self._mesh_object = mesh_io.import_mesh(self.input_file)
             elif self.input_type == "file_obj":
                 self._mesh_object = mesh_io.import_mesh(self.input_file)
                 if isinstance(self.mesh_object, trimesh.Trimesh):
-                    self.mesh_information = mesh_io.parse_obj(self.input_file)
+                    self._mesh_information = mesh_io.parse_obj(self.input_file)
                 else:
                     log.debug(f"{self.input_file} can't be converted to bobj")
             elif self.input_type == "file_dae":
                 self._mesh_object = mesh_io.import_mesh(self.input_file)
-                self.mesh_information = mesh_io.parse_dae(self.input_file)
+                self._mesh_information = mesh_io.parse_dae(self.input_file)
             elif self.input_type == "file_bobj":
-                self.mesh_information = mesh_io.parse_bobj(self.input_file)
-                self._mesh_object = mesh_io.mesh_info_dict_2_trimesh(**self.mesh_information)
+                self._mesh_information = mesh_io.parse_bobj(self.input_file)
+                self._mesh_object = mesh_io.mesh_info_dict_2_trimesh(**self._mesh_information)
         self.history.append(f"loaded {'bpy-Mesh' if BPY_AVAILABLE else 'trimesh'} from {self.input_type} {self.input_file}")
         return self.mesh_object
 
@@ -706,21 +746,29 @@ class Mesh(Representation, SmurfBase):
         # log.debug(f"Providing mesh {targetpath}...")
         # if there are no changes we can simply copy
         if "file_"+ext == self.input_type:
-            if not self.changed and self.input_file == targetpath:
+            if not self._changed and self.input_file == targetpath:
                 log.debug(f"Using existing mesh {targetpath}...")
-                self.exported[ext] = targetpath
+                self._exported[ext] = {
+                    "operations": self._operations,
+                    "filepath": targetpath,
+                    "export_operation": "None"
+                }
                 self.history.append(f"->target == input == {self.input_file} for ext {ext}")
                 self.write_history(targetpath)
                 return
-            elif not self.changed:
+            elif not self._changed:
                 log.debug(f"Copying mesh {os.path.relpath(self.input_file, os.path.dirname(targetpath))} to {targetpath}...")
                 shutil.copyfile(self.input_file, targetpath)
-                self.exported[ext] = targetpath
+                self._exported[ext] = {
+                    "operations": self._operations,
+                    "filepath": targetpath,
+                    "export_operation": "copy"
+                }
                 self.history.append(f"->copying {self.input_file} to {targetpath}")
                 self.write_history(targetpath)
                 return
         # do nothing if the file is already there and identical
-        if os.path.isfile(targetpath) and not self.changed:
+        if os.path.isfile(targetpath) and not self._changed:
             existing_mesh = mesh_io.import_mesh(targetpath)
             o_history = self.read_history(targetpath)
             equiv_histories = False
@@ -728,7 +776,11 @@ class Mesh(Representation, SmurfBase):
                 equiv_histories = [x for x in o_history[1:] if not x.startswith("->")] == [x for x in self.history[1:] if not x.startswith("->")]
             if existing_mesh is not None and (equiv_histories or mesh_io.identical(mesh_io.as_trimesh(self.mesh_object, silent=True), existing_mesh)):
                 log.debug(f"Skipping export of {targetpath} as the mesh file already exists and is identical")
-                self.exported[ext] = targetpath
+                self._exported[ext] = {
+                    "operations": self._operations,
+                    "filepath": targetpath,
+                    "export_operation": "None"
+                }
                 self.write_history(targetpath)
                 return
             elif existing_mesh is not None and o_history is not None:
@@ -747,12 +799,12 @@ class Mesh(Representation, SmurfBase):
         if self.input_type.startswith("file") and self.mesh_object is None:
             self.load_mesh()
         # only export bobj, if it makes sense for the mesh
-        if ext == "bobj" and self.mesh_information is None:
+        if ext == "bobj" and self._mesh_information is None:
             if throw_on_invalid_bobj:
                 raise IOError(
                     f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh can't be exported as bobj")
             return
-        elif ext == "bobj" and (not self.info_in_sync and "texture_coords" in self.mesh_information):
+        elif ext == "bobj" and (not self._info_in_sync and "texture_coords" in self._mesh_information):
             if throw_on_invalid_bobj:
                 raise IOError(
                     f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh has been edited and thus the textures might have get mixed up.")
@@ -761,8 +813,12 @@ class Mesh(Representation, SmurfBase):
         log.debug(f"Writing {type(self.mesh_object)} to {targetpath}...")
         assert self.mesh_object is not None
         if ext == "bobj" and self.input_type == "file_obj":
-            mesh_io.write_bobj(targetpath, **self.mesh_information)
-            self.exported[ext] = targetpath
+            mesh_io.write_bobj(targetpath, **self._mesh_information)
+            self._exported[ext] = {
+                "operations": self._operations,
+                "filepath": targetpath,
+                "export_operation": "write_bobj"
+            }
             self.history.append(f"->wrote bobj {targetpath} from {self.input_type}")
             self.write_history(targetpath)
             return
@@ -797,7 +853,11 @@ class Mesh(Representation, SmurfBase):
             bpy.ops.object.select_all(action='DESELECT')
             tmpobject.select_set(True)
             bpy.ops.object.delete()
-            self.exported[ext] = targetpath
+            self._exported[ext] = {
+                "operations": self._operations,
+                "filepath": targetpath,
+                "export_operation": "blender_export"
+            }
             self.history.append(f"->wrote {ext} to {targetpath} from {self.input_type}")
             self.write_history(targetpath)
             return
@@ -815,18 +875,25 @@ class Mesh(Representation, SmurfBase):
             else:
                 with open(targetpath, "wb") as f:
                     f.write(dae_xml)
+            exp_op = "trimesh_export"
         elif ext == "bobj":
             assert isinstance(self.mesh_object, trimesh.Trimesh),\
                 f"Export to bobj only possible from trimesh.Trimesh not for {type(self.mesh_object)}"
             log.debug(f"Exporting {targetpath} with {len(self.mesh_object.vertices)} vertices...")
             mesh_io.write_bobj(targetpath, **mesh_io.trimesh_2_mesh_info_dict(self.mesh_object))
+            exp_op = "write_bobj"
         else:
             self.mesh_object.export(
                 file_obj=targetpath
             )
+            exp_op = "trimesh_export"
         self.history.append(f"->wrote {ext} to {targetpath} from {self.input_type}")
         self.write_history(targetpath)
-        self.exported[ext] = targetpath
+        self._exported[ext] = {
+            "operations": self._operations,
+            "filepath": targetpath,
+            "export_operation": exp_op
+        }
 
     # methods that leave the mesh and mesh_info in sync
     @property
@@ -842,13 +909,14 @@ class Mesh(Representation, SmurfBase):
             self._scale = [scale, scale, scale]
         else:
             raise TypeError(f"Can't scale with {scale}, requires list(3) or float")
+        self._operations.append({"scale": [self._scale]})
 
     def multiply_scale(self, factor):
         if type(factor) == list:
             assert len(factor) == 3
-            self._scale = [v * s for v, s in zip(self.scale, factor)]
+            self.scale = [v * s for v, s in zip(self.scale, factor)]
         elif type(factor) in [float, int]:
-            self._scale = [v * factor for v in self.scale]
+            self.scale = [v * factor for v in self.scale]
         else:
             raise TypeError(f"Can't multiply scale with {factor}, requires list(3) or float")
 
@@ -857,21 +925,23 @@ class Mesh(Representation, SmurfBase):
         self.load_mesh()
         if isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene):
             self.mesh_object.apply_transform(np.diag(list(self.scale) + [1]))
-            self.history.append(f"applied scale {self.scale}")
-            self.changed = True
+            self._operations.append("apply_scale")
+            self.history.append(f"apply_scale {self.scale}")
+            self._changed = True
             self.scale = 1
-            if self.mesh_information is not None:
-                self.mesh_information["vertices"] = self.mesh_information["vertices"] * np.array(self.scale)
-                self.mesh_information["vertex_normals"] = self.mesh_information["vertex_normals"] / np.array(self.scale)
+            if self._mesh_information is not None:
+                self._mesh_information["vertices"] = self._mesh_information["vertices"] * np.array(self.scale)
+                self._mesh_information["vertex_normals"] = self._mesh_information["vertex_normals"] / np.array(self.scale)
         elif BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
             raise NotImplementedError
 
     def improve_mesh(self):
         self.load_mesh()
         if isinstance(self.mesh_object, trimesh.Trimesh):
-            self.changed = True
-            self.info_in_sync = False
+            self._changed = True
+            self._info_in_sync = False
             self._mesh_object = improve_mesh(self.mesh_object)
+            self._operations.append("improve_mesh")
             self.history.append(f"improved mesh")
         elif isinstance(self.mesh_object, bpy.types.Mesh):
             raise NotImplementedError("Please optimize the mesh directly in blender")
@@ -881,10 +951,11 @@ class Mesh(Representation, SmurfBase):
     def reduce_mesh(self, factor):
         self.load_mesh()
         if isinstance(self.mesh_object, trimesh.Trimesh):
-            self.changed = True
-            self.info_in_sync = False
+            self._changed = True
+            self._info_in_sync = False
             self._mesh_object = reduce_mesh(self.mesh_object, factor)
-            self.unique_name = edit_name_string(self.unique_name, suffix=f"_red{str(factor).replace('.',',')}")
+            self._operations.append({"reduce_mesh": [factor]})
+            self.set_unique_name(misc.edit_name_string(self.unique_name, suffix=f"_red{str(factor).replace('.',',')}"))
             self.history.append(f"reduced mesh factor={factor}")
         elif isinstance(self.mesh_object, bpy.types.Mesh):
             raise NotImplementedError("Please reduce the mesh directly in blender")
@@ -895,10 +966,11 @@ class Mesh(Representation, SmurfBase):
         self.load_mesh()
         if isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene):
             self._mesh_object = self.mesh_object.convex_hull
-            self.mesh_information = mesh_io.trimesh_2_mesh_info_dict(self.mesh_object)
-            self.changed = True
-            self.info_in_sync = False
-            self.unique_name = edit_name_string(self.unique_name, suffix="_convex")
+            self._mesh_information = mesh_io.trimesh_2_mesh_info_dict(self.mesh_object)
+            self._operations.append("to_convex_hull")
+            self._changed = True
+            self._info_in_sync = False
+            self.set_unique_name(misc.edit_name_string(self.unique_name, suffix="_convex"))
             self.history.append(f"to trimesh convex_hull")
         elif BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
             import bmesh
@@ -907,9 +979,10 @@ class Mesh(Representation, SmurfBase):
             bmesh.ops.convex_hull(bm, bm.verts)
             bm.to_mesh(self.mesh_object)
             bm.free()
-            self.changed = True
-            self.info_in_sync = False
-            self.unique_name = edit_name_string(self.unique_name, suffix="_convex")
+            self._operations.append("to_convex_hull")
+            self._changed = True
+            self._info_in_sync = False
+            self.set_unique_name(misc.edit_name_string(self.unique_name, suffix="_convex"))
             self.history.append(f"to bpy convex_hull")
         else:
             log.error(f"Couldn't create convex hull for mesh {self.unique_name}")
@@ -924,15 +997,16 @@ class Mesh(Representation, SmurfBase):
             name_replacements = {}
         if isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene):
             self._mesh_object = self.mesh_object.apply_transform(mirror_transform)
+            self._operations.append({"mirror": [mirror_transform]})
             try:
                 self.mesh_object.fix_normals()
             except AttributeError:
                 # [TODO v2.1.0] It seems there is an issue in trimesh, which we have to escape here
                 pass
-            self.mesh_information = mesh_io.trimesh_2_mesh_info_dict(self.mesh_object)
-            self.changed = True
-            self.info_in_sync = False
-            self.unique_name = edit_name_string(self.unique_name, suffix="_mirrored", replacements=name_replacements)
+            self._mesh_information = mesh_io.trimesh_2_mesh_info_dict(self.mesh_object)
+            self._changed = True
+            self._info_in_sync = False
+            self.set_unique_name(misc.edit_name_string(self.unique_name, suffix="_mirrored", replacements=name_replacements))
             self.history.append(f"trimesh mirrored {['{:0.2f}'.format(x) for x in mirror_transform.diagonal()]}")
         elif BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
             import bmesh
@@ -942,10 +1016,11 @@ class Mesh(Representation, SmurfBase):
             bmesh.ops.mirror(bm, bm.faces, mathutils.Matrix(mirror_transform))
             bm.to_mesh(self.mesh_object)
             bm.free()
-            self.changed = True
-            self.info_in_sync = False
-            self.mesh_information = mesh_io.blender_2_mesh_info_dict(self.mesh_object)
-            self.unique_name = edit_name_string(self.unique_name, suffix="_mirrored", replacements=name_replacements)
+            self._operations.append({"mirror": [mirror_transform]})
+            self._changed = True
+            self._info_in_sync = False
+            self._mesh_information = mesh_io.blender_2_mesh_info_dict(self.mesh_object)
+            self.set_unique_name(misc.edit_name_string(self.unique_name, suffix="_mirrored", replacements=name_replacements))
             self.history.append(f"bpy mirrored {['{:0.2f}'.format(x) for x in mirror_transform.diagonal()]}")
         else:
             log.error(f"Couldn't create convex hull for mesh {self.unique_name}")
@@ -953,10 +1028,11 @@ class Mesh(Representation, SmurfBase):
     def to_trimesh_mesh(self):
         self.load_mesh()
         if not isinstance(self.mesh_object, trimesh.Trimesh):
-            self.changed = True
-            self.info_in_sync = False
+            self._changed = True
+            self._info_in_sync = False
             self.history.append(f"converted from {type(self.mesh_object)} to trimesh")
             self._mesh_object = mesh_io.as_trimesh(self.mesh_object)
+            self._operations.append("to_trimesh_mesh")
 
     # [TODO v2.1.0] Consider using this other shader for the x3d export
     # shapes += "<CommonSurfaceShader ambientFactor='.588 .588 .588' diffuseFactor='{} {} {}' specularFactor='{} {} {}' shininessFactor='{}' normalScale='2 2 2' normalBias='-1 -1 1'>\n".format(diffuse[0], diffuse[1], diffuse[2], specular[0], specular[1], specular[2], shininess)
@@ -1005,10 +1081,8 @@ class Collision(Representation, SmurfBase):
 
     def __init__(self, name=None, link=None, geometry=None, origin=None, bitmask=None, noDataPackage=False,
                  reducedDataPackage=False, ccfm=None, **kwargs):
-        if type(link) is str:
-            link = link
-        elif link is not None:
-            link = link.name
+        if link is not None:
+            link = str(link)
         self.original_name = name
         if name is None or len(name) == 0:
             if link is not None:
@@ -1018,7 +1092,8 @@ class Collision(Representation, SmurfBase):
                 name = link + "_collision"
             else:
                 name = None
-        SmurfBase.__init__(self, name=name, link=link, returns=['name', 'link'], **kwargs)
+        self.link = link
+        SmurfBase.__init__(self, name=name, link=link, returns=['name', 'link', 'geometry'], **kwargs)
         self.geometry = _singular(geometry)
         if origin is None:
             origin = Pose()
@@ -1033,20 +1108,26 @@ class Collision(Representation, SmurfBase):
             self.ccfm = ccfm
         if bitmask is not None:
             self.returns += ['bitmask']
-        self.excludes += ["origin", "original_name", "geometry"]
+        self.excludes += ["origin", "original_name"]
 
 
 class Visual(Representation, SmurfBase):
-    _class_variables = ["name", "geometry", "material", "origin"]
+    _class_variables = ["name", "link", "geometry", "material", "origin"]
 
-    def __init__(self, geometry=None, material=None, material_: Material = None, origin=None, name=None, **kwargs):
+    def __init__(self, geometry=None, material=None, material_: Material = None, origin=None, name=None, link=None, **kwargs):
+        self.original_name = name
+        if link is not None:
+            link = str(link)
         self.original_name = name
         if name is None or len(name) == 0:
-            if "_parent_xml" in kwargs:
+            if link is not None:
+                name = str(link) + "_visual"
+            elif "_parent_xml" in kwargs:
                 link = kwargs["_parent_xml"].attrib["name"]
                 name = link + "_visual"
             else:
                 name = None
+        self.link = link
         self.name = name
         self.geometry = _singular(geometry)
         material_ = _singular(material_)
@@ -1062,7 +1143,7 @@ class Visual(Representation, SmurfBase):
         if origin is None:
             origin = Pose()
         self.origin = _singular(origin)
-        SmurfBase.__init__(self, **kwargs)
+        SmurfBase.__init__(self, returns=["name", "geometry"], **kwargs)
         assert isinstance(self.origin, Pose)
 
     @property

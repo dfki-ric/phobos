@@ -698,7 +698,7 @@ class BaseModel(yaml.YAMLObject):
                                          rel_mesh_pathes=self.export_meshes, ros_pkg_later=True)
         for vc in self.robot.collisions + self.robot.visuals:
             if isinstance(vc.geometry, representation.Mesh):
-                self.processed_meshes = self.processed_meshes.union([os.path.realpath(f) for f in vc.geometry.exported.values()])
+                self.processed_meshes = self.processed_meshes.union([os.path.realpath(f["filepath"]) for f in vc.geometry._exported.values()])
                 self.processed_meshes.add(os.path.realpath(vc.geometry.abs_filepath))
         if "keep_files" in self.deployment:
             git.reset(self.targetdir, "autobuild", "master")
