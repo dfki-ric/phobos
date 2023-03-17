@@ -74,18 +74,11 @@ def createGeometry(viscol, geomsrc, linkobj=None):
     geometry = viscol.geometry
     geometry_type = None
     if isinstance(geometry, representation.Mesh):
-        meshname = geometry.unique_name
         geometry_type = "mesh"
         bpy.ops.object.add(type='MESH')
         newgeom = bpy.context.active_object
-        nUtils.safelyName(newgeom, viscol.name, phobostype=geomsrc)
-        bUtils.sortObjectToCollection(newgeom, cname=geomsrc)
-        if meshname in bpy.data.meshes:
-            log('Assigning copy of existing mesh ' + meshname + ' to ' + viscol.name, 'INFO')
-            newgeom.data = bpy.data.meshes[meshname]
-        else:
-            log("Importing mesh for {0} element: '{1}".format(geomsrc, viscol.name), 'INFO')
-            newgeom.data = geometry.load_mesh()
+        newgeom.name = viscol.name
+        newgeom.data = geometry.load_mesh()
         newgeom.scale = geometry.scale
     elif isinstance(geometry, representation.Box) or isinstance(geometry, representation.Cylinder) or isinstance(geometry, representation.Sphere):
         dimensions = None
@@ -111,6 +104,8 @@ def createGeometry(viscol, geomsrc, linkobj=None):
         )
         return None
 
+    newgeom.phobostype = geomsrc
+
     # from here it's the same for both meshes and primitives
     newgeom['geometry/type'] = geometry_type
     if geomsrc == 'visual':
@@ -118,6 +113,8 @@ def createGeometry(viscol, geomsrc, linkobj=None):
             assignMaterial(newgeom, viscol.material)
         else:
             log('No material for visual {}.'.format(viscol.name), 'WARNING')
+    elif newgeom.data.users == 1:
+        assignMaterial(newgeom, "phobos_collision")
 
     # write generic custom properties
     for prop, value in viscol.to_yaml().items():
@@ -128,14 +125,14 @@ def createGeometry(viscol, geomsrc, linkobj=None):
             else:
                 newgeom[prop] = value
 
-    nUtils.safelyName(newgeom, viscol.name)
-    newgeom.phobostype = geomsrc
+
 
     # place geometric object relative to its parent link
     if linkobj:
         eUtils.parentObjectsTo(newgeom, linkobj)
         newgeom.matrix_local = mathutils.Matrix(viscol.origin.to_matrix())
 
+    bUtils.sortObjectToCollection(newgeom, cname=geomsrc)
     # # make object smooth
     # eUtils.smoothen_surface(newgeom)
 
@@ -205,8 +202,16 @@ def createLink(link):
     )
     bound_box = (0, 0, 0)
     geometries = []
-    for viscol in link.visuals + link.collisions:
-        geom = createGeometry(viscol, 'visual' if isinstance(viscol, representation.Visual) else "collision")
+    for viscol in link.visuals:
+        geom = createGeometry(viscol, 'visual')
+        bound_box = (
+            max(bound_box[0], max(geom.bound_box[0])),
+            max(bound_box[1], max(geom.bound_box[1])),
+            max(bound_box[2], max(geom.bound_box[2])),
+        )
+        geometries.append((geom, viscol))
+    for viscol in link.collisions:
+        geom = createGeometry(viscol, "collision")
         bound_box = (
             max(bound_box[0], max(geom.bound_box[0])),
             max(bound_box[1], max(geom.bound_box[1])),
