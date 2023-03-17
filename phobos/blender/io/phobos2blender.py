@@ -314,23 +314,23 @@ def createInterface(interface: representation.Interface, parent):
         parent = sUtils.getObjectByName(interface.parent)
 
     templateobj = ioUtils.getResource(('interface', 'default', interface.direction))
-    scale = parent.scale
+    scale = parent.data.bones[0].length
     ifobj = bUtils.createPrimitive(
         interface.name,
         'box',
-        (1.0, 1.0, 1.0),
+        (scale,) * 3,
         defs.layerTypes['interface'],
         phobostype='interface',
     )
     nUtils.safelyName(ifobj, interface.name, 'interface')
     ifobj.data = templateobj.data
     ifobj.phobostype = "interface"
-    ifobj.scale = (scale,) * 3
     ifobj['type'] = interface.type
     ifobj['direction'] = interface.direction
     if parent is not None:
         eUtils.parentObjectsTo(ifobj, parent)
         ifobj.matrix_local = interface.origin.to_matrix()
+    ifobj.scale = (scale,) * 3
 
     # write generic custom properties
     for prop, value in interface.to_yaml().items():
