@@ -1106,7 +1106,6 @@ class PhobosModelPanel(bpy.types.Panel):
         c2.label(text="Custom properties", icon='WORDWRAP_ON')
         c2.operator('phobos.rename_custom_property', text="Rename", icon='OUTLINER_DATA_FONT')
         c2.operator('phobos.batch_property', text="Edit", icon='GREASEPENCIL')
-        c2.operator('phobos.edityamldictionary', text="Edit Dictionary", icon='TEXT')
         #todo: c2.operator('phobos.copy_props', text="Copy", icon='GHOST')
         c2.operator('phobos.copy_props', text="Copy")
 
@@ -1268,8 +1267,6 @@ class PhobosExportPanel(bpy.types.Panel):
         layout.prop(expsets, "path")
         ginlayout = self.layout.split()
         g1 = ginlayout.column(align=True)
-        # FIXME remove this?
-        # g1.prop(expsets, "relativePaths")
         g1.prop(expsets, "exportTextures")
         g1.prop(expsets, "selectedOnly")
         g2 = ginlayout.column(align=True)
