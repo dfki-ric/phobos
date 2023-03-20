@@ -31,10 +31,10 @@ def create_box(mesh, oriented=True, scale=1.0):
 
     if oriented:
         half_ext = mesh.bounding_box_oriented.extents
-        transform = mesh.bounding_box_oriented.transform
+        transform = mesh.bounding_box_oriented.primitive.transform
     else:
         half_ext = mesh.bounding_box.extents
-        transform = mesh.bounding_box.transform
+        transform = mesh.bounding_box.primitive.transform
 
     return representation.Box(size=half_ext), transform
 
@@ -46,7 +46,7 @@ def create_sphere(mesh, scale=1.0):
     mesh.apply_transform(np.diag((scale if type(scale) == list else [scale]*3) + [1]))
 
     half_ext = mesh.bounding_box.extents
-    transform = mesh.bounding_box.transform
+    transform = mesh.bounding_box.primitive.transform
 
     r = np.amax(half_ext)
 
@@ -61,11 +61,11 @@ def create_cylinder(mesh, scale=1.0):
     mesh.apply_transform(np.diag((scale if type(scale) == list else [scale]*3) + [1]))
 
     c = mesh.bounding_cylinder
-    transform = mesh.bounding_cylinder.transform
+    transform = mesh.bounding_cylinder.primitive.transform
 
     # Find the length and the axis
     axis = mesh.bounding_cylinder.direction
-    orthogonal = axis
+    orthogonal = np.array(axis)
     if axis[0] != 0.0:
         orthogonal[0] = -axis[0]
     elif axis[1] != 0.0:

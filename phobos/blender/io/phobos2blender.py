@@ -125,8 +125,6 @@ def createGeometry(viscol, geomsrc, linkobj=None):
             else:
                 newgeom[prop] = value
 
-
-
     # place geometric object relative to its parent link
     if linkobj:
         eUtils.parentObjectsTo(newgeom, linkobj)

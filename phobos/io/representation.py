@@ -670,17 +670,26 @@ class Mesh(Representation, SmurfBase):
             return self.mesh_object
         assert os.path.isfile(self.input_file), f"Mesh with path {self.input_file} wasn't found!"
         assert self.is_lfs_checked_out(), f"LFS file {self.input_file} not properly checked out!"
+        log.info(f"--> loading mesh: {self.input_file}")
         if BPY_AVAILABLE:
+            for mesh in bpy.data.meshes:
+                if mesh.name.startswith(self.unique_name) and mesh.get("input_file", None) == self.input_file:
+                    log.info("Found multi-user mesh")
+                    self._mesh_object = bpy.data.meshes[self.unique_name]
+                    self._operations.append("_loaded_in_blender")
+                    self._changed = True
+                    break
+        if BPY_AVAILABLE and self.mesh_object is None:
             bpy.ops.object.select_all(action='DESELECT')
             if self.input_type == "file_stl":
                 bpy.ops.import_mesh.stl(filepath=self.input_file)
-                self._mesh_object = bpy.data.meshes.new_from_object(bpy.context.object)
+                self._mesh_object = bpy.data.meshes[bpy.context.object.data.name]
                 bpy.ops.object.delete()
             elif self.input_type == "file_obj":
                 bpy.ops.import_scene.obj(filepath=self.input_file,
                                          axis_forward=self.mesh_orientation["forward"],
                                          axis_up=self.mesh_orientation["up"])
-                self._mesh_object = bpy.data.meshes.new_from_object(bpy.context.object)
+                self._mesh_object = bpy.data.meshes[bpy.context.object.data.name]
                 # with obj file import, blender only turns the object, not the vertices,
                 # leaving a rotation in the matrix_basis, which we here get rid of
                 bpy.ops.object.transform_apply(rotation=True)
@@ -706,6 +715,7 @@ class Mesh(Representation, SmurfBase):
                 if len(mesh_objects) > 1:
                     bpy.ops.object.join()
                 self._mesh_object = bpy.data.meshes.new_from_object(bpy.context.object)
+                self._mesh_object.name = self.unique_name
                 bpy.ops.object.select_all(action='DESELECT')
                 for obj in delete_objects:
                     obj.select_set(True)
@@ -717,8 +727,9 @@ class Mesh(Representation, SmurfBase):
                 bpy.context.view_layer.objects.active = bpy.data.objects.new(self.unique_name, self.mesh_object)
             bpy.ops.object.delete()
             self._operations.append("_loaded_in_blender")
+            self._mesh_object["input_file"] = self.input_file
             self.changed = True  # as we there might be unnoticed changes by blender
-        else:
+        elif self.mesh_object is None:
             if self.input_type == "file_stl":
                 self._mesh_object = mesh_io.import_mesh(self.input_file)
             elif self.input_type == "file_obj":
