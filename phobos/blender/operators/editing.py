@@ -1209,9 +1209,15 @@ class CreateCollisionObjects(Operator):
     bl_label = "Create Collision Object(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
+    # [TODO v2.1.0] Add convex
     property_colltype : EnumProperty(
         name='Collision Type', default='box', description="Collision type", items=defs.geometrytypes
     )
+
+    # [TODO v2.1.0] Fix optimized creation see: Fix creation for Trimesh in geometry/geometry.py
+    # property_optimized : BoolProperty(
+    #     name='Optimize', default=False, description="Whether you want to add an improved sized and oriented primitive"
+    # )
 
     def execute(self, context):
         """
@@ -1239,7 +1245,7 @@ class CreateCollisionObjects(Operator):
         for vis in visuals:
             # build object names
             if "visual" in vis.name.lower():
-                collname = vis.name.split('_').replace("visual", "collision").replace("Visual", "Collision").replace("VISUAL", "COLLISION")
+                collname = vis.name.replace("visual", "collision").replace("Visual", "Collision").replace("VISUAL", "COLLISION")
             else:
                 collname = vis.name + "_collision"
 
@@ -1250,24 +1256,40 @@ class CreateCollisionObjects(Operator):
             # create Mesh
             if self.property_colltype != 'mesh':
                 geometry = None
+                transform = np.identity(4)
                 if self.property_colltype == "box":
-                    geometry = geo.create_box(mesh_io.as_trimesh(vis.data), scale=phobos_vis.scale)
+                    # [TODO v2.1.0] Fix optimized creation see: Fix creation for Trimesh in geometry/geometry.py
+                    # geometry, transform = geo.create_box(
+                    #     vis if not self.property_optimized else mesh_io.as_trimesh(vis.data),
+                    #     scale=getattr(phobos_vis, "scale", 1), oriented=self.property_optimized
+                    # )
+                    geometry, transform = geo.create_box(vis, scale=getattr(phobos_vis, "scale", 1), oriented=self.property_optimized)
                 elif self.property_colltype == "cylinder":
-                    geometry = geo.create_cylinder(mesh_io.as_trimesh(vis.data), scale=phobos_vis.scale)
+                    # [TODO v2.1.0] Fix optimized creation see: Fix creation for Trimesh in geometry/geometry.py
+                    # geometry, transform = geo.create_cylinder(
+                    #     vis if not self.property_optimized else mesh_io.as_trimesh(vis.data),
+                    #     scale=getattr(phobos_vis, "scale", 1),
+                    # )
+                    geometry, transform = geo.create_cylinder(vis, scale=getattr(phobos_vis, "scale", 1),)
                 elif self.property_colltype == "sphere":
-                    geometry = geo.create_sphere(mesh_io.as_trimesh(vis.data), scale=phobos_vis.scale)
+                    # [TODO v2.1.0] Fix optimized creation see: Fix creation for Trimesh in geometry/geometry.py
+                    # geometry, transform = geo.create_sphere(
+                    #     vis if not self.property_optimized else mesh_io.as_trimesh(vis.data),
+                    #     scale=getattr(phobos_vis, "scale", 1),
+                    # )
+                    geometry, transform = geo.create_sphere(vis, scale=getattr(phobos_vis, "scale", 1),)
                 elif self.property_colltype == "convex":
                     geometry = blender2phobos.deriveGeometry(vis, duplicate_mesh=True)
                     geometry.to_convex_hull()
                     geometry.apply_scale()
-                representation.Collision(
+                collision = representation.Collision(
                     name=collname,
                     link=sUtils.getEffectiveParent(vis),
                     geometry=geometry,
-                    origin=vis.origin
+                    origin=representation.Pose.from_matrix(phobos_vis.origin.to_matrix().dot(transform))
                 )
-                ob = phobos2blender.createGeometry(geometry)
-            elif self.property_colltype == 'mesh':
+                ob = phobos2blender.createGeometry(collision, geomsrc="collision", linkobj=sUtils.getEffectiveParent(vis))
+            else:
                 ob = bUtils.createPrimitive(
                     collname,
                     'cylinder',
@@ -1279,7 +1301,7 @@ class CreateCollisionObjects(Operator):
                     'collision'
                 )
                 ob.scale = vis.scale
-                ob.data = vis.data.copy()
+                ob.data = vis.data  # we don't do vis.data.copy() to have a multi-user mesh
 
             # set properties of new collision object
             ob.phobostype = 'collision'

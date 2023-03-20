@@ -7,7 +7,7 @@ from ..defs import load_json, dump_json
 from ..io.scenes import World, Entity
 
 
-class SMURFScene(World):
+class Scene(World):
     """ A simple object to store all information about the scene, the smurfs and corresponding urdf
     """
 

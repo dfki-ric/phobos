@@ -7,7 +7,12 @@ import numpy as np
 import trimesh
 
 from ..commandline_logging import get_logger
+from ..defs import BPY_AVAILABLE
 from ..io import representation
+from ..utils.transform import create_transformation
+
+if BPY_AVAILABLE:
+    import bpy
 
 log = get_logger(__name__)
 
@@ -25,30 +30,46 @@ def create_box(mesh, oriented=True, scale=1.0):
     """
     Create a box element.
     """
-    # scale the mesh
-    mesh = deepcopy(mesh)
-    mesh.apply_transform(np.diag((scale if type(scale) == list else [scale]*3) + [1]))
-
-    if oriented:
-        half_ext = mesh.bounding_box_oriented.extents
-        transform = mesh.bounding_box_oriented.primitive.transform
+    assert not oriented or isinstance(mesh, trimesh.Trimesh)
+    # [TODO v2.1.0] Fix creation for Trimesh
+    if isinstance(mesh, trimesh.Trimesh) or isinstance(mesh, trimesh.Scene):
+        # scale the mesh
+        mesh = deepcopy(mesh)
+        mesh.apply_transform(np.diag((scale if type(scale) == list else [scale]*3) + [1]))
+        if oriented:
+            extent = mesh.bounding_box_oriented.extents
+            transform = mesh.bounding_box_oriented.primitive.transform
+        else:
+            extent = mesh.bounding_box.extents
+            transform = mesh.bounding_box.primitive.transform
+    elif BPY_AVAILABLE and isinstance(mesh, bpy.types.Object):
+        extent = (np.max(mesh.bound_box, axis=0) - np.min(mesh.bound_box, axis=0))
+        transform = np.identity(4)
+        transform[0:3, 3] = np.average(mesh.bound_box, axis=0)
+        # transform = np.array(mesh.matrix_local).dot(transform)
     else:
-        half_ext = mesh.bounding_box.extents
-        transform = mesh.bounding_box.primitive.transform
+        raise ValueError(f"Received {type(mesh)}")
 
-    return representation.Box(size=half_ext), transform
+    return representation.Box(size=extent), transform
 
 
 def create_sphere(mesh, scale=1.0):
     """ Create a sphere """
-    # scale the mesh
-    mesh = deepcopy(mesh)
-    mesh.apply_transform(np.diag((scale if type(scale) == list else [scale]*3) + [1]))
-
-    half_ext = mesh.bounding_box.extents
-    transform = mesh.bounding_box.primitive.transform
-
-    r = np.amax(half_ext)
+    # [TODO v2.1.0] Fix creation for Trimesh
+    if isinstance(mesh, trimesh.Trimesh) or isinstance(mesh, trimesh.Scene):
+        # scale the mesh
+        mesh = deepcopy(mesh)
+        mesh.apply_transform(np.diag((scale if type(scale) == list else [scale]*3) + [1]))
+        half_ext = mesh.bounding_box.extents
+        transform = mesh.bounding_box.primitive.transform
+        r = np.amax(half_ext)
+    elif BPY_AVAILABLE and isinstance(mesh, bpy.types.Object):
+        r = np.max(np.max(mesh.bound_box, axis=0) - np.min(mesh.bound_box, axis=0))
+        transform = np.identity(4)
+        transform[0:3, 3] = np.average(mesh.bound_box, axis=0)
+        # transform = np.array(mesh.matrix_local).dot(transform)
+    else:
+        raise ValueError(f"Received {type(mesh)}")
 
     return representation.Sphere(radius=r * 0.5), transform
 
@@ -56,24 +77,38 @@ def create_sphere(mesh, scale=1.0):
 def create_cylinder(mesh, scale=1.0):
     """Create a cylinder.
     """
-    # scale the mesh
-    mesh = deepcopy(mesh)
-    mesh.apply_transform(np.diag((scale if type(scale) == list else [scale]*3) + [1]))
-
-    c = mesh.bounding_cylinder
-    transform = mesh.bounding_cylinder.primitive.transform
-
-    # Find the length and the axis
-    axis = mesh.bounding_cylinder.direction
-    orthogonal = np.array(axis)
-    if axis[0] != 0.0:
-        orthogonal[0] = -axis[0]
-    elif axis[1] != 0.0:
-        orthogonal[1] = -axis[1]
-    elif axis[2] != 0.0:
-        orthogonal[2] = -axis[2]
-    length = np.abs(c.direction).dot(c.extents)
-    diameter = np.cross(axis, orthogonal).dot(c.extents)
+    # [TODO v2.1.0] Fix creation for Trimesh
+    if isinstance(mesh, trimesh.Trimesh) or isinstance(mesh, trimesh.Scene):
+        # scale the mesh
+        mesh = deepcopy(mesh)
+        mesh.apply_transform(np.diag((scale if type(scale) == list else [scale]*3) + [1]))
+        c = mesh.bounding_cylinder
+        transform = mesh.bounding_cylinder.primitive.transform
+        # Find the length and the axis
+        axis = mesh.bounding_cylinder.direction
+        orthogonal = np.array(axis)
+        if axis[0] != 0.0:
+            orthogonal[0] = -axis[0]
+        elif axis[1] != 0.0:
+            orthogonal[1] = -axis[1]
+        elif axis[2] != 0.0:
+            orthogonal[2] = -axis[2]
+        length = np.abs(c.direction).dot(c.extents)
+        diameter = np.cross(axis, orthogonal).dot(c.extents)
+    elif BPY_AVAILABLE:
+        extent = (np.max(mesh.bound_box, axis=0) - np.min(mesh.bound_box, axis=0))
+        deviation = extent - np.average(extent)
+        length = extent[np.argmax(deviation)]
+        axis = np.argmax(deviation)
+        diameter = np.max([extent[i] for i in range(3) if i != axis])
+        rpy = [0, 0, 0]
+        if axis == 0:
+            rpy = [0, np.pi/2, 0]
+        if axis == 1:
+            rpy = [np.pi/2, 0, 0]
+        transform = create_transformation(xyz=np.average(mesh.bound_box, axis=0), rpy=rpy)
+    else:
+        raise ValueError(f"Received {type(mesh)}")
 
     return representation.Cylinder(radius=diameter/2, length=length), transform
 

@@ -26,12 +26,25 @@ def createPhobosMaterials():
         mat = defs.definitions['materials'][materialname]
         if materialname not in materials:
             new_material = bpy.data.materials.new(materialname)
-            new_material.diffuse_color = tuple(mat['diffuse'])
+            new_material.use_nodes = True
+            principled_bsdf = new_material.node_tree.nodes.get('Principled BSDF')
+            if principled_bsdf is not None:
+                new_material.node_tree.nodes.remove(principled_bsdf)
+            shader_node = new_material.node_tree.nodes.new('ShaderNodeEeveeSpecular')
+            material_output = new_material.node_tree.nodes.get('Material Output')
+            new_material.node_tree.links.new(shader_node.outputs[0], material_output.inputs[0])
+            shader_node.inputs['Base Color'].default_value = tuple(mat['diffuse'])
+            new_material.show_transparent_back = False
             if 'specular' in mat:
-                new_material.specular_color = tuple(mat['specular'][:3])
+                shader_node.inputs['Specular'].default_value = tuple(mat['specular'])
                 new_material.specular_intensity = 0.5
-            if "transparency" in mat and hasattr(new_material, "transparency"):
-                new_material.transparency = mat["transparency"]
+            if "transparency" in mat:
+                shader_node.inputs['Transparency'].default_value = mat["transparency"]
+                new_material.show_transparent_back = mat.get("show_transparent_back", True)
+                new_material.blend_method = "BLEND"
+                new_material.use_backface_culling = False
+                new_material.diffuse_color = tuple(mat['diffuse'])
+                new_material.diffuse_color[3] = 1-mat["transparency"]
 
 
 def assignMaterial(obj, materialname, override=True):
