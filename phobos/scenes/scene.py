@@ -4,9 +4,10 @@ import numpy as np
 
 from .entity import WORLD, PARENT, Entity, BaseEntity
 from ..defs import load_json, dump_json
+from ..io.scenes import World, Entity
 
 
-class Scene(object):
+class SMURFScene(World):
     """ A simple object to store all information about the scene, the smurfs and corresponding urdf
     """
 

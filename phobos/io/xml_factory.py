@@ -49,6 +49,16 @@ def get_class(classname):
     return cls
 
 
+def get_var(object, varname_string):
+    if "." in varname_string:
+        var = object
+        for var_part in varname_string.split("."):
+            var = getattr(var, var_part)
+    else:
+        var = getattr(object, varname_string)
+    return var
+
+
 class XMLDefinition(object):
     def __init__(self, dialect, tag, value=None, attributes=None, children=None, value_children=None,
                  attribute_children=None, nested_children=None):
@@ -83,7 +93,7 @@ class XMLDefinition(object):
             float_fmt_dict = {}
         attrib = {}
         for attname, varname in self.xml_attributes.items():
-            val = getattr(object, varname)
+            val = get_var(object, varname)
             if val is not None:
                 attrib[attname] = self._serialize(val, float_fmt=float_fmt_dict.get(attname, float_fmt_dict.get("default", None)))
         out = ET.Element(self.xml_tag, attrib=attrib)
@@ -91,7 +101,7 @@ class XMLDefinition(object):
         if self.xml_value is not None:
             assert all([x == {} for x in [self.xml_children, self.xml_value_children, self.xml_attribute_children,
                                           self.xml_nested_children]])
-            val = getattr(object, self.xml_value)
+            val = get_var(object, self.xml_value)
             out.text = self._serialize(val, float_fmt=float_fmt_dict.get(self.xml_tag, float_fmt_dict.get("default", None)))
             if val is not None:
                 return out
@@ -100,7 +110,7 @@ class XMLDefinition(object):
         # normal children
         children = []
         for _, var in self.xml_children.items():
-            obj = getattr(object, var["varname"])
+            obj = get_var(object, var["varname"])
             if type(obj) == list:
                 children += [o for o in obj if o is not None and (not isinstance(o, Representation) or not o.is_empty())]
             elif isinstance(obj, var["class"]):
@@ -121,15 +131,15 @@ class XMLDefinition(object):
                     raise error
         # children that are created from a simple property and have only attributes
         for tag, attribute_map in self.xml_attribute_children.items():
-            _attrib = {attname: self._serialize(getattr(object, varname), float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)))
-                       for attname, varname in attribute_map.items() if getattr(object, varname) is not None}
+            _attrib = {attname: self._serialize(get_var(object, varname), float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)))
+                       for attname, varname in attribute_map.items() if get_var(object, varname) is not None}
             if len(_attrib) == 0:
                 continue
             e = ET.Element(tag, attrib=_attrib)
             out.append(e)
         # children that have the a value as text
         for tag, varname in self.xml_value_children.items():
-            val = getattr(object, varname)
+            val = get_var(object, varname)
             if val is not None:
                 if type(val) == list and all([not is_int(v) and not is_float(v) and type(v) == str for v in val]):
                     for v in val:

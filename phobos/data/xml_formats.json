@@ -499,6 +499,76 @@
     }
   },
   "sdf": {
+    "World": {
+      "tag":  "world",
+      "children": {
+        "model": {
+          "classname": "Entity",
+          "varname": "entities"
+        },
+        "frames":{
+          "classname": "Frame",
+          "varname": "frames"
+        },
+        "physics": {
+          "classname": "Physics",
+          "varname": "physics"
+        }
+      },
+      "value_children": {
+        "gravity": "physics.gravity"
+      }
+    },
+    "Environment": {
+      "tag": "scene"
+    },
+    "Frame": {
+      "value_children": {
+        "name": "name",
+        "attached_to": "attached_to"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      }
+    },
+    "Entity": {
+      "tag": "model",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "link": {
+          "classname": "Link",
+          "varname": "model.links"
+        },
+        "joint": {
+          "classname": "Joint",
+          "varname": "model.joints"
+        },
+        "material": {
+          "classname": "Material",
+          "varname": "model.materials"
+        },
+        "sensor": {
+          "classname": "SensorFactory",
+          "varname": "model.sensors"
+        },
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      }
+    },
+    "Physics": {
+      "tag": "physics",
+      "children": {
+        "classname": "ODE",
+        "varname": "ode"
+      }
+    },
     "XMLRobot": {
       "tag": "model",
       "attributes": {
