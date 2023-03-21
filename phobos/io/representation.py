@@ -454,7 +454,7 @@ class Mesh(Representation, SmurfBase):
         self._info_in_sync = True
         self.material = material
         if mesh is not None:
-            assert meshname is not None
+            assert meshname is not None and type(meshname) == str
             self.original_mesh_name = meshname
             self._mesh_object = mesh
             self.input_type = str(type(mesh))[8:-2]  # handle: <class 'the type name'>
@@ -481,6 +481,7 @@ class Mesh(Representation, SmurfBase):
             meshext = meshext[1:]  # remove the dot
             if meshname is None:
                 meshname = _meshname
+            assert type(meshname) == str
             self.original_mesh_name = _meshname
             self._mesh_object = None
             self._mesh_information = None  # this will get the raw information present from file
@@ -527,6 +528,7 @@ class Mesh(Representation, SmurfBase):
         return self.unique_name
 
     def set_unique_name(self, value):
+        assert type(value) == str
         self.unique_name = value
         self._operations.append({"set_unique_name": [value]})
 

@@ -102,7 +102,7 @@ def deriveGeometry(obj, duplicate_mesh=False, **kwargs):
         return representation.Mesh(
             scale=list(obj.matrix_world.to_scale()),
             mesh=blender_mesh,
-            meshname=blender_mesh
+            meshname=blender_mesh.name
         )
     else:
         raise ValueError(f"Unknown geometry type: {gtype}")
