@@ -4,6 +4,7 @@ from copy import deepcopy
 import numpy as np
 import pkg_resources
 import pydot
+import traceback
 
 from .. import geometry as pgu, utils
 from ..commandline_logging import get_logger
@@ -32,7 +33,8 @@ class Robot(SMURFRobot):
                              verify_meshes_on_import=verify_meshes_on_import, inputfile=inputfile, description=description,
                              autogenerate_submechanisms=autogenerate_submechanisms, is_human=is_human)
         except Exception as e:
-            log.error(f"Failed loading:\n  input: {inputfile}\n  xml: {xmlfile}\n  submechanims: {submechanisms_file}\n  smurf: {smurffile}")
+            log.error(f"Failed loading:\n  input: {inputfile}\n  xml: {xmlfile}\n  submechanims: {submechanisms_file}\n  smurf: {smurffile}\n"
+                      f"because of:\n"+''.join(traceback.format_exception(None, e, e.__traceback__)))
             raise e
 
         if name is not None:
@@ -2402,5 +2404,3 @@ class Robot(SMURFRobot):
         else:
             raise TypeError("geometry_for_inertia holds invalid type "+type(geometry_for_inertia))
         link.inertial.inertia = representation.Inertia(*inertia_list)
-
-
