@@ -1043,7 +1043,8 @@
     "Mesh": {
       "tag": "IndexedFaceSet",
       "attributes": {
-        "coordIndex": "x3d_faces"
+        "coordIndex": "x3d_faces",
+        "colorPerVertex": "$false"
       },
       "attribute_children": {
         "Coordinate": {

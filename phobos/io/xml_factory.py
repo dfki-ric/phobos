@@ -50,6 +50,8 @@ def get_class(classname):
 
 
 def get_var(object, varname_string):
+    if varname_string.startswith("$"):
+        return varname_string[1:]
     if "." in varname_string:
         var = object
         for var_part in varname_string.split("."):
