@@ -1080,12 +1080,13 @@
         "DEF": "name"
       },
       "attribute_children": {
-        "Material": {
-          "diffuseColor": "diffuse_rgb",
-          "specularColor": "specular_rgb",
-          "emissiveColor": "emissive_rgb",
-          "shininess": "shininess",
-          "transparency": "transparency"
+        "CommonSurfaceShader": {
+          "diffuseFactor": "diffuse_rgb",
+          "specularFactor": "specular_rgb",
+          "shininessFactor": "shininess",
+          "ambientFactor": "$.588 .588 .588",
+          "normalScale": "$2 2 2",
+          "normalBias": "$-1 -1 1"
         }
       },
       "children": {
