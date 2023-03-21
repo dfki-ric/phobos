@@ -1044,7 +1044,8 @@
       "tag": "IndexedFaceSet",
       "attributes": {
         "coordIndex": "x3d_faces",
-        "colorPerVertex": "$false"
+        "colorPerVertex": "$false",
+        "normalPerVertex": "$false"
       },
       "attribute_children": {
         "Coordinate": {
