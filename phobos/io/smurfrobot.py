@@ -246,12 +246,13 @@ class SMURFRobot(XMLRobot):
                 visual.pop("geometry")
                 if vis_instance is not None:
                     vis_instance.add_annotations(overwrite=False, **visual)
-                    
+
         if 'collisions' in self.annotations:
             for collision in self.annotations['collisions']:
                 coll_instance = self.get_collision(collision['name'])
                 # [TODO v2.1.0] We should prefer this over the URDF Mesh and also fill the meshes annotation
-                collision.pop("geometry")
+                if "geometry" in collision:
+                    collision.pop("geometry")
                 if coll_instance is not None:
                     coll_instance.add_annotations(overwrite=False, **collision)
 
