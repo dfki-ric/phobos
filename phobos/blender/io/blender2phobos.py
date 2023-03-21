@@ -108,7 +108,7 @@ def deriveGeometry(obj, duplicate_mesh=False, **kwargs):
         raise ValueError(f"Unknown geometry type: {gtype}")
 
 
-def deriveCollision(obj, duplicat_mesh=False,  **kwargs):
+def deriveCollision(obj, duplicate_mesh=False,  **kwargs):
     # bitmask (will deprecate with MARS2.0)
     bitmask = None
     # the bitmask is cut to length = 16 and reverted for int parsing
