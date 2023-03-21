@@ -14,7 +14,7 @@ def main(args):
     import argparse
     import os
 
-    from ..scenes import Scene, Assembly
+    from ..scenes import SMURFScene, Assembly
     from ..utils import resources
     from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
@@ -29,7 +29,7 @@ def main(args):
     log = setup_logger_level(log_level=args.loglevel)
     log.info("Unique names for all links and joints are assumed to create a valid .urdf file!")
 
-    scene = Scene(args.input)
+    scene = SMURFScene(args.input)
     if scene.is_empty():
         log.error("Given file is empty!")
         return 1

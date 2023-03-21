@@ -1,14 +1,14 @@
 import os.path
 from copy import deepcopy
 
-from .scene import Scene
+from .smurfscene import SMURFScene
 from ..defs import dump_json
 from ..io import representation
 from ..utils import xml
 
 
 # [Todo v2.1.0] Test and fix this
-class Assembly(Scene):
+class Assembly(SMURFScene):
     def __init__(self, smurfassembly, copy_construct=False, output_dir=None, **kwargs):
         super().__init__(smurfassembly, copy_construct=copy_construct, output_dir=output_dir, **kwargs)
         if len(self.entities) > 1:

@@ -7,7 +7,7 @@ from ..defs import load_json, dump_json
 from ..io.scenes import World, Entity
 
 
-class Scene(World):
+class SMURFScene(World):
     """ A simple object to store all information about the scene, the smurfs and corresponding urdf
     """
 
@@ -18,8 +18,7 @@ class Scene(World):
             if self.scenefile is not None else None, None
         self.scenedir = os.path.dirname(self.scenefile) if self.scenefile is not None else None
         self.filedict = load_json(open(self.scenefile, "r").read()) if not copy_construct else None
-        self.entities = []
-        self.entities_by_name = {}
+        super(SMURFScene, self).__init__()
         if not copy_construct:
             self.recursive_parse(self.scenefile)
         self.output_dir = os.path.abspath(output_dir) if output_dir is not None else None
@@ -53,7 +52,7 @@ class Scene(World):
                         continue
                 raise AssertionError("Parent " + entity.parent_entity + " of " + entity.name + "not yet loaded!")
 
-            if entity.parent_entity not in self.entities_by_name.keys() and entity.parent_entity != WORLD:
+            if entity.parent_entity not in [str(e) for e in self.entities] and entity.parent_entity != WORLD:
                 raise AssertionError(
                     "You have to sort your entities in a way that the parent is defined before the child.")
             if _type in ["urdf", "smurf"]:
@@ -65,7 +64,6 @@ class Scene(World):
                         T = go_through_entities_for_transformation(self.entities, np.identity(4))
                         entity.transformation = T.dot(entity.transformation)
                     self.entities += [entity]
-                    self.entities_by_name[entity.name] = entity
                 elif entity.anchor == PARENT:
                     if connect_root_to is not None and entity.root is True:
                         entity.set_parent(connect_root_to)
@@ -79,12 +77,12 @@ class Scene(World):
                                 return go_through_entities(child.children)
                             else:
                                 continue
-                        log.error(self.entities_by_name.keys())
+                        log.error([str(e) for e in self.entities])
                         raise AssertionError(
                             "Parent " + entity.parent_entity + " of " + entity.name + " not yet loaded!")
 
                     go_through_entities(self.entities)
-                    self.entities_by_name[entity.name] = entity
+                    self.entities += [entity]
                 else:
                     raise NotImplementedError
             elif _type in ["smurfs", "smurfa"]:
@@ -102,7 +100,7 @@ class Scene(World):
 
     def export(self, outputfile=None):
         out = {"smurfs": []}
-        for entity in self.entities_by_name.values():
+        for entity in self.entities:
             out["smurfs"].append(entity.to_yaml())
         with open(outputfile, "w") as f:
             f.write(dump_json(out, default_flow_style=False))

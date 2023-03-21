@@ -96,7 +96,7 @@ class Environment(Representation, SmurfBase):
 
 
 class World(Representation, SmurfBase):
-    def __init__(self, entities, frames, physics=None):
+    def __init__(self, entities=None, frames=None, physics=None):
         super(World, self).__init__()
         self.entities = _plural(entities)
         self.physics = _singular(physics)
