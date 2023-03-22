@@ -614,14 +614,10 @@ class CreateInterfaceOperator(Operator):
         Returns:
 
         """
-        ifdict = {
-            'type': self.interface_type,
-            'direction': self.interface_direction,
-            'name': self.interface_name,
-            'scale': self.scale,
-        }
         if self.all_selected:
-            for link in [obj for obj in context.selected_objects if obj.phobostype == 'link']:
+            for link in [obj for obj in context.selected_objects]:
+                if link.phobostype != "link":
+                    link = sUtils.getEffectiveParent(link)
                 phobos2blender.createInterface(
                     representation.Interface(
                         name=self.interface_name,
@@ -629,17 +625,22 @@ class CreateInterfaceOperator(Operator):
                         type=self.interface_type,
                         direction=self.interface_direction
                     ),
-                    link
+                    None,
+                    self.scale
                 )
         else:
+            link = context.object
+            if link.phobostype != "link":
+                link = sUtils.getEffectiveParent(context.object)
             phobos2blender.createInterface(
                 representation.Interface(
                         name=self.interface_name,
-                        parent=context.object.name,
+                        parent=link.name,
                         type=self.interface_type,
                         direction=self.interface_direction
                     ),
-                context.object
+                None,
+                self.scale
             )
         return {'FINISHED'}
 
@@ -654,7 +655,7 @@ class CreateInterfaceOperator(Operator):
 
         """
         if context.object:
-            return context.object.mode == 'OBJECT'
+            return context.object.mode == 'OBJECT' and hasattr(context.object, "phobostype") and context.object.phobostype == "link"
         else:
             return True
 

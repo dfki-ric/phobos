@@ -310,14 +310,14 @@ def createJoint(joint: representation.Joint, linkobj=None):
     log("Assigned joint information to {}.".format(linkobj.name), 'DEBUG')
 
 
-def createInterface(interface: representation.Interface, parent):
+def createInterface(interface: representation.Interface, parent, scale=None):
     bUtils.toggleLayer('interface', value=True)
 
     if not parent:
         parent = sUtils.getObjectByName(interface.parent)
-
+    assert parent.phobostype == "link"
     templateobj = ioUtils.getResource(('interface', 'default', interface.direction))
-    scale = parent.data.bones[0].length
+    scale = parent.data.bones[0].length if scale is None else scale
     ifobj = bUtils.createPrimitive(
         interface.name,
         'box',
@@ -330,9 +330,8 @@ def createInterface(interface: representation.Interface, parent):
     ifobj.phobostype = "interface"
     ifobj['type'] = interface.type
     ifobj['direction'] = interface.direction
-    if parent is not None:
-        eUtils.parentObjectsTo(ifobj, parent)
-        ifobj.matrix_local = interface.origin.to_matrix()
+    eUtils.parentObjectsTo(ifobj, parent)
+    ifobj.matrix_local = interface.origin.to_matrix()
     ifobj.scale = (scale,) * 3
 
     # write generic custom properties
