@@ -100,8 +100,12 @@ class Pose(Representation, SmurfBase):
             self._matrix[0:3, 0:3] = transform.rpy_to_matrix([0, 0, value])
         elif type(value) in [list, tuple, np.ndarray] and len(value) == 3:
             self._matrix[0:3, 0:3] = transform.rpy_to_matrix(value)
+        elif BPY_AVAILABLE and hasattr(value, "__len__") and type(value) != str and len(value) == 3:
+            self._matrix[0:3, 0:3] = transform.rpy_to_matrix(np.array(value))
         elif type(value) in [list, tuple, np.ndarray] and len(value) == 4:
             self._matrix[0:3, 0:3] = transform.quaternion_to_matrix(value)
+        elif BPY_AVAILABLE and hasattr(value, "__len__") and type(value) != str and len(value) == 4:
+            self._matrix[0:3, 0:3] = transform.rpy_to_matrix(np.array(value))
         elif type(value) == dict and len(value) == 3:
             if all([k in "rpy" for k in value.keys()]):
                 self._matrix[0:3, 0:3] = transform.rpy_to_matrix([value["r"], value["p"], value["y"]])
@@ -146,7 +150,7 @@ class Pose(Representation, SmurfBase):
         if value is None:
             self._matrix[0:3, 3] = np.array([0.0, 0.0, 0.0])
         else:
-            assert type(value) in [list, np.ndarray] and len(value) == 3
+            assert (type(value) in [list, np.ndarray, tuple] or (hasattr(value, "__len__") and type(value) != str)) and len(value) == 3
             self._matrix[0:3, 3] = np.array(value)
 
     def from_vec(self, vec):
