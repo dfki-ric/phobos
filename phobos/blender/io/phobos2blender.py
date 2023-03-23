@@ -330,8 +330,8 @@ def createInterface(interface: representation.Interface, parent, scale=None):
     ifobj.phobostype = "interface"
     ifobj['type'] = interface.type
     ifobj['direction'] = interface.direction
-    eUtils.parentObjectsTo(ifobj, parent)
     ifobj.matrix_local = interface.origin.to_matrix()
+    eUtils.parentObjectsTo(ifobj, parent, relative=False)
     ifobj.scale = (scale,) * 3
 
     # write generic custom properties

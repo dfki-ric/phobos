@@ -187,7 +187,7 @@ def restructureKinematicTree(link, root=None):
     log("Restructured kinematic tree to new root: {}.".format(link.name), 'INFO')
 
 
-def parentObjectsTo(objects, parent, clear=False):
+def parentObjectsTo(objects, parent, clear=False, relative=True):
     """Parents the specified objects to the parent object.
     
     Depending on their phobostype the objects are parented either *bone relative* or *object*.
@@ -199,6 +199,7 @@ def parentObjectsTo(objects, parent, clear=False):
       objects(list(bpy.types.Object): objects to set parent of
       parent(bpy.types.Object): parent object
       clear(bool, optional): if True, the parenting of the objects will be cleared (Default value = False)
+      relative(bool, optional): will use parenting mode *bone relative* for links if True, *bone* otherwise (Default value = True)
 
     Returns:
 
@@ -220,7 +221,10 @@ def parentObjectsTo(objects, parent, clear=False):
     sUtils.selectObjects([parent] + objects, active=0, clear=True)
 
     if parent.phobostype == 'link':
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        if relative:
+            bpy.ops.object.parent_set(type='BONE_RELATIVE')
+        else:
+            bpy.ops.object.parent_set(type='BONE')
     else:
         bpy.ops.object.parent_set(type='OBJECT')
 
