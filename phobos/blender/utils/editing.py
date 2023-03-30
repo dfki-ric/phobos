@@ -187,7 +187,7 @@ def restructureKinematicTree(link, root=None):
     log("Restructured kinematic tree to new root: {}.".format(link.name), 'INFO')
 
 
-def parentObjectsTo(objects, parent, clear=False, relink=False):
+def parentObjectsTo(objects, parent, clear=False):
     """Parents the specified objects to the parent object.
     
     Depending on their phobostype the objects are parented either *bone relative* or *object*.
@@ -199,7 +199,6 @@ def parentObjectsTo(objects, parent, clear=False, relink=False):
       objects(list(bpy.types.Object): objects to set parent of
       parent(bpy.types.Object): parent object
       clear(bool, optional): if True, the parenting of the objects will be cleared (Default value = False)
-      relink(bool, optional): if True, the other children of parent will be unlinked before linking the objects and relinked afterwards
 
     Returns:
 
@@ -214,14 +213,6 @@ def parentObjectsTo(objects, parent, clear=False, relink=False):
     # Restore original layers
     #bpy.context.scene.layers = originallayers
 
-    linksToRelink = []
-    if relink:
-        for child in parent.children:
-            sUtils.selectObjects([child], active=0, clear=True)
-            bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
-            linksToRelink.append(child)
-
-
     if clear:
         sUtils.selectObjects(objects, active=0, clear=True)
         bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
@@ -232,11 +223,6 @@ def parentObjectsTo(objects, parent, clear=False, relink=False):
         bpy.ops.object.parent_set(type='BONE_RELATIVE')
     else:
         bpy.ops.object.parent_set(type='OBJECT')
-
-    #relink
-    for link in linksToRelink:
-        sUtils.selectObjects([parent, link], active=0, clear=True)
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
 
 
 def getNearestCommonParent(objs):
