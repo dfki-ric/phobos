@@ -332,7 +332,7 @@ def createInterface(interface: representation.Interface, parent, scale=None):
     ifobj.phobostype = "interface"
     ifobj['type'] = interface.type
     ifobj['direction'] = interface.direction
-    eUtils.parentObjectsTo(ifobj, parent, relink=True)
+    eUtils.parentObjectsTo(ifobj, parent)
     ifobj.matrix_local = interface.origin.to_matrix()
     ifobj.scale = (scale,) * 3
 
