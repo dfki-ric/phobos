@@ -663,6 +663,7 @@ class CreateInterfaceOperator(Operator):
             return True
 
 
+
 class CopyCustomProperties(Operator):
     """Copy custom properties of selected object(s)"""
 
