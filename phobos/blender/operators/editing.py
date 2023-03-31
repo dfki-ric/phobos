@@ -655,9 +655,12 @@ class CreateInterfaceOperator(Operator):
 
         """
         if context.object:
-            return context.object.mode == 'OBJECT' and hasattr(context.object, "phobostype") and context.object.phobostype == "link"
+            for ob in [context.object, sUtils.getEffectiveParent(context.object)]:
+                if ob is not None and ob.mode == 'OBJECT' and hasattr(ob, "phobostype") and ob.phobostype == "link":
+                    return True
         else:
             return True
+
 
 
 class CopyCustomProperties(Operator):
