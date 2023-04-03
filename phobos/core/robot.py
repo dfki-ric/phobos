@@ -303,7 +303,7 @@ class Robot(SMURFRobot):
         for sm in self.submechanisms + self.exoskeletons:
             if hasattr(sm, "file_path"):
                 _submodel = self.instantiate_submodel(
-                    name=str(sm), start=sm.get_root(self), stop=sm.get_leaves(self), robotname=str(sm),
+                    name=str(sm), start=sm.get_root(self), stop=sm.get_leaves(self, include_dependent=True), robotname=str(sm),
                     no_submechanisms=True, include_unstopped_branches=False
                 )
                 sm.file_path = f"../submechanisms/{str(sm)}.urdf"

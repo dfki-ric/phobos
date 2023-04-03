@@ -138,7 +138,7 @@ class HyrodynAnnotation(SmurfBase):
         root_joints = [jn for jn in self.get_joints() if jn in robot.get_children(self.get_root(robot))]
         return root_joints
 
-    def get_leaves(self, robot):
+    def get_leaves(self, robot, **kwargs):
         return tree.find_leaves(robot, self.get_joints())
 
     def get_children(self, robot):
@@ -304,16 +304,17 @@ class Exoskeleton(HyrodynAnnotation):
             jointnames=jointnames, file_path=file_path,
             around=around, auto_gen=auto_gen, type=None
         )
+        self.file_path = None
         self.returns += ["jointnames_dependent", "jointnames", "jointnames_spanningtree"]
-
-    def get_joints(self):
-        return list(set(([] if self.jointnames is None else self.jointnames) + self.jointnames_spanningtree + self.jointnames_dependent))
 
     def regenerate(self, robot, absorb_fixed_upwards=False, absorb_fixed_downwards=False):
         joints_df = robot.get_joints_ordered_df()
         self.jointnames = [str(j) for j in joints_df if j._child.is_human]
         self.jointnames_spanningtree = [str(j) for j in joints_df if j._child.is_human and j.joint_type != "fixed"]
         self.jointnames_dependent = [str(j.mimic.joint) for j in joints_df if j._child.is_human and j.joint_type != "fixed"]
+
+    def get_leaves(self, robot, include_dependent=False, **kwargs):
+        return tree.find_leaves(robot, self.get_joints() + (self.jointnames_dependent if include_dependent and self.jointnames_dependent is not None else []))
 
     def reduce_to_match(self, joints):
         joints = [str(j) for j in joints]
