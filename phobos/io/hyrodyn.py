@@ -306,6 +306,9 @@ class Exoskeleton(HyrodynAnnotation):
         )
         self.returns += ["jointnames_dependent", "jointnames", "jointnames_spanningtree"]
 
+    def get_joints(self):
+        return list(set(([] if self.jointnames is None else self.jointnames) + self.jointnames_spanningtree + self.jointnames_dependent))
+
     def regenerate(self, robot, absorb_fixed_upwards=False, absorb_fixed_downwards=False):
         joints_df = robot.get_joints_ordered_df()
         self.jointnames = [str(j) for j in joints_df if j._child.is_human]

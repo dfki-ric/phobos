@@ -300,7 +300,7 @@ class Robot(SMURFRobot):
             if len(double_joints) != 0:
                 print({dj: [sm.to_yaml() for sm in self.submechanisms if dj in sm.get_joints()] for dj in double_joints})
                 raise AssertionError(f"The following joints are multiply defined in the submechanisms definition: \n{double_joints}")
-        for sm in self.submechanisms:
+        for sm in self.submechanisms + self.exoskeletons:
             if hasattr(sm, "file_path"):
                 _submodel = self.instantiate_submodel(
                     name=str(sm), start=sm.get_root(self), stop=sm.get_leaves(self), robotname=str(sm),
