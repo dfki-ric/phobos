@@ -1585,7 +1585,7 @@ class DefineJointConstraintsOperator(Operator):
                     linkobj=joint
                 )
             elif not self.active and sUtils.getObjectByName(motor_name) is not None:
-                bpy.data.object.remove(sUtils.getObjectByName(motor_name))
+                bpy.data.objects.remove(sUtils.getObjectByName(motor_name))
 
         return {'FINISHED'}
 

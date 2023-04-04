@@ -16,6 +16,7 @@ Contains the utility functions for selecting objects in Blender based on differe
 import bpy
 
 from ..phoboslog import log
+from . import naming as nUtils
 
 
 def getLeaves(roots, objects=[]):
@@ -271,6 +272,33 @@ def isEntity(obj):
 
     """
     return obj is not None and 'entity/type' in obj and 'entity/name' in obj
+
+
+def getModelRoot(modelname):
+    roots = getRoots()
+    for root in roots:
+        if nUtils.getModelName(root) == modelname:
+            return root
+
+
+def selectModel(modelname):
+    selection = []
+    if modelname:
+        log("phobos: Selecting model" + modelname, "INFO")
+        roots = getRoots()
+        for root in roots:
+            if nUtils.getModelName(root) == modelname:
+                selection = getChildren(root)
+        if not selection:
+            log("phobos: No proper modelname given", "ERROR")
+    else:
+        log("No model name provided, deriving from selection...", "INFO")
+        roots = set()
+        for obj in bpy.context.selected_objects:
+            roots.add(getRoot(obj))
+        for root in list(roots):
+            selection.extend(getChildren(root))
+    selectObjects(list(selection), True)
 
 
 def selectObjects(objects, clear=True, active=-1):

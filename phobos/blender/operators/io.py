@@ -139,7 +139,7 @@ class ExportModelOperator(Operator):
         elif modellist:
             self.modelname = modellist[0][0]
             return self.execute(context)
-        log("No propely defined models to export.", 'ERROR')
+        log("No properly defined models to export.", 'ERROR')
         return {'CANCELLED'}
 
     def exportModel(self, root, exportpath='.'):
