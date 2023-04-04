@@ -503,6 +503,21 @@ class Mesh(Representation, SmurfBase):
             "forward": "Y" if not mars_mesh else "-Z"
         } if mesh_orientation is None else mesh_orientation
         self._exported = {}
+        if self.input_file is not None:
+            git_root = git.get_root(os.path.dirname(self.input_file))
+            if git_root is not None:
+                _, _, url = git.get_repo_data(git_root)
+                self.imported = {
+                    "remote": url,
+                    "commit": git.revision(git_root),
+                    "filepath": os.path.relpath(self.input_file, git_root)
+                }
+            else:
+                self.imported = {
+                    "filepath": self.input_file
+                }
+        else:
+            self.imported = "input file not known"
         self.history = [f"Instantiated with filepath={filepath}->{self.input_file}, scale={scale}, mesh={mesh}, meshname={meshname}, "
                         f"material={material}, mesh_orientation={mesh_orientation}, {kwargs}"]
         self.excludes += ["history", "input_type", "input_file", "original_mesh_name", "mesh_object"]
@@ -587,24 +602,15 @@ class Mesh(Representation, SmurfBase):
         else:
             return self._exported
 
-    @property
-    def imported(self):
-        if self.input_file is not None:
-            git_root = git.get_root(os.path.dirname(self.input_file))
-            if git_root is not None:
-                _, _, url = git.get_repo_data(git_root)
-                out = {
-                    "remote": url,
-                    "commit": git.revision(git_root),
-                    "filepath": os.path.relpath(self.input_file, git_root)
-                }
-            else:
-                out = {
-                    "filepath": self.input_file
-                }
-        else:
-            out = "input file not known"
-        return out
+    @exported.setter
+    def exported(self, value):
+        for fmt, info in value.items():
+            self._exported[fmt] = {
+                k: v
+                if k != "filepath" or self._related_robot_instance is None or os.path.isabs(v)
+                else os.path.normpath(os.path.join(read_relative_filename(v, getattr(self._related_robot_instance, "smurffile", self._related_robot_instance.xmlfile))))
+                for k, v in info.items()
+            }
 
     @property
     def input_file_name(self):

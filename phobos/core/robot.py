@@ -1326,7 +1326,7 @@ class Robot(SMURFRobot):
         """Transform the visual(s) of the given link.
         """
         # Get the visual
-        visual = self.get_visual(linkname)
+        visual = self.get_visual_by_link(linkname)
         log.info(" Transform Visuals")
         # Transform
         T = create_transformation(translation, rotation)
@@ -1337,7 +1337,7 @@ class Robot(SMURFRobot):
         """Transform the collision(s) of the given link.
         """
         # Get the collision
-        collision = self.get_collision(linkname)
+        collision = self.get_collision_by_link(linkname)
         log.info(" Transform Collisions")
         # Transform
         T = create_transformation(translation, rotation)

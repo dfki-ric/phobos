@@ -467,7 +467,7 @@ class XMLRobot(Representation):
 
         return self.links[link_id].inertial
 
-    def get_visual(self, link_name):
+    def get_visual_by_link(self, link_name):
         """
         Return all visuals of the given link if it exists.
         :param link_name: the name of the respective link
@@ -504,7 +504,7 @@ class XMLRobot(Representation):
 
         return None
 
-    def get_collision(self, link_name):
+    def get_collision_by_link(self, link_name):
         """
         Return all collisions of the given link if it exists.
         :param link_name: the name of the respective link
