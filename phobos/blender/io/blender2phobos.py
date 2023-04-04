@@ -15,6 +15,7 @@ from ..utils.validation import validate
 
 from ... import core
 from ...io import representation, sensor_representations, xmlrobot
+from ...io.poses import JointPoseSet
 
 """
 Factory functions for creating representation.* Instances from blender
@@ -533,6 +534,24 @@ def deriveMotor(obj):
     )
 
 
+def derivePoses(root, robot):
+    joints = [obj for obj in sUtils.getChildren(
+        root, selected_only=ioUtils.getExpSettings().selectedOnly, include_hidden=False
+    ) if obj.phobostype == "link"]
+    poses = {}
+    for joint in joints:
+        for k in joint.keys():
+            if k.startswith("pose/"):
+                posename = k[5:]
+                if posename not in poses:
+                    poses[posename] = {}
+                poses[posename] = {joint.get("joint/name", joint.name): joint[k]}
+    pose_objects = []
+    for posename, configuration in poses.items():
+        pose_objects.append(JointPoseSet(robot=robot, name=posename, configuration=configuration))
+    return pose_objects
+
+
 # [TODO v2.0.0] Add submechanisms
 def deriveSubmechanism(obj):
     raise NotImplementedError
@@ -658,7 +677,7 @@ def deriveRobot(root, name='', objectlist=None):
         name=modelname,
         links=[deriveLink(obj) for obj in objectlist if obj.phobostype == 'link'],
         joints=[deriveJoint(obj) for obj in objectlist if obj.phobostype == 'link' and sUtils.getEffectiveParent(obj, include_hidden=True) is not None],
-        sensors=[deriveSensor(obj) for obj in objectlist if obj.phobostype == 'sensor'],
+        sensors=[deriveSensor(obj) for obj in objectlist if obj.phobostype == 'sensor']
         # [TODO v2.1.0] Add transmission support
     )
 
@@ -674,6 +693,9 @@ def deriveRobot(root, name='', objectlist=None):
 
     for interface in [deriveInterface(obj) for obj in objectlist if obj.phobostype == 'interface']:
         robot.add_aggregate("interface", interface)
+
+    for pose in derivePoses(root, robot):
+        robot.add_aggregate("pose", pose)
 
     # [TODO v2.0.0] Add submechanisms
 
