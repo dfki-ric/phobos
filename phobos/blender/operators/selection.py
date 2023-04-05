@@ -217,21 +217,7 @@ class SelectModelOperator(Operator):
         Returns:
 
         """
-        selection = []
-        if self.modelname:
-            log("phobos: Selecting model" + self.modelname, "INFO")
-            roots = sUtils.getRoots()
-            for root in roots:
-                if nUtils.getModelName(root) == self.modelname:
-                    selection = sUtils.getChildren(root)
-        else:
-            log("No model name provided, deriving from selection...", "INFO")
-            roots = set()
-            for obj in bpy.context.selected_objects:
-                roots.add(sUtils.getRoot(obj))
-            for root in list(roots):
-                selection.extend(sUtils.getChildren(root))
-        sUtils.selectObjects(list(selection), True)
+        sUtils.selectModel(self.modelname)
         return {'FINISHED'}
 
 classes = (

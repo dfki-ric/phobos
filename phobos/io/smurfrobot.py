@@ -241,20 +241,30 @@ class SMURFRobot(XMLRobot):
 
         if 'visuals' in self.annotations:
             for visual in self.annotations['visuals']:
-                vis_instance = self.get_visual(visual['name'])
-                # [TODO v2.1.0] We should prefer this over the URDF Mesh and also fill the meshes annotation
-                visual.pop("geometry")
+                vis_instance = self.get_visual_by_name(visual['name'])
                 if vis_instance is not None:
+                    # [TODO v2.1.0] We should prefer this over the URDF Mesh
+                    if isinstance(vis_instance.geometry, representation.Mesh) and type(visual["geometry"]) == dict:
+                        vis_instance.geometry.add_annotations(overwrite=True, **visual["geometry"])
+                    visual.pop("geometry")
                     vis_instance.add_annotations(overwrite=False, **visual)
+                else:
+                    log.error(f"There is no visual with name {visual['name']} in this robot.")
+                    log.debug(f"But there are: {[str(v) for v in self.visuals]}")
 
         if 'collisions' in self.annotations:
             for collision in self.annotations['collisions']:
-                coll_instance = self.get_collision(collision['name'])
-                # [TODO v2.1.0] We should prefer this over the URDF Mesh and also fill the meshes annotation
-                if "geometry" in collision:
-                    collision.pop("geometry")
+                coll_instance = self.get_collision_by_name(collision['name'])
                 if coll_instance is not None:
+                    if "geometry" in collision:
+                        # [TODO v2.1.0] We should prefer this over the URDF Mesh
+                        if isinstance(coll_instance.geometry, representation.Mesh) and type(collision["geometry"]) == dict:
+                            coll_instance.geometry.add_annotations(overwrite=True, **collision["geometry"])
+                        collision.pop("geometry")
                     coll_instance.add_annotations(overwrite=False, **collision)
+                else:
+                    log.error(f"There is no collision with name {collision['name']} in this robot.")
+                    log.debug(f"But there are: {[str(c) for c in self.collisions]}")
 
         if 'submechanisms' in self.annotations:
             for submech in self.annotations['submechanisms']:

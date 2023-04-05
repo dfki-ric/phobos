@@ -17,6 +17,7 @@ import json
 import os
 
 import bpy
+import numpy as np
 
 from ..phoboslog import log
 from ..utils import blender as bUtils
@@ -170,13 +171,10 @@ def storePose(root, posename):
       : Nothing.
 
     """
+    if not posename:
+        log("No pose name given", "WARN")
+        return
     if root:
-        filename = nUtils.getModelName(root) + '::poses'
-        posedict = json.loads(bUtils.readTextFile(filename))
-        if not posedict:
-            posedict = {posename: {'name': posename, 'joints': {}}}
-        else:
-            posedict[posename] = {'name': posename, 'joints': {}}
         links = sUtils.getChildren(root, ('link',), True, False)
         sUtils.selectObjects([root] + links, clear=True, active=0)
         bpy.ops.object.mode_set(mode='POSE')
@@ -185,16 +183,18 @@ def storePose(root, posename):
             for link in links
             if 'joint/type' in link and link['joint/type'] not in ['fixed', 'floating']
         ):
-            link.pose.bones['Bone'].rotation_mode = 'XYZ'
-            posedict[posename]['joints'][nUtils.getObjectName(link, 'joint')] = link.pose.bones[
-                'Bone'
-            ].rotation_euler.y
+            if link["joint/type"] == "prismatic":
+                link["pose/"+posename] = np.round(link.pose.bones['Bone'].location.y, decimals=6)
+            else:
+                link.pose.bones['Bone'].rotation_mode = 'XYZ'
+                link["pose/"+posename] = np.round(link.pose.bones['Bone'].rotation_euler.y, decimals=6)
+            if "joint/limits/lower" in link:
+                link["pose/"+posename] = max(link["pose/"+posename], link["joint/limits/lower"])
+            if "joint/limits/upper" in link:
+                link["pose/"+posename] = min(link["pose/"+posename], link["joint/limits/upper"])
         bpy.ops.object.mode_set(mode='OBJECT')
-        # [TODO v2.1.0] REVIEW this
-        posedict = gUtils.roundFloatsInDict(posedict, ioUtils.getExpSettings().urdfDecimalPlaces)
-        bUtils.updateTextFile(filename, json.dumps(posedict))
     else:
-        log("No model root provided to store the pose for", "ERROR")
+        log("No model root provided to store the pose for", "WARNING")
 
 
 def loadPose(modelname, posename):
@@ -207,33 +207,76 @@ def loadPose(modelname, posename):
     Returns:
 
     """
-
-    load_file = bUtils.readTextFile(modelname + '::poses')
-    if load_file == '':
-        log('No poses stored.', 'ERROR')
+    if not modelname:
+        log("No model name given", "WARN")
         return
-
-    loadedposes = json.loads(load_file)
-    if posename not in loadedposes:
-        log('No pose with name ' + posename + ' stored for model ' + modelname, 'ERROR')
+    if not posename:
+        log("No pose name given", "WARN")
         return
-    prev_mode = bpy.context.mode
-    pose = loadedposes[posename]
-
-    # apply rotations to all joints defined by the pose
+    root = sUtils.getModelRoot(modelname)
+    if not root:
+        log("No model found with the name "+modelname, "ERROR")
+    links = sUtils.getChildren(root, ('link',), True, False)
+    sUtils.selectObjects([root] + links, clear=True, active=0)
+    found = False
     try:
         bpy.ops.object.mode_set(mode='POSE')
-        for obj in sUtils.getObjectsByPhobostypes(['link']):
-            if nUtils.getObjectName(obj, 'joint') in pose['joints']:
-                obj.pose.bones['Bone'].rotation_mode = 'XYZ'
-                obj.pose.bones['Bone'].rotation_euler.y = float(
-                    pose['joints'][nUtils.getObjectName(obj, 'joint')]
-                )
-    except KeyError as error:
-        log("Could not apply the pose: " + str(error), 'ERROR')
+        for link in (
+                link
+                for link in links
+                if 'joint/type' in link and link['joint/type'] not in ['fixed', 'floating']
+        ):
+            if "pose/" + posename in link:
+                found = True
+                if link["joint/type"] == "prismatic":
+                    link.pose.bones['Bone'].location.y = link["pose/" + posename]
+                else:
+                    link.pose.bones['Bone'].rotation_mode = "XYZ"
+                    link.pose.bones['Bone'].rotation_euler.y = link["pose/"+posename]
+        bpy.ops.object.mode_set(mode='OBJECT')
     finally:
         # restore previous mode
-        bpy.ops.object.mode_set(mode=prev_mode)
+        bpy.ops.object.mode_set(mode='OBJECT')
+
+    if not found:
+        log(f"No pose with name {posename} in model {modelname}", "ERROR")
+
+
+def deletePose(modelname, posename):
+    """Load and apply a robot's stored pose.
+
+    Args:
+      modelname(str): the model's name
+      posename(str): the name the pose is stored under
+
+    Returns:
+
+    """
+    if not modelname:
+        log("No model name given", "WARN")
+        return
+    if not posename:
+        log("No pose name given", "WARN")
+        return
+    root = sUtils.getModelRoot(modelname)
+    if not root:
+        log("No model found with the name "+modelname, "ERROR")
+    links = sUtils.getChildren(root, ('link',), True, False)
+    sUtils.selectObjects([root] + links, clear=True, active=0)
+    found = False
+    for link in (
+            link
+            for link in links
+            if 'joint/type' in link and link['joint/type'] not in ['fixed', 'floating']
+    ):
+        if "pose/" + posename in link:
+            found = True
+            link.pop("pose/" + posename)
+
+    if not found:
+        log(f"No pose with name {posename} in model {modelname}", "ERROR")
+    else:
+        log(f"Pose {posename} has been deleted", "INFO")
 
 
 def getPoses(modelname):
@@ -246,8 +289,22 @@ def getPoses(modelname):
       : A list containing the poses' names.
 
     """
-    load_file = bUtils.readTextFile(modelname + '::poses')
-    if load_file == '':
-        return []
-    poses = json.loads(load_file)
-    return poses.keys()
+    if not modelname:
+        log("No model name given", "WARN")
+        return
+    root = sUtils.getModelRoot(modelname)
+    if not root:
+        log("No model found with the name " + modelname, "ERROR")
+        return
+    links = sUtils.getChildren(root, ('link',), True, False)
+    sUtils.selectObjects([root] + links, clear=True, active=0)
+    poses = set()
+    for link in (
+            link
+            for link in links
+            if 'joint/type' in link and link['joint/type'] not in ['fixed', 'floating']
+    ):
+        for k in link.keys():
+            if k.startswith("pose/"):
+                poses.add(k[5:])
+    return list(poses)

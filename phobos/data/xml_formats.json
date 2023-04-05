@@ -572,7 +572,8 @@
     "XMLRobot": {
       "tag": "model",
       "attributes": {
-        "name": "name"
+        "name": "name",
+        "canonical_link": "root"
       },
       "children": {
         "link": {
@@ -582,10 +583,6 @@
         "joint": {
           "classname": "Joint",
           "varname": "joints"
-        },
-        "material": {
-          "classname": "Material",
-          "varname": "materials"
         },
         "sensor": {
           "classname": "SensorFactory",
@@ -599,6 +596,10 @@
         "name": "name"
       },
       "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        },
         "inertial": {
           "classname": "Inertial",
           "varname": "inertial"
@@ -616,7 +617,6 @@
     "Material": {
       "tag": "material",
       "value_children": {
-        "script": "name",
         "diffuse": "diffuse",
         "ambient": "ambient",
         "specular": "specular",
@@ -659,6 +659,10 @@
         "pose": {
           "classname": "Pose",
           "varname": "origin"
+        },
+        "material": {
+          "classname": "Material",
+          "varname": "material"
         }
       },
       "nested_children": {
@@ -680,11 +684,6 @@
               "classname": "Mesh",
               "varname": "geometry"
             }
-          }
-        },
-        "material": {
-          "value_children": {
-            "name": "material"
           }
         }
       }

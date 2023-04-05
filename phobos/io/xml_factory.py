@@ -123,7 +123,7 @@ class XMLDefinition(object):
                     children += [_obj]
         for child in sorted(children, key=lambda x: x.sort_string()):
             try:
-                e = child.to_xml(self.dialect)
+                e = child.to_xml(self.dialect, float_fmt_dict=float_fmt_dict, **kwargs)
                 if e is not None:
                     out.append(e)
             except KeyError as error:
@@ -165,7 +165,7 @@ class XMLDefinition(object):
         # children that are nested in another element
         if self.xml_nested_children != {}:
             for _, nest in self.xml_nested_children.items():
-                out.append(nest.to_xml(object))
+                out.append(nest.to_xml(object, float_fmt_dict=float_fmt_dict, **kwargs))
         return out
 
     def kwargs_from_xml(self, xml: ET.Element, **kwargs):
@@ -231,7 +231,7 @@ class XMLDefinition(object):
             elif any([type(v) in [float, np.float64] for v in entry]):
                 entry = [float_fmt % v if type(v) in [float, np.float64] and float_fmt is not None else str(v) for v in entry]
             return " ".join(entry)
-        elif type(entry) in [int, bool]:
+        elif type(entry) in [int, np.intc, np.int64, bool]:
             return str(int(entry))
         elif type(entry) in [float, np.float64]:
             return float_fmt % entry if float_fmt is not None else str(entry)

@@ -71,6 +71,9 @@ class Robot(SMURFRobot):
         outputfile = os.path.abspath(outputfile)
 
         export_robot = self.duplicate()
+        # [ToDo v2.0.0] When converting an SDF to an URDF the relative_to information of the Poses will get lost.
+        # Therefore we need to check whether the origin have the by URDF expected frames and transform them when necessary
+
         if mesh_format is not None:
             export_robot.mesh_format = mesh_format
         export_robot.xmlfile = outputfile
@@ -116,7 +119,7 @@ class Robot(SMURFRobot):
             export_robot.mesh_format = mesh_format
         export_robot.xmlfile = outputfile
 
-        xml_string = "<sdf>\n"+export_robot.to_sdf_string(float_fmt_dict=float_fmt_dict)+"\n</sdf>"
+        xml_string = '<sdf version="1.9">\n'+export_robot.to_sdf_string(float_fmt_dict=float_fmt_dict)+"\n</sdf>"
 
         if ros_pkg is True:
             xml_string = regex_replace(xml_string, {'<uri>../': '<uri>package://' if ros_pkg_name is None else f'<uri>package://{ros_pkg_name}/'})
@@ -221,7 +224,6 @@ class Robot(SMURFRobot):
             meshes = [_mesh_format] + additional_meshes
             for mf in [f.lower() for f in meshes]:
                 export_robot.export_meshes(mesh_output_dir=os.path.join(outputdir, rel_mesh_pathes[mf]), format=mf)
-
         # xml
         _export_robot = self.duplicate()
         if enforce_zero:
@@ -298,12 +300,12 @@ class Robot(SMURFRobot):
                 log.debug(f"Lacking definitions for:\n{missing_joints}")
             double_joints = self._get_joints_included_twice_in_submechanisms()
             if len(double_joints) != 0:
-                print({dj: [sm.to_yaml() for sm in self.submechanisms if dj in sm.get_joints()] for dj in double_joints})
+                log.error({dj: [sm.to_yaml() for sm in self.submechanisms if dj in sm.get_joints()] for dj in double_joints})
                 raise AssertionError(f"The following joints are multiply defined in the submechanisms definition: \n{double_joints}")
         for sm in self.submechanisms + self.exoskeletons:
             if hasattr(sm, "file_path"):
                 _submodel = self.instantiate_submodel(
-                    name=str(sm), start=sm.get_root(self), stop=sm.get_leaves(self), robotname=str(sm),
+                    name=str(sm), start=sm.get_root(self), stop=sm.get_leaves(self, include_dependent=True), robotname=str(sm),
                     no_submechanisms=True, include_unstopped_branches=False
                 )
                 sm.file_path = f"../submechanisms/{str(sm)}.urdf"
@@ -664,7 +666,7 @@ class Robot(SMURFRobot):
                     ros_pkg=export["ros_pathes"] if "ros_pathes" in export else None,
                     copy_with_other_pathes=export["copy_with_other_pathes"] if "copy_with_other_pathes" in export else None,
                     ros_pkg_name=ros_pkg_name,
-                    float_fmt_dict=export["float_format_dict"] if "float_format_dict" in export else None,
+                    float_fmt_dict=export.get("float_fmt_dict", None),
                     filename=export["filename"] if "filename" in export else None,
                     with_meshes=False, # this has already been done above
                     mesh_format=export["mesh_format"],
@@ -1326,7 +1328,7 @@ class Robot(SMURFRobot):
         """Transform the visual(s) of the given link.
         """
         # Get the visual
-        visual = self.get_visual(linkname)
+        visual = self.get_visual_by_link(linkname)
         log.info(" Transform Visuals")
         # Transform
         T = create_transformation(translation, rotation)
@@ -1337,14 +1339,14 @@ class Robot(SMURFRobot):
         """Transform the collision(s) of the given link.
         """
         # Get the collision
-        collision = self.get_collision(linkname)
+        collision = self.get_collision_by_link(linkname)
         log.info(" Transform Collisions")
         # Transform
         T = create_transformation(translation, rotation)
         assert transform_object(collision, T)
         return True
 
-    def enforce_zero(self, xyz_tolerance=1E-4, rad_tolerance=1E-6, mass_tolerance=1E-4, i_tolerance=1E-12):
+    def enforce_zero(self, xyz_tolerance=1E-5, rad_tolerance=1E-6, mass_tolerance=1E-4, i_tolerance=1E-12):
         """
         Values belwo the respective tolerances will be rounded to zero.
         :param xyz_tolerance: tolerance for all length values (translation)

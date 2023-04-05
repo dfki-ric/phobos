@@ -785,26 +785,26 @@ class PhobosModelWarningsPanel(bpy.types.Panel):
         obj = context.active_object
 
         # show naming errors in the UI
-        errors = validation.validateObjectNames(obj)
-        if errors:
-            layout.separator()
-            errorname = ""
-            for error in sorted(errors):
-                if errorname != error.message[:5]:
-                    row = layout.row(align=True)
-                    errorname = error.message[:5]
-                    col1 = row.column(align=True)
-                    col2 = row.column(align=True)
-                    col3 = row.column(align=True)
-                if error.level == 'WARNING':
-                    col1.label(icon='ERROR')
-                elif error.level == 'ERROR':
-                    col1.label(icon='CANCEL')
-                else:
-                    col1.label(icon='QUESTION')
-
-                col2.label(text=error.message)
-                col3.operator(error.operator, text="Fix")
+        # errors = validation.validateObjectNames(obj)
+        # if errors:
+        #     layout.separator()
+        #     errorname = ""
+        #     for error in sorted(errors):
+        #         if errorname != error.message[:5]:
+        #             row = layout.row(align=True)
+        #             errorname = error.message[:5]
+        #             col1 = row.column(align=True)
+        #             col2 = row.column(align=True)
+        #             col3 = row.column(align=True)
+        #         if error.level == 'WARNING':
+        #             col1.label(icon='ERROR')
+        #         elif error.level == 'ERROR':
+        #             col1.label(icon='CANCEL')
+        #         else:
+        #             col1.label(icon='QUESTION')
+        #
+        #         col2.label(text=error.message)
+        #         col3.operator(error.operator, text="Fix")
 
 
 ignoredProps = set(
@@ -876,7 +876,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                 content.prop(param['object'], '["{0}"]'.format(param['customprop']), text="")
             # just show it as text
             else:
-                content.label(text=str(value))  #, **param['infoparams'])
+                content.label(text=str(value) if not hasattr(value, "to_list") else str(value.to_list()))
 
     def addObjLink(self, prop, value, column, param, label=None):
         """Add an object link, which is a clickable goto button in the GUI.
@@ -976,6 +976,21 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                     self.addProp([key], [sUtils.getObjectByName(getattr(joint, key))], categories["joint"], [guiparams])
                 else:
                     log(f"PhobosPropertyInformationPanel: {str(obj.name)} has no entry for {key}", "DEBUG")
+
+        if obj.phobostype == "link" and not sUtils.isRoot(obj) and any([k.startswith("pose/") for k in obj.keys()]):
+            layout.label(text="Pose", icon=supportedCategories["pose"]['icon_value'])
+            box = layout.box()
+            row = box.split()
+            column = row.column()
+            categories["pose"] = [box, column, [0, 0]]
+            guiparams = {'object': obj}
+            for _key in obj.keys():
+                if _key.startswith("pose/"):
+                    key = _key[5:]
+                    if _key in obj:
+                        self.addProp([key], [obj[_key]], categories["pose"], [guiparams])
+                    else:
+                        log(f"PhobosPropertyInformationPanel: {str(obj.name)} has no entry for {key}", "DEBUG")
 
         # The following has been replaced and is obsolete
         # # generate general category only if needed
@@ -1144,6 +1159,7 @@ class PhobosModelPanel(bpy.types.Panel):
         mc2.label(text='Poses', icon='POSE_HLT')
         mc2.operator('phobos.store_pose')
         mc2.operator('phobos.load_pose')
+        mc2.operator('phobos.delete_pose')
 
         # Hardware
         layout.separator()
@@ -1663,6 +1679,8 @@ def register():
         'inertial': {'icon_value': 'SHADING_TEXTURE'},
         'joint': {'icon_value': 'FORCE_HARMONIC'},
         'sensor': {'icon_value': 'OUTLINER_OB_FORCE_FIELD'},
+        'pose': {'icon_value': 'POSE_HLT'},
+        'link': {'icon_value': 'LINK_BLEND'}
     }
 
     # TODO delete me?

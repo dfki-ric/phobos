@@ -1267,7 +1267,8 @@ class CreateCollisionObjects(Operator):
                     #     vis if not self.property_optimized else mesh_io.as_trimesh(vis.data),
                     #     scale=getattr(phobos_vis, "scale", 1), oriented=self.property_optimized
                     # )
-                    geometry, transform = geo.create_box(vis, scale=getattr(phobos_vis, "scale", 1), oriented=self.property_optimized)
+                    # geometry, transform = geo.create_box(vis, scale=getattr(phobos_vis, "scale", 1), oriented=self.property_optimized)
+                    geometry, transform = geo.create_box(vis, scale=getattr(phobos_vis, "scale", 1), oriented=False)
                 elif self.property_colltype == "cylinder":
                     # [TODO v2.1.0] Fix optimized creation see: Fix creation for Trimesh in geometry/geometry.py
                     # geometry, transform = geo.create_cylinder(
@@ -1588,7 +1589,7 @@ class DefineJointConstraintsOperator(Operator):
                     linkobj=joint
                 )
             elif not self.active and sUtils.getObjectByName(motor_name) is not None:
-                bpy.data.object.remove(sUtils.getObjectByName(motor_name))
+                bpy.data.objects.remove(sUtils.getObjectByName(motor_name))
 
         return {'FINISHED'}
 
