@@ -3473,6 +3473,47 @@ class MeasureDistanceOperator(Operator):
         """
         return len(context.selected_objects) == 2
 
+class ParentOperator(Operator):
+    """Parent selected objects to active object"""
+
+    bl_idname = "phobos.parent"
+    bl_label = "Parent Selection"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        """
+
+        Args:
+          context:
+
+        Returns:
+
+        """
+        parent = context.active_object
+        children = context.selected_objects
+        print("Parent")
+        print(parent)
+        print("children")
+        print(children)
+        for child in children:
+            if child != parent:
+                eUtils.parentObjectsTo(child, parent)
+
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(self, context):
+        """
+
+        Args:
+          context:
+
+        Returns:
+
+        """
+        return len(context.selected_objects) >= 2
+
+
 classes = (
     SafelyRemoveObjectsFromSceneOperator,
     MoveToSceneOperator,
@@ -3509,6 +3550,7 @@ classes = (
     # ValidateOperator,
     CalculateMassOperator,
     MeasureDistanceOperator,
+    ParentOperator,
 )
 
 
