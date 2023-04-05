@@ -391,6 +391,10 @@ class XMLRobot(Representation):
         chain.reverse()
         return chain
 
+    @property
+    def root(self):
+        return self.get_root()
+
     def get_root(self):
         root = None
         for link in self.links:
