@@ -236,7 +236,7 @@ class XMLDefinition(object):
         elif type(entry) in [float, np.float64]:
             return float_fmt % entry if float_fmt is not None else str(entry)
         else:
-            return entry
+            return str(entry)
 
     def _deserialize(self, string: str, key=None):
         string = string.strip()

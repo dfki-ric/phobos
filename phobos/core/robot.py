@@ -656,7 +656,7 @@ class Robot(SMURFRobot):
         # export everything else
         for export in export_config:
             if export["type"] in KINEMATIC_TYPES:
-                if not export["link_in_smurf"]:
+                if export.get("link_in_smurf", False):
                     export_robot_instance = self.duplicate()
                 else:
                     export_robot_instance = self
@@ -676,7 +676,7 @@ class Robot(SMURFRobot):
                     correct_inertials=export.get("correct_inertials", False)
                 )
                 ros_pkg |= export["ros_pathes"] if "ros_pathes" in export else None
-                if export["link_in_smurf"]:
+                if export.get("link_in_smurf", False):
                     assert xml_file_in_smurf is None, "Only one xml file can be linked in the SMURF"
                     xml_file_in_smurf = xml_file
             elif export["type"] == "submodel":

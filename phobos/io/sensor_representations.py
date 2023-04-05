@@ -44,6 +44,10 @@ class Sensor(Representation, SmurfBase):
         return self._blender_type
 
     @property
+    def sdf_type(self):
+        return self._sdf_type
+
+    @property
     def position_offset(self):
         if self.origin is None:
             return None

@@ -393,7 +393,7 @@ class XMLRobot(Representation):
 
     @property
     def root(self):
-        return self.get_root()
+        return str(self.get_root())
 
     def get_root(self):
         root = None
