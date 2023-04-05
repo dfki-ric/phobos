@@ -116,7 +116,7 @@ class Robot(SMURFRobot):
             export_robot.mesh_format = mesh_format
         export_robot.xmlfile = outputfile
 
-        xml_string = "<sdf>\n"+export_robot.to_sdf_string(float_fmt_dict=float_fmt_dict)+"\n</sdf>"
+        xml_string = '<sdf version="1.9">\n'+export_robot.to_sdf_string(float_fmt_dict=float_fmt_dict)+"\n</sdf>"
 
         if ros_pkg is True:
             xml_string = regex_replace(xml_string, {'<uri>../': '<uri>package://' if ros_pkg_name is None else f'<uri>package://{ros_pkg_name}/'})
