@@ -1264,7 +1264,8 @@ class CreateCollisionObjects(Operator):
                     #     vis if not self.property_optimized else mesh_io.as_trimesh(vis.data),
                     #     scale=getattr(phobos_vis, "scale", 1), oriented=self.property_optimized
                     # )
-                    geometry, transform = geo.create_box(vis, scale=getattr(phobos_vis, "scale", 1), oriented=self.property_optimized)
+                    # geometry, transform = geo.create_box(vis, scale=getattr(phobos_vis, "scale", 1), oriented=self.property_optimized)
+                    geometry, transform = geo.create_box(vis, scale=getattr(phobos_vis, "scale", 1), oriented=False)
                 elif self.property_colltype == "cylinder":
                     # [TODO v2.1.0] Fix optimized creation see: Fix creation for Trimesh in geometry/geometry.py
                     # geometry, transform = geo.create_cylinder(
