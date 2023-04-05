@@ -572,7 +572,8 @@
     "XMLRobot": {
       "tag": "model",
       "attributes": {
-        "name": "name"
+        "name": "name",
+        "canonical_link": "root"
       },
       "children": {
         "link": {
