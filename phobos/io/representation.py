@@ -1333,11 +1333,11 @@ class KCCDHull(Representation, SmurfBase):
 class Link(Representation, SmurfBase):
     _class_variables = ["name", "visuals", "collisions", "inertial", "kccd_hull"]
 
-    def __init__(self, name=None, visuals=None, inertial=None, collisions=None, #origin=None,
+    def __init__(self, name=None, visuals=None, inertial=None, collisions=None, origin=None,
                  noDataPackage=False, reducedDataPackage=False, is_human=None, kccd_hull=None, **kwargs):
-        # assert origin is None  # Unused but might be neccesary for sdf
         SmurfBase.__init__(self, **kwargs)
         self.name = name
+        self._origin = _singular(origin)
         self.is_human = is_human
         self.returns += ['name', "is_human"]
         self.visuals = []
@@ -1371,6 +1371,21 @@ class Link(Representation, SmurfBase):
                 if i > 0:
                     geo.name += str(i)
         self.excludes += ["inertial"]
+
+    @property
+    def origin(self):
+        if self._origin:
+            return self._origin
+        assert self._related_robot_instance is not None
+        jointname = self._related_robot_instance.get_parent(self.name)
+        if jointname is not None:
+            return self._related_robot_instance.get_joint(jointname).origin
+        else:
+            return None
+
+    @property
+    def has_link_origin(self):
+        return self._origin is not None
 
     def remove_aggregate(self, elem):
         if isinstance(elem, Visual):

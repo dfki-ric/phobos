@@ -596,6 +596,10 @@
         "name": "name"
       },
       "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        },
         "inertial": {
           "classname": "Inertial",
           "varname": "inertial"

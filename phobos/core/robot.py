@@ -71,6 +71,9 @@ class Robot(SMURFRobot):
         outputfile = os.path.abspath(outputfile)
 
         export_robot = self.duplicate()
+        # [ToDo v2.0.0] When converting an SDF to an URDF the relative_to information of the Poses will get lost.
+        # Therefore we need to check whether the origin have the by URDF expected frames and transform them when necessary
+
         if mesh_format is not None:
             export_robot.mesh_format = mesh_format
         export_robot.xmlfile = outputfile
