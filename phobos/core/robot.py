@@ -1404,10 +1404,10 @@ class Robot(SMURFRobot):
                     if joint.axis is not None:
                         joint.axis[i] = 0.0 if np.abs(joint.axis[i]) < xyz_tolerance else joint.axis[i]
                 if hasattr(joint, "limit") and joint.limit is not None:
-                    joint.limit.lower = 0.0 if np.abs(joint.limit.lower) < rad_tolerance else joint.limit.lower
-                    joint.limit.upper = 0.0 if np.abs(joint.limit.upper) < rad_tolerance else joint.limit.upper
-                    joint.limit.velocity = 0.0 if np.abs(joint.limit.velocity) < rad_tolerance else joint.limit.velocity
-                    joint.limit.effort = 0.0 if np.abs(joint.limit.effort) < rad_tolerance else joint.limit.effort
+                    joint.limit.lower = 0.0 if joint.limit.lower is not None and np.abs(joint.limit.lower) < rad_tolerance else joint.limit.lower
+                    joint.limit.upper = 0.0 if joint.limit.upper is not None and np.abs(joint.limit.upper) < rad_tolerance else joint.limit.upper
+                    joint.limit.velocity = 0.0 if joint.limit.velocity is not None and np.abs(joint.limit.velocity) < rad_tolerance else joint.limit.velocity
+                    joint.limit.effort = 0.0 if joint.limit.effort is not None and np.abs(joint.limit.effort) < rad_tolerance else joint.limit.effort
 
     def set_estimated_link_com(self, link, dont_overwrite=True):
         """
