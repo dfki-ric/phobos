@@ -635,11 +635,10 @@ class XMLRobot(Representation):
         assert self.get_link(name, verbose=True) is not None, name
         if str(name) in self.parent_map.keys():
             parents = self.parent_map[str(name)]
-        elif str(name) in self.child_map.keys():
+        elif str(name) in [str(l) for l in self.links + self.joints]:
             return None
         else:
-            log.error(f"Parent map keys: {self.parent_map.keys()}")
-            raise AssertionError("Nothing with name " + str(name) + " in this robot")
+            raise AssertionError(str(name) + " does not exist in this robot")
 
         # Parentmap contains links.
         # If we want joints, then collect the children of these
