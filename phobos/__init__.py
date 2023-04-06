@@ -30,7 +30,7 @@ bl_info = {
     "description": "A toolbox to enable editing of robot models in Blender.",
     "author": "Kai von Szadkowski, Henning Wiedemann, Malte Langosz, Simon Reichel, Julius Martensen, et. al.",
     "version": (2, 0, 0),
-    "blender": (3, 3, 4),
+    "blender": (3, 3),
     "location": "Phobos adds a custom tool panel.",
     "warning": "",
     "wiki_url": "https://github.com/dfki-ric/phobos/wiki",

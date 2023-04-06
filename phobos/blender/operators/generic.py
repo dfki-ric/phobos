@@ -419,7 +419,8 @@ class AddAnnotationsOperator(bpy.types.Operator):
                 GA_name=self.name,
                 GA_parent=parent if parent else None,
                 GA_parent_type=parent.phobostype if parent else None,
-                GA_transform=blender2phobos.deriveObjectPose(context.active_object) if context.active_object is not None and self.include_transform
+                GA_transform=blender2phobos.deriveObjectPose(context.active_object)
+                if context.active_object is not None and self.include_transform else None
             )
         )
         bUtils.toggleLayer('annotation', value=True)
