@@ -696,63 +696,65 @@ def mergeLinks(links, targetlink, movetotarget=False):
         del link
 
 
-def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
-    """Add a new annotation object with the specified annotations to the object.
-    
-    The annotation object will receive 'annotation_object' as its default name, unless a name is
-    provided. Naming is done using :func:`phobos.utils.naming.safelyName`.
-    
-    The annotation object will be scaled according to the **size** parameter.
-    
-    If ``namespace`` is provided, the annotations will be saved with this string prepended.
-    This is done using :func:`addAnnotation`.
 
-    Args:
-      obj(bpy.types.Object): object to add annotation object to
-      annotation(dict): annotations that will be added
-      name(str, optional): name for the new annotation object (Default value = None)
-      size(int/float, optional): size of the new annotation object (Default value = 0.1)
-      namespace(str, optional): namespace that will be prepended to the annotations (Default value = None)
 
-    Returns:
-      : bpy.types.Object - the new annotation object
-
-    """
-    loc = obj.matrix_world.to_translation()
-    if not name:
-        name = obj.name + '_annotation_object'
-
-    annot_obj = bUtils.createPrimitive(
-        name,
-        'box',
-        [1, 1, 1],
-        defs.layerTypes['annotation'],
-        plocation=loc,
-        phobostype='annotation',
-    )
-    annot_obj.scale = (size,) * 3
-
-    resource = ioUtils.getResource(['annotation', namespace.split('/')[-1]])
-    if resource:
-        annot_obj.data = resource.data
-    else:
-        annot_obj.data = ioUtils.getResource(['annotation', 'default']).data
-
-    # make sure all layers are enabled for parenting
-    originallayers = {}
-    for name, coll in bpy.context.window.view_layer.layer_collection.children.items():
-        originallayers[name] = coll.exclude
-        coll.exclude = False
-
-    # parent annotation object
-    parentObjectsTo(annot_obj, obj)
-
-    # Restore original layers
-    for key, value in originallayers.items():
-        bpy.context.window.view_layer.layer_collection.children[key].exclude = value
-
-    addAnnotation(annot_obj, annotation, namespace=namespace)
-    return annot_obj
+# def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None, parent=None):
+#     """Add a new annotation object with the specified annotations to the object.
+#
+#     The annotation object will receive 'annotation_object' as its default name, unless a name is
+#     provided. Naming is done using :func:`phobos.utils.naming.safelyName`.
+#
+#     The annotation object will be scaled according to the **size** parameter.
+#
+#     If ``namespace`` is provided, the annotations will be saved with this string prepended.
+#     This is done using :func:`addAnnotation`.
+#
+#     Args:
+#       obj(bpy.types.Object): object to add annotation object to
+#       annotation(dict): annotations that will be added
+#       name(str, optional): name for the new annotation object (Default value = None)
+#       size(int/float, optional): size of the new annotation object (Default value = 0.1)
+#       namespace(str, optional): namespace that will be prepended to the annotations (Default value = None)
+#
+#     Returns:
+#       : bpy.types.Object - the new annotation object
+#
+#     """
+#     loc = obj.matrix_world.to_translation()
+#     if not name:
+#         name = obj.name + '_annotation_object'
+#
+#     annot_obj = bUtils.createPrimitive(
+#         name,
+#         'box',
+#         [1, 1, 1],
+#         defs.layerTypes['annotation'],
+#         plocation=loc,
+#         phobostype='annotation',
+#     )
+#     annot_obj.scale = (size,) * 3
+#
+#     resource = ioUtils.getResource(['annotation', namespace.split('/')[-1]])
+#     if resource:
+#         annot_obj.data = resource.data
+#     else:
+#         annot_obj.data = ioUtils.getResource(['annotation', 'default']).data
+#
+#     # make sure all layers are enabled for parenting
+#     originallayers = {}
+#     for name, coll in bpy.context.window.view_layer.layer_collection.children.items():
+#         originallayers[name] = coll.exclude
+#         coll.exclude = False
+#
+#     # parent annotation object
+#     parentObjectsTo(annot_obj, obj)
+#
+#     # Restore original layers
+#     for key, value in originallayers.items():
+#         bpy.context.window.view_layer.layer_collection.children[key].exclude = value
+#
+#     addAnnotation(annot_obj, annotation, namespace=namespace)
+#     return annot_obj
 
 
 def addAnnotation(obj, annotation, namespace=None, ignore=[]):
@@ -769,8 +771,21 @@ def addAnnotation(obj, annotation, namespace=None, ignore=[]):
     Returns:
 
     """
-    for key, value in annotation.items():
-        obj[str(namespace + '/' if namespace and key not in ignore else '') + key] = value
+    def flatten_dict(input_dict):
+        flat = {}
+        for k, v in input_dict.items():
+            if type(v) == dict:
+                flat_v = flatten_dict(v)
+                for k2, v2 in flat_v:
+                    flat[k+"/"+k2] = v2
+            else:
+                flat[k] = v
+        return flat
+
+    flat_annotations = flatten_dict(annotation)
+
+    for key, value in flat_annotations.items():
+        obj[key] = value
 
 
 def sortObjectsToLayers(objs):

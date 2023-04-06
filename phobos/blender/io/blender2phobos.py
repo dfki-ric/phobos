@@ -1,4 +1,5 @@
 import traceback
+from copy import deepcopy
 
 import bpy
 import numpy as np
@@ -468,19 +469,36 @@ def deriveInterface(obj):
     )
 
 
-# [TODO v2.0.0] Advance this
 def deriveAnnotation(obj):
     """Derives the annotation info of an annotation object.
     """
-    props = {
-        "$pose": deriveObjectPose(obj),
-        "$parent": sUtils.getEffectiveParent(obj).name,
-        "$name": obj.name
-    }
-    props.update({
-        k: v for k, v in obj.items() if k not in reserved_keys.INTERNAL_KEYS
-    })
-    return props
+    assert obj.phobostype == "annotation"
+
+    def deepen_dict(input_dict):
+        out = {}
+        for k, v in input_dict.items():
+            if "/" in k:
+                out[k.split("/",1)[0]] = deepen_dict({k.split("/", 1)[1]: v})
+            else:
+                out[k] = v
+        return out
+
+    props = {}
+    for k, v in obj.items():
+        if k not in reserved_keys.INTERNAL_KEYS:
+            props[k] = v
+
+    props = deepen_dict(props)
+
+    name = obj.split(":")[1]
+    return representation.GenericAnnotation(
+        GA_category=obj.split(":")[0],
+        GA_name=name if not name.startswith("unnamed") else None,
+        GA_parent=obj.parent.name,
+        GA_parent_type=obj.parent.phobostype,
+        GA_transform=deriveObjectPose(obj),
+        **props
+    )
 
 
 def deriveSensor(obj, logging=False):
@@ -705,6 +723,6 @@ def deriveRobot(root, name='', objectlist=None):
     # [TODO v2.1.0] Re-add lights and SRDF support
 
     for named_annotation in [deriveAnnotation(obj) for obj in objectlist if obj.phobostype == 'annotation']:
-        robot.add_named_annotation(named_annotation["$name"], {k: v for k, v in named_annotation.items() if k.startswith("$")})
+        robot.add_categorized_annotation(named_annotation["$name"], {k: v for k, v in named_annotation.items() if k.startswith("$")})
 
     return robot

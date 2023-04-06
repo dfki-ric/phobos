@@ -28,7 +28,7 @@ class SMURFRobot(XMLRobot):
         self.autogenerate_submechanisms = autogenerate_submechanisms
         self.inputfiles = []
         self.annotations = {}
-        self.named_annotations = {}
+        self.categorized_annotations = []
         # Smurf Informations
         self.motors = []
         self.poses = []
@@ -287,6 +287,27 @@ class SMURFRobot(XMLRobot):
                     representation.Interface(**interf)
                 )
 
+        # [TODO v2.1.0] Check how we can store which properties are defined by which literals to reload them properly from file
+        pop_annotations = []
+        for k, v in self.annotations.items():
+            if k not in self.smurf_annotation_keys:
+                pop_annotations.append(k)
+                if type(v) == list:
+                    for a in v:
+                        self.add_aggregate("generic_annotations", representation.GenericAnnotation(
+                            GA_category=k,
+                            **a
+                        ))
+                elif type(v) == dict:
+                    for an, av in v.items():
+                        self.add_aggregate("generic_annotations", representation.GenericAnnotation(
+                            GA_category=k,
+                            GA_name=an,
+                            **av
+                        ))
+        for k in pop_annotations:
+            self.annotations.pop(k)
+
     def _rename(self, targettype, target, new_name, further_targettypes=None):
         other_targettypes = ["motors", "poses", "submechanisms", "exoskeletons", "interfaces"]
         if further_targettypes is not None:
@@ -355,12 +376,9 @@ class SMURFRobot(XMLRobot):
                 no_problems &= not isinstance(vc.geometry, representation.Mesh) or not vc.geometry.available()
         return no_problems
 
-    def add_named_annotation(self, name, content):
-        if name in self.named_annotations.keys():
-            raise NameError("A named annotation with the name " + name +
-                            " does already exist. Please merge or rename your annotations!")
-        else:
-            self.named_annotations[name] = content
+    # [ToDo v2.1.0] Support here all powers of GenericAnnotation
+    def add_categorized_annotation(self, name, content):
+        self.categorized_annotations.append(representation.GenericAnnotation(GA_category=name, GA_dict=content))
 
     def add_motor(self, motor):
         """Attach a new motor to the robot. Either the joint is already defined inside the motor

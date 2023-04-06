@@ -1906,3 +1906,55 @@ class Motor(Representation, SmurfBase):
     @mimic_offset.setter
     def mimic_offset(self, val):
         pass
+
+
+# [TODO v2.1.0] Check how we can store which properties are defined by which literals to reload them properly from file
+class GenericAnnotation(Representation, SmurfBase):
+    _class_variables = ["GA_related_link", "GA_related_joint", "GA_related_motor", "GA_related_sensor",
+                        "GA_related_visual", "GA_related_collision"]
+    _type_dict = {
+        "GA_related_link": "link",
+        "GA_related_joint": "joint",
+        "GA_related_motor": "motor",
+        "GA_related_sensor": "sensor",
+        "GA_related_visual": "visual",
+        "GA_related_collision": "collision",
+    }
+
+    def __init__(self, GA_category, GA_name=None, GA_parent=None, GA_parent_type=None, GA_transform: Pose=None,
+                 **annotations):
+        assert GA_parent_type in ["GA_related_"+v for v in self._class_variables]
+        setattr(self, "GA_related_"+GA_parent_type, GA_parent)
+        self._GA_parent_var = "GA_related_"+GA_parent_type
+        assert "returns" not in annotations
+        self._GA_transform = GA_transform
+        self.GA_category = GA_category
+        self.GA_name = GA_name
+
+        for k, v in annotations.items():
+            setattr(self, "_"+k, v)
+
+            def _getter(instance, varname=k):
+                value = getattr(instance, "_" + varname)
+                if type(value) == str and value.startswith("$parent."):
+                    return getattr(self._GA_parent_var, value[value.find(".") + 1:])
+                elif type(value) == str and "$parent" in value:
+                    return getattr(self._GA_parent_var, varname)
+                elif type(value) == str and "$transform." in value:
+                    return getattr(self._GA_transform, value[value.find(".") + 1:])
+                elif type(value) == str and "$transform" in value:
+                    return self._GA_transform
+
+            def _setter(instance, value, varname=k):
+                if "$" in getattr(instance, "_"+varname) and not "$" in value:
+                    log.warning(f'{varname} uses the literal: {getattr(instance, "_"+varname)},'
+                                f' but you are overriding it with a non literal value: {value}')
+                setattr(self, "_"+k, v)
+
+            setattr(self, k, property(_getter, _setter))
+
+        super(GenericAnnotation, self).__init__(returns=annotations.keys())
+
+    @property
+    def GA_parent(self):
+        return getattr(self, self._GA_parent_var)

@@ -8,7 +8,7 @@ from .. import defs
 from .. import reserved_keys
 from ..model import joints as jointmodel
 from ..model.materials import assignMaterial
-from ..phoboslog import log
+from ..phoboslog import log, ErrorMessageWithBox
 from ..utils import blender as bUtils
 from ..utils import editing as eUtils
 from ..utils import io as ioUtils
@@ -324,7 +324,7 @@ def createInterface(interface: representation.Interface, parent, scale=None):
         interface.name,
         'box',
         (scale,) * 3,
-        defs.layerTypes['interface'],
+        player=defs.layerTypes['interface'],
         phobostype='interface',
     )
     nUtils.safelyName(ifobj, interface.name, 'interface')
@@ -443,6 +443,61 @@ def createMotor(motor: representation.Motor, linkobj: bpy.types.Object):
         [newmotor], clear=True, active=0
     )
     return newmotor
+
+
+def createAnnotation(ga: representation.GenericAnnotation, parent=None, size=0.1):
+    if not parent and ga.GA_parent is not None:
+        parent = sUtils.getObjectByName(ga.GA_parent)
+
+    annot_obj = bUtils.createPrimitive(
+        f"{ga.GA_category}:{ga.GA_name if ga.GA_name is not None else 'unnamed'}",
+        'box',
+        [1, 1, 1],
+        player=defs.layerTypes['annotation'],
+        plocation=None if parent is None else parent.matrix_world.to_translation(),
+        phobostype='annotation'
+    )
+    annot_obj.scale = (size,) * 3
+    resource = ioUtils.getResource(['annotation', ga.GA_category])
+    if resource:
+        annot_obj.data = resource.data
+    else:
+        annot_obj.data = ioUtils.getResource(['annotation', 'default']).data
+
+    if parent is not None:
+        # make sure all layers are enabled for parenting
+        originallayers = {}
+        for name, coll in bpy.context.window.view_layer.layer_collection.children.items():
+            originallayers[name] = coll.exclude
+            coll.exclude = False
+        # parent annotation object
+        eUtils.parentObjectsTo(annot_obj, parent)
+        # Restore original layers
+        for key, value in originallayers.items():
+            bpy.context.window.view_layer.layer_collection.children[key].exclude = value
+
+        annot_obj["$include_parent"] = True
+    else:
+        annot_obj["$include_parent"] = False
+
+    annot_obj["$include_transform"] = ga.GA_transform is None
+
+    props = ga.to_yaml()
+
+    def flatten_dict(input_dict):
+        out = {}
+        for k, v in input_dict.items():
+            if type(v) == dict:
+                for k2, v2 in flatten_dict(v).items():
+                    out[k+"/"+k2] = v2
+            else:
+                out[k] = v
+        return out
+
+    for k, v in flatten_dict(props).items():
+        annot_obj[k] = v
+
+    return annot_obj
 
 
 def createRobot(robot: core.Robot):

@@ -687,7 +687,7 @@ class BaseModel(yaml.YAMLObject):
 
             if "named_annotations" in self.annotations.keys():
                 for k, v in self.annotations["named_annotations"].items():
-                    self.robot.add_named_annotation(k, v)
+                    self.robot.add_categorized_annotation(k, v)
 
         log.info('Finished processing')
         return True

@@ -1854,65 +1854,65 @@ class AddMotorOperator(Operator):
         return {'FINISHED'}
 
 
-# [TODO v2.0.0] REVIEW this
-def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
-    """Execution function for the temporary operator to add motors from yaml files.
-
-    The specified parameters match the interface of the `addObjectFromYaml` generic function.
-
-    As additional argument, a boolean value is required. It controls whether the specified motor
-    will be added to all selected joints (True) or to the active object only (False).
-
-    Args:
-      motor_dict(dict): phobos representation of a motor
-      annotations(dict): annotation dictionary containing annotation categories as keys
-      selected_objs(list(bpy.types.Object): selected objects in the current context
-      active_obj(bpy.types.Object): active object in the current context
-      *args(list): list containing a single bool value
-
-    Returns:
-      tuple: lists of new motor, new annotation and controller objects
-
-    """
-    addtoall = args[0]
-    addcontrollers = args[1]
-
-    if addtoall:
-        joints = [lnk for lnk in selected_objs if lnk.phobostype == 'link' and 'joint/type' in lnk]
-    else:
-        joints = [active_obj]
-
-    newmotors = []
-    annotation_objs = []
-    controller_objs = []
-    for joint in joints:
-        pos_matrix = joint.matrix_world
-        motor_dict['name'] = ''
-        motor_obj = phobos2blender.createMotor(
-            motor_dict, joint, pos_matrix, addcontrollers=addcontrollers
-        )
-
-        if isinstance(motor_obj, list):
-            controller_objs.append(motor_obj[1])
-            motor_obj = motor_obj[0]
-
-        # parent motor to its joint
-        sUtils.selectObjects([motor_obj, joint], clear=True, active=1)
-        bpy.ops.object.parent_set(type='BONE_RELATIVE')
-
-        newmotors.append(motor_obj)
-
-        # add optional annotation objects
-        for annot in annotations:
-            annotation_objs.append(
-                eUtils.addAnnotationObject(
-                    motor_obj,
-                    annotations[annot],
-                    name=nUtils.getObjectName(motor_obj) + '_' + annot,
-                    namespace='motor/' + annot,
-                )
-            )
-    return newmotors, annotation_objs, controller_objs
+# [TODO v2.1.0] Can we delete this
+# def addMotorFromYaml(motor_dict, annotations, selected_objs, active_obj, *args):
+#     """Execution function for the temporary operator to add motors from yaml files.
+#
+#     The specified parameters match the interface of the `addObjectFromYaml` generic function.
+#
+#     As additional argument, a boolean value is required. It controls whether the specified motor
+#     will be added to all selected joints (True) or to the active object only (False).
+#
+#     Args:
+#       motor_dict(dict): phobos representation of a motor
+#       annotations(dict): annotation dictionary containing annotation categories as keys
+#       selected_objs(list(bpy.types.Object): selected objects in the current context
+#       active_obj(bpy.types.Object): active object in the current context
+#       *args(list): list containing a single bool value
+#
+#     Returns:
+#       tuple: lists of new motor, new annotation and controller objects
+#
+#     """
+#     addtoall = args[0]
+#     addcontrollers = args[1]
+#
+#     if addtoall:
+#         joints = [lnk for lnk in selected_objs if lnk.phobostype == 'link' and 'joint/type' in lnk]
+#     else:
+#         joints = [active_obj]
+#
+#     newmotors = []
+#     annotation_objs = []
+#     controller_objs = []
+#     for joint in joints:
+#         pos_matrix = joint.matrix_world
+#         motor_dict['name'] = ''
+#         motor_obj = phobos2blender.createMotor(
+#             motor_dict, joint, pos_matrix, addcontrollers=addcontrollers
+#         )
+#
+#         if isinstance(motor_obj, list):
+#             controller_objs.append(motor_obj[1])
+#             motor_obj = motor_obj[0]
+#
+#         # parent motor to its joint
+#         sUtils.selectObjects([motor_obj, joint], clear=True, active=1)
+#         bpy.ops.object.parent_set(type='BONE_RELATIVE')
+#
+#         newmotors.append(motor_obj)
+#
+#         # add optional annotation objects
+#         for annot in annotations:
+#             annotation_objs.append(
+#                 eUtils.addAnnotationObject(
+#                     motor_obj,
+#                     annotations[annot],
+#                     name=nUtils.getObjectName(motor_obj) + '_' + annot,
+#                     namespace='motor/' + annot,
+#                 )
+#             )
+#     return newmotors, annotation_objs, controller_objs
 
 
 class CreateLinksOperator(Operator):

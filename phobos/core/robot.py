@@ -355,12 +355,30 @@ class Robot(SMURFRobot):
                 stream.write(dump_json({"submodels": out_submodel_defs}, default_style=False))
                 export_files.append(os.path.split(stream.name)[-1])
 
-        for k, v in self.named_annotations.items():
-            # if os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k))):
-            #     raise NameError("You can't overwrite the already existing SMURF-Annotation-File " +
-            #                     os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)) +
-            #                     "\nPlease choose another name for you annotation")
-            # else:
+        # generic annotations
+        temp_generic_annotations = {}
+        for ga in self.categorized_annotations:
+            if ga.GA_category not in temp_generic_annotations:
+                temp_generic_annotations[ga.GA_category] = []
+            temp_generic_annotations[ga.GA_category].append({ga.GA_name: ga.to_yaml()} if ga.GA_name is not None else ga.to_yaml())
+        # clean-up the temporary lists
+        for k, v in temp_generic_annotations.items():
+            if len(v) == 1:
+                temp_generic_annotations[k] = v[0]
+            elif len(v) > 1 and all(type(x) == dict and len(x.keys()) == 1 for x in v):
+                for sub_dict in v:
+                    temp_generic_annotations[k].update(sub_dict)
+        for k, v in temp_generic_annotations.items():
+            # deal with existing names
+            if os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k))):
+                k = "generic_annotation_"+k
+            new_k = k
+            i = 0
+            while os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, new_k))):
+                i += 1
+                new_k = f"{k}_{i}"
+            k = new_k
+            # write
             if len(v) > 0 and k not in self.smurf_annotation_keys:
                 with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w") as stream:
                     stream.write(dump_json({k: v}, default_style=False))
