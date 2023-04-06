@@ -3491,10 +3491,6 @@ class ParentOperator(Operator):
         """
         parent = context.active_object
         children = context.selected_objects
-        print("Parent")
-        print(parent)
-        print("children")
-        print(children)
         for child in children:
             if child != parent:
                 eUtils.parentObjectsTo(child, parent)
