@@ -1523,7 +1523,7 @@ class Joint(Representation, SmurfBase):
         if origin is None and cut_joint is False:
             origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=self.parent)
         self._origin = _singular(origin)
-        self.limit = _singular(limit)
+        self.limit = _singular(limit) if self.joint_type != "fixed" else None
         if joint_dependencies is not None:
             self.joint_dependencies = _plural(joint_dependencies) + _plural(mimic)
         else:

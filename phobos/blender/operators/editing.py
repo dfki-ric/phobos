@@ -42,7 +42,7 @@ from ..model import joints as jUtils
 from ..model import links as modellinks
 from ..operators.generic import addObjectFromYaml
 from ..phobosgui import prev_collections
-from ..phoboslog import log
+from ..phoboslog import log, ErrorMessageWithBox
 from ..utils import blender as bUtils
 from ..utils import editing as eUtils
 from ..utils import general as gUtils
@@ -1171,6 +1171,9 @@ class GenerateInertialObjectsOperator(Operator):
                 inertia=representation.Inertia(*inertia),
                 origin=representation.Pose(xyz=pose)
             )
+            if not sUtils.getEffectiveParent(obj):
+                ErrorMessageWithBox(f"{obj.name} has no parent link to which the inertial could be added", reporter=self)
+                continue
             newinertial = phobos2blender.createInertial(inertial, sUtils.getEffectiveParent(obj), adjust=True, logging=True)
 
             if newinertial:
