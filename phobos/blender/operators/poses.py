@@ -123,6 +123,7 @@ class LoadPoseOperator(Operator):
 
 
 class DeletePoseOperator(Operator):
+    # [ToDo v2.1.0] make this a dialog like DissolveLink
     """Load a previously stored pose for one of the scene's robots"""
 
     bl_idname = 'phobos.delete_pose'

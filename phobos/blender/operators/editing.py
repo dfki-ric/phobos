@@ -1171,7 +1171,6 @@ class GenerateInertialObjectsOperator(Operator):
                 inertia=representation.Inertia(*inertia),
                 origin=representation.Pose(xyz=pose)
             )
-            print(pose)
             newinertial = phobos2blender.createInertial(inertial, sUtils.getEffectiveParent(obj), adjust=True, logging=True)
 
             if newinertial:

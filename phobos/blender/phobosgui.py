@@ -1122,7 +1122,6 @@ class PhobosModelPanel(bpy.types.Panel):
         c2.operator('phobos.rename_custom_property', text="Rename", icon='OUTLINER_DATA_FONT')
         c2.operator('phobos.batch_property', text="Edit", icon='GREASEPENCIL')
         #todo: c2.operator('phobos.copy_props', text="Copy", icon='GHOST')
-        c2.operator('phobos.copy_props', text="Copy")
 
         # Kinematics
         layout.separator()

@@ -145,6 +145,8 @@ def createInertial(inertial: representation.Inertial, newlink: bpy.types.Object,
             log("  "+e.message, 'ERROR')
             log("   "+str(e.information), 'ERROR')
 
+    assert newlink is not None
+
     origin = mathutils.Vector(inertial.origin.position)
 
     # create new inertial object

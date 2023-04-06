@@ -89,9 +89,6 @@ def compileMechanismList():
 
 def register():
     """TODO Missing documentation"""
-    WindowManager.mechanismpreview = EnumProperty(
-        items=getMechanismListForEnumProperty, name='Mechanism'
-    )
     compileMechanismList()
 
 

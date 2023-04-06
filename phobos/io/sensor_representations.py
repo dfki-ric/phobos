@@ -100,7 +100,6 @@ class Sensor(Representation, SmurfBase):
         return None
 
 
-
 class Joint6DOF(Sensor):
     _class_variables = ["name", "link"]
 

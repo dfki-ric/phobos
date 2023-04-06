@@ -492,7 +492,7 @@ class Mesh(Representation, SmurfBase):
             self.input_type = "file_"+meshext.lower()
             self.input_file = filepath
             self.unique_name = meshname
-        # [ToDo pre_v2.0.0] deal with different obj mesh axes during import and export
+        # [ToDo v2.1.0] deal with different obj mesh axes during import and export
         # This is the default definition for stl and obj in general how the internal axis are defined
         # using this convention exporting stl/obj from blender will have the vertices on the same axes as defined by the link frames in urdf/sdf.
         # OSG has for obj a special handling which changes this https://github.com/openscenegraph/OpenSceneGraph/blob/2e4ae2ea94595995c1fc56860051410b0c0be605/src/osgPlugins/obj/ReaderWriterOBJ.cpp#L208

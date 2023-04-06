@@ -187,11 +187,6 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
     Returns:
 
     """
-    # unregister other temporary operators first
-    try:
-        bpy.utils.unregister_class(TempObjAddOperator)
-    except UnboundLocalError:
-        pass
 
     blender_name = name.replace(' ', '_').lower()
     operatorBlenderId = 'phobos.add_{}_{}'.format(phobtype, blender_name)
