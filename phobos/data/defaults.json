@@ -74,7 +74,8 @@
       "p": 20.0,
       "i": 0.0,
       "d": 0.0,
-      "type": "DC"
+      "type": "dc",
+      "controller_type": "position"
     }
   },
   "joints": {

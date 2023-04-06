@@ -2,6 +2,7 @@ import json
 import os
 import shutil
 from copy import deepcopy
+from xml.etree import ElementTree as ET
 
 import numpy
 import numpy as np
@@ -1772,9 +1773,10 @@ class Transmission(Representation):
 
 class Motor(Representation, SmurfBase):
     TYPES = ["dc", "ac", "step"]
+    CONTROLLER_TYPES = ["position", "velocity", "force"]
     _class_variables = ["name", "joint"]
 
-    def __init__(self, name=None, joint=None, **kwargs):
+    def __init__(self, name=None, joint=None, controller_type="position", **kwargs):
         SmurfBase.__init__(self, name=name, joint=joint, **kwargs)
         # This is hardcoded information
         assert self.joint is not None
@@ -1783,7 +1785,10 @@ class Motor(Representation, SmurfBase):
         self._maxValue = None
         self._minValue = None
         self.type = kwargs.get("type", None)
-        self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue']
+        self.controller_type = controller_type
+        assert self.type is None or self.type in self.TYPES
+        assert self.controller_type is None or self.controller_type in self.CONTROLLER_TYPES
+        self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue', 'controller_type']
 
     @property
     def maxEffort(self):
@@ -1906,6 +1911,54 @@ class Motor(Representation, SmurfBase):
     @mimic_offset.setter
     def mimic_offset(self, val):
         pass
+
+    @property
+    def plugin_name(self):
+        if self.controller_type == "position":
+            return "gz::sim::systems::JointPositionController"
+        return "gz::sim::systems::JointController"
+
+    @property
+    def plugin_filename(self):
+        if self.controller_type == "position":
+            return "gz-sim-joint-position-controller-system"
+        return "gz-sim-joint-controller-system"
+
+    @property
+    def force_control(self):
+        if self.controller_type == "position":
+            return None
+        return self.controller_type == "force"
+
+
+class PluginFactory(Representation):
+    @classmethod
+    def create(cls, plugin_name, plugin_filename, _xml: ET.Element = None, **kwargs):
+        if any(x in plugin_name for x in ["JointController", "JointPositionController"]):
+            assert "joint_name" in kwargs
+            if "JointPositionController" in plugin_name:
+                controller_type = "position"
+            elif not kwargs.get("use_force_command", False):
+                controller_type = "velocity"
+            else:
+                controller_type = "force"
+            kwargs.pop("use_force_command")
+            return Motor(
+                name=kwargs["joint_name"]+"_motor",
+                controller_type=(
+                    "position" if "JointPositionController" in plugin_name
+                    else (
+                        "velocity" if not kwargs.get("use_force_command", False)
+                        else "force"
+                    )
+                ),
+                p=kwargs.pop("p_gain") if "p_gain" in kwargs else None,
+                i=kwargs.pop("i_gain") if "i_gain" in kwargs else None,
+                d=kwargs.pop("d_gain") if "d_gain" in kwargs else None,
+                **kwargs
+            )
+        log.error(f"Couldn't instantiate plugin from {repr(kwargs)}")
+        return None
 
 
 # [TODO v2.1.0] Check how we can store which properties are defined by which literals to reload them properly from file

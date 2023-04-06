@@ -587,6 +587,14 @@
         "sensor": {
           "classname": "SensorFactory",
           "varname": "sensors"
+        },
+        "plugin": {
+          "classname": "PluginFactory",
+          "varname": "plugins"
+        },
+        "motors": {
+          "classname": "PluginFactory",
+          "varname": "motors"
         }
       }
     },
@@ -1026,6 +1034,46 @@
             "collision": "collisions"
           }
         }
+      }
+    },
+    "PluginFactory": {
+      "tag": "plugin",
+      "attributes": {
+        "name": "plugin_name",
+        "filename": "plugin_filename"
+      },
+      "value_children": {
+        "joint_name": "joint_name",
+        "joint_index": "joint_index",
+        "use_force_commands": "use_force_commands",
+        "p_gain": "p_gain",
+        "i_gain":  "i_gain",
+        "d_gain": "d_gain",
+        "i_max":  "i_max",
+        "i_min": "i_min",
+        "cmd_max":  "cmd_max",
+        "cmd_min": "cmd_min",
+        "cmd_offset":  "cmd_offset"
+      }
+    },
+    "Motor": {
+      "tag": "plugin",
+      "attributes": {
+        "filename": "plugin_filename",
+        "name": "plugin_name"
+      },
+      "value_children": {
+        "joint_name": "joint",
+        "joint_index": "joint_index",
+        "use_force_commands": "force_control",
+        "p_gain": "p",
+        "i_gain":  "i",
+        "d_gain": "d",
+        "i_max":  "i_max",
+        "i_min": "i_min",
+        "cmd_max":  "cmd_max",
+        "cmd_min": "cmd_min",
+        "cmd_offset":  "cmd_offset"
       }
     }
   },
