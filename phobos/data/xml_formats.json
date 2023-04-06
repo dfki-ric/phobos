@@ -727,6 +727,13 @@
               "varname": "geometry"
             }
           }
+        },
+        "surface": {
+          "nested_children": {
+            "value_children": {
+              "collide_bitmask": "bitmask"
+            }
+          }
         }
       }
     },
