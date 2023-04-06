@@ -655,7 +655,10 @@ class CreateInterfaceOperator(Operator):
 
         """
         if context.object:
-            return context.object.mode == 'OBJECT' and hasattr(context.object, "phobostype") and context.object.phobostype == "link"
+            for ob in [context.object, sUtils.getEffectiveParent(context.object)]:
+                if ob is not None and ob.mode == 'OBJECT' and hasattr(ob, "phobostype") and ob.phobostype == "link":
+                    return True
+            return False
         else:
             return True
 
@@ -3472,6 +3475,43 @@ class MeasureDistanceOperator(Operator):
         """
         return len(context.selected_objects) == 2
 
+class ParentOperator(Operator):
+    """Parent selected objects to active object"""
+
+    bl_idname = "phobos.parent"
+    bl_label = "Parent Selection"
+    bl_options = {"REGISTER", "UNDO"}
+
+    def execute(self, context):
+        """
+
+        Args:
+          context:
+
+        Returns:
+
+        """
+        parent = context.active_object
+        children = context.selected_objects
+        for child in children:
+            if child != parent:
+                eUtils.parentObjectsTo(child, parent)
+
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(self, context):
+        """
+
+        Args:
+          context:
+
+        Returns:
+
+        """
+        return len(context.selected_objects) >= 2
+
+
 classes = (
     SafelyRemoveObjectsFromSceneOperator,
     MoveToSceneOperator,
@@ -3508,6 +3548,7 @@ classes = (
     # ValidateOperator,
     CalculateMassOperator,
     MeasureDistanceOperator,
+    ParentOperator,
 )
 
 
