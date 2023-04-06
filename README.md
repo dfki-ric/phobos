@@ -1,16 +1,12 @@
 [![latest-release](https://img.shields.io/github/tag/dfki-ric/phobos.svg?label=version&style=flat)](https://github.com/dfki-ric/phobos/releases)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.01326/status.svg)](https://doi.org/10.21105/joss.01326)
-[![Code style:
-black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/ambv/black)
 [![license](https://img.shields.io/github/license/dfki-ric/phobos.svg?style=flat)](https://github.com/dfki-ric/phobos/blob/master/COPYING)
-[![made-with-python](https://img.shields.io/badge/Made%20with-Python-1f425f.svg)](https://www.python.org/)
 [![made-with-sphinx-doc](https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/)
-[![Build Status](https://travis-ci.org/dfki-ric/phobos.svg?branch=master)](https://travis-ci.org/dfki-ric/phobos)
 
 ![Phobos](https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png)
 
 Phobos is both a CLI tool and add-on for the open-source 3D modeling software
-[Blender](http://www.blender.org) to support your robot model creation and editing.
+[Blender v3.3LTS](https://www.blender.org/download/lts/3-3/) to support your robot model creation and editing.
 
 The Blender add-on enables the creation of WYSIWYG robot
 models for use in robot frameworks like [ROS](http://wiki.ros.org/) and
@@ -53,16 +49,20 @@ If you are on the hunt for a BiBTeX entry, check out the [FAQ section](https://g
 ## Installation
 
 ### Blender
+>UPDATING: If you already have phobos installed and want to update. 
+> You have to remove the old version of Phobos first and close Blender. 
+> Then proceed with the installation steps explained below.
+
 Phobos has several python dependencies, those have to be installed in blender before you can use phobos. There are two ways of doing this:
 
->NOTE: If you are using blender under windows, make sure you have the latest version of [Microsoft Visual C++ Redistributable](https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170) installed.  Otherwise blenders python won't work properly.
+>NOTE: If you are using blender under Windows, make sure you have the latest version of [Microsoft Visual C++ Redistributable](https://learn.microsoft.com/en-US/cpp/windows/latest-supported-vc-redist?view=msvc-170) installed.  Otherwise Blender's python won't work properly.
 
 Before installing the phobos.zip you can run the script install_requirements.py with the blender python.
 ```bash
 ${BLENDER_EXECUTABLE} -b --python install_requirements.py
 ```
 
-Just zip the `phobos` subfolder: `zip -r phobos.zip phobos` and install it via Blender: `blender->edit->preferences->addons->install`
+Then, just zip the `phobos` subfolder: `zip -r phobos.zip phobos` and install it via Blender: `blender->edit->preferences->addons->install`
 
 After installation the phobos main menu can be found on the right hand side of the 3D Viewport. If not already visible, one can find a very small arrow to open the Blender toolbar (purple circle showing it in the image).
 
