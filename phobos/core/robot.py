@@ -108,6 +108,7 @@ class Robot(SMURFRobot):
         If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
         If export_collisions is set to to True, all collisions will be exported. Otherwise no collision get exported.
         """
+        # [Todo v2.1.0] Create the model.config file for gazebo
         if float_fmt_dict is None:
             float_fmt_dict = {}
         self.joints = self.get_joints_ordered_df()

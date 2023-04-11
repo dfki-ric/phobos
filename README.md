@@ -28,6 +28,12 @@ Please contact [Kai von Szadkowski](https://robotik.dfki-bremen.de/de/ueber-uns/
 for any inquiries, or any questions and feedback not suited for the issues
 page.
 
+## Questions or Ideas you want to discuss?
+Please have a look at our [GitHub discussions](https://github.com/dfki-ric/phobos/discussions).
+
+## Found a bug or want to request a feature?
+Please let us know by opening an issue [here](https://github.com/dfki-ric/phobos/issues).
+
 ## Documentation
 
 - User documentation: [Phobos Wiki](https://github.com/dfki-ric/phobos/wiki)
@@ -49,8 +55,8 @@ If you are on the hunt for a BiBTeX entry, check out the [FAQ section](https://g
 ## Installation
 
 ### Blender
->UPDATING: If you already have phobos installed and want to update. 
-> You have to remove the old version of Phobos first and close Blender. 
+>UPDATING: If you already have phobos installed and want to update.
+> You have to remove the old version of Phobos first and close Blender.
 > Then proceed with the installation steps explained below.
 
 Phobos has several python dependencies, those have to be installed in blender before you can use phobos. There are two ways of doing this:
@@ -148,7 +154,7 @@ It will also tell you which dependencies are missing for some scripts.
 - Export with defined floating point precision
 - Model integrity checks
 - Tools for maintaining your own model database
-+ Library containing Python examples for automatic model adaption
+- Library containing Python examples for automatic model adaption
 - All the cool features Blender already provides (rendering, animation, etc.)
 
 ## License
