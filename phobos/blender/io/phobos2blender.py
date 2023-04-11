@@ -356,7 +356,7 @@ def createSensor(sensor: sensor_representations.Sensor, linkobj=None):
         'box',
         [1, 1, 1],
         None,
-        pmaterial=defs.def_settings['sensors'][sensor.blender_type]['material'],
+        #pmaterial=defs.def_settings['sensors'][sensor.blender_type]['material'], #TODO
         phobostype='sensor'
     )
 
@@ -372,7 +372,7 @@ def createSensor(sensor: sensor_representations.Sensor, linkobj=None):
     # assign the parent if available
     if linkobj is not None:
         eUtils.parentObjectsTo(newsensor, nUtils.getObjectName(linkobj) if type(linkobj) == str else linkobj)
-        newsensor.matrix_local = sensor.origin.to_matrix()
+        # newsensor.matrix_local = sensor.origin.to_matrix() #TODO
 
     # set sensor properties
     newsensor.phobostype = 'sensor'

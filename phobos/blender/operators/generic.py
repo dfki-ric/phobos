@@ -18,6 +18,7 @@ from bpy.props import (
     BoolProperty,
     EnumProperty,
     CollectionProperty,
+    StringProperty,
 )
 from bpy.types import Operator, PropertyGroup
 
