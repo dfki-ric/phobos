@@ -15,6 +15,7 @@ Contains all functions to model inertias within Blender.
 
 import mathutils
 import numpy
+import numpy as np
 
 from .. import reserved_keys
 from ..phoboslog import log
@@ -56,7 +57,7 @@ def calculateInertia(obj, mass, geometry, errors=None, adjust=False, logging=Fal
     inertia = None
 
     # Get the rotation of the object
-    object_rotation = obj.rotation_euler.to_matrix()
+    object_rotation = np.array(obj.rotation_euler.to_matrix())
 
     if isinstance(geometry, representation.Box):
         inertia = calculateBoxInertia(mass, geometry.size)
@@ -69,7 +70,7 @@ def calculateInertia(obj, mass, geometry, errors=None, adjust=False, logging=Fal
         inertia = calculateMeshInertia(mass, obj.data, scale=obj.scale)
 
     # Correct the inertia orientation to account for Cylinder / mesh orientation issues
-    inertia = object_rotation * inertiaListToMatrix(inertia) * object_rotation.transposed()
+    inertia = object_rotation.dot(inertiaListToMatrix(inertia)).dot(object_rotation.transpose())
 
     return inertiaMatrixToList(inertia)
 
@@ -86,7 +87,7 @@ def inertiaListToMatrix(inertialist):
     """
     il = inertialist
     inertia = [[il[0], il[1], il[2]], [il[1], il[3], il[4]], [il[2], il[4], il[5]]]
-    return mathutils.Matrix(inertia)
+    return np.array(inertia)
 
 
 def inertiaMatrixToList(im):
