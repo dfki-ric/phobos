@@ -13,7 +13,7 @@ import unittest
 
 try:
     import mathutils as mathutils
-    import phobos
+    import phobos.blender as phobos
 
     class TestBlenderUtils(unittest.TestCase):
 

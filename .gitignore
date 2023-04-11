@@ -3,6 +3,7 @@ installation.conf
 .^(travis).*
 *.orig
 *.blend1
+*.idea
 *.pyc
 __pycache__
 doc/_build

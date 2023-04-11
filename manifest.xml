@@ -9,20 +9,43 @@
 -->
 
 <package>
-  <description brief="Phobos is a Blender Add-On for modeling robots">
-    Phobos is an add-on for the open-source 3D modeling software [Blender](http://www.blender.org)
+  <description brief="Phobos is a python command line tool and Blender Add-On for modeling robots">
+    Phobos is a python tool to edit, maintain, test and convert simulation models.
+    It comes with an add-on for the open-source 3D modeling software [Blender](http://www.blender.org)
     that enables the creation and modification of WYSIWYG robot models for use in robot
     frameworks like ROS and ROCK or in real-time simulations such as MARS or Gazebo.
     Phobos allows to export completed models in formats such as URDF or SMURF and meshes
-    as STereoLithography (.stl), Wavefront (.obj) or Collada (.dae).
+    as StereoLithography (.stl), Wavefront (.obj) or Collada (.dae).
   </description>
-  <author>Kai/kai_alexander.von_szadkowski@dfki.de, Simon/simon.reichel@dfki.de</author>
-  <maintainer>Simon/simon.reichel@dfki.de</maintainer>
+  <author>Kai/kai_alexander.von_szadkowski@dfki.de, Simon/simon.reichel@dfki.de, Henning/henning.wiedemann@dfki.de</author>
+  <maintainer>Henning/henning.wiedemann@dfki.de</maintainer>
   <license>BSD-3-Clause</license>
   <url>https://robotik.dfki-bremen.de/en/research/softwaretools/phobos.html</url>
   <logo>https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png</logo>
 
-  <depend package="blender"/>
+  <depend package="pyyaml"/>
+  <depend package="external/urdf_parser_py" />
+  <depend package="control/kccdtools"/>
+  <depend package="control/urdfdom" />
+  <depend package="control/urdfdom_headers" />
+  <depend package="curl" />
+  <depend package="full-graphviz" />
+  <depend package="networkx" />
+  <depend package="numpy" />
+  <depend package="python-fcl" />
+  <depend package="scipy" />
+  <depend package="trimesh" />
+  <!--  Only necessary when using the blender add-on-->
+  <depend package="blender" optional="1"/>
+  <!--  Only used for certain tests-->
+  <depend package="control/hyrodyn" optional="1" />
+  <depend package="control/hyrodynpy" optional="1" />
+  <depend package="pybullet" optional="1" />
+  <depend package="opengl" optional="1"/>
+  <!--  Optional because in most cases it's easier to install it manually-->
+  <depend package="git-lfs" optional="1"/>
+  <!--  Only for xtype models-->
+  <depend package="tools/cad/deimos" optional="1"/>
 
   <keywords>
     <keyword>Simulation</keyword>
@@ -35,8 +58,9 @@
   <activity>active</activity>
 
   <classifiers>
+    <classifier>cli</classifier>
     <classifier>gui</classifier>
-    <classifier>python</classifier>
+    <classifier>python3</classifier>
     <classifier>blender</classifier>
     <classifier>add-on</classifier>
     <classifier>windows</classifier>

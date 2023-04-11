@@ -10,8 +10,8 @@
 # -------------------------------------------------------------------------------
 
 import bpy
-from phobos.utils.selection import selectObjects as select
-import phobos.utils.editing as eUtils
+from phobos.blender.utils.selection import selectObjects as select
+import phobos.blender.utils.editing as eUtils
 
 root = bpy.context.active_object
 links = [link for link in bpy.context.selected_objects if link.phobostype == 'link']

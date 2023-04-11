@@ -10,8 +10,8 @@
 # -------------------------------------------------------------------------------
 
 import bpy
-import phobos.utils.selection as sUtils
-import phobos.utils.io as ioUtils
+import phobos.blender.utils.selection as sUtils
+import phobos.blender.utils.io as ioUtils
 
 # Things this script does not cover:
 #    - updating old sensors to new sensors (delete sensor/* properties and replace them with the

@@ -79,7 +79,7 @@
       "resolution": 0.1,
       "min_dist": 0,
       "max_dist": 100.0,
-      "hud_pos": 0,
+      "hud_idx": 0,
       "update_rate": 10,
       "gain": 1,
       "show_cam": false,
