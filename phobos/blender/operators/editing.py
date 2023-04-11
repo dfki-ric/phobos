@@ -1039,16 +1039,24 @@ class GenerateInertialObjectsOperator(Operator):
         description="Clear existing inertial objects of selected links.",
     )
 
+    def toggleVisual(self, context):
+        self.collisions = not bool(self.visuals)
+
+    def toggleCollision(self, context):
+        self.visuals = not bool(self.collisions)
+
     visuals : BoolProperty(
         name="visual",
         default=True,
         description="Use the selected visual objects for inertial creation.",
+        update=toggleVisual
     )
 
     collisions : BoolProperty(
         name="collision",
-        default=True,
+        default=False,
         description="Use the selected visual objects for inertial creation.",
+        update=toggleCollision
     )
 
     def invoke(self, context, event):
