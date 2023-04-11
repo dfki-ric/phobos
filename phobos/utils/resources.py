@@ -18,9 +18,36 @@ with open(get_resources_path("defaults.json"), "r") as f:
     DEFAULTS = json.load(f)
 
 
-def get_default_sensor(sensor_type):
-    return DEFAULTS["sensors"][sensor_type]
+def get_sensor(sensor_category, sensor_type = "default"):
+    if len(sensor_category) == 0:
+        return {}
+    if len(sensor_type) == 0:
+        sensor_type = "default"
+    try:
+        return DEFAULTS["sensors"][sensor_category][sensor_type]
+    except KeyError:
+        return {}
 
+def get_sensor_info(sensor_category):
+    result = {
+        "blender_type": "Ray_sensor"
+    }
+    cat = DEFAULTS["sensors"][sensor_category]
+    info = [] if "" not in cat else cat[""]
+    for key in info:
+        result[key] = info[key]
+    return result
+
+def get_sensor_categories():
+    return DEFAULTS["sensors"].keys()
+
+def get_sensor_types(sensor_category):
+    sensors = DEFAULTS["sensors"][sensor_category].keys()
+    result = []
+    for key in sensors:
+        if len(key) > 0:
+            result.append(key)
+    return sensors
 
 def get_default_motor(motor_definition="default"):
     return DEFAULTS["motors"][motor_definition.lower()]
