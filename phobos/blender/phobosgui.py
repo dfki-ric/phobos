@@ -57,6 +57,14 @@ def set_loglevel(self, level):
     self["loglevel"] = level
 
 
+def get_username():
+    try:
+        user = os.getlogin()
+    except:
+        user = ""
+    return user
+
+
 class PhobosPrefs(AddonPreferences):
     """The general Phobos addon settings are stored in this class.
     They can be edited in the User Preferences of Blender under the Addon tab.
@@ -74,7 +82,7 @@ class PhobosPrefs(AddonPreferences):
 
     username : StringProperty(
         name='username',
-        default=os.getlogin(),
+        default=get_username(),
         description="Name of the user/company (used for export information etc.)",
     )
 
