@@ -282,8 +282,8 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
     export_smurf_xml_type : EnumProperty(
         items=getXMLTypeListForEnumProp,
-        name='URDF mesh type',
-        description="Mesh type to use in exported URDF files.",
+        name='Kinematic representation',
+        description="Type of Kinematic representation to use in exported SMURF.",
     )
 
     export_urdf_mesh_type : EnumProperty(
@@ -485,7 +485,8 @@ class PhobosToolsPanel(bpy.types.Panel):
         tsc2.label(text="Tools", icon='MODIFIER')
         tsc2.operator('phobos.sort_objects_to_layers', icon='IMGDISPLAY')
         tsc2.operator('phobos.set_xray')
-        tsc2.operator('phobos.toggle_namespaces')
+        # [TODO v2.1.0] REVIEW this
+        # tsc2.operator('phobos.toggle_namespaces')
         tsc2.operator('phobos.measure_distance')
         # [TODO v2.1.0] Re-add this
         # tsc2.operator('phobos.validate')
@@ -1143,7 +1144,7 @@ class PhobosModelPanel(bpy.types.Panel):
         kc1.operator('phobos.dissolve_link')
         kc1.operator('phobos.define_joint_constraints')
         kc1.operator("phobos.create_mimic_joint")
-        kc1.operator('phobos.add_kinematic_chain', icon='CONSTRAINT')
+        # [Todo v2.1.0] kc1.operator('phobos.add_kinematic_chain', icon='CONSTRAINT')
         kc1.operator('phobos.parent')
 
         # Visual/Collisions
@@ -1176,7 +1177,7 @@ class PhobosModelPanel(bpy.types.Panel):
         hw1 = minlayout.column(align=True)
         hw1.label(text="Hardware", icon='MOD_SCREW')
         hw1.operator('phobos.add_motor')
-        hw1.operator('phobos.add_controller')
+        # [TODO v2.1.0] hw1.operator('phobos.add_controller')
         hw1.operator('phobos.add_sensor')
         hw1.operator('phobos.create_interface')
 

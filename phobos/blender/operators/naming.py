@@ -42,7 +42,7 @@ class ToggleNamespaces(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -82,7 +82,7 @@ class NameModelOperator(Operator):
         """Hide operator if there is no link present.
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -94,8 +94,8 @@ class NameModelOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -109,7 +109,7 @@ class NameModelOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -146,7 +146,7 @@ class SetModelVersionOperator(Operator):
         """Hide operator if there is no link present.
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -158,8 +158,8 @@ class SetModelVersionOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -171,7 +171,7 @@ class SetModelVersionOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -209,7 +209,7 @@ class BatchRename(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -226,7 +226,7 @@ class BatchRename(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -249,7 +249,7 @@ class ChangeObjectName(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -304,7 +304,7 @@ class ChangeObjectName(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -315,8 +315,8 @@ class ChangeObjectName(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -333,7 +333,7 @@ class ChangeObjectName(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -351,7 +351,7 @@ class ChangeObjectName(Operator):
 
 
 classes = (
-    ToggleNamespaces,
+    # [TODO v2.1.0] Re-add ToggleNamespaces,
     NameModelOperator,
     SetModelVersionOperator,
     BatchRename,

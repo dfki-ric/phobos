@@ -347,7 +347,7 @@ class SortObjectsToLayersOperator(Operator):
         """
         return len(context.selected_objects) > 0
 
-
+# [TODO v2.1.0] REFACTOR THIS
 class AddKinematicChainOperator(Operator):
     """Add a kinematic chain between two selected objects"""
 
@@ -3524,7 +3524,7 @@ classes = (
     SafelyRemoveObjectsFromSceneOperator,
     MoveToSceneOperator,
     SortObjectsToLayersOperator,
-    AddKinematicChainOperator,
+    # [TODO v2.1.0] Re-add AddKinematicChainOperator,
     SetXRayOperator,
     SetPhobosType,
     BatchEditPropertyOperator,
@@ -3542,7 +3542,7 @@ classes = (
     AddMotorOperator,
     CreateLinksOperator,
     AddSensorOperator,
-    AddControllerOperator,
+    # [TODO v2.1.0] AddControllerOperator,
     CreateMimicJointOperator,
     AddHeightmapOperator,
     AddSubmodel,
