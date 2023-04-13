@@ -21,6 +21,7 @@ from bpy.props import (
     StringProperty,
 )
 from bpy.types import Operator, PropertyGroup
+from numpy import isin
 
 from .. import defs as defs
 from ..phoboslog import log
@@ -97,6 +98,8 @@ class DynamicProperty(PropertyGroup):
     FLOAT = 4
     valueType : bpy.props.IntProperty()
 
+    isEnabled : bpy.props.BoolProperty()
+
     def getValue(self):
         if self.valueType == self.INT:
             return self.intProp
@@ -117,24 +120,40 @@ class DynamicProperty(PropertyGroup):
         Returns:
 
         """
-        if isinstance(value, int):
+        self.isEnabled = True
+
+        if isinstance(value, bool):
+            self.boolProp = value
+            self.valueType = self.BOOL
+        elif isinstance(value, str):
+
+            #TODO Probably no longer required
+            # import re
+            # .
+            # .
+            # # make sure eval is called only with true or false
+            # if re.match('true|false', value[1:], re.IGNORECASE):
+            #     booleanString = value[1:]
+            #     booleanString = booleanString[0].upper() + booleanString[1:].lower()
+            #     self.boolProp = eval(booleanString)
+            #     self.valueType = self.BOOL
+            # else:
+            self.stringProp = value
+            self.valueType = self.STRING
+        elif isinstance(value, int):
             self.intProp = value
             self.valueType = self.INT
-        elif isinstance(value, str):
-            import re
-
-            # make sure eval is called only with true or false
-            if re.match('true|false', value[1:], re.IGNORECASE):
-                booleanString = value[1:]
-                booleanString = booleanString[0].upper() + booleanString[1:].lower()
-                self.boolProp = eval(booleanString)
-                self.valueType = self.BOOL
-            else:
-                self.stringProp = value
-                self.valueType = self.STRING
         elif isinstance(value, float):
             self.floatProp = value
             self.valueType = self.FLOAT
+        elif value is None:
+            self.intProp = 0
+            self.valueType = self.INT
+            self.isEnabled = False
+        else:
+            print("Unknown type:")
+            print(type(value))
+            print(value)
         # TODO what about lists?
 
         self.name = name
@@ -175,14 +194,18 @@ class DynamicProperty(PropertyGroup):
         Returns:
 
         """
+        line = layout.split()
+        line.prop(self, 'isEnabled', text="")
+        row = line.row()
         if self.valueType == self.INT:
-            layout.prop(self, 'intProp', text=name)
+            row.prop(self, 'intProp', text=name)
         elif self.valueType == self.BOOL:
-            layout.prop(self, 'boolProp', text=name)
+            row.prop(self, 'boolProp', text=name)
         elif self.valueType == self.STRING:
-            layout.prop(self, 'stringProp', text=name)
+            row.prop(self, 'stringProp', text=name)
         elif self.valueType == self.FLOAT:
-            layout.prop(self, 'floatProp', text=name)
+            row.prop(self, 'floatProp', text=name)
+        row.enabled = self.isEnabled
 
 
 def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops=[]):

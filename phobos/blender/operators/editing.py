@@ -2087,6 +2087,18 @@ class AddSensorOperator(Operator):
     # dynamic properties of the sensor
     sensorProperties: CollectionProperty(type=DynamicProperty)
 
+    currentSensor = ("", "")
+
+    def updateSensorProperties(self):
+        if self.category != self.currentSensor[0] or self.sensorType != self.currentSensor[1]:
+            data = resources.get_sensor(self.category, self.sensorType)
+            self.sensorProperties.clear()
+            DynamicProperty.assignDict(
+                self.sensorProperties.add, data
+            )
+            self.currentSensor = (self.category, self.sensorType)
+
+
     def draw(self, context):
         """
 
@@ -2104,11 +2116,7 @@ class AddSensorOperator(Operator):
         layout.separator()
 
         # Draw sensor properties
-        data = resources.get_sensor(self.category, self.sensorType)
-        self.sensorProperties.clear()
-        DynamicProperty.assignDict(
-            self.sensorProperties.add, data
-        )
+        self.updateSensorProperties()
         for i in range(len(self.sensorProperties)):
             name = self.sensorProperties[i].name.replace('_', ' ')
 
