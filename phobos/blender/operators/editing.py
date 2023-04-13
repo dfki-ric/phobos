@@ -56,6 +56,8 @@ from ...utils import resources
 from ...io.sensor_representations import Sensor
 from ...utils.transform import create_transformation
 
+from ...io import sensor_representations
+
 class SafelyRemoveObjectsFromSceneOperator(Operator):
     """Removes all selected objects from scene, warning if they are deleted"""
 
@@ -2108,10 +2110,12 @@ class AddSensorOperator(Operator):
             self.sensorProperties.add, data
         )
         for i in range(len(self.sensorProperties)):
-            name = self.sensorProperties[i].name[2:].replace('_', ' ')
+            name = self.sensorProperties[i].name.replace('_', ' ')
 
             # use the dynamic props name in the GUI, but without the type id
             self.sensorProperties[i].draw(layout, name)
+        layout.label(text="You can add custom properties under")
+        layout.label(text="Object Properties > Custom Properties")
 
     def invoke(self, context, event):
         """
@@ -2125,16 +2129,16 @@ class AddSensorOperator(Operator):
         """
         return context.window_manager.invoke_props_dialog(self)
 
-    def check(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        return True
+    # def check(self, context):
+    #     """
+    #
+    #     Args:
+    #       context:
+    #
+    #     Returns:
+    #
+    #     """
+    #     return True
 
     @classmethod
     def poll(cls, context):
@@ -2144,9 +2148,50 @@ class AddSensorOperator(Operator):
           context:
 
         Returns:
+            True if there is a link we can attach a new sensor to
+            False otherwise
 
         """
-        return context.active_object
+        linkFound, link = cls.getLink(context)
+        return linkFound
+
+    def getSensorParameters(self):
+        """
+
+        Args:
+
+        Returns: The parameters entered by the user for the selected sensor
+
+        """
+        data = resources.get_sensor(self.category, self.sensorType)
+        print("Default data")
+        print(data)
+        result = {}
+        for prop in self.sensorProperties:
+            result[prop.name] = prop.getValue()
+        print(result)
+        return result
+
+    @classmethod
+    def getLink(cls, context):
+        """
+
+        Args:
+          context:
+
+        Returns:
+            False, None if neither the selection nor their parent are links
+            True, theLink otherwise
+
+        """
+        link = context.active_object
+        if link is None:
+            return False, None
+        if not context.active_object.phobostype == 'link':  # Selection is no link, get their parent
+            link = sUtils.getEffectiveParent(link)
+        if not context.active_object.phobostype == 'link':  # Parent is no link either
+            return False, None
+        return True, link
 
     def execute(self, context):
         """
@@ -2159,27 +2204,21 @@ class AddSensorOperator(Operator):
         """
         print("Execute add sensor")
         # make sure a link or its child is selected
-        link = context.active_object
-        if not context.active_object.phobostype == 'link': # Selection is no link, get their parent
-            link = sUtils.getEffectiveParent(link)
-        if not context.active_object.phobostype == 'link': # Parent is no link either
-            log(
-                'Select a link to add the sensor to',
-                'INFO',
-            )
-            print("Select a link to add the sensor to")
-            print("Cancelled")
+        linkFound, link = self.getLink(context)
+        if not linkFound:
             return {'CANCELLED'}
 
         # Create Sensor
-        info = resources.get_sensor_info(self.category)
-        print(info)
         sensorName = self.sensorName
-        blenderType = info["blender_type"]
-        sensor = Sensor(
+        parameters = self.getSensorParameters()
+        # Get sensor category specific class
+        sensorClass = getattr(sensor_representations,self.category)
+        sensor = sensorClass(
             name = sensorName,
-            _blender_type = blenderType,
+            **parameters # Pass sensor specific parameters
         )
+        print("Our new sensor:")
+        print(sensor)
         sensor_obj = phobos2blender.createSensor(sensor, linkobj=link)
 
 
