@@ -1118,7 +1118,8 @@ class Collision(Representation, SmurfBase):
             else:
                 name = None
         self.link = link
-        SmurfBase.__init__(self, name=name, link=link, returns=['name', 'link', 'geometry'], **kwargs)
+        self.name = name
+        SmurfBase.__init__(self, returns=['name', 'link', 'geometry'], **kwargs)
         self.geometry = _singular(geometry)
         if origin is None:
             origin = Pose()
@@ -1777,7 +1778,9 @@ class Motor(Representation, SmurfBase):
     _class_variables = ["name", "joint"]
 
     def __init__(self, name=None, joint=None, controller_type="position", **kwargs):
-        SmurfBase.__init__(self, name=name, joint=joint, **kwargs)
+        self.name = name,
+        self.joint = joint
+        SmurfBase.__init__(self, returns=["name", "joint"], **kwargs)
         # This is hardcoded information
         assert self.joint is not None
         self._maxEffort = None

@@ -8,7 +8,8 @@ class SmurfBase(YamlReflection):
 
     def __init__(self, returns=None, **kwargs):
         assert "robot" not in kwargs
-        assert not any([x in kwargs for x in dir(self.__class__)]), f"Can't overwrite native attributes of {self.__class__}"
+        assert not any([x in kwargs for x in dir(self.__class__)]),\
+            f"Can't overwrite native attributes ({[x for x in dir(self.__class__) if x in kwargs]}) of {self.__class__}"
         super(YamlReflection, self).__init__()
         # The object has to know which properties to export, this is done via
         self.returns = [] if returns is None else returns

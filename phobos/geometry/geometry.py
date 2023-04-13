@@ -97,14 +97,14 @@ def create_cylinder(mesh, scale=1.0):
         diameter = np.cross(axis, orthogonal).dot(c.extents)
     elif BPY_AVAILABLE:
         extent = (np.max(mesh.bound_box, axis=0) - np.min(mesh.bound_box, axis=0))
-        deviation = extent - np.average(extent)
+        deviation = np.abs(extent - np.average(extent))
         length = extent[np.argmax(deviation)]
         axis = np.argmax(deviation)
         diameter = np.max([extent[i] for i in range(3) if i != axis])
         rpy = [0, 0, 0]
         if axis == 0:
             rpy = [0, np.pi/2, 0]
-        if axis == 1:
+        elif axis == 1:
             rpy = [np.pi/2, 0, 0]
         transform = create_transformation(xyz=np.average(mesh.bound_box, axis=0), rpy=rpy)
     else:
