@@ -94,6 +94,22 @@ class DynamicProperty(PropertyGroup):
     stringProp : bpy.props.StringProperty()
     floatProp : bpy.props.FloatProperty()
 
+    STRING = 1
+    INT = 2
+    BOOL = 3
+    FLOAT = 4
+    valueType : bpy.props.IntProperty()
+
+    def getValue(self):
+        if self.valueType == self.INT:
+            return self.intProp
+        elif self.valueType == self.BOOL:
+            return self.boolProp
+        elif self.valueType == self.STRING:
+            return self.stringProp
+        elif self.valueType == self.FLOAT:
+            return self.floatProp
+
     def assignValue(self, name, value):
         """
 
@@ -104,10 +120,9 @@ class DynamicProperty(PropertyGroup):
         Returns:
 
         """
-        prefix = ''
         if isinstance(value, int):
             self.intProp = value
-            prefix = 'i'
+            self.valueType = self.INT
         elif isinstance(value, str):
             import re
 
@@ -116,16 +131,16 @@ class DynamicProperty(PropertyGroup):
                 booleanString = value[1:]
                 booleanString = booleanString[0].upper() + booleanString[1:].lower()
                 self.boolProp = eval(booleanString)
-                prefix = 'b'
+                self.valueType = self.BOOL
             else:
                 self.stringProp = value
-                prefix = 's'
+                self.valueType = self.STRING
         elif isinstance(value, float):
             self.floatProp = value
-            prefix = 'f'
+            self.valueType = self.FLOAT
         # TODO what about lists?
 
-        self.name = prefix + '_' + name
+        self.name = name
 
     def assignDict(addfunc, dictionary, ignore=[]):
         """
@@ -163,13 +178,13 @@ class DynamicProperty(PropertyGroup):
         Returns:
 
         """
-        if self.name[0] == 'i':
+        if self.valueType == self.INT:
             layout.prop(self, 'intProp', text=name)
-        elif self.name[0] == 'b':
+        elif self.valueType == self.BOOL:
             layout.prop(self, 'boolProp', text=name)
-        elif self.name[0] == 's':
+        elif self.valueType == self.STRING:
             layout.prop(self, 'stringProp', text=name)
-        elif self.name[0] == 'f':
+        elif self.valueType == self.FLOAT:
             layout.prop(self, 'floatProp', text=name)
 
 
