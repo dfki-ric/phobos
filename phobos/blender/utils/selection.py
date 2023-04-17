@@ -156,7 +156,7 @@ def getRecursiveChildren(
     return children
 
 
-def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, objectlist=[]):
+def getEffectiveParent(obj, ignore_selection=True, include_hidden=True, objectlist=[]):
     """Returns the parent of an object, i.e. the first *link* ascending the
     object tree that is selected, starting from the obj, optionally also excluding
     hidden objects.

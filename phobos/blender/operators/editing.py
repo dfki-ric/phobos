@@ -1182,10 +1182,10 @@ class GenerateInertialObjectsOperator(Operator):
                 inertia=representation.Inertia(*inertia),
                 origin=representation.Pose(xyz=pose)
             )
-            if not sUtils.getEffectiveParent(obj):
+            if not sUtils.getEffectiveParent(obj, include_hidden=True, ignore_selection=True):
                 ErrorMessageWithBox(f"{obj.name} has no parent link to which the inertial could be added", reporter=self)
                 continue
-            newinertial = phobos2blender.createInertial(inertial, sUtils.getEffectiveParent(obj), adjust=True, logging=True)
+            newinertial = phobos2blender.createInertial(inertial, sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True), adjust=True, logging=True)
 
             if newinertial:
                 new_inertial_objects.append(newinertial)
@@ -1299,11 +1299,11 @@ class CreateCollisionObjects(Operator):
                     geometry.apply_scale()
                 collision = representation.Collision(
                     name=collname,
-                    link=sUtils.getEffectiveParent(vis),
+                    link=sUtils.getEffectiveParent(vis, include_hidden=True, ignore_selection=True),
                     geometry=geometry,
                     origin=representation.Pose.from_matrix(phobos_vis.origin.to_matrix().dot(transform))
                 )
-                ob = phobos2blender.createGeometry(collision, geomsrc="collision", linkobj=sUtils.getEffectiveParent(vis))
+                ob = phobos2blender.createGeometry(collision, geomsrc="collision", linkobj=sUtils.getEffectiveParent(vis, include_hidden=True, ignore_selection=True))
             else:
                 ob = bUtils.createPrimitive(
                     collname,
@@ -1326,7 +1326,6 @@ class CreateCollisionObjects(Operator):
             # make collision object relative if visual object has a parent
             if vis.parent:
                 ob.select_set(True)
-
                 bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
                 vis.parent.select_set(True)
                 eUtils.parentObjectsTo(context.selected_objects, vis.parent)
@@ -2052,7 +2051,7 @@ def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args
     # we don't need to check the parentlink, as the calling operator
     # does make sure it exists (or a new link is created instead)
     if 'phobostype' in active_obj and active_obj.phobostype != 'link':
-        parentlink = sUtils.getEffectiveParent(active_obj, ignore_selection=True)
+        parentlink = sUtils.getEffectiveParent(active_obj, ignore_selection=True, include_hidden=True)
     else:
         parentlink = active_obj
 

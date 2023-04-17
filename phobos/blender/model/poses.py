@@ -55,7 +55,7 @@ def deriveObjectPose(obj, logging=False, adjust=False, errors=None):
       .. seealso phobos.utils.editing.getCombinedTransform: pose information of the object
 
     """
-    effectiveparent = sUtils.getEffectiveParent(obj)
+    effectiveparent = sUtils.getEffectiveParent(obj, include_hidden=True, ignore_selection=True)
     matrix = eUtils.getCombinedTransform(obj, effectiveparent)
 
     pose = {
