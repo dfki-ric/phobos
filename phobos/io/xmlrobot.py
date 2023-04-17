@@ -305,11 +305,13 @@ class XMLRobot(Representation):
                 for vis in child.visuals:
                     VC_T_P = C_T_P.dot(vis.origin.to_matrix())
                     vis.origin = representation.Pose.from_matrix(VC_T_P)
+                    vis.link = parent.name
                     parent.add_aggregate('visual', vis)
 
                 for col in child.collisions:
                     CC_T_P = C_T_P.dot(col.origin.to_matrix())
                     col.origin = representation.Pose.from_matrix(CC_T_P)
+                    col.link = parent.name
                     parent.add_aggregate('collision', col)
             # reparent the following joints
             new_joints = []
