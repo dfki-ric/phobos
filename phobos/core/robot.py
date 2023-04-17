@@ -662,7 +662,6 @@ class Robot(SMURFRobot):
         # submechanism generation if necessary
         if self.autogenerate_submechanisms is None or self.autogenerate_submechanisms is True:
             self.generate_submechanisms()
-
         # export meshes
         if with_meshes:
             mesh_formats = set()
@@ -699,10 +698,6 @@ class Robot(SMURFRobot):
                     assert xml_file_in_smurf is None, "Only one xml file can be linked in the SMURF"
                     xml_file_in_smurf = xml_file
             elif export["type"] == "submodel":
-                if export["name"] == "abstract_model" and export.get("abstract_model", False) and \
-                        (len(self.submechanisms) == 0 or all([sm.type == "serial" for sm in self.submechanisms])):
-                    log.debug("Skipping export of submodel abstract_model, as the robot is already abstract.")
-                    continue
                 log.debug(f"Exporting submodel {export['name']}")
                 if export["name"] not in self.submodel_defs:
                     export_robot_instance = self.define_submodel(
@@ -711,7 +706,12 @@ class Robot(SMURFRobot):
                         stop=export["stop"] if "stop" in export else None,
                         include_unstopped_branches=export["include_unstopped_branches"] or "stop" not in export
                         if "include_unstopped_branches" in export else None,
-                        no_submechanisms=export["no_submechanisms"] if "no_submechanisms" in export else False
+                        no_submechanisms=export["no_submechanisms"] if "no_submechanisms" in export else False,
+                        abstract_model=export.get("abstract_model", False),
+                        include_human_in_abstract=export.get("include_human_in_abstract", False),
+                        only_urdf=export.get("only_urdf", False),
+                        remove_joints=export.get("remove_joints", None),
+                        move_joint_axis_to_intersection=export.get("move_joint_axis_to_intersection", None)
                     )
                 else:
                     assert export["start"] == self.submodel_defs["start"]
@@ -720,7 +720,7 @@ class Robot(SMURFRobot):
                     assert export["no_submechanisms"] == self.submodel_defs["no_submechanisms"]
                     export_robot_instance = self.instantiate_submodel(**export)
                 if "add_floating_base" in export and export["add_floating_base"]:
-                    export_robot_instance.add_floating_base()
+                    export_robot_instance = export_robot_instance.add_floating_base()
                 _export_config = None
                 if "export_config" in export:
                     _export_config = export["export_config"]
@@ -1105,12 +1105,17 @@ class Robot(SMURFRobot):
 
             remove_joints += [str(j) for j in self.joints
                               if str(j) not in abstract_joints]
+            submodel.autogenerate_submechanisms = True
+            submodel.submechanisms = []
+            submodel.exoskeletons = []
 
         submodel.remove_joint(remove_joints)
 
         if move_joint_axis_to_intersection is not None:
             for jointname, intersecting in move_joint_axis_to_intersection.items():
                 submodel.move_joint_to_intersection(jointname, intersecting)
+
+        submodel.relink_entities()
 
         return submodel
 
