@@ -1977,9 +1977,11 @@ class GenericAnnotation(Representation, SmurfBase):
 
     def __init__(self, GA_category, GA_name=None, GA_parent=None, GA_parent_type=None, GA_transform: Pose=None,
                  **annotations):
-        assert GA_parent_type in ["GA_related_"+v for v in self._class_variables]
-        setattr(self, "GA_related_"+GA_parent_type, GA_parent)
-        self._GA_parent_var = "GA_related_"+GA_parent_type
+        assert (GA_parent is None and GA_parent_type is None) \
+               or GA_parent_type in ["GA_related_"+str(v) for v in self._class_variables],\
+            "Unknown GA_parent_type="+str(GA_parent_type)
+        setattr(self, "GA_related_"+str(GA_parent_type), GA_parent)
+        self._GA_parent_var = "GA_related_"+str(GA_parent_type)
         assert "returns" not in annotations
         self._GA_transform = GA_transform
         self.GA_category = GA_category
@@ -1990,9 +1992,9 @@ class GenericAnnotation(Representation, SmurfBase):
 
             def _getter(instance, varname=k):
                 value = getattr(instance, "_" + varname)
-                if type(value) == str and value.startswith("$parent."):
+                if not self._GA_parent_var.endswith("None") and type(value) == str and value.startswith("$parent."):
                     return getattr(self._GA_parent_var, value[value.find(".") + 1:])
-                elif type(value) == str and "$parent" in value:
+                elif not self._GA_parent_var.endswith("None") and type(value) == str and "$parent" in value:
                     return getattr(self._GA_parent_var, varname)
                 elif type(value) == str and "$transform." in value:
                     return getattr(self._GA_transform, value[value.find(".") + 1:])
