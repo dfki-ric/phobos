@@ -168,7 +168,7 @@ class Linkable(object):
             True if all references are python-references
         """
         linked = self._related_robot_instance is not None
-        assert linked is not None, type(self)
+        assert linked, self.__class__
         _class_attributes = self._class_linkables
         if attribute is not None:
             _class_attributes = [var for var in self._class_linkables if var == attribute]
@@ -180,6 +180,7 @@ class Linkable(object):
                     for v in getattr(self, var):
                         if isinstance(v, Linkable):
                             linked &= v.check_linkage()
+                assert linked, f"Variable {var} of {type(self)} {str(self) if self.stringable() else repr(self)} is not linked."
         for attribute in _class_attributes:
             linked &= (
                 getattr(self, "_" + attribute) is None or
