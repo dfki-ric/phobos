@@ -30,7 +30,6 @@ class SMURFRobot(XMLRobot):
         self.annotations = {}
         self.categorized_annotations = []
         # Smurf Informations
-        self.motors = []
         self.poses = []
         self.description = None
         # Hyrodyn stuff
@@ -119,27 +118,27 @@ class SMURFRobot(XMLRobot):
     # helper methods
     def link_entities(self, check_linkage_later=False):
         super(SMURFRobot, self).link_entities(check_linkage_later=True)
-        for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
+        for entity in self.submechanisms + self.exoskeletons + self.poses + self.interfaces:
             entity.link_with_robot(self, check_linkage_later=True)
         if not check_linkage_later:
             assert self.check_linkage()
 
     def unlink_entities(self, check_linkage_later=False):
         super(SMURFRobot, self).unlink_entities(check_linkage_later=True)
-        for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
+        for entity in self.submechanisms + self.exoskeletons + self.poses + self.interfaces:
             entity.unlink_from_robot(check_linkage_later=True)
         if not check_linkage_later:
             assert self.check_unlinkage()
 
     def check_linkage(self):
         out = super(SMURFRobot, self).check_linkage()
-        for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
+        for entity in self.submechanisms + self.exoskeletons + self.poses + self.interfaces:
             out &= entity.check_linkage()
         return out
 
     def check_unlinkage(self):
         out = super(SMURFRobot, self).check_unlinkage()
-        for entity in self.submechanisms + self.exoskeletons + self.motors + self.poses + self.interfaces:
+        for entity in self.submechanisms + self.exoskeletons + self.poses + self.interfaces:
             out &= entity.check_unlinkage()
         return out
 
@@ -181,23 +180,29 @@ class SMURFRobot(XMLRobot):
     # [TODO v2.1.0] Refactor this
     def _init_annotations(self):
         if 'motors' in self.annotations:
-            for motor in self.annotations['motors']:
+            for motor_def in self.annotations['motors']:
                 # Search for the joint
-                joint = self.get_joint(motor['joint'])
-                if joint is not None:
-                    annotations = deepcopy(motor)
-                    if "name" in annotations.keys():
-                        annotations.pop('name')
-                    self.add_aggregate(
-                        'motors',
-                        representation.Motor(
-                            name=motor['name'] if 'name' in motor else motor['joint'] + "_motor",
-                            **annotations
-                        )
-                    )
-                else:
+                joint = self.get_joint(motor_def['joint'])
+                if joint is None:
                     log.error(motor)
                     log.error("There is no joint to which the above motor definition relates. Skipping...")
+                    continue
+                existing = self.get_motor(motor_def["name"])
+                annotations = deepcopy(motor_def)
+                if "name" in annotations.keys():
+                    annotations.pop('name')
+                motor = representation.Motor(
+                    name=motor_def['name'] if 'name' in motor else motor_def['joint'] + "_motor",
+                    **annotations
+                )
+                if existing is not None and not existing.equivalent(motor):
+                    log.debug(f"Replacing existing sensor with name {motor_def['name']}\n"
+                              f"existing: {existing.to_yaml()}\n"
+                              f"new: {motor.to_yaml()}")
+                    self.remove_aggregate("motors", existing)
+                    self.add_motor(motor)
+                elif existing is None:
+                    self.add_motor(motor)
 
         if 'sensors' in self.annotations:
             for sensor_def in self.annotations['sensors']:
@@ -309,7 +314,7 @@ class SMURFRobot(XMLRobot):
             self.annotations.pop(k)
 
     def _rename(self, targettype, target, new_name, further_targettypes=None):
-        other_targettypes = ["motors", "poses", "submechanisms", "exoskeletons", "interfaces"]
+        other_targettypes = ["poses", "submechanisms", "exoskeletons", "interfaces"]
         if further_targettypes is not None:
             other_targettypes += further_targettypes
         return super(SMURFRobot, self)._rename(targettype, target, new_name, further_targettypes=other_targettypes)
@@ -319,13 +324,8 @@ class SMURFRobot(XMLRobot):
             elem = self.get_aggregate(typeName, elem)
         if elem is None:
             return
-        if typeName in "motors":
-            elem.joint.motor = None
+        if typeName in "joints":
             super(SMURFRobot, self).remove_aggregate(typeName, elem)
-        elif typeName in "joints":
-            super(SMURFRobot, self).remove_aggregate(typeName, elem)
-            # motors
-            self.motors = [m for m in self.motors if m.joint != str(elem)]
             # interfaces
             for interf in self.interfaces:
                 if interf.parent == elem.child:
@@ -353,15 +353,6 @@ class SMURFRobot(XMLRobot):
         else:
             super(SMURFRobot, self).remove_aggregate(typeName, elem)
 
-    # getters
-    def get_motor(self, motor_name) -> [representation.Motor, list]:
-        """Returns the ID (index in the motor list) of the motor(s).
-        """
-        if isinstance(motor_name, list):
-            return [self.get_motor(motor) for motor in motor_name]
-
-        return self.get_aggregate('motors', motor_name)
-
     # tools
     def verify_meshes(self):
         """
@@ -379,21 +370,6 @@ class SMURFRobot(XMLRobot):
     # [ToDo v2.1.0] Support here all powers of GenericAnnotation
     def add_categorized_annotation(self, name, content):
         self.categorized_annotations.append(representation.GenericAnnotation(GA_category=name, GA_dict=content))
-
-    def add_motor(self, motor):
-        """Attach a new motor to the robot. Either the joint is already defined inside the motor
-        or a jointname is given. Renames the motor if already given.
-        """
-        if isinstance(motor, list):
-            return [self.add_motor(m) for m in motor]
-        if not isinstance(motor, representation.Motor):
-            raise Exception(f"Please provide an instance of Motor to attach. Got {type(motor)}")
-        # Check if the motor already contains joint information
-        joint = self.get_joint(motor.joint)
-        assert joint is not None
-        motor.link_with_robot(self)
-        self.add_aggregate("motors", motor)
-        joint.motor = motor
 
     def add_pose(self, pose):
         """Add a new pose to the robot.

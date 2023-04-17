@@ -6,6 +6,7 @@ import numpy as np
 
 from . import representation, xml_factory, sensor_representations
 from .base import Representation
+from .xml_factory import plural as _plural
 from ..commandline_logging import get_logger
 from ..utils.transform import create_transformation, get_adjoint, inv
 from ..utils.tree import get_joints_depth_first
@@ -20,7 +21,8 @@ class XMLRobot(Representation):
                  joints: List[representation.Joint] = None,
                  materials: List[representation.Material] = None,
                  transmissions: List[representation.Transmission] = None,
-                 sensors=None, is_human=False, urdf_version=None, xmlfile=None, _xmlfile=None):
+                 sensors=None, motors=None, plugins=None,
+                 is_human=False, urdf_version=None, xmlfile=None, _xmlfile=None):
         super().__init__()
         self.joints = []
         self.links = []
@@ -29,7 +31,9 @@ class XMLRobot(Representation):
         self.materials = []
         self.transmissions = []
         self.sensors = []
-        self.xmlfile =xmlfile if xmlfile is not None else _xmlfile
+        self.plugins = []  # Currently just a place holder
+        self.motors = []
+        self.xmlfile = xmlfile if xmlfile is not None else _xmlfile
 
         # Default export mesh format from phobos.defs.MESH_TYPES
         self.mesh_format = "stl"
@@ -55,6 +59,10 @@ class XMLRobot(Representation):
         self.materials = materials if materials is not None else []
         self.transmissions = transmissions if transmissions is not None else []
         self.sensors = sensors if sensors is not None else []
+        self.motors = motors if motors is not None else []
+        if plugins is not None:
+            self.motors += [m for m in _plural(plugins) if isinstance(m, representation.Motor)]
+
         if is_human:
             self.annotate_as_human()
 
@@ -76,26 +84,26 @@ class XMLRobot(Representation):
             link.is_human = True
 
     def link_entities(self, check_linkage_later=False):
-        for entity in self.links + self.joints + self.sensors + self.materials:
+        for entity in self.links + self.joints + self.motors + self.sensors + self.materials:
             entity.link_with_robot(self, check_linkage_later=True)
         if not check_linkage_later:
             assert self.check_linkage()
 
     def unlink_entities(self, check_linkage_later=False):
-        for entity in self.links + self.joints + self.sensors + self.materials:
+        for entity in self.links + self.joints + self.motors + self.sensors + self.materials:
             entity.unlink_from_robot(check_linkage_later=True)
         if not check_linkage_later:
             assert self.check_unlinkage()
 
     def check_linkage(self):
         out = True
-        for entity in self.links + self.joints + self.sensors + self.materials:
+        for entity in self.links + self.joints + self.motors + self.sensors + self.materials:
             out &= entity.check_linkage()
         return out
 
     def check_unlinkage(self):
         out = True
-        for entity in self.links + self.joints + self.sensors + self.materials:
+        for entity in self.links + self.joints + self.motors + self.sensors + self.materials:
             out &= entity.check_unlinkage()
         return out
 
@@ -141,7 +149,7 @@ class XMLRobot(Representation):
         assert self.get_aggregate(targettype, new_name) is None,\
                 f"Can't rename {targettype} {target} to {new_name} as the new name already exists"
 
-        other_targettypes = ['collision', 'visual', 'material']
+        other_targettypes = ['collision', 'visual', 'material', 'sensor', "motor"]
         if further_targettypes is not None:
             other_targettypes += further_targettypes
         other_targettypes = set([o[:-1] if o.endswith("s") else o for o in other_targettypes])
@@ -253,7 +261,10 @@ class XMLRobot(Representation):
             return
         if type(elem) == list:
             return [self.remove_aggregate(typeName, e) for e in elem]
-        if typeName in 'joints' or typeName in "links":
+        if typeName in "motors":
+            elem.joint.motor = None
+            self.remove_aggregate(typeName, elem)
+        elif typeName in 'joints' or typeName in "links":
             # find the corresponding link/joint we have to delete as well
             if typeName in "joints":
                 joint = elem
@@ -340,6 +351,7 @@ class XMLRobot(Representation):
                         sensor.link = str(parent)
                         new_sensors += [sensor]
             self.sensors = new_sensors
+            self.motors = [m for m in self.motors if m.joint != str(elem)]
 
             new_transmissions = []
             for tm in self.transmissions:
@@ -370,6 +382,21 @@ class XMLRobot(Representation):
             raise Exception(f"Please provide an instance of Sensor to attach. Received: {repr(type(sensor))}")
         self.add_aggregate('sensors', sensor)
         return
+
+    def add_motor(self, motor):
+        """Attach a new motor to the robot. Either the joint is already defined inside the motor
+        or a jointname is given. Renames the motor if already given.
+        """
+        if isinstance(motor, list):
+            return [self.add_motor(m) for m in motor]
+        if not isinstance(motor, representation.Motor):
+            raise Exception(f"Please provide an instance of Motor to attach. Got {type(motor)}")
+        # Check if the motor already contains joint information
+        joint = self.get_joint(motor.joint)
+        assert joint is not None
+        motor.link_with_robot(self)
+        self.add_aggregate("motors", motor)
+        joint.motor = motor
 
     def get_chain(self, root, tip, joints=True, links=True, fixed=True):
         assert root is not None
@@ -459,6 +486,14 @@ class XMLRobot(Representation):
             return [self.get_sensor(sensor) for sensor in sensor_name]
 
         return self.get_aggregate('sensors', sensor_name)
+
+    def get_motor(self, motor_name) -> [representation.Motor, list]:
+        """Returns the ID (index in the motor list) of the motor(s).
+        """
+        if isinstance(motor_name, list):
+            return [self.get_motor(motor) for motor in motor_name]
+
+        return self.get_aggregate('motors', motor_name)
 
     def get_inertial(self, link_name):
         """
