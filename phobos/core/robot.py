@@ -2388,6 +2388,7 @@ class Robot(SMURFRobot):
         }
         floatingbase.submechanisms += [Submechanism(**freeflyer)]
         floatingbase.autogenerate_submechanisms = self.autogenerate_submechanisms
+        floatingbase.link_entities()
         return floatingbase
 
     def scale_link(self, linkname, scale_x, scale_y, scale_z, new_mass=None, geometry_for_inertia=None):
