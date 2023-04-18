@@ -1072,6 +1072,15 @@ class GenerateInertialObjectsOperator(Operator):
         geometric_objects = [
             obj for obj in context.selected_objects if obj.phobostype in ['visual', 'collision']
         ]
+        visuals = [obj for obj in geometric_objects if obj.phobostype == 'visual']
+        collisions = [obj for obj in geometric_objects if obj.phobostype == 'collision']
+
+        if not visuals:
+            self.collisions = True
+            self.visuals = False
+        if not collisions:
+            self.visuals = True
+            self.collisions = False
 
         # initialise the geometry parameter correctly
         if not geometric_objects:
@@ -1126,9 +1135,12 @@ class GenerateInertialObjectsOperator(Operator):
         # store previously selected objects
         selection = context.selected_objects
         viscols = [obj for obj in selection if obj.phobostype in ['visual', 'collision']]
+        if any([obj.parent is None for obj in viscols]):
+            ErrorMessageWithBox(f"You have selected objects that don't have a parent, those will be ignored", reporter=self)
+            viscols = [obj for obj in selection if obj.phobostype in ['visual', 'collision'] if obj.parent is not None]
         links = list(
             set(
-                [obj.parent for obj in viscols]
+                [obj.parent for obj in viscols if obj.parent is not None]
                 + [obj for obj in selection if obj.phobostype == 'link']
             )
         )

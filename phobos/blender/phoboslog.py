@@ -179,7 +179,7 @@ def ErrorMessageWithBox(message = "", title = "Error", icon = 'ERROR', reporter=
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
     log(message, "ERROR")
     if reporter:
-        reporter.report({"ERROR"}, message)
+        reporter.report({"ERROR"}, "Phobos: "+message)
 
 
 def WarnMessageWithBox(message = "", title = "Warning", icon = 'WARN', reporter=None):
@@ -188,4 +188,4 @@ def WarnMessageWithBox(message = "", title = "Warning", icon = 'WARN', reporter=
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
     log(message, "WARN")
     if reporter:
-        reporter.report({"WARN"}, message)
+        reporter.report({"WARN"}, "Phobos: "+message)

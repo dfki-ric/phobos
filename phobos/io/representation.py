@@ -671,7 +671,7 @@ class Mesh(Representation, SmurfBase):
         if mesh.is_volume:
             return mesh.volume, mesh.center_mass
         else:
-            log.warning("Volume is not watertight taking volume of convex_hull, estimating COM as centroid of faces")
+            log.warning(f"Mesh {str(self.mesh_object)} is not watertight taking volume of convex_hull, estimating COM as centroid of faces")
             return mesh.convex_hull.volume, mesh.centroid
 
     def equivalent(self, other):
