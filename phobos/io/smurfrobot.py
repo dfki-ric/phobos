@@ -32,6 +32,7 @@ class SMURFRobot(XMLRobot):
         # Smurf Informations
         self.poses = []
         self.description = None
+        self.generic_annotations = []
         # Hyrodyn stuff
         self.submechanisms = []
         self.exoskeletons = []
@@ -297,6 +298,7 @@ class SMURFRobot(XMLRobot):
         for k, v in self.annotations.items():
             if k not in self.smurf_annotation_keys:
                 pop_annotations.append(k)
+                log.info(f"Adding generic annotation of category {k}")
                 if type(v) == list:
                     for a in v:
                         self.add_aggregate("generic_annotations", representation.GenericAnnotation(

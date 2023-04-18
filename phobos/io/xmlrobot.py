@@ -240,7 +240,7 @@ class XMLRobot(Representation):
             objects = getattr(self, typeName)
             object_names = [str(obj) for obj in objects]
             counter = 1
-            if str(elem) in object_names:
+            if elem.stringable() and str(elem) in object_names:
                 while str(elem) + f"_{counter}" in object_names:
                     counter += 1
                 if not silent:

@@ -2009,8 +2009,22 @@ class GenericAnnotation(Representation, SmurfBase):
 
             setattr(self, k, property(_getter, _setter))
 
-        super(GenericAnnotation, self).__init__(returns=annotations.keys())
+        SmurfBase.__init__(self, returns=list(annotations.keys()))
 
     @property
     def GA_parent(self):
         return getattr(self, self._GA_parent_var)
+
+    def __str__(self):
+        if self.GA_name is not None:
+            return self.GA_name
+        raise NotImplementedError
+
+    def set_unique_name(self, value):
+        if self.GA_name is not None:
+            self.GA_name = value
+        else:
+            raise NotImplementedError
+
+    def stringable(self):
+        return self.GA_name is not None
