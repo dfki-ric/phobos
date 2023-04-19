@@ -17,12 +17,16 @@ log = get_logger(__name__)
 class XMLRobot(Representation):
     SUPPORTED_VERSIONS = ["1.0"]
 
+    _related_world_instance = None
+    _related_entity_instance = None
+
     def __init__(self, name=None, version=None, links: List[representation.Link] = None,
                  joints: List[representation.Joint] = None,
                  materials: List[representation.Material] = None,
                  transmissions: List[representation.Transmission] = None,
                  sensors=None, motors=None, plugins=None,
                  is_human=False, urdf_version=None, xmlfile=None, _xmlfile=None):
+        self._related_robot_instance = self
         super().__init__()
         self.joints = []
         self.links = []

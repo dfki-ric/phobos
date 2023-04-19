@@ -15,6 +15,8 @@ class Linkable(object):
         "relative_to": "links",
     }
     _related_robot_instance = None
+    # _related_robot_instances need to have a _related_world_instance and a _related_entity_instance (where the latter has be set if the first is set)
+
     # _class_variables contains those properties which have to be scanned for linkables
     _class_variables = []
     _handle_ambiguous = True
@@ -57,7 +59,13 @@ class Linkable(object):
         if self._related_robot_instance is None or isinstance(new_value, Representation):
             return new_value
         vtype = self.type_dict[varname].lower()
-        converted = self._related_robot_instance.get_aggregate(f"{vtype}", new_value)
+        if self._related_robot_instance._related_world_instance is not None and "::" in new_value:
+            if new_value.startswith(self._related_robot_instance._related_entity_instance.name + "::"):
+                converted = self._related_robot_instance.get_aggregate(f"{vtype}", new_value.split("::", 1)[1])
+            else:
+                converted = self._related_robot_instance._related_world_instance.get_aggregate(f"{vtype}", new_value)
+        else:
+            converted = self._related_robot_instance.get_aggregate(f"{vtype}", new_value)
         if converted is None and new_value is not None:
             log.warning(f"There is no {vtype} with name {new_value} in {self._related_robot_instance.name}; setting {varname} to None")
             log.warning(f"Available are: {repr([str(x) for x in getattr(self._related_robot_instance, vtype)])}")

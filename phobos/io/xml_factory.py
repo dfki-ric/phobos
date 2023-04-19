@@ -97,14 +97,14 @@ class XMLDefinition(object):
         for attname, varname in self.xml_attributes.items():
             val = get_var(object, varname)
             if val is not None:
-                attrib[attname] = self._serialize(val, float_fmt=float_fmt_dict.get(attname, float_fmt_dict.get("default", None)))
+                attrib[attname] = self._serialize(val, float_fmt=float_fmt_dict.get(attname, float_fmt_dict.get("default", None)), **kwargs)
         out = ET.Element(self.xml_tag, attrib=attrib)
         # value
         if self.xml_value is not None:
             assert all([x == {} for x in [self.xml_children, self.xml_value_children, self.xml_attribute_children,
                                           self.xml_nested_children]])
             val = get_var(object, self.xml_value)
-            out.text = self._serialize(val, float_fmt=float_fmt_dict.get(self.xml_tag, float_fmt_dict.get("default", None)))
+            out.text = self._serialize(val, float_fmt=float_fmt_dict.get(self.xml_tag, float_fmt_dict.get("default", None)), **kwargs)
             if val is not None:
                 return out
             else:
@@ -133,7 +133,7 @@ class XMLDefinition(object):
                     raise error
         # children that are created from a simple property and have only attributes
         for tag, attribute_map in self.xml_attribute_children.items():
-            _attrib = {attname: self._serialize(get_var(object, varname), float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)))
+            _attrib = {attname: self._serialize(get_var(object, varname), float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)), **kwargs)
                        for attname, varname in attribute_map.items() if get_var(object, varname) is not None}
             if len(_attrib) == 0:
                 continue
@@ -146,7 +146,7 @@ class XMLDefinition(object):
                 if type(val) == list and all([not is_int(v) and not is_float(v) and type(v) == str for v in val]):
                     for v in val:
                         e = ET.Element(tag)
-                        _t = self._serialize(v, float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)))
+                        _t = self._serialize(v, float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)), **kwargs)
                         try:
                             e.text = _t
                         except TypeError as error:
@@ -155,7 +155,7 @@ class XMLDefinition(object):
                         out.append(e)
                 else:
                     e = ET.Element(tag)
-                    _t = self._serialize(val, float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)))
+                    _t = self._serialize(val, float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)), **kwargs)
                     try:
                         e.text = _t
                     except TypeError as error:
@@ -212,7 +212,7 @@ class XMLDefinition(object):
                         kwargs[k] = v
         return kwargs
 
-    def _serialize(self, entry, float_fmt=None) -> str:
+    def _serialize(self, entry, float_fmt=None, **kwargs) -> str:
         """
 
         Args:
@@ -226,15 +226,18 @@ class XMLDefinition(object):
         if hasattr(entry, "tolist"):
             entry = entry.tolist()
         if type(entry) in [list, tuple, np.array]:
-            if any([type(v) in [int, np.int64] for v in entry]):
-                entry = [str(v) for v in entry]
-            elif any([type(v) in [float, np.float64] for v in entry]):
-                entry = [float_fmt % v if type(v) in [float, np.float64] and float_fmt is not None else str(v) for v in entry]
+            entry = [self._serialize(v, float_fmt=float_fmt) for v in entry]
             return " ".join(entry)
         elif type(entry) in [int, np.intc, np.int64, bool]:
             return str(int(entry))
         elif type(entry) in [float, np.float64]:
             return float_fmt % entry if float_fmt is not None else str(entry)
+        elif isinstance(entry, Linkable):
+            if entry._related_robot_instance is not None and kwargs.get("robot_instance", None) is not None and \
+               str(entry._related_robot_instance._related_entity_instance) != str(kwargs["robot_instance"]._related_entity_instance):
+                    return str(entry._related_robot_instance._related_entity_instance) + "::" + str(entry)
+            else:
+                return str(entry)
         else:
             return str(entry)
 
@@ -282,7 +285,7 @@ class XMLFactory(XMLDefinition):
         if float_fmt_dict is None:
             float_fmt_dict = {}
         if self.available_in_dialect:
-            return super(XMLFactory, self).to_xml(object, float_fmt_dict=float_fmt_dict)
+            return super(XMLFactory, self).to_xml(object, float_fmt_dict=float_fmt_dict, **kwargs)
         else:
             return None
 
@@ -334,10 +337,10 @@ def class_factory(cls, only=None):
 
         if XML_REFLECTIONS[refl]["write"]:
             def _to_xml(obj, _dialect=refl, **kwargs):
-                return obj.to_xml(dialect=_dialect, **kwargs)
+                return obj.to_xml(dialect=_dialect, robot_instance=obj._related_robot_instance, **kwargs)
 
             def _to_string(obj, _dialect=refl, **kwargs):
-                return obj.to_xml_string(dialect=_dialect, **kwargs)
+                return obj.to_xml_string(dialect=_dialect, robot_instance=obj._related_robot_instance, **kwargs)
 
             setattr(cls, f"to_{refl}", _to_xml)
             setattr(cls, f"to_{refl}_string", _to_string)
