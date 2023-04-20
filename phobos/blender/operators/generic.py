@@ -102,6 +102,7 @@ class DynamicProperty(PropertyGroup):
     valueType : bpy.props.IntProperty()
 
     isEnabled : bpy.props.BoolProperty()
+    isEnabledOption : bpy.props.BoolProperty() # Whether this property can be disabled
 
     def getValue(self):
         if self.valueType == self.INT:
@@ -112,6 +113,17 @@ class DynamicProperty(PropertyGroup):
             return self.stringProp
         elif self.valueType == self.FLOAT:
             return self.floatProp
+
+    def allowDisabling(self):
+        """
+        Call to allow the user to disable this property
+
+        Args:
+
+        Returns:
+
+        """
+        self.isEnabledOption = True
 
     def assignValue(self, name, value):
         """
@@ -124,23 +136,12 @@ class DynamicProperty(PropertyGroup):
 
         """
         self.isEnabled = True
+        self.isEnabledOption = False
 
         if isinstance(value, bool):
             self.boolProp = value
             self.valueType = self.BOOL
         elif isinstance(value, str):
-
-            #TODO Probably no longer required
-            # import re
-            # .
-            # .
-            # # make sure eval is called only with true or false
-            # if re.match('true|false', value[1:], re.IGNORECASE):
-            #     booleanString = value[1:]
-            #     booleanString = booleanString[0].upper() + booleanString[1:].lower()
-            #     self.boolProp = eval(booleanString)
-            #     self.valueType = self.BOOL
-            # else:
             self.stringProp = value
             self.valueType = self.STRING
         elif isinstance(value, int):
@@ -153,8 +154,9 @@ class DynamicProperty(PropertyGroup):
             self.intProp = 0
             self.valueType = self.INT
             self.isEnabled = False
+            self.allowDisabling()
         else:
-            print("Unknown type:")
+            print("DynamicProperty - Unknown type:")
             print(type(value))
             print(value)
         # TODO what about lists?
@@ -197,10 +199,14 @@ class DynamicProperty(PropertyGroup):
         Returns:
 
         """
-        line = layout.split(factor=0.2)
-        line.prop(self, 'isEnabled', text="")
-        row = line.row()
-        row.enabled = self.isEnabled
+        if self.isEnabledOption:
+            line = layout.split(factor=0.2)
+            line.prop(self, 'isEnabled', text="")
+            row = line.row()
+            row.enabled = self.isEnabled
+        else:
+            row = layout
+
         if self.valueType == self.INT:
             row.prop(self, 'intProp', text=name)
         elif self.valueType == self.BOOL:

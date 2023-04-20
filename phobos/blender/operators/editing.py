@@ -2116,6 +2116,8 @@ class AddSensorOperator(Operator):
             DynamicProperty.assignDict(
                 self.sensorProperties.add, data
             )
+            for prop in self.sensorProperties:
+                prop.allowDisabling()
             self.currentSensor = (self.category, self.sensorType)
 
 
