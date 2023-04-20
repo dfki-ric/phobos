@@ -220,10 +220,7 @@ def parentObjectsTo(objects, parent, clear=False):
     sUtils.selectObjects([parent] + objects, active=0, clear=True)
 
     if parent.phobostype == 'link':
-        if relative:
-            bpy.ops.object.parent_set(type='BONE_RELATIVE')
-        else:
-            bpy.ops.object.parent_set(type='BONE')
+        bpy.ops.object.parent_set(type='BONE_RELATIVE')
     else:
         bpy.ops.object.parent_set(type='OBJECT')
 

@@ -2045,12 +2045,6 @@ class AddSensorOperator(Operator):
     bl_label = "Add Sensor"
     bl_options = {'REGISTER', 'UNDO'}
 
-    sensorPropertyAnnotations = {
-        "CameraSensor": {
-            "height": "Selbsterklärend",
-            "hud_height": "What's that?"
-        }
-    }
 
     def sensorlist(self, context):
         """
@@ -2058,7 +2052,8 @@ class AddSensorOperator(Operator):
         Args:
           context:
 
-        Returns:
+        Returns: A list of available sensor categories. Taken from defaults.json
+            Format: [('Sensor_name', 'Sensor name', ''),...]
 
         """
 
@@ -2066,12 +2061,7 @@ class AddSensorOperator(Operator):
             (sen, sen.replace('_', ' '), '')
             for sen in sorted(resources.get_sensor_types(self.category))
         ]
-        # items = [
-        #     (sen, sen.replace('_', ' '), '')
-        #     for sen in sorted(defs.definitions['sensors'])
-        #     if self.categ in defs.def_settings['sensors'][sen]['categories']
-        #     #sensor_representations factory, sensor, multisensor rausschmeißen
-        # ]
+        # Alternative: sensor_representations w/o factory, sensor, multisensor
         return items
 
     def categorylist(self, context):
@@ -2112,6 +2102,14 @@ class AddSensorOperator(Operator):
     currentSensor = ("", "")
 
     def updateSensorProperties(self):
+        """
+        Updates the dynamic sensor properties after changing sensor category or type
+
+        Args:
+
+        Returns:
+
+        """
         if self.category != self.currentSensor[0] or self.sensorType != self.currentSensor[1]:
             data = resources.get_sensor(self.category, self.sensorType)
             self.sensorProperties.clear()
@@ -2194,12 +2192,10 @@ class AddSensorOperator(Operator):
 
         """
         data = resources.get_sensor(self.category, self.sensorType)
-        print("Default data")
-        print(data)
         result = {}
         for prop in self.sensorProperties:
-            result[prop.name] = prop.getValue()
-        print(result)
+            if prop.isEnabled:
+                result[prop.name] = prop.getValue()
         return result
 
     @classmethod
@@ -2232,7 +2228,6 @@ class AddSensorOperator(Operator):
         Returns:
 
         """
-        print("Execute add sensor")
         # make sure a link or its child is selected
         linkFound, link = self.getLink(context)
         if not linkFound:
@@ -2247,8 +2242,6 @@ class AddSensorOperator(Operator):
             name = sensorName,
             **parameters # Pass sensor specific parameters
         )
-        print("Our new sensor:")
-        print(sensor)
         sensor_obj = phobos2blender.createSensor(sensor, linkobj=link)
 
 
@@ -3640,6 +3633,7 @@ classes = (
 def register():
     """TODO Missing documentation"""
     print("Registering operators.editing...")
+    bpy.utils.register_class(DynamicProperty)
     for classdef in classes:
         bpy.utils.register_class(classdef)
 
@@ -3647,5 +3641,6 @@ def register():
 def unregister():
     """TODO Missing documentation"""
     print("Unregistering operators.editing...")
+    bpy.utils.unregister_class(DynamicProperty)
     for classdef in classes:
         bpy.utils.unregister_class(classdef)

@@ -197,9 +197,10 @@ class DynamicProperty(PropertyGroup):
         Returns:
 
         """
-        line = layout.split()
+        line = layout.split(factor=0.2)
         line.prop(self, 'isEnabled', text="")
         row = line.row()
+        row.enabled = self.isEnabled
         if self.valueType == self.INT:
             row.prop(self, 'intProp', text=name)
         elif self.valueType == self.BOOL:
@@ -208,7 +209,6 @@ class DynamicProperty(PropertyGroup):
             row.prop(self, 'stringProp', text=name)
         elif self.valueType == self.FLOAT:
             row.prop(self, 'floatProp', text=name)
-        row.enabled = self.isEnabled
 
 
 def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops=[]):
@@ -467,11 +467,9 @@ class AddAnnotationsOperator(bpy.types.Operator):
 
 def register():
     """TODO Missing documentation"""
-    # bpy.utils.register_class(DynamicProperty)
     bpy.utils.register_class(AddAnnotationsOperator)
 
 
 def unregister():
     """TODO Missing documentation"""
-    # bpy.utils.unregister_class(DynamicProperty)
     bpy.utils.unregister_class(AddAnnotationsOperator)
