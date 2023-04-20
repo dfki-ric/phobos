@@ -2172,8 +2172,8 @@ class AddSensorOperator(Operator):
         data = resources.get_sensor(self.category, self.sensorType)
         result = {}
         for prop in self.sensorProperties:
-            if prop.isEnabled:
-                result[prop.name] = prop.getValue()
+            if prop.isEnabled and not prop.isDictElement():
+                result[prop.name] = prop.getValue(self.sensorProperties)
         return result
 
     @classmethod
