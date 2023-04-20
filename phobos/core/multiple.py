@@ -1,7 +1,7 @@
 import os
 
 from . import Robot
-from ..defs import dump_json
+from ..defs import dump_json, load_json
 from ..io import representation, scenes
 from ..io.base import Representation
 from ..io.smurf_reflection import SmurfBase
@@ -13,7 +13,8 @@ __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 class Entity(Representation, SmurfBase):
     _class_variables = ["origin"]
 
-    def __init__(self, name=None, world=None, model=None, file=None, type=None, origin=None, frames=None, anchor=None):
+    def __init__(self, name=None, world=None, model=None, file=None, type=None, origin=None, frames=None, anchor=None,
+                 **kwargs):
         Representation.__init__(self)
         self.model = _singular(model)
         self.origin = _singular(origin) if origin is not None else representation.Pose()
@@ -27,8 +28,8 @@ class Entity(Representation, SmurfBase):
         for frame in _plural(frames):
             self._frames.append(frame)
         self.anchor = anchor
-        SmurfBase.__init__(self, name=name, returns=["name", "type", "parent", "position", "rotation", "anchor"])
-        self.excludes += ["origin"]
+        SmurfBase.__init__(self, name=name, returns=["name", "type", "parent", "position", "rotation", "anchor", "root", "file"], **kwargs)
+        self.excludes += ["origin", "model"]
         assert self.name is not None
 
     def stringable(self):
@@ -147,6 +148,20 @@ class Arrangement(Representation, SmurfBase):
         self.entities = _plural(entities)
         self.inputfile = inputfile
         self._frames = _plural(frames)
+        if self.inputfile is not None:
+            ext = self.inputfile.lower().rsplit(".", 1)[-1]
+            if ext == "sdf":
+                # [Todo v2.1.0]
+                raise NotImplementedError
+            elif ext in ["smurfa", "smurfs"]:
+                with open(self.inputfile, "r") as f:
+                    file_dict = load_json(f.read())
+                entity_defs = file_dict.get("entities", file_dict.get("smurfa", file_dict.get("smurfs", [])))
+                for e_def in entity_defs:
+                    self.add_entity(Entity(world=self, **e_def))
+            else:
+                raise IOError(f"The given file has an extension ({ext}) that cannot be parsed as Arrangement.")
+        self.excludes += ["inputfile"]
 
     def add_robot(self, name, robot, origin=None, anchor=None):
         self.add_entity(Entity(
