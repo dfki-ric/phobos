@@ -22,6 +22,8 @@ class Entity(Representation, SmurfBase):
         if model is None and file is not None:
             self.model = Robot(inputfile=file)
         assert self.model is not None
+        if name is None:
+            name = os.path.basename(file.rsplit(".", 1)[0])
         if world is not None:
             self.link_with_world(world)
         self._frames = []
@@ -30,10 +32,6 @@ class Entity(Representation, SmurfBase):
         self.anchor = anchor
         SmurfBase.__init__(self, name=name, returns=["name", "type", "parent", "position", "rotation", "anchor", "root", "file"], **kwargs)
         self.excludes += ["origin", "model"]
-        assert self.name is not None
-
-    def stringable(self):
-        return False
 
     def link_with_world(self, world, check_linkage_later=False):
         self.model._related_world_instance = world
@@ -234,6 +232,7 @@ class Arrangement(Representation, SmurfBase):
         assert self.check_linkage()
         assert outputfile.endswith("smurfa")
         out = self.to_yaml()
+        out["entities"] = [e.to_yaml() for e in self.entities]
         if not os.path.exists(os.path.dirname(os.path.abspath(outputfile))):
             os.makedirs(os.path.dirname(os.path.abspath(outputfile)), exist_ok=True)
         with open(outputfile, "w") as f:

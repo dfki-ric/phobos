@@ -1808,7 +1808,7 @@ class Motor(Representation, SmurfBase):
     _class_variables = ["name", "joint"]
 
     def __init__(self, name=None, joint=None, controller_type="position", **kwargs):
-        self.name = name,
+        self.name = name
         self.joint = joint
         SmurfBase.__init__(self, returns=["name", "joint"], **kwargs)
         # This is hardcoded information
