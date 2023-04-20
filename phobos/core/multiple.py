@@ -235,6 +235,12 @@ class Arrangement(Representation, SmurfBase):
             out &= e.check_unlinkage()
         return out
 
+    def is_empty(self):
+        return len(self.entities) == 0
+
+    def has_one_root(self):
+        return len(self.get_root_entities()) == 1
+
     def get_root_entities(self):
         return [e for e in self.entities if e._anchor in ["NONE", "WORLD"]]
 
