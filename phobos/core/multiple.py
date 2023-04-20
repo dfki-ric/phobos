@@ -139,6 +139,16 @@ class Entity(Representation, SmurfBase):
         else:
             self._anchor = value
 
+    @property
+    def root(self):
+        if self.model._related_world_instance is not None and self in self.model._related_world_instance.get_root_entities():
+            return True
+        return None
+
+    @root.setter
+    def root(self, val):
+        pass
+
 
 class Arrangement(Representation, SmurfBase):
     def __init__(self, inputfile=None, entities=None, frames=None):
@@ -160,6 +170,7 @@ class Arrangement(Representation, SmurfBase):
             else:
                 raise IOError(f"The given file has an extension ({ext}) that cannot be parsed as Arrangement.")
         self.excludes += ["inputfile"]
+        self.link_entities()
 
     def add_robot(self, name, robot, origin=None, anchor=None):
         self.add_entity(Entity(
@@ -223,6 +234,54 @@ class Arrangement(Representation, SmurfBase):
         for e in self.entities:
             out &= e.check_unlinkage()
         return out
+
+    def get_root_entities(self):
+        return [e for e in self.entities if e._anchor in ["NONE", "WORLD"]]
+
+    def assemble(self, root_entity=None):
+        if root_entity is None:
+            root_entities = self.get_root_entities()
+            assert len(root_entities) == 1, "assemble() is determined for Assmeblies with only one root"
+            root_entity = root_entities[0]
+        elif type(root_entity) == str:
+            root_entity = self.get_aggregate("entities", root_entity)
+            assert root_entity is not None, f"No entity with name {root_entity} found."
+
+        assembly = root_entity.model.duplicate()
+        assembly.rename_all(prefix=root_entity.name + "_")
+        entities_in_tree = [root_entity]
+
+        attached = 1
+        while attached > 0:
+            attached = 0
+            for entity in self.entities:
+                if entity._anchor in ["NONE, WORLD"] or entity in entities_in_tree:
+                    continue
+                if entity._anchor == "PARENT":
+                    parent_entity, parent_link = entity.parent.split("::", 1)
+                else:
+                    parent_entity, parent_link = entity._anchor.split("::", 1)
+                if parent_entity in [str(e) for e in entities_in_tree]:
+                    parent_link = assembly.get_link(parent_entity+"_"+parent_link)
+                    assert parent_link is not None
+                    attach_model = entity.model.duplicate()
+                    attach_model.rename_all(prefix=entity.name + "_")
+                    entity.origin.relative_to = entity.origin.relative_to.replace("::", "_")
+                    assembly.attach(
+                        other=attach_model,
+                        joint=representation.Joint(
+                            name=str(parent_entity)+"2"+str(entity),
+                            parent=parent_link,
+                            child=attach_model.get_root(),
+                            type="fixed",
+                            origin=entity.origin
+                        )
+                    )
+                    entities_in_tree.append(entity)
+                    attached += 1
+
+        assembly.relink_entities()
+        return assembly
 
     def export_sdf(self, use_includes=True):
         # we need to find a solution of exporting entities either as include or as full model

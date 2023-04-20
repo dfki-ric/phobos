@@ -69,7 +69,7 @@ class Linkable(object):
         if converted is None and new_value is not None:
             log.warning(f"There is no {vtype} with name {new_value} in {self._related_robot_instance.name}; setting {varname} to None")
             log.warning(f"Available are: {repr([str(x) for x in getattr(self._related_robot_instance, vtype)])}")
-            raise AssertionError(f"{str(type(self))}, can not convert {new_value} to value type {vtype}")
+            raise AssertionError(f"{str(type(self))}, can not convert {new_value} to value type {vtype} for variable {varname}")
         return converted
 
     def _attr_get_name(self, attribute):

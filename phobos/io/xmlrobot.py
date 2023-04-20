@@ -220,6 +220,7 @@ class XMLRobot(Representation):
                 self.child_map[j.parent] = [(j.name, j.child)]
 
     def add_aggregate(self, typeName, elem, silent=False):
+        assert elem is not None
         if type(elem) == list:
             return [self.add_aggregate(typeName, e) for e in elem]
         if typeName in 'joints':

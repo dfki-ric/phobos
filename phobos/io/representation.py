@@ -1510,6 +1510,7 @@ class Joint(Representation, SmurfBase):
                  dynamics=None, safety_controller=None, calibration=None,
                  mimic=None, joint_dependencies=None, motor=None,
                  noDataPackage=False, reducedDataPackage=False, cut_joint=False, constraint_axes=None, **kwargs):
+        assert name is not None
         self.name = name
         self.returns = ['name']
         assert parent is not None
