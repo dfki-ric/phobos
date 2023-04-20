@@ -54,7 +54,6 @@ def register():
     from . import io
     from . import core
     from . import geometry
-    from . import scenes
     from . import utils
     from . import ci
     # from . import scripts
@@ -145,7 +144,6 @@ from . import defs
 from . import io
 from . import core
 from . import geometry
-from . import scenes
 from . import utils
 from . import ci
 from . import scripts

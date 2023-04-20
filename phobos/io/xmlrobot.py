@@ -13,6 +13,8 @@ from ..utils.tree import get_joints_depth_first
 
 log = get_logger(__name__)
 
+__IMPORTS__ = [x for x in dir() if not x.startswith("__")]
+
 
 class XMLRobot(Representation):
     SUPPORTED_VERSIONS = ["1.0"]

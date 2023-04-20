@@ -328,17 +328,29 @@ class Representation(Linkable):
 
     @classmethod
     def from_xml(cls, xml: ET.Element, dialect, **kwargs):
-        return cls.factory[dialect].from_xml(cls, xml, **kwargs)
+        try:
+            return cls.factory[dialect].from_xml(cls, xml, **kwargs)
+        except KeyError:
+            raise LookupError(f"Class {cls.__name__} has no xml format defined for dialect '{dialect}'")
 
     @classmethod
     def from_xml_string(cls, xml: str, dialect):
-        return cls.factory[dialect].from_xml_string(cls, xml)
+        try:
+            return cls.factory[dialect].from_xml_string(cls, xml)
+        except KeyError:
+            raise LookupError(f"Class {cls.__name__} has no xml format defined for dialect '{dialect}'")
 
     def to_xml(self, dialect, **kwargs) -> ET.Element:
-        return self.factory[dialect].to_xml(self, **kwargs)
+        try:
+            return self.factory[dialect].to_xml(self, **kwargs)
+        except KeyError:
+            raise LookupError(f"Class {self.__class__.__name__} has no xml format defined for dialect '{dialect}'")
 
     def to_xml_string(self, dialect, **kwargs) -> ET.Element:
-        return self.factory[dialect].to_xml_string(self, **kwargs)
+        try:
+            return self.factory[dialect].to_xml_string(self, **kwargs)
+        except KeyError:
+            raise LookupError(f"Class {self.__class__.__name__} has no xml format defined for dialect '{dialect}'")
 
     def sort_string(self, dialect=None) -> str:
         prefix = type(self).__name__ if dialect is None else self.to_xml(dialect).tag

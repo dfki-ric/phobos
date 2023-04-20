@@ -16,6 +16,7 @@ from ..defs import BPY_AVAILABLE
 from ..geometry import io as mesh_io
 from ..geometry.geometry import identical, reduce_mesh, get_reflection_matrix, improve_mesh
 from ..utils import misc, git, transform
+from ..utils.transform import inv
 from ..utils.xml import read_relative_filename
 
 MESH_INFO_KEYS = ["vertex_normals", "texture_coords", "vertices", "faces"]
@@ -139,6 +140,10 @@ class Pose(Representation, SmurfBase):
         return transform.matrix_to_quaternion(self._matrix[0:3, 0:3])
 
     @property
+    def quaternion_dict(self):
+        return {k: v for k,v in zip("xyzw", transform.matrix_to_quaternion(self._matrix[0:3, 0:3]))}
+
+    @property
     def angle_axis(self):
         return transform.quaternion_to_angle_axis(self.quaternion)
 
@@ -177,6 +182,12 @@ class Pose(Representation, SmurfBase):
         return Pose.from_matrix(
             T.dot(self._matrix),
             relative_to
+        )
+
+    def inv(self, relative_to=None):
+        out = Pose.from_matrix(
+            inv(self._matrix),
+            relative_to=relative_to
         )
 
     def dot(self, other):
@@ -1540,6 +1551,7 @@ class Joint(Representation, SmurfBase):
         # dynamics
         self.dynamics = _singular(dynamics)
         SmurfBase.__init__(self, **kwargs)
+        # [Todo v2.1.0] To safe all information in SMURF we have to add here the transformation from parent_relative_origin, but with the correct key
         self.returns += ["joint_dependencies", "parent", "child"]
         self.excludes += ["limit", "mimic", "axis", "dynamics"]
 
@@ -1585,8 +1597,28 @@ class Joint(Representation, SmurfBase):
         return self._origin
 
     @origin.setter
-    def origin(self, origin: Pose):
+    def origin(self, origin):
         self._origin = _singular(origin)
+
+    # [TODO v2.1.0] for enhanced sdf support these properties have to be implemented for visual, collision etc. as well
+    @property
+    def parent_relative_origin(self):
+        if self._origin is not None and self._origin.relative_to is None:
+            self._origin.relative_to = self.parent
+        elif self._origin is not None and self._origin.relative_to != self.parent:
+            assert self._related_robot_instance is not None, "Trying to get parent_relative_origin while robot is not linked"
+            r2x = self._related_robot_instance.get_transformation
+            out = r2x(self.parent).inv().dot(r2x(self._origin.relative_to).dot(self._origin))
+            out.relative_to = self.parent
+            return out
+        return self._origin
+
+    @parent_relative_origin.setter
+    def parent_relative_origin(self, origin):
+        origin = _singular(origin)
+        assert origin.relative_to is None or origin.relative_to == self.parent
+        self._origin = _singular(origin)
+        self._origin.relative_to = self.parent
 
     @property
     def mimic(self):

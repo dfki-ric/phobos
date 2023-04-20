@@ -13,6 +13,7 @@ from .base import Representation, Linkable
 from ..utils.misc import to_pretty_xml_string
 
 FORMATS = json.load(open(pkg_resources.resource_filename("phobos", "data/xml_formats.json"), "r"))
+REGISTERED_CLASSES = {}
 
 
 def is_int(val):
@@ -36,16 +37,14 @@ def is_float(val):
 
 
 def get_class(classname):
-    from . import representation
-    from . import sensor_representations
-    if hasattr(representation, classname) and classname not in representation.__IMPORTS__:
-        cls = getattr(representation, classname)
-    elif hasattr(sensor_representations, classname) and classname not in sensor_representations.__IMPORTS__:
-        cls = getattr(sensor_representations, classname)
-    else:
-        raise AssertionError(f"The class {classname} is not None to the XML-Factory")
-    assert callable(cls) or issubclass(cls,
-                                       Representation), f"The class {classname} is not a valid Representation instance"
+    assert classname in REGISTERED_CLASSES,\
+        f"The class {classname} is not known to the XML-Factory." \
+        f" Have you registered it with REGISTER_CLASS_TO_XML_FACTORY(module, classname)?\n" \
+        f" Registered are: {list(REGISTERED_CLASSES.keys())}"
+    cls = REGISTERED_CLASSES[classname]
+    assert cls.__name__ == classname
+    assert callable(cls) or issubclass(cls, Representation),\
+        f"The class {classname} is not a valid Representation instance"
     return cls
 
 
@@ -70,7 +69,11 @@ class XMLDefinition(object):
         self.xml_attributes = attributes if attributes else {}
         self.xml_children = children if children else {}
         for _, child_def in self.xml_children.items():
-            child_def["class"] = get_class(child_def["classname"])
+            try:
+                child_def["class"] = get_class(child_def["classname"])
+                assert child_def["class"].__name__ == child_def["classname"]
+            except TypeError:
+                raise TypeError(f"Faulty XMLDefinition for dialect '{dialect}' and tag '{tag}': {child_def}")
         self.xml_value_children = value_children if value_children else {}
         self.xml_attribute_children = attribute_children if attribute_children else {}
         self.xml_nested_children = nested_children if nested_children else {}
@@ -263,16 +266,19 @@ class XMLFactory(XMLDefinition):
     def __init__(self, dialect, classname):
         self.available_in_dialect = classname in FORMATS[dialect].keys()
         if self.available_in_dialect:
-            super(XMLFactory, self).__init__(
-                dialect=dialect,
-                tag=FORMATS[dialect][classname]["tag"],
-                value=FORMATS[dialect][classname]["value"] if "value" in FORMATS[dialect][classname] else None,
-                attributes=FORMATS[dialect][classname]["attributes"] if "attributes" in FORMATS[dialect][classname] else None,
-                children=FORMATS[dialect][classname]["children"] if "children" in FORMATS[dialect][classname] else None,
-                value_children=FORMATS[dialect][classname]["value_children"] if "value_children" in FORMATS[dialect][classname] else {},
-                attribute_children=FORMATS[dialect][classname]["attribute_children"] if "attribute_children" in FORMATS[dialect][classname] else None,
-                nested_children=FORMATS[dialect][classname]["nested_children"] if "nested_children" in FORMATS[dialect][classname] else None
-            )
+            try:
+                super(XMLFactory, self).__init__(
+                    dialect=dialect,
+                    tag=FORMATS[dialect][classname]["tag"],
+                    value=FORMATS[dialect][classname]["value"] if "value" in FORMATS[dialect][classname] else None,
+                    attributes=FORMATS[dialect][classname]["attributes"] if "attributes" in FORMATS[dialect][classname] else None,
+                    children=FORMATS[dialect][classname]["children"] if "children" in FORMATS[dialect][classname] else None,
+                    value_children=FORMATS[dialect][classname]["value_children"] if "value_children" in FORMATS[dialect][classname] else {},
+                    attribute_children=FORMATS[dialect][classname]["attribute_children"] if "attribute_children" in FORMATS[dialect][classname] else None,
+                    nested_children=FORMATS[dialect][classname]["nested_children"] if "nested_children" in FORMATS[dialect][classname] else None
+                )
+            except KeyError as e:
+                raise KeyError(f"Failed to instantiate XMLFactory for dialect '{dialect}' of class {classname}. Missing key: "+str(e))
 
     def from_xml(self, classtype, xml: ET.Element, **kwargs):
         if self.available_in_dialect:
@@ -368,6 +374,17 @@ def class_factory(cls, only=None):
 
             del _getter
             del _setter
+
+
+def REGISTER_MODULE_TO_XML_FACTORY(module):
+    global REGISTERED_CLASSES
+    for classname in dir(module):
+        if not classname.startswith("_") and classname not in module.__IMPORTS__:
+            assert classname not in REGISTERED_CLASSES, f"Class {classname} already registered, can't register it twice!"
+            REGISTERED_CLASSES[classname] = getattr(module, classname)
+    for classname in dir(module):
+        if not classname.startswith("_") and classname not in module.__IMPORTS__:
+            class_factory(getattr(module, classname))
 
 
 def singular(prop):

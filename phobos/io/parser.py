@@ -2,7 +2,6 @@ import os
 from xml.etree import ElementTree as ET
 
 from .xmlrobot import XMLRobot
-from .scenes import World
 from ..commandline_logging import get_logger
 
 log = get_logger(__name__)
@@ -38,18 +37,11 @@ def parse_xml(xml):
     if file_type is None or file_type == "sdf":
         if xml_root.tag == "sdf":
             file_type = "sdf"
-            if len(xml_root.findall("./world")) == 1:
-                return World.from_xml(xml_root.findall("./world")[0], dialect=file_type, _xmlfile=xml_file)
-            elif len(xml_root.findall("./world")) > 1:
-                return [World.from_xml(x, dialect=file_type, _xmlfile=xml_file) for x in xml_root.findall("./world")]
-            elif len(xml_root.findall("./model")) > 1:
+            if len(xml_root.findall("./model")) > 1:
                 log.warning("Multiple robots detected in this sdf!")
                 return [XMLRobot.from_xml(x, dialect=file_type, _xmlfile=xml_file) for x in xml_root.findall("./model")]
             else:
                 xml_root = xml_root.findall("./model")[0]
-        elif xml_root.tag == "world":
-            file_type = "sdf"
-            return World.from_xml(xml_root, dialect=file_type, _xmlfile=xml_file)
         elif xml_root.tag == "model":
             file_type = "sdf"
         elif xml_root.tag == "robot":
