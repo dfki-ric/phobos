@@ -812,7 +812,7 @@ class Mesh(Representation, SmurfBase):
             equiv_histories = False
             if o_history is not None:
                 equiv_histories = [x for x in o_history[1:] if not x.startswith("->")] == [x for x in self.history[1:] if not x.startswith("->")]
-            if existing_mesh is not None and (equiv_histories or mesh_io.identical(mesh_io.as_trimesh(self.mesh_object, silent=True), existing_mesh)):
+            if existing_mesh is not None and (equiv_histories or mesh_io.identical(mesh_io.as_trimesh(self.load_mesh(), silent=True), existing_mesh)):
                 log.debug(f"Skipping export of {targetpath} as the mesh file already exists and is identical")
                 self._exported[ext] = {
                     "operations": self._operations,

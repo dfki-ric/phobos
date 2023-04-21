@@ -232,13 +232,15 @@ def write_bobj(filepath, vertices=None, vertex_normals=None, faces=None, texture
 
         if write_uv:
             # uv maps
-            assert texture_coords.shape[0] == vertices.shape[0]
+            if texture_coords.shape[0] == vertices.shape[0]:
+                log.warning(f"UV coords of mesh {filepath} might not be accurate")
             N = texture_coords.shape[0]
             key = struct.unpack("f", struct.pack("i", 2))  # data type trick for writing an int in a float array
             out.write(np.c_[np.array([key]*N, dtype=np.single), texture_coords].tobytes())
 
         # vertex_normals
-        assert vertex_normals.shape[0] == vertices.shape[0]
+        if vertex_normals.shape[0] == vertices.shape[0]:
+            log.warning(f"Vertex normals of mesh {filepath} might not be accurate")
         N = vertex_normals.shape[0]
         key = struct.unpack("f", struct.pack("i", 3))  # data type trick for writing an int in a float array
         out.write(np.c_[np.array([key]*N, dtype=np.single), vertex_normals].tobytes())
