@@ -23,17 +23,24 @@ Factory functions for creating representation.* Instances from blender
 """
 
 
-def deriveObjectPose(obj, logging=True):
-    effectiveparent = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True)
-    matrix = eUtils.getCombinedTransform(obj, effectiveparent)
+def deriveObjectPose(obj, effectiveparent=None, logging=True):
+    if effectiveparent is None:
+        effectiveparent = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True)
 
-    pose = representation.Pose.from_matrix(np.array(matrix))
+    if effectiveparent is not None:
+        w2p = representation.Pose.from_matrix(effectiveparent.matrix_world.normalized())
+    else:
+        w2p = representation.Pose()
+
+    w2o = representation.Pose.from_matrix(obj.matrix_world.normalized())
+    p2o = w2p.inv().dot(w2o)
+
     if logging:
         log(
-            obj.name+": Location: " + str(pose.position) + " Rotation: " + str(pose.rotation),
+            obj.name+": Location: " + str(p2o.position) + " Rotation: " + str(p2o.rotation),
             'DEBUG',
         )
-    return pose
+    return p2o
 
 
 @validate("material")

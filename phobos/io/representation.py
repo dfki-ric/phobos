@@ -171,13 +171,13 @@ class Pose(Representation, SmurfBase):
         return xyz.tolist() + rpy.tolist()
 
     @staticmethod
-    def from_matrix(T, dec=16, relative_to=None):
-        return Pose(matrix=T, dec=dec, relative_to=relative_to)
+    def from_matrix(T, relative_to=None):
+        return Pose(matrix=np.array(T),relative_to=relative_to)
 
     def to_matrix(self):
         return self._matrix
 
-    def transform(self, T, relative_to=None):
+    def transform_by(self, T, relative_to=None):
         """T.dot(this)"""
         return Pose.from_matrix(
             T.dot(self._matrix),
@@ -185,7 +185,7 @@ class Pose(Representation, SmurfBase):
         )
 
     def inv(self, relative_to=None):
-        out = Pose.from_matrix(
+        return Pose.from_matrix(
             inv(self._matrix),
             relative_to=relative_to
         )
