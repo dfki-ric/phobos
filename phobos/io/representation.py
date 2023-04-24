@@ -586,9 +586,14 @@ class Mesh(Representation, SmurfBase):
         else:
             assert self._related_robot_instance is not None
             assert self._related_robot_instance.mesh_format is not None
-            if self._related_robot_instance.mesh_format not in self._exported:
-                raise IOError(f"The mesh {self.unique_name} with the required mesh format ({self._related_robot_instance.mesh_format}) has not yet been exported.")
-            return self._exported[self._related_robot_instance.mesh_format]["filepath"]
+            assert self._related_robot_instance.mesh_format != "input_type" or self.input_type.startswith("file"), \
+                f"No input file to derive the format from! {self} {self.input_type}"
+            format = self._related_robot_instance.mesh_format
+            if format == "input_type":
+                format = self.input_type[5:]
+            if format not in self._exported:
+                raise IOError(f"The mesh {self.unique_name} with the required mesh format ({format}) has not yet been exported.")
+            return self._exported[format]["filepath"]
 
     @property
     def filepath(self):
@@ -774,17 +779,19 @@ class Mesh(Representation, SmurfBase):
     def provide_mesh_file(self, targetpath, format=None, throw_on_invalid_bobj=False):
         if format is None and self._related_robot_instance is not None:
             format = self._related_robot_instance.mesh_format
-        elif format is None:
+        if format in [None, "input_type"] and self.input_type.startswith("file"):
+            format = self.input_type[5:]
+        if format is None:
             raise AssertionError("To export meshes you have to specify the format. (format=None)")
         assert os.path.isabs(targetpath)
         ext = format.lower()
         os.makedirs(targetpath, exist_ok=True)
         targetpath = os.path.join(targetpath, self.unique_name+"."+ext)
-        self.history.append(f"->trying export of {type(self.mesh_object)} to {targetpath}")
+        self.history.append(f"->trying export of {str(self.mesh_object)} to {targetpath}")
         # log.debug(f"Providing mesh {targetpath}...")
         # if there are no changes we can simply copy
-        if "file_"+ext == self.input_type:
-            if not self._changed and self.input_file == targetpath:
+        if self.input_file is not None and "file_"+ext == self.input_type and not self._changed:
+            if self.input_file == targetpath:
                 log.debug(f"Using existing mesh {targetpath}...")
                 self._exported[ext] = {
                     "operations": self._operations,
@@ -794,7 +801,7 @@ class Mesh(Representation, SmurfBase):
                 self.history.append(f"->target == input == {self.input_file} for ext {ext}")
                 self.write_history(targetpath)
                 return
-            elif not self._changed:
+            else:
                 log.debug(f"Copying mesh {os.path.relpath(self.input_file, os.path.dirname(targetpath))} to {targetpath}...")
                 shutil.copyfile(self.input_file, targetpath)
                 self._exported[ext] = {

@@ -68,6 +68,8 @@ class BaseModel(yaml.YAMLObject):
         for ec in self.export_config:
             if ec["type"] in KINEMATIC_TYPES:
                 assert "mesh_format" in ec
+                if ec["mesh_format"] != "input_type":
+                    log.warning("Due to the mesh handling on the git repos for CI-pipelines using input_type as mesh format is not yet fully tested and supported.")
                 if "additional_meshes" in ec and type(ec["additional_meshes"]) == str:
                     ec["additional_meshes"] = [ec["additional_meshes"]]
                 elif not ("additional_meshes" in ec and type(ec["additional_meshes"]) == list):

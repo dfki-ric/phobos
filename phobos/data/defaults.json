@@ -191,7 +191,7 @@
     "default": [
       {
         "type": "urdf",
-        "mesh_format": "stl",
+        "mesh_format": "input_type",
         "additional_meshes": [
           "bobj"
         ],
@@ -203,7 +203,7 @@
       },
       {
         "type": "sdf",
-        "mesh_format": "stl",
+        "mesh_format": "input_type",
         "additional_meshes": [
           "bobj"
         ],
@@ -229,7 +229,7 @@
     "minimal": [
       {
         "type": "urdf",
-        "mesh_format": "stl",
+        "mesh_format": "input_type",
         "additional_meshes": [],
         "link_in_smurf": true,
         "include_cut_joints": false,
@@ -277,6 +277,7 @@
     "obj": "meshes/obj",
     "dae": "meshes/dae",
     "bobj": "meshes/bobj",
-    "mars_obj": "meshes/mars_obj"
+    "mars_obj": "meshes/mars_obj",
+    "input_type": "meshes"
   }
 }

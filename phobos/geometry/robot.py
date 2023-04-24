@@ -159,6 +159,7 @@ def join_collisions(robot, linkname, collisionnames=None, name_id=None, only_ret
     meshes = []
     names = []
     primitives = []
+    file_types = set()
     for e in elements:
         if not isinstance(e.geometry, representation.Mesh):
             primitives += [e]
@@ -174,6 +175,7 @@ def join_collisions(robot, linkname, collisionnames=None, name_id=None, only_ret
             names.append(name)
             mesh.apply_transform(e.origin.to_matrix())
             meshes.append(mesh)
+            file_types.add(e.geometry.input_type)
             if not only_return:
                 link.remove_aggregate(e)
 
@@ -186,8 +188,8 @@ def join_collisions(robot, linkname, collisionnames=None, name_id=None, only_ret
         filename = "_".join([str.replace(linkname, "/", ""), name_id, "joined"])
 
     mesh_representation = representation.Mesh(meshname=filename, mesh=mesh)
-    # [TODO pre_v2.0.0] Review whether the mesh export happens on export of this xml anyways
-    mesh_representation.provide_mesh_file(targetpath=os.path.dirname(elements[0].geometry.input_file), format="stl")
+    if len(file_types) == 1:
+        mesh_representation.input_type = list(file_types)[0]
     link.add_aggregate("collision", representation.Collision(
         origin=representation.Pose(rpy=[0, 0, 0], xyz=[0, 0, 0]),
         geometry=mesh_representation,

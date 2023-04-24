@@ -42,7 +42,7 @@ class XMLRobot(Representation):
         self.xmlfile = xmlfile if xmlfile is not None else _xmlfile
 
         # Default export mesh format from phobos.defs.MESH_TYPES
-        self.mesh_format = "stl"
+        self.mesh_format = "input_type"
 
         if name is None or len(name) == 0:
             if self.xmlfile is not None:
