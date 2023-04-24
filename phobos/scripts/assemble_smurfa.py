@@ -21,7 +21,7 @@ def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument("input", type=str, help="SMURFA or SMURFS file")
     parser.add_argument("output", type=str,  help="The output directory")
-    parser.add_argument('-c', '--copy-meshes', help='Copies the meshes', action='store_true', default=False)
+    parser.add_argument('-m', '--copy-meshes', help='Copies the meshes', action='store_true', default=False)
     parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
                         default=BASE_LOG_LEVEL)
     # [ToDo v2.0.0] add setter for export_config, both key or config file
@@ -36,11 +36,11 @@ def main(args):
         return 1
     if arrangement.has_one_root():
         assembly = arrangement.assemble()
-        assembly.export(outputdir=args.output, export_config=resources.get_default_export_config())
+        assembly.export(outputdir=args.output, export_config=resources.get_default_export_config(), with_meshes=args.copy_meshes)
     else:
         for root in arrangement.get_root_entities():
             assembly = arrangement.assemble(root)
-            assembly.export(outputdir=os.path.join(args.output, f"root-{root.name}"), export_config=resources.get_default_export_config())
+            assembly.export(outputdir=os.path.join(args.output, f"root-{root.name}"), export_config=resources.get_default_export_config(), with_meshes=args.copy_meshes)
     return 0
 
 
