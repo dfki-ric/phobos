@@ -117,7 +117,7 @@ def deriveGeometry(obj, duplicate_mesh=False, **kwargs):
         raise ValueError(f"Unknown geometry type: {gtype}")
 
 
-def deriveCollision(obj, duplicate_mesh=False,  **kwargs):
+def deriveCollision(obj, linkobj=None, duplicate_mesh=False,  **kwargs):
     # bitmask (will deprecate with MARS2.0)
     bitmask = None
     # the bitmask is cut to length = 16 and reverted for int parsing
@@ -131,6 +131,12 @@ def deriveCollision(obj, duplicate_mesh=False,  **kwargs):
                 log(f"Object {obj.name} is on a collision layer higher than 16. These layers are ignored when exporting."
                     'WARNING',)
                 break
+
+    primitives = []
+    if obj.children:
+        for child in obj.children:
+            if getattr(child, "phobostype", None) == "collision" and child.get("geometry/type", None) in ["box", "sphere", "cylinder"]:
+                primitives.append(deriveCollision(child, linkobj=linkobj))
 
     # further annotations
     annotations = {}
@@ -147,8 +153,9 @@ def deriveCollision(obj, duplicate_mesh=False,  **kwargs):
     return representation.Collision(
         name=obj.name,
         geometry=deriveGeometry(obj, duplicate_mesh),
-        origin=deriveObjectPose(obj),
+        origin=deriveObjectPose(obj, effectiveparent=linkobj),
         bitmask=bitmask,
+        primitives=primitives,
         **annotations
     )
 

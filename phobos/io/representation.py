@@ -1120,13 +1120,14 @@ class GeometryFactory(Representation):
 
 
 class Collision(Representation, SmurfBase):
-    _class_variables = ["name", "link", "geometry", "origin", "bitmask"]
+    _class_variables = ["name", "link", "geometry", "origin", "bitmask", "primitive"]
 
     def __init__(self, name=None, link=None, geometry=None, origin=None, bitmask=None, noDataPackage=False,
-                 reducedDataPackage=False, ccfm=None, **kwargs):
+                 reducedDataPackage=False, ccfm=None, primitive=None, **kwargs):
         if link is not None:
             link = str(link)
         self.original_name = name
+        self.primitive = _plural(primitive)
         if name is None or len(name) == 0:
             if link is not None:
                 name = str(link) + "_collision"
@@ -1137,7 +1138,7 @@ class Collision(Representation, SmurfBase):
                 name = None
         self.link = link
         self.name = name
-        SmurfBase.__init__(self, returns=['name', 'link', 'geometry'], **kwargs)
+        SmurfBase.__init__(self, returns=['name', 'link', 'geometry', 'primitive'], **kwargs)
         self.geometry = _singular(geometry)
         if origin is None:
             origin = Pose()
@@ -1153,6 +1154,14 @@ class Collision(Representation, SmurfBase):
         if bitmask is not None:
             self.returns += ['bitmask']
         self.excludes += ["origin", "original_name"]
+
+    def add_primitive(self, primitive):
+        if type(primitive) in (list, tuple):
+            for p in primitive:
+                self.add_primitive(p)
+        assert isinstance(primitive, Collision)
+        assert type(primitive.geometry) in (Box, Sphere, Cylinder)
+        self.primitive.append(primitive)
 
 
 class Visual(Representation, SmurfBase):
