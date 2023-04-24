@@ -2239,7 +2239,13 @@ class AddSensorOperator(Operator):
         sensorName = self.sensorName
         parameters = self.getSensorParameters()
         # Get sensor category specific class
-        sensorClass = getattr(sensor_representations,self.category)
+        sensorClass = getattr(sensor_representations, self.category)
+        if "link" in sensorClass._class_variables:
+            parameters["link"] = parameters.get("link", link.name)
+        if "joint" in sensorClass._class_variables:
+            parameters["link"] = parameters.get("joint", link.get("joint/name", link.name))
+        if "frame" in sensorClass._class_variables:
+            parameters["frame"] = parameters.get("frame", link.name)
         sensor = sensorClass(
             name = sensorName,
             **parameters # Pass sensor specific parameters

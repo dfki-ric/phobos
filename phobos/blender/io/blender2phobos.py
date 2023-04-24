@@ -535,7 +535,7 @@ def deriveSensor(obj, logging=False):
         )
 
     values = {k: v for k, v in obj.items() if k not in reserved_keys.INTERNAL_KEYS}
-    values["parent"] = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True).name
+    parent = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True)
     sensor_type = values.pop("type")
 
     if sensor_type.upper() in ["CAMERASENSOR", "CAMERA"]:
@@ -546,6 +546,12 @@ def deriveSensor(obj, logging=False):
              **values
         )
     else:
+        if "link" in getattr(sensor_representations, sensor_type)._class_variables:
+            values["link"] = values.get("link", parent.name)
+        if "joint" in getattr(sensor_representations, sensor_type)._class_variables:
+            values["link"] = values.get("joint", parent.get("joint/name", parent.name))
+        if "frame" in getattr(sensor_representations, sensor_type)._class_variables:
+            values["frame"] = values.get("frame", parent.name)
         return getattr(sensor_representations, sensor_type)(**values)
 
 
