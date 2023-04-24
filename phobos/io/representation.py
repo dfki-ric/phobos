@@ -582,7 +582,10 @@ class Mesh(Representation, SmurfBase):
     @property
     def abs_filepath(self):
         if len(self._exported) == 0:
-            return self.input_file
+            out = self.input_file if self.input_file is not None else self._mesh_object.get("input_file", None)
+            if out is None:
+                raise IOError(f"This mesh ({self.unique_name}) hasn't been exported nor is an input file known, which could be used.")
+            return out
         else:
             assert self._related_robot_instance is not None
             assert self._related_robot_instance.mesh_format is not None
@@ -776,7 +779,7 @@ class Mesh(Representation, SmurfBase):
         self.history.append(f"loaded {'bpy-Mesh' if BPY_AVAILABLE else 'trimesh'} from {self.input_type} {self.input_file}")
         return self.mesh_object
 
-    def provide_mesh_file(self, targetpath, format=None, throw_on_invalid_bobj=False):
+    def provide_mesh_file(self, targetpath, format=None, throw_on_invalid_bobj=False, use_existing=False):
         if format is None and self._related_robot_instance is not None:
             format = self._related_robot_instance.mesh_format
         if format in [None, "input_type"] and self.input_type.startswith("file"):
@@ -787,6 +790,15 @@ class Mesh(Representation, SmurfBase):
         ext = format.lower()
         os.makedirs(targetpath, exist_ok=True)
         targetpath = os.path.join(targetpath, self.unique_name+"."+ext)
+        if use_existing:
+            if os.path.isfile(targetpath):
+                self._exported[ext] = {
+                    "operations": self._operations,
+                    "filepath": targetpath,
+                    "export_operation": "None"
+                }
+                return
+            raise FileNotFoundError("Was told to use an existing file, that is not there")
         self.history.append(f"->trying export of {str(self.mesh_object)} to {targetpath}")
         # log.debug(f"Providing mesh {targetpath}...")
         # if there are no changes we can simply copy

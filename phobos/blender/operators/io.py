@@ -195,11 +195,27 @@ class ExportModelOperator(Operator):
                 })
             else:
                 raise ValueError(f"Can't export for given format: {fmt}")
+        if getattr(ioUtils.getExpSettings(), "export_default_submodel_abstract"):
+            export_config.append({
+                "type": "submodel",
+                "name": "serial_abstract",
+                "abstract_model": True,
+                "include_unstopped_branches": True
+            })
+        if getattr(ioUtils.getExpSettings(), "export_default_submodel_abstract"):
+            export_config.append({
+                "type": "submodel",
+                "name": "floating_base",
+                "add_floating_base": True,
+                "include_unstopped_branches": True
+            })
         robot.export(
             outputdir=exportpath,
             export_config=export_config,
             rel_mesh_pathes=get_default_rel_mesh_pathes(),
-            ros_pkg_name=None if len(ioUtils.getRosPackageName()) == 0 else ioUtils.getRosPackageName()
+            ros_pkg_name=None if len(ioUtils.getRosPackageName()) == 0 else ioUtils.getRosPackageName(),
+            with_meshes=True,
+            use_existing_meshes=len([mt for mt in phobos_defs.MESH_TYPES if getattr(bpy.context.scene, "export_mesh_"+mt, False)]) == 0
         )
 
     def execute(self, context):

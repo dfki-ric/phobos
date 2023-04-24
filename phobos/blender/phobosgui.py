@@ -230,7 +230,7 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
     # TODO: CHECK which props are visible in GUI?
     selectedOnly : BoolProperty(
-        name="Selected only", default=True, description="Export only selected objects"
+        name="Selected only", default=False, description="Export only selected objects"
     )
     # smurfDecimalPlaces : IntProperty(
     #     name="decimals", description="Number of " + "decimal places to export in smurf", default=5, min=3
@@ -309,6 +309,20 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         name='Export to Gazebo models folder',
         description='Export model to the Gazebo models folder.',
     )
+
+    export_default_submodel_abstract : BoolProperty(
+        default=False,
+        name='Serial/abstract',
+        description='Export a submodel only with the abstract joints.',
+    )
+
+    export_default_submodel_floatingbase: BoolProperty(
+        default=False,
+        name='Floating base',
+        description='Export a submodel that has a floating base joint structrure before the root.',
+    )
+
+
 
 
 # class Mesh_Export_UIList(bpy.types.UIList):
@@ -1263,6 +1277,7 @@ class PhobosExportPanel(bpy.types.Panel):
     bl_region_type = 'UI'
     bl_category = 'Phobos'
 
+
     def draw_header(self, context):
         """
 
@@ -1313,6 +1328,14 @@ class PhobosExportPanel(bpy.types.Panel):
         for meshtype in phobos_defs.MESH_TYPES:
             typename = "export_mesh_" + meshtype
             cmesh.prop(bpy.context.scene, typename)
+
+        # Settings for submodel export
+        inlayout2 = self.layout.split()
+
+        csubm = inlayout2.column(align=True)
+        csubm.label(text="Default Submodels")
+        csubm.prop(expsets, "export_default_submodel_abstract")
+        csubm.prop(expsets, "export_default_submodel_floatingbase")
 
         # [TODO v2.1.0] make this work again in an extra Phobos Scenes tab
         # cscene = inlayout.column(align=True)

@@ -42,7 +42,7 @@ class Robot(SMURFRobot):
         self.submodel_defs = {}
 
     # export methods
-    def export_meshes(self, mesh_output_dir, format=None):
+    def export_meshes(self, mesh_output_dir, format=None, use_existing=False):
         """
         Will go through all visuals and collisions and export the meshes of all mesh geometries to in the given format to the outputdir
         Args:
@@ -54,7 +54,8 @@ class Robot(SMURFRobot):
         """
         for vc in self.visuals + self.collisions:
             if isinstance(vc.geometry, representation.Mesh):
-                vc.geometry.provide_mesh_file(targetpath=os.path.abspath(mesh_output_dir), format=format)
+                vc.geometry.provide_mesh_file(targetpath=os.path.abspath(mesh_output_dir), format=format,
+                                              use_existing=use_existing)
 
     def export_urdf(self, outputfile, float_fmt_dict=None, ros_pkg=False, copy_with_other_pathes=False, ros_pkg_name=None, mesh_format=None):
         """Export the mechanism to the given output file.
@@ -187,7 +188,7 @@ class Robot(SMURFRobot):
 
     def export_xml(self, outputdir=None, format="urdf", filename=None, float_fmt_dict=None, no_format_dir=False,
                    ros_pkg=False, copy_with_other_pathes=None, ros_pkg_name=None,
-                   with_meshes=True, mesh_format=None, additional_meshes=None, rel_mesh_pathes=None,
+                   with_meshes=True, use_existing_meshes=False, mesh_format=None, additional_meshes=None, rel_mesh_pathes=None,
                    enforce_zero=False, correct_inertials=False):
         """ Exports all model information stored inside this instance.
         """
@@ -215,7 +216,7 @@ class Robot(SMURFRobot):
         export_robot.xmlfile = model_file
 
         # meshes
-        if with_meshes:
+        if with_meshes and not use_existing_meshes:
             _mesh_format = mesh_format
             if _mesh_format is None:
                 _mesh_format = self.mesh_format
@@ -227,6 +228,8 @@ class Robot(SMURFRobot):
                 export_robot.export_meshes(mesh_output_dir=os.path.join(outputdir, rel_mesh_pathes[mf]), format=mf)
         # xml
         _export_robot = self.duplicate()
+        if use_existing_meshes:
+            _export_robot.export_meshes(mesh_output_dir=os.path.join(outputdir, rel_mesh_pathes[mesh_format]), format=mesh_format, use_existing=True)
         if enforce_zero:
             _export_robot.enforce_zero()
         if correct_inertials:
@@ -283,7 +286,6 @@ class Robot(SMURFRobot):
             meshes = [_mesh_format] + additional_meshes
             for mf in [f.lower() for f in meshes]:
                 self.export_meshes(mesh_output_dir=os.path.join(outputdir, rel_mesh_pathes[mf]), format=mf)
-
         # Export the smurf files
         smurf_dir = os.path.join(outputdir, "smurf")
         self.smurffile = os.path.join(smurf_dir, "{}.smurf".format(self.name))
@@ -650,7 +652,7 @@ class Robot(SMURFRobot):
         graph[0].write_pdf(outputfile)
 
     def export(self, outputdir, export_config, rel_mesh_pathes=None, ros_pkg_name=None, no_smurf=False,
-               ros_pkg_later=False, check_submechs=True, with_meshes=True):
+               ros_pkg_later=False, check_submechs=True, with_meshes=True, use_existing_meshes=False):
         assert self.check_linkage()
         outputdir = os.path.abspath(outputdir)
         if rel_mesh_pathes is None:
@@ -663,7 +665,7 @@ class Robot(SMURFRobot):
         if self.autogenerate_submechanisms is None or self.autogenerate_submechanisms is True:
             self.generate_submechanisms()
         # export meshes
-        if with_meshes:
+        if with_meshes and not use_existing_meshes:
             mesh_formats = set()
             for ex in export_config:
                 mesh_formats = mesh_formats.union([f.lower() for f in ex.get("additional_meshes", [])])
@@ -691,7 +693,8 @@ class Robot(SMURFRobot):
                     additional_meshes=export["additional_meshes"] if "additional_meshes" in export else None,
                     rel_mesh_pathes=rel_mesh_pathes,
                     enforce_zero=export.get("enforce_zero", False),
-                    correct_inertials=export.get("correct_inertials", False)
+                    correct_inertials=export.get("correct_inertials", False),
+                    use_existing_meshes=use_existing_meshes
                 )
                 ros_pkg |= export["ros_pathes"] if "ros_pathes" in export else None
                 if export.get("link_in_smurf", False):
@@ -732,6 +735,7 @@ class Robot(SMURFRobot):
                     export_config=_export_config,
                     rel_mesh_pathes={k: os.path.join("..", "..", v) for k, v in rel_mesh_pathes.items()},
                     with_meshes=False,
+                    use_existing_meshes=use_existing_meshes,
                     no_smurf=no_smurf
                 )
             elif export["type"] == "pdf":
@@ -766,7 +770,7 @@ class Robot(SMURFRobot):
                 robotfile=xml_file_in_smurf,
                 check_submechs=check_submechs,
                 with_submodel_defs=True,
-                with_meshes=False
+                with_meshes=False # has been done before
             )
         # export ros package files
         if ros_pkg and not ros_pkg_later:
