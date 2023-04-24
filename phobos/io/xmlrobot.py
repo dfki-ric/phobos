@@ -221,7 +221,7 @@ class XMLRobot(Representation):
 
     def add_aggregate(self, typeName, elem, silent=False):
         assert elem is not None
-        if type(elem) == list:
+        if type(elem) in (list, tuple):
             return [self.add_aggregate(typeName, e) for e in elem]
         if typeName in 'joints':
             assert elem.name not in [str(j) for j in self.joints], f"Robot has already a joint with name {elem.name}"

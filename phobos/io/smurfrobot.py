@@ -323,6 +323,8 @@ class SMURFRobot(XMLRobot):
         return super(SMURFRobot, self)._rename(targettype, target, new_name, further_targettypes=other_targettypes)
 
     def remove_aggregate(self, typeName, elem):
+        if type(elem) in (list, tuple):
+            return [self.remove_aggregate(typeName, e) for e in elem]
         if type(elem) == str:
             elem = self.get_aggregate(typeName, elem)
         if elem is None:
