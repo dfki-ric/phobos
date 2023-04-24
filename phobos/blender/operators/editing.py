@@ -2275,299 +2275,240 @@ class AddSensorOperator(Operator):
         #     )
         return {'FINISHED'}
 
-
-# [TODO v2.0.0] REVIEW this
-def addSensorFromYaml(sensor_dict, annotations, selected_objs, active_obj, *args):
-    """Execution function for the temporary operator to add sensors from yaml files.
-
-    The specified parameters match the interface of the `addObjectFromYaml` generic function.
-
-    As additional argument, a boolean value is required. It controls whether the specified sensor
-    will be added to a new link (True) or not (False).
-
-    Args:
-      sensor_dict(dict): phobos representation of a sensor
-      annotations(dict): annotation dictionary containing annotation categories as keys
-      selected_objs(list(bpy.types.Object): selected objects in the current context
-      active_obj(bpy.types.Object): active object in the current context
-      *args(list): list containing a single bool value
-
-    Returns:
-      tuple: lists of new sensor, new annotation objects and empty list
-
-    """
-
-    # we don't need to check the parentlink, as the calling operator
-    # does make sure it exists (or a new link is created instead)
-    if 'phobostype' in active_obj and active_obj.phobostype != 'link':
-        parentlink = sUtils.getEffectiveParent(active_obj, ignore_selection=True)
-    else:
-        parentlink = active_obj
-
-    parent_obj = parentlink
-
-    pos_matrix = active_obj.matrix_world
-    # [TODO v2.0.0] Fix this
-    sensor_obj = None
-    sensor_obj = sensors.createSensor(sensor_dict, parent_obj, pos_matrix)
-
-    # parent to the added link
-    if newlink:
-        # parent newlink to parent link if there is any
-        if parentlink:
-            eUtils.parentObjectsTo(newlink, parentlink)
-
-    # parent sensor to its superior link
-    eUtils.parentObjectsTo(sensor_obj, parent_obj)
-
-    annotation_objs = []
-    # add optional annotation objects
-    for annot in annotations:
-        annotation_objs.append(
-            eUtils.addAnnotationObject(
-                sensor_obj,
-                annotations[annot],
-                name=nUtils.getObjectName(sensor_obj) + '_' + annot,
-                namespace='sensor/' + annot,
-            )
-        )
-
-    return [sensor_obj], annotation_objs, []
-
-
-# [TODO v2.0.0] REVIEW this
-def addControllerFromYaml(controller_dict, annotations, selected_objs, active_obj, *args):
-    """Execution function for the temporary operator to add controllers from yaml files.
-
-    The specified parameters match the interface of the `addObjectFromYaml` generic function.
-
-    Args:
-      controller_dict(dict): phobos representation of a controller
-      annotations(dict): annotation dictionary containing annotation categories as keys
-      selected_objs(list(bpy.types.Object): selected objects in the current context
-      active_obj(bpy.types.Object): active object in the current context
-      *args(list): empty list
-
-    Returns:
-      tuple: tuple of lists of new motor, new controller and new annotation objects
-
-    """
-    addtoall = args[0]
-
-    if addtoall:
-        objects = [obj for obj in selected_objs if obj.phobostype in defs.controllabletypes]
-    else:
-        objects = [active_obj]
-
-    controller_objs = []
-    annotation_objs = []
-    for obj in objects:
-        pos_matrix = obj.matrix_world
-        controller_obj = controllermodel.createController(controller_dict, obj, pos_matrix)
-
-        # add optional annotation objects
-        for annot in annotations:
-            annotation_objs.append(
-                eUtils.addAnnotationObject(
-                    controller_obj,
-                    annotations[annot],
-                    name=nUtils.getObjectName(controller_obj) + '_' + annot,
-                    namespace='controller/' + annot,
-                )
-            )
-        controller_objs.append(controller_obj)
-
-    return controller_objs, annotation_objs, []
-
-
-# [TODO v2.0.0] REVIEW this
-class AddControllerOperator(Operator):
-    """Add a controller at the position of the selected object."""
-
-    bl_idname = "phobos.add_controller"
-    bl_label = "Add Controller"
-    bl_options = {'UNDO'}
-
-    def controllerlist(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        items = [
-            (con, con.replace('_', ' '), '')
-            for con in sorted(defs.definitions['controllers'])
-            if self.categ in defs.def_settings['controllers'][con]['categories']
-        ]
-        return items
-
-    def categorylist(self, context):
-        """Create an enum for the controller categories. For phobos preset categories,
-        the phobosIcon is added to the enum.
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-
-        phobosIcon = prev_collections["phobos"]["phobosIcon"].icon_id
-        categories = [t for t in defs.def_subcategories['controllers']]
-
-        icon = ''
-        items = []
-        i = 0
-        for categ in categories:
-            # assign an icon to the phobos preset categories
-            if categ == 'motor':
-                icon = 'AUTO'
-            else:
-                #icon = 'GAME'
-                icon = ''
-
-            items.append((categ, categ, categ, icon, i))
-            i += 1
-
-        return items
-
-    categ : EnumProperty(items=categorylist, description='The controller category')
-
-    controllerType : EnumProperty(items=controllerlist, description='The controller type')
-
-    controllerName : StringProperty(
-        name="Controller name", default='new_controller', description="Name of the controller"
-    )
-
-    addToAll : BoolProperty(
-        name="Add to all",
-        default=True,
-        description="Add a controller to all controllable selected objects",
-    )
-
-    def draw(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        layout = self.layout
-        layout.prop(self, 'controllerName')
-        layout.separator()
-        layout.prop(self, 'categ', text='Sensor category')
-        layout.prop(self, 'controllerType', text='Controller type')
-        layout.prop(self, 'addToAll', icon='PARTICLES')
-
-    def invoke(self, context, event):
-        """
-
-        Args:
-          context:
-          event:
-
-        Returns:
-
-        """
-        return context.window_manager.invoke_props_dialog(self)
-
-    def check(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        return True
-
-    @classmethod
-    def poll(cls, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        return context.active_object and context.active_object.phobostype in defs.controllabletypes
-
-    def execute(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        # match the operator to avoid dangers of eval
-        import re
-
-        opName = addObjectFromYaml(
-            self.controllerName,
-            'controller',
-            self.controllerType,
-            addControllerFromYaml,
-            self.addToAll,
-        )
-        operatorPattern = re.compile('[[a-z][a-zA-Z]*\.]*[a-z][a-zA-Z]*')
-
-        # run the operator and pass on add link (to allow undo both new link and sensor)
-        if operatorPattern.match(opName):
-            eval('bpy.ops.' + opName + "('INVOKE_DEFAULT')")
-        else:
-            log(
-                'This controller name is not following the naming convention: '
-                + opName
-                + '. It can not be converted into an operator.',
-                'ERROR',
-            )
-        return {'FINISHED'}
-
-
-# [TODO v2.0.0] REVIEW this
-def getControllerParameters(name):
-    """Returns the controller parameters for the controller type with the provided
-    name.
-
-    Args:
-      name(str): the name of the controller type.
-
-    Returns:
-
-    """
-    try:
-        return defs.definitions['controllers'][name]['parameters'].keys()
-    except:
-        return []
-
-
-# [TODO v2.0.0] REVIEW this
-def getDefaultControllerParameters(scene, context):
-    """Returns the default controller parameters for the controller of the active
-    object.
-
-    Args:
-      scene:
-      context:
-
-    Returns:
-
-    """
-    try:
-        name = bpy.context.active_object['motor/controller']
-        return defs.definitions['controllers'][name]['parameters'].values()
-    except:
-        return None
-
+#
+# # [TODO v2.0.0] REVIEW this
+# def addControllerFromYaml(controller_dict, annotations, selected_objs, active_obj, *args):
+#     """Execution function for the temporary operator to add controllers from yaml files.
+#
+#     The specified parameters match the interface of the `addObjectFromYaml` generic function.
+#
+#     Args:
+#       controller_dict(dict): phobos representation of a controller
+#       annotations(dict): annotation dictionary containing annotation categories as keys
+#       selected_objs(list(bpy.types.Object): selected objects in the current context
+#       active_obj(bpy.types.Object): active object in the current context
+#       *args(list): empty list
+#
+#     Returns:
+#       tuple: tuple of lists of new motor, new controller and new annotation objects
+#
+#     """
+#     addtoall = args[0]
+#
+#     if addtoall:
+#         objects = [obj for obj in selected_objs if obj.phobostype in defs.controllabletypes]
+#     else:
+#         objects = [active_obj]
+#
+#     controller_objs = []
+#     annotation_objs = []
+#     for obj in objects:
+#         pos_matrix = obj.matrix_world
+#         controller_obj = controllermodel.createController(controller_dict, obj, pos_matrix)
+#
+#         # add optional annotation objects
+#         for annot in annotations:
+#             annotation_objs.append(
+#                 eUtils.addAnnotationObject(
+#                     controller_obj,
+#                     annotations[annot],
+#                     name=nUtils.getObjectName(controller_obj) + '_' + annot,
+#                     namespace='controller/' + annot,
+#                 )
+#             )
+#         controller_objs.append(controller_obj)
+#
+#     return controller_objs, annotation_objs, []
+#
+#
+# # [TODO v2.0.0] REVIEW this
+# class AddControllerOperator(Operator):
+#     """Add a controller at the position of the selected object."""
+#
+#     bl_idname = "phobos.add_controller"
+#     bl_label = "Add Controller"
+#     bl_options = {'UNDO'}
+#
+#     def controllerlist(self, context):
+#         """
+#
+#         Args:
+#           context:
+#
+#         Returns:
+#
+#         """
+#         items = [
+#             (con, con.replace('_', ' '), '')
+#             for con in sorted(defs.definitions['controllers'])
+#             if self.categ in defs.def_settings['controllers'][con]['categories']
+#         ]
+#         return items
+#
+#     def categorylist(self, context):
+#         """Create an enum for the controller categories. For phobos preset categories,
+#         the phobosIcon is added to the enum.
+#
+#         Args:
+#           context:
+#
+#         Returns:
+#
+#         """
+#
+#         phobosIcon = prev_collections["phobos"]["phobosIcon"].icon_id
+#         categories = [t for t in defs.def_subcategories['controllers']]
+#
+#         icon = ''
+#         items = []
+#         i = 0
+#         for categ in categories:
+#             # assign an icon to the phobos preset categories
+#             if categ == 'motor':
+#                 icon = 'AUTO'
+#             else:
+#                 #icon = 'GAME'
+#                 icon = ''
+#
+#             items.append((categ, categ, categ, icon, i))
+#             i += 1
+#
+#         return items
+#
+#     categ : EnumProperty(items=categorylist, description='The controller category')
+#
+#     controllerType : EnumProperty(items=controllerlist, description='The controller type')
+#
+#     controllerName : StringProperty(
+#         name="Controller name", default='new_controller', description="Name of the controller"
+#     )
+#
+#     addToAll : BoolProperty(
+#         name="Add to all",
+#         default=True,
+#         description="Add a controller to all controllable selected objects",
+#     )
+#
+#     def draw(self, context):
+#         """
+#
+#         Args:
+#           context:
+#
+#         Returns:
+#
+#         """
+#         layout = self.layout
+#         layout.prop(self, 'controllerName')
+#         layout.separator()
+#         layout.prop(self, 'categ', text='Sensor category')
+#         layout.prop(self, 'controllerType', text='Controller type')
+#         layout.prop(self, 'addToAll', icon='PARTICLES')
+#
+#     def invoke(self, context, event):
+#         """
+#
+#         Args:
+#           context:
+#           event:
+#
+#         Returns:
+#
+#         """
+#         return context.window_manager.invoke_props_dialog(self)
+#
+#     def check(self, context):
+#         """
+#
+#         Args:
+#           context:
+#
+#         Returns:
+#
+#         """
+#         return True
+#
+#     @classmethod
+#     def poll(cls, context):
+#         """
+#
+#         Args:
+#           context:
+#
+#         Returns:
+#
+#         """
+#         return context.active_object and context.active_object.phobostype in defs.controllabletypes
+#
+#     def execute(self, context):
+#         """
+#
+#         Args:
+#           context:
+#
+#         Returns:
+#
+#         """
+#         # match the operator to avoid dangers of eval
+#         import re
+#
+#         opName = addObjectFromYaml(
+#             self.controllerName,
+#             'controller',
+#             self.controllerType,
+#             addControllerFromYaml,
+#             self.addToAll,
+#         )
+#         operatorPattern = re.compile('[[a-z][a-zA-Z]*\.]*[a-z][a-zA-Z]*')
+#
+#         # run the operator and pass on add link (to allow undo both new link and sensor)
+#         if operatorPattern.match(opName):
+#             eval('bpy.ops.' + opName + "('INVOKE_DEFAULT')")
+#         else:
+#             log(
+#                 'This controller name is not following the naming convention: '
+#                 + opName
+#                 + '. It can not be converted into an operator.',
+#                 'ERROR',
+#             )
+#         return {'FINISHED'}
+#
+#
+# # [TODO v2.0.0] REVIEW this
+# def getControllerParameters(name):
+#     """Returns the controller parameters for the controller type with the provided
+#     name.
+#
+#     Args:
+#       name(str): the name of the controller type.
+#
+#     Returns:
+#
+#     """
+#     try:
+#         return defs.definitions['controllers'][name]['parameters'].keys()
+#     except:
+#         return []
+#
+#
+# # [TODO v2.0.0] REVIEW this
+# def getDefaultControllerParameters(scene, context):
+#     """Returns the default controller parameters for the controller of the active
+#     object.
+#
+#     Args:
+#       scene:
+#       context:
+#
+#     Returns:
+#
+#     """
+#     try:
+#         name = bpy.context.active_object['motor/controller']
+#         return defs.definitions['controllers'][name]['parameters'].values()
+#     except:
+#         return None
+#
 
 # [TODO v2.0.0] REVIEW this
 class CreateMimicJointOperator(Operator):
