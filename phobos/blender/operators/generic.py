@@ -18,9 +18,10 @@ from bpy.props import (
     BoolProperty,
     EnumProperty,
     CollectionProperty,
-    StringProperty
+    StringProperty,
 )
 from bpy.types import Operator, PropertyGroup
+from numpy import isin
 
 from .. import defs as defs
 from ..io import phobos2blender, blender2phobos
@@ -94,6 +95,36 @@ class DynamicProperty(PropertyGroup):
     stringProp : bpy.props.StringProperty()
     floatProp : bpy.props.FloatProperty()
 
+    STRING = 1
+    INT = 2
+    BOOL = 3
+    FLOAT = 4
+    valueType : bpy.props.IntProperty()
+
+    isEnabled : bpy.props.BoolProperty()
+    isEnabledOption : bpy.props.BoolProperty() # Whether this property can be disabled
+
+    def getValue(self):
+        if self.valueType == self.INT:
+            return self.intProp
+        elif self.valueType == self.BOOL:
+            return self.boolProp
+        elif self.valueType == self.STRING:
+            return self.stringProp
+        elif self.valueType == self.FLOAT:
+            return self.floatProp
+
+    def allowDisabling(self):
+        """
+        Call to allow the user to disable this property
+
+        Args:
+
+        Returns:
+
+        """
+        self.isEnabledOption = True
+
     def assignValue(self, name, value):
         """
 
@@ -104,28 +135,33 @@ class DynamicProperty(PropertyGroup):
         Returns:
 
         """
-        prefix = ''
-        if isinstance(value, int):
-            self.intProp = value
-            prefix = 'i'
-        elif isinstance(value, str):
-            import re
+        self.isEnabled = True
+        self.isEnabledOption = False
 
-            # make sure eval is called only with true or false
-            if re.match('true|false', value[1:], re.IGNORECASE):
-                booleanString = value[1:]
-                booleanString = booleanString[0].upper() + booleanString[1:].lower()
-                self.boolProp = eval(booleanString)
-                prefix = 'b'
-            else:
-                self.stringProp = value
-                prefix = 's'
+        if isinstance(value, bool):
+            self.boolProp = value
+            self.valueType = self.BOOL
+        elif isinstance(value, str):
+            self.stringProp = value
+            self.valueType = self.STRING
+        elif isinstance(value, int):
+            self.intProp = value
+            self.valueType = self.INT
         elif isinstance(value, float):
             self.floatProp = value
-            prefix = 'f'
+            self.valueType = self.FLOAT
+        elif value is None:
+            self.intProp = 0
+            self.valueType = self.INT
+            self.isEnabled = False
+            self.allowDisabling()
+        else:
+            print("DynamicProperty - Unknown type:")
+            print(type(value))
+            print(value)
         # TODO what about lists?
 
-        self.name = prefix + '_' + name
+        self.name = name
 
     def assignDict(addfunc, dictionary, ignore=[]):
         """
@@ -163,14 +199,22 @@ class DynamicProperty(PropertyGroup):
         Returns:
 
         """
-        if self.name[0] == 'i':
-            layout.prop(self, 'intProp', text=name)
-        elif self.name[0] == 'b':
-            layout.prop(self, 'boolProp', text=name)
-        elif self.name[0] == 's':
-            layout.prop(self, 'stringProp', text=name)
-        elif self.name[0] == 'f':
-            layout.prop(self, 'floatProp', text=name)
+        if self.isEnabledOption:
+            line = layout.split(factor=0.2)
+            line.prop(self, 'isEnabled', text="")
+            row = line.row()
+            row.enabled = self.isEnabled
+        else:
+            row = layout
+
+        if self.valueType == self.INT:
+            row.prop(self, 'intProp', text=name)
+        elif self.valueType == self.BOOL:
+            row.prop(self, 'boolProp', text=name)
+        elif self.valueType == self.STRING:
+            row.prop(self, 'stringProp', text=name)
+        elif self.valueType == self.FLOAT:
+            row.prop(self, 'floatProp', text=name)
 
 
 def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops=[]):
@@ -429,11 +473,9 @@ class AddAnnotationsOperator(bpy.types.Operator):
 
 def register():
     """TODO Missing documentation"""
-    # bpy.utils.register_class(DynamicProperty)
     bpy.utils.register_class(AddAnnotationsOperator)
 
 
 def unregister():
     """TODO Missing documentation"""
-    # bpy.utils.unregister_class(DynamicProperty)
     bpy.utils.unregister_class(AddAnnotationsOperator)
