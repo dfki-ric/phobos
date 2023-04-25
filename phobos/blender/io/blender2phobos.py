@@ -387,7 +387,7 @@ def deriveLink(obj, objectlist=None, logging=True, errors=None):
     # further annotations
     annotations = {}
     for k, v in obj.items():
-        if k not in reserved_keys.JOINT_KEYS+reserved_keys.LINK_KEYS+reserved_keys.INTERNAL_KEYS and not k.startswith("joint/"):
+        if k not in reserved_keys.JOINT_KEYS+reserved_keys.MOTOR_KEYS+reserved_keys.LINK_KEYS+reserved_keys.INTERNAL_KEYS and not k.startswith("joint/") and not k.startswith("motor/"):
             k = k.replace("link/", "")
             if "/" not in k:
                 annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
@@ -417,7 +417,7 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
     # further annotations
     annotations = {}
     for k, v in obj.items():
-        if k not in reserved_keys.JOINT_KEYS+reserved_keys.LINK_KEYS+reserved_keys.INTERNAL_KEYS and not k.startswith("link/"):
+        if k not in reserved_keys.JOINT_KEYS+reserved_keys.MOTOR_KEYS+reserved_keys.LINK_KEYS+reserved_keys.INTERNAL_KEYS and not k.startswith("motor/") and not k.startswith("link/"):
             k = k.replace("joint/", "")
             if "/" not in k:
                 annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
@@ -548,7 +548,9 @@ def deriveMotor(obj):
     # further annotations
     annotations = {}
     for k, v in obj.items():
-        if k not in reserved_keys.MOTOR_KEYS+reserved_keys.INTERNAL_KEYS:
+        if k not in reserved_keys.JOINT_KEYS+reserved_keys.MOTOR_KEYS+reserved_keys.LINK_KEYS+reserved_keys.INTERNAL_KEYS\
+                and not k.startswith("joint/") and not k.startswith("link/"):
+            k = k.replace("motor/", "")
             annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
 
     return representation.Motor(
