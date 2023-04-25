@@ -556,8 +556,7 @@ def deriveSensor(obj, logging=False):
 
 
 def deriveMotor(obj):
-    parent = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True)
-    assert parent.phobostype == "link"
+    assert obj.phobostype == "link"
 
     # further annotations
     annotations = {}
@@ -566,8 +565,8 @@ def deriveMotor(obj):
             annotations[k] = v
 
     return representation.Motor(
-        name=obj.name,
-        joint=parent.get("joint/name", parent.name),
+        name=obj.get("motor/name", obj.name),
+        joint=obj.get("joint/name", obj.name),
         **annotations
     )
 

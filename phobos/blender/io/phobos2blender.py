@@ -403,46 +403,14 @@ def createSensor(sensor: sensor_representations.Sensor, linkobj=None):
 
 
 def createMotor(motor: representation.Motor, linkobj: bpy.types.Object):
-    bUtils.toggleLayer('motor', value=True)
-
-    # create motor object
-    psize=(max(np.array(linkobj.bound_box).flatten().tolist()),) * 3
-    newmotor = bUtils.createPrimitive(
-        motor.name,
-        'box',
-        psize,
-        [],
-        phobostype='motor',
-    )
-    # use resource name provided as: "resource:whatever_name"
-    resource_obj = ioUtils.getResource(['motor'] + [motor.type.lower()])
-    if resource_obj:
-        log("Assigned resource mesh and materials to new motor object.", 'DEBUG')
-        newmotor.data = resource_obj.data
-    else:
-        log("Could not use resource mesh for motor. Default cube used instead.", 'WARNING')
-
-    # assign the parent if available
-    eUtils.parentObjectsTo(newmotor, linkobj)
-    newmotor.matrix_local = mathutils.Matrix(np.identity(4))
-    newmotor.scale = psize
-    # set motor properties
-    newmotor.phobostype = 'motor'
-
     # write generic custom properties
     for prop, value in motor.__dict__.items():
-        if prop in motor.get_refl_vars() and prop not in reserved_keys.MOTOR_KEYS:
+        if prop in motor.get_refl_vars():
             if type(value) == dict:
                 for k, v in value.items():
-                    newmotor[f"{prop}/{k}"] = v
+                    linkobj[f"motor/{prop}/{k}"] = v
             else:
-                newmotor[f"{prop}"] = value
-
-    # select the new motor
-    sUtils.selectObjects(
-        [newmotor], clear=True, active=0
-    )
-    return newmotor
+                linkobj[f"motor/{prop}"] = value
 
 
 def createAnnotation(ga: representation.GenericAnnotation, parent=None, size=0.1):
