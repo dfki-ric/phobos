@@ -12,7 +12,6 @@ These can be used by simply calling them via the `phobos` command:
     Usage:
     phobos COMMAND ARGUMENTS
     Commands:
-        assemble_smurfa         Loads a SMURFS/SMURFA file and exports the urdf(s)/smurf of the assembly.
         check_meshes            Checks whether all meshes are available.
         convert                 Converts the given input robot file to SDF/URDF/PDF/THUMBNAIL/SMURF/SMURFA/SMURFS.
         preprocess_cad_export   Preprocess CAD->URDF exports to use with pipeline.
