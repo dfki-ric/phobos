@@ -143,12 +143,12 @@ def deriveCollision(obj, linkobj=None, duplicate_mesh=False,  **kwargs):
     for k, v in obj.items():
         if k not in reserved_keys.VISCOL_KEYS+reserved_keys.INTERNAL_KEYS:
             if "/" not in k:
-                annotations[k] = v
+                annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
             else:
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
-                annotations[k1][k2] = v
+                annotations[k1][k2] = v if not hasattr(v, "to_list") else v.to_list()
 
     return representation.Collision(
         name=obj.name,
@@ -190,12 +190,12 @@ def deriveVisual(obj, logging=True, duplicate_mesh=False, **kwargs):
     for k, v in obj.items():
         if k not in reserved_keys.VISCOL_KEYS+reserved_keys.INTERNAL_KEYS:
             if "/" not in k:
-                annotations[k] = v
+                annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
             else:
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
-                annotations[k1][k2] = v
+                annotations[k1][k2] = v if not hasattr(v, "to_list") else v.to_list()
 
     return representation.Visual(
         name=obj.name,
@@ -218,12 +218,12 @@ def deriveInertial(obj, logging=True, **kwargs):
     for k, v in obj.items():
         if k not in ["mass", "inertia", "origin"]:
             if "/" not in k:
-                annotations[k] = v
+                annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
             else:
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
-                annotations[k1][k2] = v
+                annotations[k1][k2] = v if not hasattr(v, "to_list") else v.to_list()
 
     return representation.Inertial(
         mass=obj["mass"] if "mass" in obj else 0.0,
@@ -389,12 +389,12 @@ def deriveLink(obj, objectlist=None, logging=True, errors=None):
         if k not in reserved_keys.JOINT_KEYS+reserved_keys.LINK_KEYS+reserved_keys.INTERNAL_KEYS and not k.startswith("joint/"):
             k = k.replace("link/", "")
             if "/" not in k:
-                annotations[k] = v
+                annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
             else:
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
-                annotations[k1][k2] = v
+                annotations[k1][k2] = v if not hasattr(v, "to_list") else v.to_list()
 
     return representation.Link(
         name=obj.name,
@@ -419,12 +419,12 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
         if k not in reserved_keys.JOINT_KEYS+reserved_keys.LINK_KEYS+reserved_keys.INTERNAL_KEYS and not k.startswith("link/"):
             k = k.replace("joint/", "")
             if "/" not in k:
-                annotations[k] = v
+                annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
             else:
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
-                annotations[k1][k2] = v
+                annotations[k1][k2] = v if not hasattr(v, "to_list") else v.to_list()
 
     return representation.Joint(
         name=obj.get("joint/name", obj.name),
@@ -461,12 +461,12 @@ def deriveInterface(obj):
     for k, v in obj.items():
         if k not in reserved_keys.INTERFACE_KEYS+reserved_keys.INTERNAL_KEYS:
             if "/" not in k:
-                annotations[k] = v
+                annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
             else:
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
-                annotations[k1][k2] = v
+                annotations[k1][k2] = v if not hasattr(v, "to_list") else v.to_list()
 
     return representation.Interface(
         name=obj.name,
@@ -495,7 +495,7 @@ def deriveAnnotation(obj):
     props = {}
     for k, v in obj.items():
         if k not in reserved_keys.INTERNAL_KEYS:
-            props[k] = v
+            props[k] = v if not hasattr(v, "to_list") else v.to_list()
 
     props = deepen_dict(props)
 
@@ -557,7 +557,7 @@ def deriveMotor(obj):
     annotations = {}
     for k, v in obj.items():
         if k not in reserved_keys.MOTOR_KEYS+reserved_keys.INTERNAL_KEYS:
-            annotations[k] = v
+            annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
 
     return representation.Motor(
         name=obj.get("motor/name", obj.name),
