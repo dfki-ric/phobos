@@ -1850,7 +1850,7 @@ class Motor(Representation, SmurfBase):
         if self.build_type:
             self.build_type = self.build_type.upper()
         self.type = type
-        self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue', 'type']
+        self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue', 'type', "mimic_motor", "mimic_multiplier", "mimic_offset"]
 
     @property
     def maxEffort(self):
