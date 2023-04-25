@@ -2169,11 +2169,7 @@ class AddSensorOperator(Operator):
         Returns: The parameters entered by the user for the selected sensor
 
         """
-        data = resources.get_sensor(self.category, self.sensorType)
-        result = {}
-        for prop in self.sensorProperties:
-            if prop.isEnabled and not prop.isDictElement():
-                result[prop.name] = prop.getValue(self.sensorProperties)
+        result = DynamicProperty.collectDict(self.sensorProperties)
         return result
 
     @classmethod
@@ -3516,6 +3512,7 @@ class ParentOperator(Operator):
 
 
 classes = (
+    DynamicProperty,
     SafelyRemoveObjectsFromSceneOperator,
     MoveToSceneOperator,
     SortObjectsToLayersOperator,
@@ -3558,7 +3555,6 @@ classes = (
 def register():
     """TODO Missing documentation"""
     print("Registering operators.editing...")
-    bpy.utils.register_class(DynamicProperty)
     for classdef in classes:
         bpy.utils.register_class(classdef)
 
@@ -3566,6 +3562,5 @@ def register():
 def unregister():
     """TODO Missing documentation"""
     print("Unregistering operators.editing...")
-    bpy.utils.unregister_class(DynamicProperty)
     for classdef in classes:
         bpy.utils.unregister_class(classdef)

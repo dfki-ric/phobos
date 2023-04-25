@@ -204,6 +204,7 @@ class DynamicProperty(PropertyGroup):
 
         self.name = name
 
+    @staticmethod
     def assignDict(addfunc, dictionary, ignore=[]):
         """
 
@@ -264,6 +265,23 @@ class DynamicProperty(PropertyGroup):
             row.prop(self, 'floatProp', text=name)
         elif self.valueType == self.DICT:
             row.label(text=name+":")
+
+    @staticmethod
+    def collectDict(properties):
+        """
+
+        Args:
+          properties (list of DynamicProperty):
+
+        Returns:
+          A dict like the one passed to assignDict with the data the user changed
+
+        """
+        result = {}
+        for prop in properties:
+            if prop.isEnabled and not prop.isDictElement():
+                result[prop.name] = prop.getValue(properties)
+        return result
 
 
 def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops=[]):
