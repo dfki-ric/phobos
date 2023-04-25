@@ -725,7 +725,7 @@ def deriveRobot(root, name='', objectlist=None):
     robot.description = bUtils.readTextFile('README.md')
     robot.link_entities()
 
-    for motor in [deriveMotor(obj) for obj in objectlist if obj.phobostype == 'motor']:
+    for motor in [deriveMotor(obj) for obj in objectlist if obj.phobostype == 'link' and any([k.startswith("motor") for k in obj.keys()])]:
         robot.add_motor(motor)
 
     for interface in [deriveInterface(obj) for obj in objectlist if obj.phobostype == 'interface']:
