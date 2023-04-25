@@ -195,14 +195,14 @@ class ExportModelOperator(Operator):
                 })
             else:
                 raise ValueError(f"Can't export for given format: {fmt}")
-        if getattr(ioUtils.getExpSettings(), "export_default_submodel_abstract"):
+        if getattr(ioUtils.getExpSettings(), "export_default_submodel_abstract", False):
             export_config.append({
                 "type": "submodel",
                 "name": "serial_abstract",
                 "abstract_model": True,
                 "include_unstopped_branches": True
             })
-        if getattr(ioUtils.getExpSettings(), "export_default_submodel_abstract"):
+        if getattr(ioUtils.getExpSettings(), "export_default_submodel_floatingbase", False):
             export_config.append({
                 "type": "submodel",
                 "name": "floating_base",
