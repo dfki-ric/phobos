@@ -6,6 +6,7 @@ from xml.dom.minidom import parseString
 from xml.etree import ElementTree as ET
 
 import numpy as np
+from PIL import Image, ImageChops
 
 from ..commandline_logging import get_logger
 
@@ -122,6 +123,56 @@ def execute_shell_command(cmd, cwd=None, dry_run=False, silent=False):
                         " Command was: "+cmd+" Executed in: "+cwd+
                         "\nError:"+err.decode('UTF-8'))
     return out.decode('UTF-8'), err.decode('UTF-8')
+
+
+def make_icon(im, thumbnail_path, size=512, trim=True):
+    if trim:
+        bg = Image.new("RGB", im.size, im.getpixel((0, 0)))
+        diff = ImageChops.difference(im.convert("RGB"), bg)
+        diff = ImageChops.add(diff, diff)
+        bbox = diff.getbbox()
+        if bbox:
+            im = im.crop(bbox)
+    im.thumbnail((size, size))
+    bg = Image.new("RGB", (size, size), im.getpixel((0, 0)))
+    bg.paste(im, (int((size-im.size[0])/2), int((size-im.size[1])/2)))
+    bg.save(thumbnail_path)
+
+
+def get_thumbnail(robotfile, icon_size=512):
+    if robotfile.lower().endswith(".smurf"):
+        base_dir = os.path.dirname(robotfile)
+        with open(robotfile, "r") as f:
+            robotfile = [x for x in yaml.safe_load(f.read())["files"] if x.endswith("df")][0]
+        robotfile = os.path.normpath(os.path.join(base_dir, robotfile))
+    # use pybullet to get an image
+    import pybullet as pb
+    pb.connect(pb.DIRECT)
+    if robotfile.lower().endswith(".sdf"):
+        pb.loadSDF(robotfile)
+    elif robotfile.lower().endswith(".urdf"):
+        pb.loadURDF(robotfile)
+    all = pb.getVisualShapeData(0)
+    max_box = np.max([np.array(x[3])+np.array(x[5]) for x in all], axis=0)
+    projectionMatrix = pb.computeProjectionMatrixFOV(
+        fov=45.0,
+        aspect=1.0,
+        nearVal=0.5,
+        farVal=max(max_box)*5
+    )
+    viewMatrix = pb.computeViewMatrix(
+        cameraEyePosition=(max_box*2).tolist(),
+        cameraTargetPosition=[0, 0, 0],
+        cameraUpVector=[0, 0, 1]
+    )
+    width, height, rgbImg, depthImg, segImg = pb.getCameraImage(
+        width=icon_size*4,
+        height=icon_size*4,
+        viewMatrix=viewMatrix,
+        projectionMatrix=projectionMatrix
+    )
+    im = Image.fromarray(rgbImg)
+    return im
 
 
 def create_symlink(pipeline, target, link):
