@@ -57,6 +57,128 @@ class Robot(SMURFRobot):
                 vc.geometry.provide_mesh_file(targetpath=os.path.abspath(mesh_output_dir), format=format,
                                               use_existing=use_existing)
 
+    def to_x3d_string(self, float_fmt_dict=None, reduce_meshes=0):
+        export_instance = self.duplicate()
+        for vis in export_instance.visuals:
+            if isinstance(vis.geometry, representation.Mesh):
+                vis.geometry.apply_scale()
+
+        if reduce_meshes > 0:
+            for vis in export_instance.visuals:
+                if isinstance(vis.geometry, representation.Mesh):
+                    n_vertices = len(vis.geometry.x3d_vertices)/3
+                    if n_vertices > reduce_meshes:
+                        vis.geometry.reduce_mesh(reduce_meshes/n_vertices)
+
+        return super(Robot, export_instance).to_x3d_string(float_fmt_dict=float_fmt_dict)
+
+    def export_x3d(self, outputfile, float_fmt_dict=None, reduce_meshes=1000):  #, ros_pkg=False, copy_with_other_pathes=None, ros_pkg_name=None, mesh_format=None):
+        """Export the mechanism to the given output file.
+        If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
+        If export_collisions is set to to True, all collisions will be exported. Otherwise no collision get exported.
+        """
+        if float_fmt_dict is None:
+            float_fmt_dict = {}
+
+        outputfile = os.path.abspath(outputfile)
+
+        xml_string = '<?xml version="1.0" encoding="UTF-8"?>\n'+ \
+                     '<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 3.3//EN" "http://www.web3d.org/specifications/x3d-3.3.dtd">\n'+ \
+                     "<X3D profile='Interchange' version='3.3' xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance' xsd:noNamespaceSchemaLocation='http://www.web3d.org/specifications/x3d-3.3.xsd'>"+ \
+                     '<head><!-- All "meta" from this section you will found in <Scene> node as MetadataString nodes. --></head>\n'+ \
+                     '<Scene>\n'+self.to_x3d_string(float_fmt_dict=float_fmt_dict, reduce_meshes=reduce_meshes)+'</Scene>\n</X3D>\n'
+
+        if not os.path.exists(os.path.dirname(os.path.abspath(outputfile))):
+            os.makedirs(os.path.dirname(os.path.abspath(outputfile)))
+        with open(outputfile, "w") as f:
+            f.write(xml_string)
+            f.close()
+
+        log.info("X3D written to {}".format(outputfile))
+        return
+        if BPY_AVAILABLE:
+            from ..blender.io.thumbnail import exportPreview
+            visuals = []
+            for link in model.links:
+                for visual in link.visuals:
+                    visuals.append(bpy.data.objects[visualname])
+            createPreview(visuals, path, model['name'])
+        else:
+            if robotfile.lower().endswith(".smurf"):
+                base_dir = os.path.dirname(robotfile)
+                with open(robotfile, "r") as f:
+                    robotfile = [x for x in yaml.safe_load(f.read())["files"] if x.endswith("df")][0]
+                robotfile = os.path.normpath(os.path.join(base_dir, robotfile))
+            # use pybullet to get an image
+            import pybullet as pb
+            pb.connect(pb.DIRECT)
+            if robotfile.lower().endswith(".sdf"):
+                pb.loadSDF(robotfile)
+            elif robotfile.lower().endswith(".urdf"):
+                pb.loadURDF(robotfile)
+            all = pb.getVisualShapeData(0)
+            max_box = np.max([np.array(x[3])+np.array(x[5]) for x in all], axis=0)
+            projectionMatrix = pb.computeProjectionMatrixFOV(
+                fov=45.0,
+                aspect=1.0,
+                nearVal=0.5,
+                farVal=max(max_box)*5
+            )
+            viewMatrix = pb.computeViewMatrix(
+                cameraEyePosition=(max_box*2).tolist(),
+                cameraTargetPosition=[0, 0, 0],
+                cameraUpVector=[0, 0, 1]
+            )
+            width, height, rgbImg, depthImg, segImg = pb.getCameraImage(
+                width=icon_size*4,
+                height=icon_size*4,
+                viewMatrix=viewMatrix,
+                projectionMatrix=projectionMatrix
+            )
+            im = Image.fromarray(rgbImg)
+            return im
+
+    def to_x3d_string(self, float_fmt_dict=None, reduce_meshes=0):
+        export_instance = self.duplicate()
+        for vis in export_instance.visuals:
+            if isinstance(vis.geometry, representation.Mesh):
+                vis.geometry.apply_scale()
+
+        if reduce_meshes > 0:
+            for vis in export_instance.visuals:
+                if isinstance(vis.geometry, representation.Mesh):
+                    n_vertices = len(vis.geometry.x3d_vertices)/3
+                    if n_vertices > reduce_meshes:
+                        vis.geometry.reduce_mesh(reduce_meshes/n_vertices)
+
+        return super(Robot, export_instance).to_x3d_string(float_fmt_dict=float_fmt_dict)
+
+    def export_x3d(self, outputfile, float_fmt_dict=None, reduce_meshes=1000):  #, ros_pkg=False, copy_with_other_pathes=None, ros_pkg_name=None, mesh_format=None):
+        """Export the mechanism to the given output file.
+        If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
+        If export_collisions is set to to True, all collisions will be exported. Otherwise no collision get exported.
+        """
+        if float_fmt_dict is None:
+            float_fmt_dict = {}
+
+        outputfile = os.path.abspath(outputfile)
+
+        xml_string = '<?xml version="1.0" encoding="UTF-8"?>\n'+ \
+                     '<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 3.3//EN" "http://www.web3d.org/specifications/x3d-3.3.dtd">\n'+ \
+                     "<X3D profile='Interchange' version='3.3' xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance' xsd:noNamespaceSchemaLocation='http://www.web3d.org/specifications/x3d-3.3.xsd'>"+ \
+                     '<head><!-- All "meta" from this section you will found in <Scene> node as MetadataString nodes. --></head>\n'+ \
+                     '<Scene>\n'+self.to_x3d_string(float_fmt_dict=float_fmt_dict, reduce_meshes=reduce_meshes)+'</Scene>\n</X3D>\n'
+
+        if not os.path.exists(os.path.dirname(os.path.abspath(outputfile))):
+            os.makedirs(os.path.dirname(os.path.abspath(outputfile)))
+        with open(outputfile, "w") as f:
+            f.write(xml_string)
+            f.close()
+
+        log.info("X3D written to {}".format(outputfile))
+        return
+
+
     def export_urdf(self, outputfile, float_fmt_dict=None, ros_pkg=False, copy_with_other_pathes=False, ros_pkg_name=None, mesh_format=None):
         """Export the mechanism to the given output file.
         If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
@@ -144,46 +266,6 @@ class Robot(SMURFRobot):
             f.close()
 
         log.info("SDF written to {}".format(outputfile))
-        return
-
-    def to_x3d_string(self, float_fmt_dict=None, reduce_meshes=0):
-        export_instance = self.duplicate()
-        for vis in export_instance.visuals:
-            if isinstance(vis.geometry, representation.Mesh):
-                vis.geometry.apply_scale()
-
-        if reduce_meshes > 0:
-            for vis in export_instance.visuals:
-                if isinstance(vis.geometry, representation.Mesh):
-                    n_vertices = len(vis.geometry.x3d_vertices)/3
-                    if n_vertices > reduce_meshes:
-                        vis.geometry.reduce_mesh(reduce_meshes/n_vertices)
-
-        return super(Robot, export_instance).to_x3d_string(float_fmt_dict=float_fmt_dict)
-
-    def export_x3d(self, outputfile, float_fmt_dict=None, reduce_meshes=1000):  #, ros_pkg=False, copy_with_other_pathes=None, ros_pkg_name=None, mesh_format=None):
-        """Export the mechanism to the given output file.
-        If export_visuals is set to True, all visuals will be exported. Otherwise no visuals get exported.
-        If export_collisions is set to to True, all collisions will be exported. Otherwise no collision get exported.
-        """
-        if float_fmt_dict is None:
-            float_fmt_dict = {}
-
-        outputfile = os.path.abspath(outputfile)
-
-        xml_string = '<?xml version="1.0" encoding="UTF-8"?>\n'+ \
-                     '<!DOCTYPE X3D PUBLIC "ISO//Web3D//DTD X3D 3.3//EN" "http://www.web3d.org/specifications/x3d-3.3.dtd">\n'+ \
-                     "<X3D profile='Interchange' version='3.3' xmlns:xsd='http://www.w3.org/2001/XMLSchema-instance' xsd:noNamespaceSchemaLocation='http://www.web3d.org/specifications/x3d-3.3.xsd'>"+ \
-                     '<head><!-- All "meta" from this section you will found in <Scene> node as MetadataString nodes. --></head>\n'+ \
-                     '<Scene>\n'+self.to_x3d_string(float_fmt_dict=float_fmt_dict, reduce_meshes=reduce_meshes)+'</Scene>\n</X3D>\n'
-
-        if not os.path.exists(os.path.dirname(os.path.abspath(outputfile))):
-            os.makedirs(os.path.dirname(os.path.abspath(outputfile)))
-        with open(outputfile, "w") as f:
-            f.write(xml_string)
-            f.close()
-
-        log.info("X3D written to {}".format(outputfile))
         return
 
     def export_xml(self, outputdir=None, format="urdf", filename=None, float_fmt_dict=None, no_format_dir=False,

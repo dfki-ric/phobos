@@ -87,8 +87,9 @@ class XMLDefinition(object):
                 raise TypeError(f"Faulty XMLDefinition for dialect '{dialect}' and tag '{tag}': {child_def}")
         self.xml_value_children = value_children if value_children else {}
         self.xml_attribute_children = attribute_children if attribute_children else {}
-        self.xml_nested_children = nested_children if nested_children else {}
-        for tag, nest in self.xml_nested_children.items():
+        self.xml_nested_children = {}
+        _xml_nested_children = nested_children if nested_children else {}
+        for tag, nest in _xml_nested_children.items():
             if "tag" not in nest.keys():
                 nest["tag"] = tag
             self.xml_nested_children[tag] = XMLDefinition(dialect, **nest)

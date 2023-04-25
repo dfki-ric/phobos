@@ -1832,7 +1832,7 @@ class Transmission(Representation):
 
 
 class Motor(Representation, SmurfBase):
-    TYPES = ["dc", "ac", "step"]
+    TYPES = ["DC", "AC", "STEP", "PID"]
     CONTROLLER_TYPES = ["position", "velocity", "force"]
     _class_variables = ["name", "joint"]
 
@@ -1846,9 +1846,8 @@ class Motor(Representation, SmurfBase):
         self._maxSpeed = None
         self._maxValue = None
         self._minValue = None
-        self.type = kwargs.get("type", None)
+        self.type = kwargs.get("type", None).upper()
         self.controller_type = controller_type
-        assert self.type is None or self.type in self.TYPES
         assert self.controller_type is None or self.controller_type in self.CONTROLLER_TYPES
         self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue', 'controller_type']
 
