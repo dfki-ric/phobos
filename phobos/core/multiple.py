@@ -18,12 +18,12 @@ class Entity(Representation, SmurfBase):
         Representation.__init__(self)
         self.model = _singular(model)
         self.origin = _singular(origin) if origin is not None else representation.Pose()
-        self._file = file
+        self._file = os.path.normpath(os.path.join(os.path.dirname(world.inputfile), file)) if not os.path.isabs(file) else file
         if model is None and file is not None:
-            self.model = Robot(inputfile=file)
+            self.model = Robot(inputfile=self._file)
         assert self.model is not None
         if name is None:
-            name = os.path.basename(file.rsplit(".", 1)[0])
+            name = os.path.basename(self._file.rsplit(".", 1)[0])
         if world is not None:
             self.link_with_world(world)
         self._frames = []
@@ -63,7 +63,7 @@ class Entity(Representation, SmurfBase):
 
     @property
     def file(self):
-        return self.model.smurffile if self.model.smurffile is not None else self.model.xmlfile
+        return os.path.relpath(self.model.smurffile if self.model.smurffile is not None else self.model.xmlfile, os.path.dirname(self.world.inputfile))
 
     @property
     def type(self):
@@ -154,7 +154,7 @@ class Arrangement(Representation, SmurfBase):
     def __init__(self, inputfile=None, entities=None, frames=None):
         super(Arrangement, self).__init__()
         self.entities = _plural(entities)
-        self.inputfile = inputfile
+        self.inputfile = os.path.abspath(inputfile)
         self._frames = _plural(frames)
         if self.inputfile is not None:
             ext = self.inputfile.lower().rsplit(".", 1)[-1]
@@ -296,6 +296,7 @@ class Arrangement(Representation, SmurfBase):
     def export_smurfa(self, outputfile):
         assert self.check_linkage()
         assert outputfile.endswith("smurfa")
+        self.inputfile = os.path.abspath(outputfile)
         out = self.to_yaml()
         out["entities"] = [e.to_yaml() for e in self.entities]
         if not os.path.exists(os.path.dirname(os.path.abspath(outputfile))):

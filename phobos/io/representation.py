@@ -1846,7 +1846,9 @@ class Motor(Representation, SmurfBase):
         self._maxSpeed = None
         self._maxValue = None
         self._minValue = None
-        self.type = kwargs.get("type", None).upper()
+        self.type = kwargs.get("type", None)
+        if self.type:
+            self.type = self.type.upper()
         self.controller_type = controller_type
         assert self.controller_type is None or self.controller_type in self.CONTROLLER_TYPES
         self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue', 'controller_type']
