@@ -17,6 +17,7 @@ from ..utils.validation import validate
 from ... import core
 from ...io import representation, sensor_representations, xmlrobot
 from ...io.poses import JointPoseSet
+from ...utils import misc
 
 """
 Factory functions for creating representation.* Instances from blender
@@ -483,21 +484,12 @@ def deriveAnnotation(obj):
     """
     assert obj.phobostype == "annotation"
 
-    def deepen_dict(input_dict):
-        out = {}
-        for k, v in input_dict.items():
-            if "/" in k:
-                out[k.split("/",1)[0]] = deepen_dict({k.split("/", 1)[1]: v})
-            else:
-                out[k] = v
-        return out
-
     props = {}
     for k, v in obj.items():
         if k not in reserved_keys.INTERNAL_KEYS:
             props[k] = v if not hasattr(v, "to_list") else v.to_list()
 
-    props = deepen_dict(props)
+    props = misc.deepen_dict(props)
 
     name = obj.split(":")[1]
     return representation.GenericAnnotation(

@@ -17,6 +17,7 @@ from ..utils import selection as sUtils
 
 from ... import core
 from ...io import representation, sensor_representations
+from ...utils import misc
 from ...utils.resources import get_default_joint
 
 """
@@ -452,17 +453,7 @@ def createAnnotation(ga: representation.GenericAnnotation, parent=None, size=0.1
 
     props = ga.to_yaml()
 
-    def flatten_dict(input_dict):
-        out = {}
-        for k, v in input_dict.items():
-            if type(v) == dict:
-                for k2, v2 in flatten_dict(v).items():
-                    out[k+"/"+k2] = v2
-            else:
-                out[k] = v
-        return out
-
-    for k, v in flatten_dict(props).items():
+    for k, v in misc.flatten_dict(props).items():
         annot_obj[k] = v
 
     return annot_obj

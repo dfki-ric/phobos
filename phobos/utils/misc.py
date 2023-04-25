@@ -33,6 +33,27 @@ def merge_default(input_dict, default_dict):
     return input_dict
 
 
+def deepen_dict(input_dict):
+    out = {}
+    for k, v in input_dict.items():
+        if "/" in k:
+            out[k.split("/", 1)[0]] = deepen_dict({k.split("/", 1)[1]: v})
+        else:
+            out[k] = v
+    return out
+
+
+def flatten_dict(input_dict):
+    out = {}
+    for k, v in input_dict.items():
+        if type(v) == dict:
+            for k2, v2 in flatten_dict(v).items():
+                out[k+"/"+k2] = v2
+        else:
+            out[k] = v
+    return out
+
+
 def read_number_from_config(config_input):
     """Converts ["rad"/"deg", value] into the rad value, computes *+/- and pi in input string"""
     if type(config_input) is list:
