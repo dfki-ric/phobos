@@ -12,14 +12,14 @@ These can be used by simply calling them via the `phobos` command:
     Usage:
     phobos COMMAND ARGUMENTS
     Commands:
-           assemble_smurfa         Loads a SMURFS/SMURFA file and exports the urdf(s)/smurf of the assembly.
-           assemble_xtype          Assemble the given model to a urdf.
-           check_hyrodyn           Checks whether the model can be loaded in Hyrodyn.
-           check_meshes            Checks whether all meshes are available.
-           convert                 Converts the given input robot file to SDF/URDF/PDF/SMURF.
-           generate_xtype          Creates the xtype database entry for the given model repository
-           preprocess_cad_export   Preprocess CAD->URDF exports to use with pipeline.
-           run_pipeline            Process simulation models automatically.
-           smurfs_in_pybullet      Loads a "smurfs" file in pyBullet.
-           test_model              Test the latest model using a CI-pipeline.
+        assemble_smurfa         Loads a SMURFS/SMURFA file and exports the urdf(s)/smurf of the assembly.
+        check_meshes            Checks whether all meshes are available.
+        convert                 Converts the given input robot file to SDF/URDF/PDF/THUMBNAIL/SMURF/SMURFA/SMURFS.
+        preprocess_cad_export   Preprocess CAD->URDF exports to use with pipeline.
+        reduce_mesh             Reduces the given mesh's number of vertices by the given factor, while trying to maintain the geometry as similar as possible.
+        run_pipeline            Process simulation models automatically.
+        setup_git               Sets-up a git repository for a simulation/control model.
+        smurfs_in_pybullet      Loads a "smurfs" file in pyBullet.
+        test_model              Test the latest model using a CI-pipeline.
+        check_hyrodyn           Checks whether the model can be loaded in Hyrodyn.
 

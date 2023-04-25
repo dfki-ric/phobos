@@ -41,15 +41,6 @@ try:
 except ImportError:
     log.info("Pybullet tests not available.")
 
-XDBI_AVAILABLE = False
-try:
-    import xtypes_py
-    import xdbi_py
-    XDBI_AVAILABLE = True
-    log.info("XDBI available.")
-except ImportError:
-    log.info("XDBI not available.")
-
 
 def dump_json(obj, **kwargs):
     import json
