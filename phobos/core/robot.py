@@ -84,7 +84,7 @@ class Robot(SMURFRobot):
             xml_string = regex_replace(xml_string, {'filename="../': 'filename="package://' if ros_pkg_name is None else f'filename="package://{ros_pkg_name}/'})
 
         if not os.path.exists(os.path.dirname(os.path.abspath(outputfile))):
-            os.makedirs(os.path.dirname(outputfile))
+            os.makedirs(os.path.dirname(os.path.abspath(outputfile)))
         with open(outputfile, "w") as f:
             f.write(xml_string)
             f.close()
@@ -126,7 +126,7 @@ class Robot(SMURFRobot):
             xml_string = regex_replace(xml_string, {'<uri>../': '<uri>package://' if ros_pkg_name is None else f'<uri>package://{ros_pkg_name}/'})
 
         if not os.path.exists(os.path.dirname(os.path.abspath(outputfile))):
-            os.makedirs(os.path.dirname(outputfile))
+            os.makedirs(os.path.dirname(os.path.abspath(outputfile)))
         with open(outputfile, "w") as f:
             f.write(xml_string)
             f.close()
@@ -177,7 +177,7 @@ class Robot(SMURFRobot):
                      '<Scene>\n'+self.to_x3d_string(float_fmt_dict=float_fmt_dict, reduce_meshes=reduce_meshes)+'</Scene>\n</X3D>\n'
 
         if not os.path.exists(os.path.dirname(os.path.abspath(outputfile))):
-            os.makedirs(os.path.dirname(outputfile))
+            os.makedirs(os.path.dirname(os.path.abspath(outputfile)))
         with open(outputfile, "w") as f:
             f.write(xml_string)
             f.close()
@@ -207,8 +207,8 @@ class Robot(SMURFRobot):
             model_file = os.path.join(outputdir, f"{format}/{self.name if filename is None else filename}")
         if not model_file.lower().endswith(format):
             model_file += "." + format
-        if not os.path.exists(os.path.dirname(model_file)):
-            os.makedirs(os.path.dirname(model_file))
+        if not os.path.exists(os.path.dirname(os.path.abspath(model_file))):
+            os.makedirs(os.path.dirname(os.path.abspath(model_file)))
         if ros_pkg_name is None:
             ros_pkg_name = os.path.basename(outputdir)
         export_robot.relink_entities()
@@ -269,8 +269,8 @@ class Robot(SMURFRobot):
 
         submech_dir = os.path.join(outputdir, "submechanisms")
         if len(self.submechanisms) > 0 or len(self.exoskeletons) > 0:
-            if not os.path.exists(submech_dir):
-                os.makedirs(submech_dir)
+            if not os.path.exists(os.path.abspath(submech_dir)):
+                os.makedirs(os.path.abspath(submech_dir))
         self.link_entities()
         # meshes
         if with_meshes:
@@ -402,8 +402,8 @@ class Robot(SMURFRobot):
     def export_joint_limits(self, outputdir, file_name="joint_limits.yml", joint_desc=None):
         output_dict = get_joint_info_dict(self, get_joints(self, joint_desc))
         log.info(f"Exporting joint_limits file {os.path.join(outputdir, file_name)}")
-        if not os.path.isdir(os.path.dirname(os.path.join(outputdir, file_name))):
-            os.makedirs(os.path.dirname(os.path.join(outputdir, file_name)))
+        if not os.path.isdir(os.path.dirname(os.path.abspath(os.path.join(outputdir, file_name)))):
+            os.makedirs(os.path.dirname(os.path.abspath(os.path.join(outputdir, file_name))))
         output_dict = {"limits": output_dict}
         with open(os.path.join(outputdir, file_name), "w") as jl_file:
             jl_file.write(dump_json(output_dict))
@@ -641,8 +641,8 @@ class Robot(SMURFRobot):
 
         out += "}\n"
 
-        if not os.path.isdir(os.path.dirname(outputfile)):
-            os.makedirs(os.path.dirname(outputfile), exist_ok=True)
+        if not os.path.isdir(os.path.dirname(os.path.abspath(outputfile))):
+            os.makedirs(os.path.dirname(os.path.abspath(outputfile)), exist_ok=True)
         with open(outputfile + ".gv", "w") as f:
             f.write(out)
 
@@ -1750,6 +1750,12 @@ class Robot(SMURFRobot):
 
         for i in range(len(coll_names)):
             self.set_bitmask(link_names[i], bitmask=bitmasks[i], collisionname=coll_names[i], **kwargs)
+
+    def rename_all(self, prefix=None, suffix=None, replacements=None, do_not_double=True):
+        for targettype in ["links", "joints", "collisions", "visuals", "sensors", "motors", "submechanisms",
+                           "exoskeletons", "annotations"]:
+            self.rename(targettype, getattr(self, targettype), prefix=prefix, suffix=suffix, replacements=replacements,
+                        do_not_double=do_not_double)
 
     def rename(self, targettype, target, prefix=None, suffix=None, replacements=None, do_not_double=True):
         """

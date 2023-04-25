@@ -220,7 +220,7 @@
       "children": {
         "origin": {
           "classname": "Pose",
-          "varname": "origin"
+          "varname": "parent_relative_origin"
         },
         "limit": {
           "classname": "JointLimit",
@@ -523,6 +523,7 @@
       "tag": "scene"
     },
     "Frame": {
+      "tag": "frame",
       "value_children": {
         "name": "name",
         "attached_to": "attached_to"
@@ -565,8 +566,21 @@
     "Physics": {
       "tag": "physics",
       "children": {
-        "classname": "ODE",
-        "varname": "ode"
+        "ode": {
+          "classname": "ODE",
+          "varname": "ode"
+        }
+      }
+    },
+    "ODE": {
+      "tag": "ode",
+      "nested_children": {
+        "constraints": {
+          "value_children": {
+            "cfm": "cfm",
+            "erp": "erp"
+          }
+        }
       }
     },
     "XMLRobot": {

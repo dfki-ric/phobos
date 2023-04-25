@@ -21,57 +21,8 @@ import numpy as np
 
 from ..phoboslog import log
 from ..utils import blender as bUtils
-from ..utils import editing as eUtils
-from ..utils import general as gUtils
-from ..utils import io as ioUtils
-from ..utils import naming as nUtils
 from ..utils import selection as sUtils
 from ..utils.io import securepath
-from ..utils.validation import validate
-
-
-@validate('object_pose')
-def deriveObjectPose(obj, logging=False, adjust=False, errors=None):
-    """Derives a pose of link, visual or collision object.
-    
-    The transformations of the object are calculated according to
-    phobos.utils.edititing.getCombinedTransform.
-    
-    The returned dictionary contains this information:
-        *rawmatrix*: mathutils.Matrix
-        *matrix*: list representation (list of lists) of mathutils.Matrix
-        *translation*: list (according to mathutils.Matrix.to_translation)
-        *rotation_euler*: list (according to mathutils.Matrix.to_euler)
-        *rotation_quaternion*: list (according to mathutils.Matrix.to_quaternion)
-
-    Args:
-      obj(bpy.types.Object): blender object to derive the pose from
-      logging: (Default value = False)
-      errors: (Default value = None)
-      adjust: (Default value = False)
-
-    Returns:
-      : dict
-      .. seealso phobos.utils.editing.getCombinedTransform: pose information of the object
-
-    """
-    effectiveparent = sUtils.getEffectiveParent(obj, include_hidden=True, ignore_selection=True)
-    matrix = eUtils.getCombinedTransform(obj, effectiveparent)
-
-    pose = {
-        'rawmatrix': matrix,
-        'matrix': [list(vector) for vector in list(matrix)],
-        'translation': list(matrix.to_translation()),
-        'rotation_euler': list(matrix.to_euler()),
-        'rotation_quaternion': list(matrix.to_quaternion()),
-    }
-
-    if logging:
-        log(
-            "Location: " + str(pose['translation']) + " Rotation: " + str(pose['rotation_euler']),
-            'DEBUG',
-        )
-    return pose
 
 
 def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimate_parameter=0.1):

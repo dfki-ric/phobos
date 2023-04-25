@@ -16,6 +16,7 @@ from ..defs import BPY_AVAILABLE
 from ..geometry import io as mesh_io
 from ..geometry.geometry import identical, reduce_mesh, get_reflection_matrix, improve_mesh
 from ..utils import misc, git, transform
+from ..utils.transform import inv
 from ..utils.xml import read_relative_filename
 
 MESH_INFO_KEYS = ["vertex_normals", "texture_coords", "vertices", "faces"]
@@ -139,6 +140,10 @@ class Pose(Representation, SmurfBase):
         return transform.matrix_to_quaternion(self._matrix[0:3, 0:3])
 
     @property
+    def quaternion_dict(self):
+        return {k: v for k,v in zip("xyzw", transform.matrix_to_quaternion(self._matrix[0:3, 0:3]))}
+
+    @property
     def angle_axis(self):
         return transform.quaternion_to_angle_axis(self.quaternion)
 
@@ -166,17 +171,23 @@ class Pose(Representation, SmurfBase):
         return xyz.tolist() + rpy.tolist()
 
     @staticmethod
-    def from_matrix(T, dec=16, relative_to=None):
-        return Pose(matrix=T, dec=dec, relative_to=relative_to)
+    def from_matrix(T, relative_to=None):
+        return Pose(matrix=np.array(T),relative_to=relative_to)
 
     def to_matrix(self):
         return self._matrix
 
-    def transform(self, T, relative_to=None):
+    def transform_by(self, T, relative_to=None):
         """T.dot(this)"""
         return Pose.from_matrix(
             T.dot(self._matrix),
             relative_to
+        )
+
+    def inv(self, relative_to=None):
+        return Pose.from_matrix(
+            inv(self._matrix),
+            relative_to=relative_to
         )
 
     def dot(self, other):
@@ -575,9 +586,14 @@ class Mesh(Representation, SmurfBase):
         else:
             assert self._related_robot_instance is not None
             assert self._related_robot_instance.mesh_format is not None
-            if self._related_robot_instance.mesh_format not in self._exported:
-                raise IOError(f"The mesh {self.unique_name} with the required mesh format ({self._related_robot_instance.mesh_format}) has not yet been exported.")
-            return self._exported[self._related_robot_instance.mesh_format]["filepath"]
+            assert self._related_robot_instance.mesh_format != "input_type" or self.input_type.startswith("file"), \
+                f"No input file to derive the format from! {self} {self.input_type}"
+            format = self._related_robot_instance.mesh_format
+            if format == "input_type":
+                format = self.input_type[5:]
+            if format not in self._exported:
+                raise IOError(f"The mesh {self.unique_name} with the required mesh format ({format}) has not yet been exported.")
+            return self._exported[format]["filepath"]
 
     @property
     def filepath(self):
@@ -763,17 +779,19 @@ class Mesh(Representation, SmurfBase):
     def provide_mesh_file(self, targetpath, format=None, throw_on_invalid_bobj=False):
         if format is None and self._related_robot_instance is not None:
             format = self._related_robot_instance.mesh_format
-        elif format is None:
+        if format in [None, "input_type"] and self.input_type.startswith("file"):
+            format = self.input_type[5:]
+        if format is None:
             raise AssertionError("To export meshes you have to specify the format. (format=None)")
         assert os.path.isabs(targetpath)
         ext = format.lower()
         os.makedirs(targetpath, exist_ok=True)
         targetpath = os.path.join(targetpath, self.unique_name+"."+ext)
-        self.history.append(f"->trying export of {type(self.mesh_object)} to {targetpath}")
+        self.history.append(f"->trying export of {str(self.mesh_object)} to {targetpath}")
         # log.debug(f"Providing mesh {targetpath}...")
         # if there are no changes we can simply copy
-        if "file_"+ext == self.input_type:
-            if not self._changed and self.input_file == targetpath:
+        if self.input_file is not None and "file_"+ext == self.input_type and not self._changed:
+            if self.input_file == targetpath:
                 log.debug(f"Using existing mesh {targetpath}...")
                 self._exported[ext] = {
                     "operations": self._operations,
@@ -783,7 +801,7 @@ class Mesh(Representation, SmurfBase):
                 self.history.append(f"->target == input == {self.input_file} for ext {ext}")
                 self.write_history(targetpath)
                 return
-            elif not self._changed:
+            else:
                 log.debug(f"Copying mesh {os.path.relpath(self.input_file, os.path.dirname(targetpath))} to {targetpath}...")
                 shutil.copyfile(self.input_file, targetpath)
                 self._exported[ext] = {
@@ -801,7 +819,7 @@ class Mesh(Representation, SmurfBase):
             equiv_histories = False
             if o_history is not None:
                 equiv_histories = [x for x in o_history[1:] if not x.startswith("->")] == [x for x in self.history[1:] if not x.startswith("->")]
-            if existing_mesh is not None and (equiv_histories or mesh_io.identical(mesh_io.as_trimesh(self.mesh_object, silent=True), existing_mesh)):
+            if existing_mesh is not None and (equiv_histories or mesh_io.identical(mesh_io.as_trimesh(self.load_mesh(), silent=True), existing_mesh)):
                 log.debug(f"Skipping export of {targetpath} as the mesh file already exists and is identical")
                 self._exported[ext] = {
                     "operations": self._operations,
@@ -1102,13 +1120,14 @@ class GeometryFactory(Representation):
 
 
 class Collision(Representation, SmurfBase):
-    _class_variables = ["name", "link", "geometry", "origin", "bitmask"]
+    _class_variables = ["name", "link", "geometry", "origin", "bitmask", "primitive"]
 
     def __init__(self, name=None, link=None, geometry=None, origin=None, bitmask=None, noDataPackage=False,
-                 reducedDataPackage=False, ccfm=None, **kwargs):
+                 reducedDataPackage=False, ccfm=None, primitive=None, **kwargs):
         if link is not None:
             link = str(link)
         self.original_name = name
+        self.primitive = _plural(primitive)
         if name is None or len(name) == 0:
             if link is not None:
                 name = str(link) + "_collision"
@@ -1119,7 +1138,7 @@ class Collision(Representation, SmurfBase):
                 name = None
         self.link = link
         self.name = name
-        SmurfBase.__init__(self, returns=['name', 'link', 'geometry'], **kwargs)
+        SmurfBase.__init__(self, returns=['name', 'link', 'geometry', 'primitive'], **kwargs)
         self.geometry = _singular(geometry)
         if origin is None:
             origin = Pose()
@@ -1135,6 +1154,14 @@ class Collision(Representation, SmurfBase):
         if bitmask is not None:
             self.returns += ['bitmask']
         self.excludes += ["origin", "original_name"]
+
+    def add_primitive(self, primitive):
+        if type(primitive) in (list, tuple):
+            for p in primitive:
+                self.add_primitive(p)
+        assert isinstance(primitive, Collision)
+        assert type(primitive.geometry) in (Box, Sphere, Cylinder)
+        self.primitive.append(primitive)
 
 
 class Visual(Representation, SmurfBase):
@@ -1499,6 +1526,7 @@ class Joint(Representation, SmurfBase):
                  dynamics=None, safety_controller=None, calibration=None,
                  mimic=None, joint_dependencies=None, motor=None,
                  noDataPackage=False, reducedDataPackage=False, cut_joint=False, constraint_axes=None, **kwargs):
+        assert name is not None
         self.name = name
         self.returns = ['name']
         assert parent is not None
@@ -1540,6 +1568,7 @@ class Joint(Representation, SmurfBase):
         # dynamics
         self.dynamics = _singular(dynamics)
         SmurfBase.__init__(self, **kwargs)
+        # [Todo v2.1.0] To safe all information in SMURF we have to add here the transformation from parent_relative_origin, but with the correct key
         self.returns += ["joint_dependencies", "parent", "child"]
         self.excludes += ["limit", "mimic", "axis", "dynamics"]
 
@@ -1585,8 +1614,28 @@ class Joint(Representation, SmurfBase):
         return self._origin
 
     @origin.setter
-    def origin(self, origin: Pose):
+    def origin(self, origin):
         self._origin = _singular(origin)
+
+    # [TODO v2.1.0] for enhanced sdf support these properties have to be implemented for visual, collision etc. as well
+    @property
+    def parent_relative_origin(self):
+        if self._origin is not None and self._origin.relative_to is None:
+            self._origin.relative_to = self.parent
+        elif self._origin is not None and self._origin.relative_to != self.parent:
+            assert self._related_robot_instance is not None, "Trying to get parent_relative_origin while robot is not linked"
+            r2x = self._related_robot_instance.get_transformation
+            out = r2x(self.parent).inv().dot(r2x(self._origin.relative_to).dot(self._origin))
+            out.relative_to = self.parent
+            return out
+        return self._origin
+
+    @parent_relative_origin.setter
+    def parent_relative_origin(self, origin):
+        origin = _singular(origin)
+        assert origin.relative_to is None or origin.relative_to == self.parent
+        self._origin = _singular(origin)
+        self._origin.relative_to = self.parent
 
     @property
     def mimic(self):
@@ -1776,7 +1825,7 @@ class Motor(Representation, SmurfBase):
     _class_variables = ["name", "joint"]
 
     def __init__(self, name=None, joint=None, controller_type="position", **kwargs):
-        self.name = name,
+        self.name = name
         self.joint = joint
         SmurfBase.__init__(self, returns=["name", "joint"], **kwargs)
         # This is hardcoded information

@@ -13,9 +13,14 @@ from ..utils.tree import get_joints_depth_first
 
 log = get_logger(__name__)
 
+__IMPORTS__ = [x for x in dir() if not x.startswith("__")]
+
 
 class XMLRobot(Representation):
     SUPPORTED_VERSIONS = ["1.0"]
+
+    _related_world_instance = None
+    _related_entity_instance = None
 
     def __init__(self, name=None, version=None, links: List[representation.Link] = None,
                  joints: List[representation.Joint] = None,
@@ -23,6 +28,7 @@ class XMLRobot(Representation):
                  transmissions: List[representation.Transmission] = None,
                  sensors=None, motors=None, plugins=None,
                  is_human=False, urdf_version=None, xmlfile=None, _xmlfile=None):
+        self._related_robot_instance = self
         super().__init__()
         self.joints = []
         self.links = []
@@ -36,7 +42,7 @@ class XMLRobot(Representation):
         self.xmlfile = xmlfile if xmlfile is not None else _xmlfile
 
         # Default export mesh format from phobos.defs.MESH_TYPES
-        self.mesh_format = "stl"
+        self.mesh_format = "input_type"
 
         if name is None or len(name) == 0:
             if self.xmlfile is not None:
@@ -214,6 +220,7 @@ class XMLRobot(Representation):
                 self.child_map[j.parent] = [(j.name, j.child)]
 
     def add_aggregate(self, typeName, elem, silent=False):
+        assert elem is not None
         if type(elem) == list:
             return [self.add_aggregate(typeName, e) for e in elem]
         if typeName in 'joints':

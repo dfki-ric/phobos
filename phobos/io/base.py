@@ -15,6 +15,8 @@ class Linkable(object):
         "relative_to": "links",
     }
     _related_robot_instance = None
+    # _related_robot_instances need to have a _related_world_instance and a _related_entity_instance (where the latter has be set if the first is set)
+
     # _class_variables contains those properties which have to be scanned for linkables
     _class_variables = []
     _handle_ambiguous = True
@@ -57,11 +59,17 @@ class Linkable(object):
         if self._related_robot_instance is None or isinstance(new_value, Representation):
             return new_value
         vtype = self.type_dict[varname].lower()
-        converted = self._related_robot_instance.get_aggregate(f"{vtype}", new_value)
+        if self._related_robot_instance._related_world_instance is not None and "::" in new_value:
+            if new_value.startswith(self._related_robot_instance._related_entity_instance.name + "::"):
+                converted = self._related_robot_instance.get_aggregate(f"{vtype}", new_value.split("::", 1)[1])
+            else:
+                converted = self._related_robot_instance._related_world_instance.get_aggregate(f"{vtype}", new_value)
+        else:
+            converted = self._related_robot_instance.get_aggregate(f"{vtype}", new_value)
         if converted is None and new_value is not None:
             log.warning(f"There is no {vtype} with name {new_value} in {self._related_robot_instance.name}; setting {varname} to None")
             log.warning(f"Available are: {repr([str(x) for x in getattr(self._related_robot_instance, vtype)])}")
-            raise AssertionError(f"{str(type(self))}, can not convert {new_value} to value type {vtype}")
+            raise AssertionError(f"{str(type(self))}, can not convert {new_value} to value type {vtype} for variable {varname}")
         return converted
 
     def _attr_get_name(self, attribute):
@@ -320,17 +328,29 @@ class Representation(Linkable):
 
     @classmethod
     def from_xml(cls, xml: ET.Element, dialect, **kwargs):
-        return cls.factory[dialect].from_xml(cls, xml, **kwargs)
+        try:
+            return cls.factory[dialect].from_xml(cls, xml, **kwargs)
+        except KeyError:
+            raise LookupError(f"Class {cls.__name__} has no xml format defined for dialect '{dialect}'")
 
     @classmethod
     def from_xml_string(cls, xml: str, dialect):
-        return cls.factory[dialect].from_xml_string(cls, xml)
+        try:
+            return cls.factory[dialect].from_xml_string(cls, xml)
+        except KeyError:
+            raise LookupError(f"Class {cls.__name__} has no xml format defined for dialect '{dialect}'")
 
     def to_xml(self, dialect, **kwargs) -> ET.Element:
-        return self.factory[dialect].to_xml(self, **kwargs)
+        try:
+            return self.factory[dialect].to_xml(self, **kwargs)
+        except KeyError:
+            raise LookupError(f"Class {self.__class__.__name__} has no xml format defined for dialect '{dialect}'")
 
     def to_xml_string(self, dialect, **kwargs) -> ET.Element:
-        return self.factory[dialect].to_xml_string(self, **kwargs)
+        try:
+            return self.factory[dialect].to_xml_string(self, **kwargs)
+        except KeyError:
+            raise LookupError(f"Class {self.__class__.__name__} has no xml format defined for dialect '{dialect}'")
 
     def sort_string(self, dialect=None) -> str:
         prefix = type(self).__name__ if dialect is None else self.to_xml(dialect).tag

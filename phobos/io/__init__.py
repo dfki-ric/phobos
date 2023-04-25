@@ -1,24 +1,22 @@
 from . import representation
-from . import xml_factory
+from .xml_factory import REGISTER_MODULE_TO_XML_FACTORY
 
-for clsname in dir(representation):
-    if not clsname.startswith("_") and clsname not in representation.__IMPORTS__:
-        xml_factory.class_factory(getattr(representation, clsname))
+REGISTER_MODULE_TO_XML_FACTORY(representation)
 
 from . import yaml_reflection
 from . import sensor_representations
-for clsname in dir(sensor_representations):
-    if not clsname.startswith("_") and clsname not in sensor_representations.__IMPORTS__:
-        xml_factory.class_factory(getattr(sensor_representations, clsname))
+REGISTER_MODULE_TO_XML_FACTORY(sensor_representations)
 
 from . import poses
-for clsname in dir(poses):
-    if not clsname.startswith("_") and clsname not in poses.__IMPORTS__:
-        xml_factory.class_factory(getattr(poses, clsname))
+REGISTER_MODULE_TO_XML_FACTORY(poses)
 
 from . import hyrodyn
-for clsname in dir(hyrodyn):
-    if not clsname.startswith("_") and clsname not in hyrodyn.__IMPORTS__:
-        xml_factory.class_factory(getattr(hyrodyn, clsname))
+REGISTER_MODULE_TO_XML_FACTORY(hyrodyn)
 
-del xml_factory
+from . import scenes
+REGISTER_MODULE_TO_XML_FACTORY(scenes)
+
+from . import xmlrobot
+REGISTER_MODULE_TO_XML_FACTORY(xmlrobot)
+
+del REGISTER_MODULE_TO_XML_FACTORY

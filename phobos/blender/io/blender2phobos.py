@@ -23,17 +23,24 @@ Factory functions for creating representation.* Instances from blender
 """
 
 
-def deriveObjectPose(obj, logging=True):
-    effectiveparent = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True)
-    matrix = eUtils.getCombinedTransform(obj, effectiveparent)
+def deriveObjectPose(obj, effectiveparent=None, logging=True):
+    if effectiveparent is None:
+        effectiveparent = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True)
 
-    pose = representation.Pose.from_matrix(np.array(matrix))
+    if effectiveparent is not None:
+        w2p = representation.Pose.from_matrix(effectiveparent.matrix_world.normalized())
+    else:
+        w2p = representation.Pose()
+
+    w2o = representation.Pose.from_matrix(obj.matrix_world.normalized())
+    p2o = w2p.inv().dot(w2o)
+
     if logging:
         log(
-            obj.name+": Location: " + str(pose.position) + " Rotation: " + str(pose.rotation),
+            obj.name+": Location: " + str(p2o.position) + " Rotation: " + str(p2o.rotation),
             'DEBUG',
         )
-    return pose
+    return p2o
 
 
 @validate("material")
@@ -110,7 +117,7 @@ def deriveGeometry(obj, duplicate_mesh=False, **kwargs):
         raise ValueError(f"Unknown geometry type: {gtype}")
 
 
-def deriveCollision(obj, duplicate_mesh=False,  **kwargs):
+def deriveCollision(obj, linkobj=None, duplicate_mesh=False,  **kwargs):
     # bitmask (will deprecate with MARS2.0)
     bitmask = None
     # the bitmask is cut to length = 16 and reverted for int parsing
@@ -124,6 +131,12 @@ def deriveCollision(obj, duplicate_mesh=False,  **kwargs):
                 log(f"Object {obj.name} is on a collision layer higher than 16. These layers are ignored when exporting."
                     'WARNING',)
                 break
+
+    primitives = []
+    if obj.children:
+        for child in obj.children:
+            if getattr(child, "phobostype", None) == "collision" and child.get("geometry/type", None) in ["box", "sphere", "cylinder"]:
+                primitives.append(deriveCollision(child, linkobj=linkobj))
 
     # further annotations
     annotations = {}
@@ -140,8 +153,9 @@ def deriveCollision(obj, duplicate_mesh=False,  **kwargs):
     return representation.Collision(
         name=obj.name,
         geometry=deriveGeometry(obj, duplicate_mesh),
-        origin=deriveObjectPose(obj),
+        origin=deriveObjectPose(obj, effectiveparent=linkobj),
         bitmask=bitmask,
+        primitives=primitives,
         **annotations
     )
 
@@ -521,7 +535,7 @@ def deriveSensor(obj, logging=False):
         )
 
     values = {k: v for k, v in obj.items() if k not in reserved_keys.INTERNAL_KEYS}
-    values["parent"] = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True).name
+    parent = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True)
     sensor_type = values.pop("type")
 
     if sensor_type.upper() in ["CAMERASENSOR", "CAMERA"]:
@@ -532,6 +546,12 @@ def deriveSensor(obj, logging=False):
              **values
         )
     else:
+        if "link" in getattr(sensor_representations, sensor_type)._class_variables:
+            values["link"] = values.get("link", parent.name)
+        if "joint" in getattr(sensor_representations, sensor_type)._class_variables:
+            values["link"] = values.get("joint", parent.get("joint/name", parent.name))
+        if "frame" in getattr(sensor_representations, sensor_type)._class_variables:
+            values["frame"] = values.get("frame", parent.name)
         return getattr(sensor_representations, sensor_type)(**values)
 
 

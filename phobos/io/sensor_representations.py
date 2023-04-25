@@ -75,7 +75,7 @@ class Sensor(Representation, SmurfBase):
 
     def transform(self, transformation):
         if hasattr(self, "origin"):
-            self.origin.transform(transformation)
+            self.origin.transform_by(transformation)
         else:
             self.origin = Pose.from_matrix(transformation)
 

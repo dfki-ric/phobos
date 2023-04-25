@@ -193,7 +193,7 @@ class SMURFRobot(XMLRobot):
                 if "name" in annotations.keys():
                     annotations.pop('name')
                 motor = representation.Motor(
-                    name=motor_def['name'] if 'name' in motor else motor_def['joint'] + "_motor",
+                    name=motor_def.get('name', motor_def['joint'] + "_motor"),
                     **annotations
                 )
                 if existing is not None and not existing.equivalent(motor):
@@ -303,6 +303,7 @@ class SMURFRobot(XMLRobot):
                     for a in v:
                         self.add_aggregate("generic_annotations", representation.GenericAnnotation(
                             GA_category=k,
+                            GA_name=k,
                             **a
                         ))
                 elif type(v) == dict:

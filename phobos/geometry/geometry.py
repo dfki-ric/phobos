@@ -145,13 +145,20 @@ def identical(mesh_a, mesh_b):
     assert mesh_a is not None and mesh_b is not None
     assert isinstance(mesh_a, trimesh.Trimesh) and isinstance(mesh_b, trimesh.Trimesh) or\
         isinstance(mesh_a, trimesh.Scene) and isinstance(mesh_b, trimesh.Scene)
-    return (
-        all(trimesh.comparison.identifier_simple(mesh_a) == trimesh.comparison.identifier_simple(mesh_b)) or
-        ((
-               len(mesh_a.vertices.flatten()) == len(mesh_b.vertices.flatten()) and
-               len(mesh_a.faces.flatten()) == len(mesh_b.faces.flatten())
+    out = (
+        (
+            len(mesh_a.vertices.flatten()) == len(mesh_b.vertices.flatten()) and
+            len(mesh_a.faces.flatten()) == len(mesh_b.faces.flatten())
         ) and (
-               all(np.round(mesh_a.vertices, decimals=8).flatten() == np.round(mesh_b.vertices, decimals=8).flatten()) and
-               all(mesh_a.faces.flatten() == mesh_b.faces.flatten())
-        ))
+            all(np.round(mesh_a.vertices, decimals=8).flatten() == np.round(mesh_b.vertices, decimals=8).flatten()) and
+            all(mesh_a.faces.flatten() == mesh_b.faces.flatten())
+        )
     )
+    try:
+        trimesh_out = (
+            all(trimesh.comparison.identifier_simple(mesh_a) == trimesh.comparison.identifier_simple(mesh_b))
+        )
+    except:
+        # trimesh sometimes does utter sh** so we catch this here and assume false to be on the safe side
+        trimesh_out = False
+    return out or trimesh_out
