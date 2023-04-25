@@ -1723,25 +1723,11 @@ class AddMotorOperator(Operator):
     bl_idname = "phobos.add_motor"
     bl_label = "Add Motor"
     bl_options = {'UNDO'}
-    lastMotorType = None
+    lastMotorDefault = None
 
-    def motorlist(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        items = [
-            (mot, mot.replace('_', ' '), '')
-            for mot in sorted(defs.definitions['motors'])
-            #if self.categ in defs.def_settings['motors'][mot]['categories']
-        ]
-        return items
-
-    motorType : EnumProperty(items=motorlist, description='The motor type')
+    template : EnumProperty(items=resources.get_motor_defaults(), description="The template to use for this motor")
+    motorType : EnumProperty(items=representation.Motor.BUILD_TYPES, description='The motor type')
+    controllerType: EnumProperty(items=representation.Motor.TYPES, description='The controller type')
     maxeffort : FloatProperty(
         name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
     )
@@ -1760,12 +1746,11 @@ class AddMotorOperator(Operator):
     controld : FloatProperty(
         name="D Factor", default=0.0, description="D factor of position controller"
     )
-    knownProperties = {"maxEffort": "maxeffort",
-                       "maxSpeed": "maxvelocity",
+    knownProperties = {"effort": "maxeffort",
+                       "velocity": "maxvelocity",
                        "p": "controlp",
                        "i": "controli",
                        "d": "controld"}
-    jointProperties = ['maxEffort', 'maxSpeed']
 
     def updateValues(self, key, defDict, lastDict, prop):
         # only update value if the user hasn't change the default value
@@ -1786,18 +1771,19 @@ class AddMotorOperator(Operator):
         """
         layout = self.layout
         #layout.separator()
-        setvalues = self.lastMotorType != self.motorType
+        setvalues = self.lastMotorDefault != self.template
         lastDict = None
-        if self.lastMotorType != None:
-            lastDict = defs.definitions['motors'][self.lastMotorType]
-        defDict = defs.definitions['motors'][self.motorType]
-        layout.prop(self, 'motorType', text='Motor type')
-        for k,v in self.knownProperties.items():
+        if self.lastMotorDefault != None:
+            lastDict = resources.get_default_motor(self.lastMotorDefault)
+        defDict = resources.get_default_motor(self.template)
+        layout.prop(self, 'template', text='Motor template')
+        layout.label(text="Parameters:")
+        for k, v in self.knownProperties.items():
             if setvalues:
                 setattr(self, v, self.updateValues(k, defDict, lastDict, getattr(self, v)))
             if k in defDict:
                 layout.prop(self, v)
-        self.lastMotorType = self.motorType
+        self.lastMotorDefault = self.template
 
     def invoke(self, context, event):
         """
@@ -1862,18 +1848,17 @@ class AddMotorOperator(Operator):
         Returns:
 
         """
-
-        joints = [lnk for lnk in context.selected_objects if lnk.phobostype == 'link' and 'joint/type' in lnk]
-        defDict = defs.definitions['motors'][self.motorType]
-        for joint in joints:
-            for k, v in defDict.items():
-                cl = "motor/"
-                if k in self.jointProperties:
-                    cl = "joint/"
-                if k in self.knownProperties:
-                    joint[cl+k] = getattr(self, self.knownProperties[k])
-                else:
-                    joint[cl+k] = v
+        objects = [o for o in context.selected_objects if o.phobostype == "link"]
+        for obj in objects:
+            phobos2blender.createMotor(representation.Motor(
+                name=obj.name+"_motor",
+                joint=obj.get("joint/name", obj.name),
+                type=self.controllerType,
+                build_type=self.motorType,
+                p=self.controlp,
+                i=self.controli,
+                d=self.controld
+            ), linkobj=obj)
         return {'FINISHED'}
 
 
@@ -2542,7 +2527,7 @@ class CreateMimicJointOperator(Operator):
         for obj in objs:
             if obj.name != masterjoint.name:
                 if self.mimicjoint:
-                    obj["joint/mimic/joint"] = nUtils.getObjectName(masterjoint, 'joint')
+                    obj["joint/mimic/joint"] = masterjoint.get("joint/name", masterjoint.name)
                     obj["joint/mimic/multiplier"] = self.multiplier
                     obj["joint/mimic/offset"] = self.offset
                 # if self.mimicmotor:

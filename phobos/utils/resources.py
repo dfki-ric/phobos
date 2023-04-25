@@ -38,8 +38,10 @@ def get_sensor_info(sensor_category):
         result[key] = info[key]
     return result
 
+
 def get_sensor_categories():
-    return DEFAULTS["sensors"].keys()
+    return list(DEFAULTS["sensors"].keys())
+
 
 def get_sensor_types(sensor_category):
     sensors = DEFAULTS["sensors"][sensor_category].keys()
@@ -49,8 +51,13 @@ def get_sensor_types(sensor_category):
             result.append(key)
     return sensors
 
+
 def get_default_motor(motor_definition="default"):
     return DEFAULTS["motors"][motor_definition.lower()]
+
+
+def get_motor_defaults():
+    return list(DEFAULTS["motors"].keys())
 
 
 def get_default_joint(joint_type):

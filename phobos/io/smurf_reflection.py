@@ -35,7 +35,8 @@ class SmurfBase(YamlReflection):
         export_props = [v for v in vars(self).keys() if v not in self.excludes and not v.startswith("_")] + \
                        [v for v in set(self.returns) if v not in self.excludes]
         for var in export_props:
-            if getattr(self, var) is not None:
+            value = getattr(self, var)
+            if value is not None and (type(value) not in [list, tuple, set, dict] or len(value) > 0):
                 out += [var]
 
         return list(set(out))

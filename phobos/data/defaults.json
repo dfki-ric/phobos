@@ -74,8 +74,29 @@
       "p": 20.0,
       "i": 0.0,
       "d": 0.0,
-      "type": "dc",
-      "controller_type": "position"
+      "build_type": "BLDC",
+      "type": "position"
+    },
+    "position": {
+      "velocity": 3.141,
+      "effort": 50.0,
+      "p": 20.0,
+      "i": 0.0,
+      "d": 0.0,
+      "build_type": "STEP",
+      "type": "PID"
+    },
+    "velocity": {
+      "velocity": 3.141,
+      "effort": 50.0,
+      "build_type": "BLDC",
+      "type": "PID"
+    },
+    "force": {
+      "velocity": 3.141,
+      "effort": 150.0,
+      "build_type": "AC",
+      "type": "PID"
     }
   },
   "joints": {
