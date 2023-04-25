@@ -31,7 +31,6 @@ layerTypes = {
     "sensor": 4,
     "decoration": 5,
     "light": 6,
-    "motor": 7,
     "controller": 8,
     "approxsphere": 13,
     'interface': 10,
@@ -47,7 +46,6 @@ phobostypes = (
     ('visual',) * 3,
     ('collision',) * 3,
     ('sensor',) * 3,
-    ('motor',) * 3,
     ('controller',) * 3,
     ('approxsphere',) * 3,
     ('light',) * 3,
@@ -70,7 +68,6 @@ jointtypes = (
 geometrytypes = (('box',) * 3, ('cylinder',) * 3, ('sphere',) * 3, ('mesh',) * 3)
 
 linkobjignoretypes = {'link', 'joint', 'submechanism', 'entity', 'model'}
-controllabletypes = ['motor']
 
 type_properties = {
     "undefined": (),
@@ -100,7 +97,6 @@ type_properties = {
 
 # definitions of model elements to be read in
 definitions = {
-    'motors': {},
     'sensors': {},
     'controllers': {},
     'algorithms': {},
@@ -171,7 +167,7 @@ def __evaluateString(s):
     for ma in p.findall(s):
         try:
             s = s.replace(ma, str(eval(ma[1:-1])))
-        except ():
+        except:
             print("The expression " + ma + " could not be evaluated. Ignoring file")
             return ""
     return s

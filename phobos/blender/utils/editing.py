@@ -58,7 +58,7 @@ def dissolveLink(obj, delete_other=False):
             other_children = sUtils.getRecursiveChildren(
                 obj,
                 recursion_depth=2,
-                phobostypes=('motor', 'controller', 'sensor', 'submodel'),
+                phobostypes=('sensor', 'submodel'),
                 include_hidden=True,
             )
             delete += [child for child in other_children if child not in children]

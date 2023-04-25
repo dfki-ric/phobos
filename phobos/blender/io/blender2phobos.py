@@ -426,11 +426,6 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
                     annotations[k1] = {}
                 annotations[k1][k2] = v
 
-    # motor
-    motor_children = sUtils.getChildren(obj, phobostypes=["motor"])
-    assert len(motor_children) <= 1, f"More than one motor defined for {obj.name}"
-    motor = motor_children[0] if len(motor_children) == 1 else None
-
     return representation.Joint(
         name=obj.get("joint/name", obj.name),
         parent=parent.name,
@@ -456,7 +451,7 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
             multiplier=obj["joint/mimic/multiplier"],
             offset=obj["joint/mimic/offset"]
         ) if "joint/mimic/joint" in obj.keys() else None,
-        motor=motor.name if motor is not None else None
+        motor=obj.get("motor/name", None)
     )
 
 
@@ -665,8 +660,6 @@ def deriveRepresentation(obj, logging=True, adjust=True):
         # [TODO v2.1.0] Re-add light support
         # elif obj.phobostype == 'light':
         #     repr_instance = deriveLight(obj)
-        elif obj.phobostype == 'motor':
-            repr_instance = deriveMotor(obj)
         elif obj.phobostype == 'annotation':
             repr_instance = deriveAnnotation(obj)
     except KeyError as e:

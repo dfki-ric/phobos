@@ -878,7 +878,7 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
             if isinstance(value, bpy.types.Object):
                 self.addObjLink(prop, value, column, param)
                 continue
-            elif prop in ["link", "joint", "motor", "parent", "child"] and type(value) == str:
+            elif prop in ["link", "joint", "parent", "child"] and type(value) == str:
                 obj_value = sUtils.getObjectByName(value)
                 if obj_value is not None:
                     self.addObjLink(prop, obj_value, column, param, label=value)

@@ -1601,18 +1601,14 @@ class DefineJointConstraintsOperator(Operator):
                 joint["joint/name"] = joint.name + "_joint"
 
             motor_name = joint.get("joint/name", joint.name) + "_motor"
-            if self.active and not any([child.phobostype == "motor" for child in sUtils.getImmediateChildren(joint)])\
-                    and sUtils.getObjectByName(motor_name) is None:
-                phobos2blender.createMotor(
-                    motor=representation.Motor(
-                        name=motor_name,
-                        joint=joint.get("joint/name", joint.name),
-                        **resources.get_default_motor()
-                    ),
-                    linkobj=joint
-                )
-            elif not self.active and sUtils.getObjectByName(motor_name) is not None:
-                bpy.data.objects.remove(sUtils.getObjectByName(motor_name))
+            phobos2blender.createMotor(
+                motor=representation.Motor(
+                    name=motor_name,
+                    joint=joint.get("joint/name", joint.name),
+                    **resources.get_default_motor()
+                ),
+                linkobj=joint
+            )
 
         return {'FINISHED'}
 
