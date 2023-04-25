@@ -6,7 +6,6 @@ from xml.dom.minidom import parseString
 from xml.etree import ElementTree as ET
 
 import numpy as np
-from PIL import Image, ImageChops
 
 from ..commandline_logging import get_logger
 
@@ -126,6 +125,7 @@ def execute_shell_command(cmd, cwd=None, dry_run=False, silent=False):
 
 
 def make_icon(im, thumbnail_path, size=512, trim=True):
+    from PIL import Image, ImageChops
     if trim:
         bg = Image.new("RGB", im.size, im.getpixel((0, 0)))
         diff = ImageChops.difference(im.convert("RGB"), bg)
@@ -140,6 +140,8 @@ def make_icon(im, thumbnail_path, size=512, trim=True):
 
 
 def get_thumbnail(robotfile, icon_size=512):
+    from PIL import Image, ImageChops
+
     if robotfile.lower().endswith(".smurf"):
         base_dir = os.path.dirname(robotfile)
         with open(robotfile, "r") as f:
