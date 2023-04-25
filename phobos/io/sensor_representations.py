@@ -199,6 +199,7 @@ class RotatingRaySensor(Sensor):
         # Nothing to do here
         pass
 
+RaySensor = RotatingRaySensor
 
 class CameraSensor(Sensor):
     _class_variables = ["name", "link", "height", "width", "hud_height", "hud_width", "opening_height", "opening_width",
