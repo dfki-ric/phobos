@@ -415,7 +415,7 @@ def createMotor(motor: representation.Motor, linkobj: bpy.types.Object):
         phobostype='motor',
     )
     # use resource name provided as: "resource:whatever_name"
-    resource_obj = ioUtils.getResource(['motor'] + [motor.type.lower()])
+    resource_obj = ioUtils.getResource(['motor'] + [motor.build_type.lower()])
     if resource_obj:
         log("Assigned resource mesh and materials to new motor object.", 'DEBUG')
         newmotor.data = resource_obj.data

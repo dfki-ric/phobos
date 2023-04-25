@@ -1832,11 +1832,11 @@ class Transmission(Representation):
 
 
 class Motor(Representation, SmurfBase):
-    TYPES = ["DC", "AC", "STEP", "PID"]
-    CONTROLLER_TYPES = ["position", "velocity", "force"]
+    BUILD_TYPES = ["DC", "AC", "STEP"]
+    TYPES = ["position", "velocity", "force"]
     _class_variables = ["name", "joint"]
 
-    def __init__(self, name=None, joint=None, controller_type="position", **kwargs):
+    def __init__(self, name=None, joint=None, type="position", **kwargs):
         self.name = name
         self.joint = joint
         SmurfBase.__init__(self, returns=["name", "joint"], **kwargs)
@@ -1846,12 +1846,11 @@ class Motor(Representation, SmurfBase):
         self._maxSpeed = None
         self._maxValue = None
         self._minValue = None
-        self.type = kwargs.get("type", None)
-        if self.type:
-            self.type = self.type.upper()
-        self.controller_type = controller_type
-        assert self.controller_type is None or self.controller_type in self.CONTROLLER_TYPES
-        self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue', 'controller_type']
+        self.build_type = kwargs.get("type", None)
+        if self.build_type:
+            self.build_type = self.build_type.upper()
+        self.type = type
+        self.returns += ['joint', 'maxEffort', 'maxSpeed', 'maxValue', 'minValue', 'type']
 
     @property
     def maxEffort(self):
@@ -1977,21 +1976,21 @@ class Motor(Representation, SmurfBase):
 
     @property
     def plugin_name(self):
-        if self.controller_type == "position":
+        if self.type == "position":
             return "gz::sim::systems::JointPositionController"
         return "gz::sim::systems::JointController"
 
     @property
     def plugin_filename(self):
-        if self.controller_type == "position":
+        if self.type == "position":
             return "gz-sim-joint-position-controller-system"
         return "gz-sim-joint-controller-system"
 
     @property
     def force_control(self):
-        if self.controller_type == "position":
+        if self.type == "position":
             return None
-        return self.controller_type == "force"
+        return self.type == "force"
 
 
 class PluginFactory(Representation):
@@ -2000,15 +1999,15 @@ class PluginFactory(Representation):
         if any(x in plugin_name for x in ["JointController", "JointPositionController"]):
             assert "joint_name" in kwargs
             if "JointPositionController" in plugin_name:
-                controller_type = "position"
+                type = "position"
             elif not kwargs.get("use_force_command", False):
-                controller_type = "velocity"
+                type = "velocity"
             else:
-                controller_type = "force"
+                type = "force"
             kwargs.pop("use_force_command")
             return Motor(
                 name=kwargs["joint_name"]+"_motor",
-                controller_type=(
+                type=(
                     "position" if "JointPositionController" in plugin_name
                     else (
                         "velocity" if not kwargs.get("use_force_command", False)
