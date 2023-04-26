@@ -2905,6 +2905,8 @@ class AssignSubmechanism(Operator):
 
     joints = []
 
+    executeMessage = []
+
     def compileSubmechanismTreeEnum(self, context):
         """
 
@@ -2991,11 +2993,9 @@ class AssignSubmechanism(Operator):
         layout.prop(self, 'linear_chain')
         layout.prop(self, 'mechanism_name')
         if not self.linear_chain:
-            print("wm.mechanismpreview")
-            print(wm.mechanismpreview)
             layout.template_icon_view(wm, 'mechanismpreview', show_labels=True, scale=5.0)
             layout.prop(wm, 'mechanismpreview')
-            size = 0 if wm.mechanismpreview == "" else len(
+            size = -1 if wm.mechanismpreview == "" else len(
                 defs.definitions['submechanisms'][wm.mechanismpreview]['joints']['spanningtree']
             )
             if size == len(self.joints):
@@ -3007,6 +3007,9 @@ class AssignSubmechanism(Operator):
                     c2.prop(self, "jointtype" + str(i), text='')
             else:
                 layout.label(text='Please choose a valid type for selected joints.')
+        if len(self.executeMessage) > 0:
+            for t in self.executeMessage:
+                layout.label(text=t)
 
     def execute(self, context):
         """
@@ -3017,6 +3020,7 @@ class AssignSubmechanism(Operator):
         Returns:
 
         """
+        self.executeMessage = []
         self.joints = self.isLinearChain(
             [obj for obj in bpy.context.selected_objects if obj.phobostype == 'link']
         )
@@ -3024,8 +3028,9 @@ class AssignSubmechanism(Operator):
         roots = [link for link in self.joints if link.parent not in self.joints]
         if len(roots) != 1:
             log("Selected joints are not all connected.", 'WARNING')
+            self.executeMessage.append("Careful, the selected joints are not all connected")
             if self.linear_chain:
-                return {'CANCELLED'}
+                return {'FINISHED'}
         if self.mechanism_name:
             if self.linear_chain:
                 root = roots[0]
@@ -3035,10 +3040,11 @@ class AssignSubmechanism(Operator):
                 root['submechanism/independent'] = list(self.joints)
                 for i in range(len(self.joints)):
                     self.joints[i]['submechanism/jointname'] = str(i + 1)
-            else:
+                root['submechanism/name'] = self.mechanism_name
+            elif len(context.window_manager.mechanismpreview) > 0:
                 root, freeloader_joints = eUtils.getNearestCommonParent(self.joints)
                 if root is None:
-                    ErrorMessageWithBox("The selected links require a common parent link")
+                    self.executeMessage.append("The selected links require a common parent link")
                     return {'FINISHED'}
                 mechanismdata = defs.definitions['submechanisms'][
                     context.window_manager.mechanismpreview
@@ -3049,8 +3055,8 @@ class AssignSubmechanism(Operator):
                         getattr(self, 'jointtype' + str(i)): self.joints[i]
                         for i in range(len(self.joints))
                     }
-                    # assign attributes
-                    try:
+                    if len(jointmap) == size:
+                        # assign attributes
                         for i in range(len(self.joints)):
                             self.joints[i]['submechanism/jointname'] = getattr(
                                 self, 'jointtype' + str(i)
@@ -3068,18 +3074,25 @@ class AssignSubmechanism(Operator):
                         ]
                         root['submechanism/root'] = root
                         root['submechanism/freeloader'] = freeloader_joints
-                    except KeyError:
-                        log("Incomplete joint definition.")
+                    else:
+                        self.executeMessage.append("Define joints")
+                        return {'FINISHED'}
                 else:
                     log(
                         'Number of joints not valid for selected submechanism type: '
                         + context.window_manager.mechanismpreview,
                         'ERROR',
                     )
+                    self.executeMessage.append("Got {} joints, {} required".format(len(self.joints), size))
                     return {'FINISHED'}
-            root['submechanism/name'] = self.mechanism_name
+                root['submechanism/name'] = self.mechanism_name
+            else:  # No submechanism selected
+                return {'FINISHED'}
         else:
             log('Submechanism definition requires valid name.', 'WARNING')
+            self.executeMessage.append("Give your submechanism a recognizable name")
+            return {'FINISHED'}
+        self.executeMessage.append("Submechanism assigned")
         return {'FINISHED'}
 
 
