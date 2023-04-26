@@ -82,7 +82,7 @@ class HyrodynAnnotation(SmurfBase):
     }
 
     def __init__(self, name, contextual_name,
-                 jointnames_spanningtree, jointnames_active=None,
+                 jointnames_spanningtree=None, jointnames_active=None,
                  jointnames_independent=None, jointnames_dependent=None,
                  jointnames=None, file_path=None,
                  type=None, around=None, auto_gen=False, **kwargs):
@@ -201,9 +201,15 @@ class Submechanism(HyrodynAnnotation):
     _class_variables = ["name", "jointnames", "jointnames_spanningtree", "jointnames_active", "jointnames_independent", "loop_constraints"]
 
     def __init__(self, name, contextual_name,
-                 jointnames_spanningtree, jointnames_active, jointnames_independent, jointnames=None,
+                 jointnames_spanningtree=None, jointnames_active=None, jointnames_independent=None, jointnames=None,
                  file_path=None, type="numerical",
                  loop_constraints=None, multi_joint_dependencies=None, auto_gen=False, **kwargs):
+        if jointnames_independent is None:
+            jointnames_independent = []
+        if jointnames_active is None:
+            jointnames_active = []
+        if jointnames_spanningtree is None:
+            jointnames_spanningtree = []
         super(Submechanism, self).__init__(
             name=name, contextual_name=contextual_name,
             jointnames_spanningtree=jointnames_spanningtree,

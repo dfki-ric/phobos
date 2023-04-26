@@ -294,7 +294,7 @@ class Robot(SMURFRobot):
             os.makedirs(os.path.dirname(os.path.abspath(model_file)))
         if ros_pkg_name is None:
             ros_pkg_name = os.path.basename(outputdir)
-        export_robot.relink_entities()
+        export_robot.link_entities()
         export_robot.xmlfile = model_file
 
         # meshes
@@ -1178,7 +1178,7 @@ class Robot(SMURFRobot):
             if k not in submodel.__dict__.keys() or submodel.__dict__[k] is None:
                 submodel.__dict__[k] = v
 
-        submodel.relink_entities()
+        submodel.link_entities()
 
         if abstract_model:
             abstract_joints = [str(j) for j in self.joints
@@ -1201,7 +1201,7 @@ class Robot(SMURFRobot):
             for jointname, intersecting in move_joint_axis_to_intersection.items():
                 submodel.move_joint_to_intersection(jointname, intersecting)
 
-        submodel.relink_entities()
+        submodel.link_entities()
 
         return submodel
 
@@ -2007,7 +2007,7 @@ class Robot(SMURFRobot):
         elif not do_not_rename:
             log.warning(f"Robot::attach(): The arguments you chose may result in the renaming of parts of the robot {other.name}")
 
-        other.relink_entities()
+        other.link_entities()
 
         if self.get_link_id(joint.parent) is None:
             raise Exception("Provide valid link to attach to. '" + joint.parent + "' is not in " + str(
@@ -2189,6 +2189,7 @@ class Robot(SMURFRobot):
         for cPose in new_poses:
             self.add_aggregate('pose', cPose)
 
+        self.link_entities()
         joint.link_with_robot(self)
         self.add_aggregate('joint', joint)
         assert joint.check_valid()
@@ -2200,7 +2201,6 @@ class Robot(SMURFRobot):
         assert len(self.joints) == len(self.get_joints_ordered_df()), f"{sorted([str(x) for x in self.joints])}\n{sorted([str(x) for x in self.get_joints_ordered_df()])}"
         assert self.get_root()
 
-        self.relink_entities()
         return renamed_entities
 
     def add_link_by_properties(self, name, joint, mass=0.0, add_default_motor=True, **kwargs):
@@ -2245,7 +2245,7 @@ class Robot(SMURFRobot):
 
     # has to be overridden in smurf and hyrodyn?
     def mirror_model(self, mirror_plane=None, flip_axis=1, exclude_meshes=None, name_replacements=None,
-                     target_urdf=None, target_smurf=None, only_return=False):
+                     target_urdf=None, target_smurf=None, only_return=False, final_linking_optional=False):
         """
         Mirrors the robot model.
         :param mirror_plane: The normal of the mirror plane. Default y-plane
@@ -2387,7 +2387,8 @@ class Robot(SMURFRobot):
 
         for k, v in robot.__dict__.items():
             setattr(self, k, v)
-        self.relink_entities()
+        if not final_linking_optional:
+            self.link_entities()
 
     def split_robot(self, link_to_cut):
         """

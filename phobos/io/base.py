@@ -56,8 +56,11 @@ class Linkable(object):
         Returns:
             The corresponding object
         """
-        if self._related_robot_instance is None or isinstance(new_value, Representation):
+        if self._related_robot_instance is None:
             return new_value
+        if isinstance(new_value, Representation):
+            # this way we ensure linking to the correct robot instance
+            new_value = str(new_value)
         vtype = self.type_dict[varname].lower()
         if self._related_robot_instance._related_world_instance is not None and "::" in new_value:
             if new_value.startswith(self._related_robot_instance._related_entity_instance.name + "::"):

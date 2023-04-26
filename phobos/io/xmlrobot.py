@@ -113,10 +113,6 @@ class XMLRobot(Representation):
             out &= entity.check_unlinkage()
         return out
 
-    def relink_entities(self):
-        self.unlink_entities()
-        self.link_entities()
-
     def duplicate(self):
         self.unlink_entities()
         out = deepcopy(self)

@@ -710,7 +710,6 @@ def deriveRobot(root, name='', objectlist=None):
     robot = core.Robot()
     robot.__dict__.update(xml_robot.__dict__)
     robot.description = bUtils.readTextFile('README.md')
-    robot.link_entities()
 
     for motor in [deriveMotor(obj) for obj in objectlist if obj.phobostype == 'link' and any([k.startswith("motor") for k in obj.keys()])]:
         robot.add_motor(motor)
@@ -724,7 +723,7 @@ def deriveRobot(root, name='', objectlist=None):
     # [TODO v2.0.0] Add submechanisms
 
     # Until here we have added all entities that are linkable
-    robot.relink_entities()
+    robot.link_entities()
 
     # [TODO v2.1.0] Re-add lights and SRDF support
 

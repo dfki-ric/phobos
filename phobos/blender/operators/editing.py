@@ -1709,7 +1709,6 @@ class DissolveLink(Operator):
         return ob is not None and ob.phobostype == 'link' and context.mode == "OBJECT"
 
 
-# [TODO v2.0.0] REVIEW this
 class AddMotorOperator(Operator):
     """Add a motor to the selected joint.
     It is possible to add motors to multiple joints at the same time.

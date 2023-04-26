@@ -274,6 +274,8 @@ class SMURFRobot(XMLRobot):
 
         if 'submechanisms' in self.annotations:
             for submech in self.annotations['submechanisms']:
+                if submech.get("auto_gen", False):
+                    continue
                 self.add_aggregate(
                     'submechanisms',
                     Submechanism(**submech)

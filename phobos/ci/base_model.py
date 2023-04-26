@@ -255,7 +255,7 @@ class BaseModel(yaml.YAMLObject):
                 else:
                     att_model = self.dep_models[child["model"]].robot.duplicate()
 
-                att_model.relink_entities()
+                att_model.link_entities()
 
                 if "child" not in child["joint"].keys() or child["joint"]["child"] is None:
                     child["joint"]["child"] = str(att_model.get_root())
@@ -296,23 +296,24 @@ class BaseModel(yaml.YAMLObject):
                                 suffix=child["name_editing"]["link_suffix"] if "link_suffix" in child["name_editing"] else "",
                                 replacements=child["name_editing"]["link_replacements"] if "link_replacements" in child["name_editing"] else {})
 
+                att_model.unlink_entities()
+
                 if "remove_beyond" in child.keys():
                     att_model = att_model.get_before(child["remove_beyond"])
-                    att_model.relink_entities()
 
                 if "take_leaf" in child.keys():
                     assert type(child["take_leaf"]) == str
                     att_model = att_model.get_beyond(child["take_leaf"])
                     assert len(att_model.keys()) == 1, "take_leaf: Please cut the tree in a way to get only one leaf"
                     att_model = list(att_model.values())[0]
-                    att_model.relink_entities()
 
                 if "mirror" in child.keys():
                     att_model.mirror_model(
                         mirror_plane=child["mirror"]["plane"] if "plane" in child["mirror"].keys() else [0, 1, 0],
                         flip_axis=child["mirror"]["flip_axis"] if "flip_axis" in child["mirror"].keys() else 1,
                         exclude_meshes=child["mirror"]["exclude_meshes"] if "exclude_meshes" in child["mirror"].keys() else [],
-                        target_urdf=combined_model.xmlfile
+                        target_urdf=combined_model.xmlfile,
+                        final_linking_optional=True
                     )
 
                 if "name" not in child["joint"].keys() or child["joint"]["name"] is None:
@@ -351,14 +352,14 @@ class BaseModel(yaml.YAMLObject):
 
                 parent.attach(att_model if isinstance(att_model, Robot) else att_model.robot, joint, do_not_rename=False)
                 assert len(combined_model.links) == len(combined_model.joints) + 1
-                parent.relink_entities()
+                parent.unlink_entities()
 
                 if "children" in child.keys():
                     recursive_attach(parent, child["children"], child["model"])
 
         if "children" in self.assemble.keys() and len(self.assemble["children"]) > 0:
             recursive_attach(combined_model, self.assemble["children"], parentname=self.assemble["model"])
-            combined_model.relink_entities()
+            combined_model.link_entities()
 
         # 3. save combined_model to the temp directory
         assert len(combined_model.links) == len(combined_model.joints) + 1
@@ -693,7 +694,7 @@ class BaseModel(yaml.YAMLObject):
         return True
 
     def export(self):
-        self.robot.relink_entities()
+        self.robot.link_entities()
         ros_pkg_name = self.robot.export(outputdir=self.exportdir, export_config=self.export_config,
                                          rel_mesh_pathes=self.export_meshes, ros_pkg_later=True)
         for vc in self.robot.collisions + self.robot.visuals:

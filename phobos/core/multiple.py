@@ -286,7 +286,7 @@ class Arrangement(Representation, SmurfBase):
                     entities_in_tree.append(entity)
                     attached += 1
 
-        assembly.relink_entities()
+        assembly.link_entities()
         return assembly
 
     def export_sdf(self, use_includes=True):
