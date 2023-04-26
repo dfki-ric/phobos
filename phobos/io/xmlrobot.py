@@ -77,6 +77,14 @@ class XMLRobot(Representation):
     def __str__(self):
         return self.name
 
+    def link_with_world(self, world, entity):
+        self._related_world_instance = world
+        self._related_entity_instance = entity
+
+    def unlink_from_world(self):
+        self._related_world_instance = None
+        self._related_entity_instance = None
+
     @property
     def collisions(self):
         return self.get_all_collisions()

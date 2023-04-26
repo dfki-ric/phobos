@@ -63,8 +63,8 @@ class Linkable(object):
             new_value = str(new_value)
         vtype = self.type_dict[varname].lower()
         if self._related_robot_instance._related_world_instance is not None and "::" in new_value:
-            if new_value.startswith(self._related_robot_instance._related_entity_instance.name + "::"):
-                converted = self._related_robot_instance.get_aggregate(f"{vtype}", new_value.split("::", 1)[1])
+            if self._related_robot_instance._related_entity_instance+"::" in new_value:
+                converted = self._related_robot_instance.get_aggregate(f"{vtype}", new_value.rsplit("::", 1)[-1])
             else:
                 converted = self._related_robot_instance._related_world_instance.get_aggregate(f"{vtype}", new_value)
         else:

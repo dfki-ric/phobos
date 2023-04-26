@@ -13,19 +13,26 @@ __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 class Entity(Representation, SmurfBase):
     _class_variables = ["origin"]
 
-    def __init__(self, name=None, world=None, model=None, file=None, type=None, origin=None, frames=None, anchor=None,
+    def __init__(self, name=None, world=None, model=None, file=None, origin=None, frames=None, anchor=None,
                  **kwargs):
         Representation.__init__(self)
+        assert world is not None
         self.model = _singular(model)
         self.origin = _singular(origin) if origin is not None else representation.Pose()
         self._file = os.path.normpath(os.path.join(os.path.dirname(world.inputfile), file)) if not os.path.isabs(file) else file
         if model is None and file is not None:
-            self.model = Robot(inputfile=self._file)
+            if self._file.lower().rsplit(".", 1)[-1] in ["smurfs", "smurfa"]:
+                try:
+                    self.model = Arrangement(inputfile=self._file)
+                except RecursionError as e:
+                    e.args = ("Ouch! The cat bites its own tail. You can't include a file in it-self.",)
+                    raise e
+            else:
+                self.model = Robot(inputfile=self._file)
         assert self.model is not None
         if name is None:
             name = os.path.basename(self._file.rsplit(".", 1)[0])
-        if world is not None:
-            self.link_with_world(world)
+        self.link_with_world(world)
         self._frames = []
         for frame in _plural(frames):
             self._frames.append(frame)
@@ -34,8 +41,7 @@ class Entity(Representation, SmurfBase):
         self.excludes += ["origin", "model"]
 
     def link_with_world(self, world, check_linkage_later=False):
-        self.model._related_world_instance = world
-        self.model._related_entity_instance = self
+        self.model.link_with_world(world, self)
         self.model.link_entities()
         # [Todo v2.1.0]
         # go through all frame entities and check whether there are frames explicitly defined that are already there by
@@ -44,8 +50,7 @@ class Entity(Representation, SmurfBase):
             self.check_linkage()
 
     def unlink_from_world(self, check_linkage_later=False):
-        self.model._related_world_instance = None
-        self.model._related_entity_instance = None
+        self.model.unlink_from_world()
         self.model.unlink_entities()
         # [Todo v2.1.0]
         #  Go through all linkables (poses should be sufficient) and check whether there are still references to other
@@ -63,11 +68,14 @@ class Entity(Representation, SmurfBase):
 
     @property
     def file(self):
-        return os.path.relpath(self.model.smurffile if self.model.smurffile is not None else self.model.xmlfile, os.path.dirname(self.world.inputfile))
+        return os.path.relpath(
+            getattr(self.model, "smurffile", getattr(self.model, "xmlfile", getattr(self.model, "inputfile"))),
+            os.path.dirname(self.model._related_world_instance.inputfile)
+        )
 
     @property
     def type(self):
-        return self.file.rsplit(".",1)[-1]
+        return self.file.rsplit(".", 1)[-1]
 
     @type.setter
     def type(self, value):
@@ -151,6 +159,10 @@ class Entity(Representation, SmurfBase):
 
 
 class Arrangement(Representation, SmurfBase):
+    # This can be model of an entity again
+    _related_world_instance = None
+    _related_entity_instance = None
+
     def __init__(self, inputfile=None, entities=None, frames=None):
         super(Arrangement, self).__init__()
         self.entities = _plural(entities)
@@ -203,17 +215,26 @@ class Arrangement(Representation, SmurfBase):
                 for e in self._frames:
                     if str(e) == elem:
                         return e
-        elif len(getattr(self, typeName, None)) == list:
+        elif "::" in elem:
+            entity, elem = elem.split("::", 1)
+            entity_instance = self.get_aggregate("entities", entity)
+            if entity_instance is None:
+                raise ValueError(f"Entity with name {entity} not found")
+            return entity_instance.model.get_aggregate(typeName, elem)
+        elif type(getattr(self, typeName, None)) == list:
             for e in getattr(self, typeName):
                 if str(e) == elem:
                     return e
-        elif "::" in elem:
-            entity, elem = elem.split("::")
-            return self.get_aggregate("entities", entity).get_aggregate(typeName, elem)
-        elif not hasattr(self, typeName):
-            raise TypeError(f"World has no {typeName}")
         else:
-            return None
+            raise TypeError(f"World has no {typeName}")
+
+    def link_with_world(self, world, entity):
+        self._related_world_instance = world
+        self._related_entity_instance = entity
+
+    def unlink_from_world(self):
+        self._related_world_instance = None
+        self._related_entity_instance = None
 
     def link_entities(self):
         for e in self.entities:
@@ -253,7 +274,13 @@ class Arrangement(Representation, SmurfBase):
             root_entity = self.get_aggregate("entities", root_entity)
             assert root_entity is not None, f"No entity with name {root_entity} found."
 
-        assembly = root_entity.model.duplicate()
+        if isinstance(root_entity.model, Robot):
+            assembly = root_entity.model.duplicate()
+        elif isinstance(root_entity.model, Arrangement):
+            assembly = root_entity.model.assemble()
+        else:
+            raise TypeError(f"Wrong model type of entity {root_entity.name}: {type(root_entity.model)}")
+        assembly.unlink_from_world()
         assembly.rename_all(prefix=root_entity.name + "_")
         entities_in_tree = [root_entity]
 
@@ -264,15 +291,25 @@ class Arrangement(Representation, SmurfBase):
                 if entity._anchor in ["NONE, WORLD"] or entity in entities_in_tree:
                     continue
                 if entity._anchor == "PARENT":
+                    assert "::" in entity.parent, "Please specify the parent in the way entity::link. Received: "+entity.parent
                     parent_entity, parent_link = entity.parent.split("::", 1)
                 else:
+                    assert "::" in entity._anchor, "Please specify the anchor in the way entity::link or use the parent keyword. Received: "+entity._anchor
                     parent_entity, parent_link = entity._anchor.split("::", 1)
                 if parent_entity in [str(e) for e in entities_in_tree]:
                     parent_link = assembly.get_link(parent_entity+"_"+parent_link)
                     assert parent_link is not None
-                    attach_model = entity.model.duplicate()
+                    if isinstance(root_entity.model, Robot):
+                        attach_model = entity.model.duplicate()
+                        assembly.unlink_from_world()
+                    elif isinstance(root_entity.model, Arrangement):
+                        attach_model = entity.model.assemble()
+                    else:
+                        raise TypeError(f"Wrong model type of entity {entity.name}: {type(entity.model)}")
+                    attach_model.unlink_from_world()
                     attach_model.rename_all(prefix=entity.name + "_")
-                    entity.origin.relative_to = entity.origin.relative_to.replace("::", "_")
+                    origin = entity.origin.duplicate()
+                    origin.relative_to = str(entity.origin.relative_to).replace("::", "_", 1)
                     assembly.attach(
                         other=attach_model,
                         joint=representation.Joint(
@@ -280,7 +317,7 @@ class Arrangement(Representation, SmurfBase):
                             parent=parent_link,
                             child=attach_model.get_root(),
                             type="fixed",
-                            origin=entity.origin
+                            origin=origin
                         )
                     )
                     entities_in_tree.append(entity)
