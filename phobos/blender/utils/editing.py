@@ -663,7 +663,7 @@ def removeProperties(obj, props, recursive=False):
         if prop in obj:
             del obj[prop]
         elif prop[-1] == '*':
-            for objprop in obj.keys():
+            for objprop in list(obj.keys()):
                 if objprop.startswith(prop[:-1]):
                     del obj[objprop]
 
