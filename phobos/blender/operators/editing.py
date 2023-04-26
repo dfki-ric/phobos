@@ -3228,6 +3228,7 @@ class DeleteSubmechanism(Operator):
         Returns:
 
         """
+        sUtils.storeSelectedObjects()
         root = sUtils.getObjectByProperty('submechanism/name', self.submechanism)
         jointlist = root['submechanism/spanningtree']
         objects = [root] + jointlist
@@ -3235,6 +3236,7 @@ class DeleteSubmechanism(Operator):
 
         for obj in objects:
             eUtils.removeProperties(obj, ['submechanism*'])
+        sUtils.restoreSelectedObjects()
         return {'FINISHED'}
 
 
