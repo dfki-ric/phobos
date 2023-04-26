@@ -2880,7 +2880,6 @@ class DefineSubmodel(Operator):
         return {'FINISHED'}
 
 
-# [TODO v2.0.0] REVIEW this
 class AssignSubmechanism(Operator):
     """Assign a submechanism to the model"""
 
@@ -3096,7 +3095,6 @@ class AssignSubmechanism(Operator):
         return {'FINISHED'}
 
 
-# [TODO v2.0.0] REVIEW this
 class SelectSubmechanism(Operator):
     """Select all objects of a submechanism"""
 
@@ -3178,7 +3176,6 @@ class SelectSubmechanism(Operator):
         return {'FINISHED'}
 
 
-# [TODO v2.0.0] REVIEW this
 class DeleteSubmechanism(Operator):
     """Delete an existing submechanism"""
 
