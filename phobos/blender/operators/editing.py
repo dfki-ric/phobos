@@ -2961,13 +2961,17 @@ class AssignSubmechanism(Operator):
         """
         wm = context.window_manager
         layout = self.layout
-        layout.label(text='Selection contains {0} joints.'.format(len(self.joints)))
+        nSelectedJoints = len(self.joints)
+        layout.label(text='Selection contains {0} joint{1}.'.format(
+            nSelectedJoints, "s" if nSelectedJoints is not 1 else ""))
         layout.prop(self, 'linear_chain')
         layout.prop(self, 'mechanism_name')
         if not self.linear_chain:
+            print("wm.mechanismpreview")
+            print(wm.mechanismpreview)
             layout.template_icon_view(wm, 'mechanismpreview', show_labels=True, scale=5.0)
             layout.prop(wm, 'mechanismpreview')
-            size = len(
+            size = 0 if wm.mechanismpreview == "" else len(
                 defs.definitions['submechanisms'][wm.mechanismpreview]['joints']['spanningtree']
             )
             if size == len(self.joints):
@@ -3009,6 +3013,9 @@ class AssignSubmechanism(Operator):
                     self.joints[i]['submechanism/jointname'] = str(i + 1)
             else:
                 root, freeloader_joints = eUtils.getNearestCommonParent(self.joints)
+                if root is None:
+                    ErrorMessageWithBox("The selected links require a common parent link")
+                    return {'FINISHED'}
                 mechanismdata = defs.definitions['submechanisms'][
                     context.window_manager.mechanismpreview
                 ]
