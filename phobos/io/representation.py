@@ -260,6 +260,10 @@ class Texture(Representation):
         else:
             return self.abs_filepath
 
+    @property
+    def posix_path(self):
+        return misc.posix_path(self.filepath)
+
     def load_image(self):
         if BPY_AVAILABLE:
             self.image = bpy.data.images.load(self.input_file)
@@ -459,8 +463,7 @@ class Mesh(Representation, SmurfBase):
     _class_variables = ["material"]
 
     def __init__(self, filepath=None, scale=None, mesh=None, meshname=None, material=None,
-                 mesh_orientation=None,
-                 **kwargs):
+                 mesh_orientation=None, **kwargs):
         SmurfBase.__init__(self, returns=["scale", "exported", "unique_name", "imported"])
         self._operations = []
         self._scale = [1.0, 1.0, 1.0]
@@ -609,6 +612,10 @@ class Mesh(Representation, SmurfBase):
             return self.abs_filepath
 
     @property
+    def posix_path(self):
+        return misc.posix_path(self.filepath)
+
+    @property
     def exported(self):
         if self._related_robot_instance is not None:
             out = {}
@@ -623,11 +630,15 @@ class Mesh(Representation, SmurfBase):
         else:
             return self._exported
 
+    @property
+    def posix_exported(self):
+        return {k: misc.posix_path(v) for k, v in self.exported}
+
     @exported.setter
     def exported(self, value):
         for fmt, info in value.items():
             self._exported[fmt] = {
-                k: v
+                k: misc.sys_path(v)
                 if k != "filepath" or self._related_robot_instance is None or os.path.isabs(v)
                 else os.path.normpath(os.path.join(read_relative_filename(v, getattr(self._related_robot_instance, "smurffile", self._related_robot_instance.xmlfile))))
                 for k, v in info.items()

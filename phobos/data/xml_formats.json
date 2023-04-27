@@ -52,7 +52,7 @@
     "Texture": {
       "tag": "texture",
       "attributes": {
-        "filename": "filepath"
+        "filename": "posix_path"
       }
     },
     "Material": {
@@ -188,7 +188,7 @@
     "Mesh": {
       "tag": "mesh",
       "attributes": {
-        "filename": "filepath",
+        "filename": "posix_path",
         "scale": "scale"
       }
     },
@@ -763,7 +763,7 @@
     "Mesh": {
       "tag": "mesh",
       "value_children": {
-        "uri": "filepath",
+        "uri": "posix_path",
         "scale": "scale"
       }
     },

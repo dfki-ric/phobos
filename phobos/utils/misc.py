@@ -43,6 +43,12 @@ def sys_path(path):
         return path.replace("\\", "/")
 
 
+def posix_path(path):
+    if path is None:
+        return path
+    return path.replace("\\", "/")
+
+
 def deepen_dict(input_dict):
     out = {}
     for k, v in input_dict.items():
