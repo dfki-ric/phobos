@@ -485,6 +485,10 @@ def createRobot(robot: core.Robot):
         child.matrix_local = mathutils.Matrix(joint.origin.to_matrix())
         createJoint(joint, child)
 
+    log("Creating {} motors...".format(len(robot.motors)), 'INFO')
+    for motor in robot.motors:
+        createMotor(motor, newlinks[robot.get_joint(motor.joint).child])
+
     log("Assigning model name: {}".format(robot.name), 'INFO')
     rootlink = newlinks[str(robot.get_root())]
     rootlink['model/name'] = robot.name
@@ -494,10 +498,6 @@ def createRobot(robot: core.Robot):
     log("Creating {} sensors...".format(len(robot.sensors)), 'INFO')
     for sensor in robot.sensors:
         newobjects.append(createSensor(sensor, linkobj=None if sensor.frame is None else newlinks[sensor.frame]))
-
-    log("Creating {} motors...".format(len(robot.motors)), 'INFO')
-    for motor in robot.motors:
-        newobjects.append(createMotor(motor, newlinks[robot.get_joint(motor.joint).child]))
 
     log("Creating interfaces...", 'INFO')
     for interface in robot.interfaces:
