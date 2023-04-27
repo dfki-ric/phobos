@@ -1,4 +1,5 @@
 import os
+import platform
 import re
 import subprocess
 from copy import deepcopy
@@ -31,6 +32,15 @@ def merge_default(input_dict, default_dict):
         if _k not in input_dict:
             input_dict[_k] = _v
     return input_dict
+
+
+def sys_path(path):
+    if path is None:
+        return path
+    if platform.system() == "Windows":
+        return path.replace("/", "\\")
+    else:
+        return path.replace("\\", "/")
 
 
 def deepen_dict(input_dict):

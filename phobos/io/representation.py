@@ -210,15 +210,15 @@ class Texture(Representation):
             self.input_file = None
             self.input_type = "img"
             if BPY_AVAILABLE and isinstance(image, bpy.types.Image):
-                self.input_file = os.path.normpath(bpy.path.abspath(image.filepath))
+                self.input_file = os.path.normpath(bpy.path.abspath(misc.sys_path(image.filepath)))
                 self.input_type = "img_bpy"
                 if self.unique_name is None:
                     self.unique_name, ext = os.path.splitext(image.name)
             elif hasattr(image, "filename"):
                 # assumes PIL/Pillow image
-                self.input_file = os.path.expanduser(image.filename)
+                self.input_file = os.path.expanduser(misc.sys_path(image.filename))
         elif filepath is not None:
-            self.input_file = filepath
+            self.input_file = misc.sys_path(filepath)
             self.input_type = "file"
             self.image = None
 
@@ -469,6 +469,7 @@ class Mesh(Representation, SmurfBase):
         self._changed = False
         self._info_in_sync = True
         self.material = material
+        filepath = misc.sys_path(filepath)
         if mesh is not None:
             assert meshname is not None and type(meshname) == str
             self.original_mesh_name = meshname

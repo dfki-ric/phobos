@@ -9,7 +9,7 @@ from ..io import representation
 from ..io import sensor_representations
 from ..io.parser import parse_xml
 from ..io.xmlrobot import XMLRobot
-from ..utils import tree
+from ..utils import tree, misc
 
 log = get_logger(__name__)
 
@@ -41,6 +41,7 @@ class SMURFRobot(XMLRobot):
 
         if inputfile is None and smurffile is not None:
             inputfile = smurffile
+        inputfile = misc.sys_path(inputfile)
         if inputfile is not None:
             inputfile = os.path.abspath(inputfile)
             if inputfile.lower().endswith(".smurf") and smurffile is None:
@@ -81,9 +82,9 @@ class SMURFRobot(XMLRobot):
                 raise ValueError("Can't parse robot from: "+inputfile + ("(can't parse)" if os.path.exists(inputfile) else "(not found)"))
 
         super(SMURFRobot, self).__init__(is_human=is_human)
-        self.xmlfile = xmlfile
-        self.smurffile = smurffile
-        self.submechanisms_file = submechanisms_file
+        self.xmlfile = misc.sys_path(xmlfile)
+        self.smurffile = misc.sys_path(smurffile)
+        self.submechanisms_file = misc.sys_path(submechanisms_file)
 
         if self.smurffile is not None:
             # Check the input file
@@ -153,6 +154,7 @@ class SMURFRobot(XMLRobot):
 
                 # Process the file to get the absolute path
                 for i, f in enumerate(self.inputfiles):
+                    f = misc.sys_path(f)
                     if not os.path.isabs(f):
                         self.inputfiles[i] = os.path.join(os.path.dirname(self.smurffile), f)
         if self.inputfiles is not None:
