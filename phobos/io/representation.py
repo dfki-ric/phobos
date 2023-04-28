@@ -46,7 +46,7 @@ class Pose(Representation, SmurfBase):
 
     def __init__(self, xyz=None, rpy=None, vec=None, relative_to=None, **kwargs):
         Representation.__init__(self)
-        SmurfBase.__init__(self, returns=["rotation", "position"])
+        SmurfBase.__init__(self, returns=["rotation", "position", "relative_to"])
         self.excludes += ["xyz", "rpy"]
         self.relative_to = relative_to
         self._matrix = np.identity(4)
@@ -639,9 +639,9 @@ class Mesh(Representation, SmurfBase):
     def exported(self, value):
         for fmt, info in value.items():
             self._exported[fmt] = {
-                k: misc.sys_path(v)
+                k: v
                 if k != "filepath" or self._related_robot_instance is None or os.path.isabs(v)
-                else os.path.normpath(os.path.join(read_relative_filename(v, getattr(self._related_robot_instance, "smurffile", self._related_robot_instance.xmlfile))))
+                else os.path.normpath(os.path.join(read_relative_filename(misc.sys_path(v), getattr(self._related_robot_instance, "smurffile", self._related_robot_instance.xmlfile))))
                 for k, v in info.items()
             }
 
@@ -1157,6 +1157,9 @@ class Collision(Representation, SmurfBase):
 
     def __init__(self, name=None, link=None, geometry=None, origin=None, bitmask=None, noDataPackage=False,
                  reducedDataPackage=False, ccfm=None, primitive=None, **kwargs):
+        _parent_xml = kwargs.get("_parent_xml", None)
+        if _parent_xml is not None and link is None:
+            link = _parent_xml.attrib.get("name")
         if link is not None:
             link = str(link)
         self.original_name = name
@@ -1213,6 +1216,9 @@ class Visual(Representation, SmurfBase):
                 name = link + "_visual"
             else:
                 name = None
+        _parent_xml = kwargs.get("_parent_xml", None)
+        if _parent_xml is not None and link is None:
+            link = _parent_xml.attrib.get("name")
         self.link = link
         self.name = name
         self.geometry = _singular(geometry)

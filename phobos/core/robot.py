@@ -705,10 +705,9 @@ class Robot(SMURFRobot):
                 if export["name"] not in self.submodel_defs:
                     export_robot_instance = self.define_submodel(
                         name=export["name"],
-                        start=export["start"] if "start" in export else str(self.get_root()),
-                        stop=export["stop"] if "stop" in export else None,
-                        include_unstopped_branches=export["include_unstopped_branches"] or "stop" not in export
-                        if "include_unstopped_branches" in export else None,
+                        start=export.get("start", None),
+                        stop=export.get("stop", None),
+                        include_unstopped_branches=export.get("include_unstopped_branches", None),
                         no_submechanisms=export["no_submechanisms"] if "no_submechanisms" in export else False,
                         abstract_model=export.get("abstract_model", False),
                         include_human_in_abstract=export.get("include_human_in_abstract", False),
@@ -976,8 +975,8 @@ class Robot(SMURFRobot):
         definition = {
             "name": name,
             "robotname": robotname,
-            "start": str(start) if start is not None else str(self.get_root()),
-            "stop": stop,
+            "start": str(start) if start is not None else None,
+            "stop": [str(s) for s in stop] if stop is not None else None,
             "only_urdf": only_urdf,
             "abstract_model": abstract_model,
             "remove_joints": remove_joints,
@@ -994,20 +993,13 @@ class Robot(SMURFRobot):
 
     def get_links_and_joints_in_subtree(self, start, stop=None, include_unstopped_branches=False):
         assert self.get_link(start, verbose=True) is not None, f"Link {start} does not exist"
-        if stop is None:
-            # Collect all links on the way to the leaves
-            parents, children = self._get_children_lists([start], [])
-            parentset = set(parents)
-            childrenset = set(children)
-            linknames = list(parentset.union(childrenset))
-        else:
-            linknames = set()
-            _stop = list(set(stop))
-            if include_unstopped_branches:
-                _stop = self.get_leaves(start, stop=_stop)
-            for leave in _stop:
-                linknames = linknames.union(self.get_chain(start, leave, joints=False))
-            linknames = list(linknames)
+        linknames = set()
+        _stop = list(set(stop)) if stop is not None else None
+        if include_unstopped_branches or stop is None:
+            _stop = self.get_leaves(start, stop=_stop)
+        for leave in _stop:
+            linknames = linknames.union(self.get_chain(start, leave, joints=False))
+        linknames = list(linknames)
 
         jointnames = [str(j) for j in self.get_joint(self.get_parent(linknames)) if j is not None and j.parent in linknames]
         assert len(linknames) == len(jointnames) + 1, f"n_links={len(linknames)} - 1 != n_joints={len(jointnames)}\n{start}\t{stop}\n{linknames}\n{jointnames}"
@@ -1038,6 +1030,9 @@ class Robot(SMURFRobot):
             raise ValueError("Neither name nor robotname given")
 
         submodel = type(self)(name=robotname)
+
+        if stop is None:
+            include_unstopped_branches = True
 
         linknames, jointnames = self.get_links_and_joints_in_subtree(
             start=start, stop=stop, include_unstopped_branches=include_unstopped_branches
@@ -1070,10 +1065,10 @@ class Robot(SMURFRobot):
         assert all([j.mimic is None or str(j.mimic.joint) in jointnames for j in submodel.joints])
 
         motors = []
-        for joint in joints:
+        for joint in _joints:
             if joint.motor is not None:
                 motors.append(joint._motor.duplicate() if type(joint._motor) != str else self.get_motor(joint._motor))
-        submodel.add_motor(motors)
+        submodel.add_aggregate("motor", motors)
 
         sensors = []
         for sensor in self.sensors:
@@ -1120,7 +1115,7 @@ class Robot(SMURFRobot):
 
         submodel.link_entities()
 
-        if abstract_model:
+        if abstract_model and len(self.submechanisms) > 0:
             abstract_joints = [str(j) for j in self.joints
                                if j.joint_type == "fixed"]
             for sm in self.submechanisms:
@@ -1213,9 +1208,11 @@ class Robot(SMURFRobot):
             if link.inertial:
                 M = self.get_inertial(link.name).to_mass_matrix()
                 origin = link.inertial.origin
+                if origin.relative_to is None:
+                    origin.relative_to = link
             else:
                 M = np.zeros((6, 6))
-                origin = representation.Pose.from_matrix(np.eye(4))
+                origin = representation.Pose.from_matrix(np.eye(4), relative_to=link)
             m = M[0, 0]
             if m <= limit:
                 M[:3, :3] = np.eye(3) * limit
@@ -1232,7 +1229,7 @@ class Robot(SMURFRobot):
 
                 M[3:, 3:] = I
 
-            link.inertial = representation.Inertial.from_mass_matrix(M, origin)
+            link.inertial = representation.Inertial.from_mass_matrix(M, origin, link)
             log.debug(" Corrected inertia for link {}".format(link.name))
 
     def compute_mass(self):
