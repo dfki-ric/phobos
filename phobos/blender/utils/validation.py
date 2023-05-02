@@ -519,7 +519,7 @@ def validateMaterial(material, adjust=False):
     return errors, material
 
 
-def validateGeometryType(obj, *args, adjust=False, geometry_dict=None):
+def validateGeometryType(obj, *args, adjust=False, geometry_dict=None, **kwargs):
     """
 
     Args:
@@ -724,7 +724,7 @@ def validateInertiaData(obj, *args, adjust=False):
     return errors, obj
 
 
-def validateVisual(obj, *args, adjust=False, geometry_dict=None):
+def validateVisual(obj, *args, adjust=False, geometry_dict=None, **kwargs):
     """
 
     Args:

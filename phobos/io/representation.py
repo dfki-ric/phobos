@@ -473,7 +473,7 @@ class Mesh(Representation, SmurfBase):
     _class_variables = ["material"]
 
     def __init__(self, filepath=None, posix_path=None, scale=None, mesh=None, meshname=None, material=None,
-                 mesh_orientation=None, **kwargs):
+                 mesh_orientation=None, fast_init=False, **kwargs):
         SmurfBase.__init__(self, returns=["scale", "exported", "unique_name", "imported"])
         self._operations = []
         self._scale = [1.0, 1.0, 1.0]
@@ -492,10 +492,11 @@ class Mesh(Representation, SmurfBase):
             self.input_file = None
             self.unique_name = meshname
             self._mesh_information = None
-            if isinstance(mesh, trimesh.Trimesh):
+            if isinstance(mesh, trimesh.Trimesh) and not fast_init:
                 self._mesh_information = mesh_io.trimesh_2_mesh_info_dict(mesh)
             elif BPY_AVAILABLE and isinstance(mesh, bpy.types.Mesh):
-                self._mesh_information = mesh_io.blender_2_mesh_info_dict(mesh)
+                if not fast_init:
+                    self._mesh_information = mesh_io.blender_2_mesh_info_dict(mesh)
                 self._operations.append("_initiated_in_blender")
                 self._changed = True
         else:

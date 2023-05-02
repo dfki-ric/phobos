@@ -45,7 +45,7 @@ def deriveObjectPose(obj, effectiveparent=None, logging=True):
     return p2o
 
 
-@validate("material")
+# @validate("material")
 def deriveMaterial(mat, logging=False, errors=None):
     if "No material defined." in errors:
         return None
@@ -94,8 +94,8 @@ def deriveMaterial(mat, logging=False, errors=None):
     )
 
 
-@validate('geometry_type')
-def deriveGeometry(obj, duplicate_mesh=False, **kwargs):
+# @validate('geometry_type')
+def deriveGeometry(obj, duplicate_mesh=False, fast_init=True, **kwargs):
     gtype = obj['geometry/type']
     if gtype == 'box':
         return representation.Box(size=list(obj.dimensions))
@@ -113,13 +113,14 @@ def deriveGeometry(obj, duplicate_mesh=False, **kwargs):
         return representation.Mesh(
             scale=list(obj.matrix_world.to_scale()),
             mesh=blender_mesh,
-            meshname=blender_mesh.name
+            meshname=blender_mesh.name,
+            fast_init=fast_init
         )
     else:
         raise ValueError(f"Unknown geometry type: {gtype}")
 
 
-def deriveCollision(obj, linkobj=None, duplicate_mesh=False,  **kwargs):
+def deriveCollision(obj, linkobj=None, duplicate_mesh=False, fast_init=True, **kwargs):
     # bitmask (will deprecate with MARS2.0)
     bitmask = None
     # the bitmask is cut to length = 16 and reverted for int parsing
@@ -154,7 +155,7 @@ def deriveCollision(obj, linkobj=None, duplicate_mesh=False,  **kwargs):
 
     return representation.Collision(
         name=obj.name,
-        geometry=deriveGeometry(obj, duplicate_mesh),
+        geometry=deriveGeometry(obj, duplicate_mesh, fast_init=fast_init),
         origin=deriveObjectPose(obj, effectiveparent=linkobj),
         bitmask=bitmask,
         primitives=primitives,
@@ -162,8 +163,8 @@ def deriveCollision(obj, linkobj=None, duplicate_mesh=False,  **kwargs):
     )
 
 
-@validate('visual')
-def deriveVisual(obj, logging=True, duplicate_mesh=False, **kwargs):
+# @validate('visual')
+def deriveVisual(obj, logging=True, duplicate_mesh=False, fast_init=True, **kwargs):
     # [TODO v2.1.0] REVIEW this was commented, is this applicable?
     # todo2.9: if obj.lod_levels:
     #     if 'lodmaxdistances' in obj:
@@ -201,7 +202,7 @@ def deriveVisual(obj, logging=True, duplicate_mesh=False, **kwargs):
 
     return representation.Visual(
         name=obj.name,
-        geometry=deriveGeometry(obj, duplicate_mesh),
+        geometry=deriveGeometry(obj, duplicate_mesh, fast_init),
         origin=deriveObjectPose(obj),
         material=material,
         **annotations
@@ -642,9 +643,9 @@ def deriveRepresentation(obj, logging=True, adjust=True):
         if obj.phobostype == 'inertial':
             repr_instance = deriveInertial(obj, adjust=adjust, logging=logging)
         elif obj.phobostype == 'visual':
-            repr_instance = deriveVisual(obj)
+            repr_instance = deriveVisual(obj, fast_init=True)
         elif obj.phobostype == 'collision':
-            repr_instance = deriveCollision(obj)
+            repr_instance = deriveCollision(obj, fast_init=True)
         # [TODO v2.1.0] Re-Add SRDF support
         # elif obj.phobostype == 'approxsphere':
         #     repr_instance = deriveApproxsphere(obj)
