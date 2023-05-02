@@ -1309,9 +1309,9 @@ class Inertia(Representation, SmurfBase):
 
 
 class Inertial(Representation, SmurfBase):
-    _class_variables = ["mass", "inertia", "origin"]
+    _class_variables = ["mass", "inertia", "origin", "link"]
 
-    def __init__(self, mass=0.0, inertia=None, origin=None, **kwargs):
+    def __init__(self, mass=0.0, inertia=None, origin=None, link=None, **kwargs):
         super().__init__()
         self.mass = mass
         self.inertia = _singular(inertia)
@@ -1319,14 +1319,22 @@ class Inertial(Representation, SmurfBase):
             origin = Pose()
         self.origin = _singular(origin)
         assert type(self.origin) == Pose, f"{origin} is not Pose"
+        _parent_xml = kwargs.get("_parent_xml", None)
+        if _parent_xml is not None and link is None:
+            link = _parent_xml.attrib.get("name")
+        self.link = link
+        if self.origin.relative_to is None:
+            self.origin.relative_to = self.link
+        assert self.origin.relative_to is not None
 
     def stringable(self):
         return False
 
     @staticmethod
-    def from_mass_matrix(M, origin: Pose):
+    def from_mass_matrix(M, origin: Pose, link=None):
         return Inertial(
             mass=M[0, 0],
+            link=link,
             inertia=Inertia.from_mass_matrix(M),
             origin=origin
         )
