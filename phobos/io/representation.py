@@ -1160,8 +1160,6 @@ class Collision(Representation, SmurfBase):
         _parent_xml = kwargs.get("_parent_xml", None)
         if _parent_xml is not None and link is None:
             link = _parent_xml.attrib.get("name")
-        if link is not None:
-            link = str(link)
         self.original_name = name
         self.primitive = _plural(primitive)
         if name is None or len(name) == 0:
@@ -1174,11 +1172,13 @@ class Collision(Representation, SmurfBase):
                 name = None
         self.link = link
         self.name = name
-        SmurfBase.__init__(self, returns=['name', 'link', 'geometry', 'primitive'], **kwargs)
-        self.geometry = _singular(geometry)
         if origin is None:
             origin = Pose()
         self.origin = _singular(origin)
+        if self.origin.relative_to is None:
+            self.origin.relative_to = self.link
+        SmurfBase.__init__(self, returns=['name', 'link', 'geometry', 'primitive'], **kwargs)
+        self.geometry = _singular(geometry)
         assert isinstance(self.origin, Pose)
         self.bitmask = bitmask
         if noDataPackage is not None:
@@ -1224,17 +1224,21 @@ class Visual(Representation, SmurfBase):
         self.geometry = _singular(geometry)
         material_ = _singular(material_)
         material = _singular(material)
-        if type(material) == str:
-            self.material = material
-            if material_ is not None and not material_.is_delegate():
-                assert isinstance(material_, Material) and material_.original_name == material
-                self.material = material_
+        if type(material) == str and material_ is not None and not material_.is_delegate():
+            assert isinstance(material_, Material) and material_.original_name == material
+            self.material = material_
         elif isinstance(material, Material):
             assert material_ is None or material_.equivalent(material)
             self.material = material
+        elif type(material) == str:
+            self.material = material
+        else:
+            assert material is None and material_ is None
         if origin is None:
             origin = Pose()
         self.origin = _singular(origin)
+        if self.origin.relative_to is None:
+            self.origin.relative_to = self.link
         SmurfBase.__init__(self, returns=["name", "geometry"], **kwargs)
         assert isinstance(self.origin, Pose)
 
@@ -1408,13 +1412,9 @@ class Link(Representation, SmurfBase):
         self.link_origin = _singular(origin)
         self.is_human = is_human
         self.returns += ['name', "is_human"]
-        self.visuals = []
-        if visuals is not None:
-            self.visuals = visuals
+        self.visuals = _plural(visuals)
         self.inertial = _singular(inertial)
-        self.collisions = []
-        if collisions is not None:
-            self.collisions = collisions
+        self.collisions = _plural(collisions)
         self.kccd_hull = kccd_hull
         for geo in self.visuals + self.collisions:
             if geo.origin.relative_to is None:
@@ -1425,17 +1425,10 @@ class Link(Representation, SmurfBase):
         if reducedDataPackage is not None:
             self.reducedDataPackage = reducedDataPackage
             self.returns += ['reducedDataPackage']
-        for geo in self.collisions:
+        for geo in self.collisions + self.visuals:
             i = 0
             if geo.name is None:
-                geo.name = self.name + "_collision"
-                if i > 0:
-                    geo.name += str(i)
-
-        for geo in self.visuals:
-            i = 0
-            if geo.name is None:
-                geo.name = self.name + "_visual"
+                geo.name = self.name + ("_collision" if isinstance(geo, Collision) else "_visual")
                 if i > 0:
                     geo.name += str(i)
         self.excludes += ["inertial"]
