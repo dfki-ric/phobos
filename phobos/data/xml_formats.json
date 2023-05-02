@@ -77,7 +77,7 @@
       "children": {
         "origin": {
           "classname": "Pose",
-          "varname": "origin"
+          "varname": "joint_relative_origin"
         },
         "inertia": {
           "classname": "Inertia",
@@ -109,7 +109,7 @@
       "children": {
         "origin": {
           "classname": "Pose",
-          "varname": "origin"
+          "varname": "joint_relative_origin"
         },
         "material": {
           "classname": "Material",
@@ -152,7 +152,7 @@
       "children": {
         "origin": {
           "classname": "Pose",
-          "varname": "origin"
+          "varname": "joint_relative_origin"
         }
       },
       "nested_children": {
@@ -220,7 +220,7 @@
       "children": {
         "origin": {
           "classname": "Pose",
-          "varname": "parent_relative_origin"
+          "varname": "joint_relative_origin"
         },
         "limit": {
           "classname": "JointLimit",

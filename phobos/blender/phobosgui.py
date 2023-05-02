@@ -977,6 +977,13 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
             categories[obj.phobostype] = [box, column, [0, 0]]
             for key in keys:
                 _key = key if obj.phobostype != "link" else "link/"+key
+                try:
+                    if hasattr(obj_repr, key):
+                        getattr(obj_repr, key)
+                except AssertionError as e:
+                    log(f"PhobosPropertyInformationPanel: Cannot display {str(obj.name)}.{key} due to internal assertion error: {e.args}",
+                        "DEBUG")
+                    continue
                 if _key in obj:
                     self.addProp([key], [obj[_key]], categories[obj.phobostype], [guiparams])
                 elif hasattr(obj_repr, key) and type(getattr(obj_repr, key)) in [str, float, int]:

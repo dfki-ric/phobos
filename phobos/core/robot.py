@@ -25,7 +25,8 @@ log = get_logger(__name__)
 
 class Robot(SMURFRobot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
-                 inputfile=None, description=None, is_human=False, autogenerate_submechanisms=None):
+                 inputfile=None, description=None, is_human=False, autogenerate_submechanisms=None,
+                 assert_validity=True):
         """ The basic robot class to represent a urdf.
         """
         try:
@@ -40,6 +41,8 @@ class Robot(SMURFRobot):
         if name is not None:
             self.name = name
         self.submodel_defs = {}
+        if assert_validity:
+            self.assert_validity()
 
     # export methods
     def export_meshes(self, mesh_output_dir, format=None, use_existing=False):
@@ -833,15 +836,49 @@ class Robot(SMURFRobot):
         """
         if str(self.get_root()) == str(link):
             return
-        # get all joints on the parent side recursively and flip them
+        if type(link) == str:
+            link = self.get_link(link)
         flip_joints = self.get_chain(self.get_root(), link, links=False)
-        for fj in flip_joints:
-            joint = self.get_joint(fj)
-            new_child = joint.parent
-            new_parent = joint.child
-            joint.parent = new_parent
-            joint.child = new_child
-            joint.origin = joint.origin.inv(relative_to=new_parent)
+        # make sure everything is according to convention where needed so we dont have to transform mid-process
+        for jointname in flip_joints:
+            joint = self.get_joint(jointname)
+            joint.origin = joint.joint_relative_origin
+            joint.origin.link_with_robot(self)
+            for child in self.get_children(joint.child):
+                cjoint = self.get_joint(child)
+                cjoint.origin = cjoint.joint_relative_origin
+                cjoint.origin.link_with_robot(self)
+        old_robot = self.duplicate()
+        # get all joints on the parent side recursively and flip them
+        first_joint = self.get_joint(self.get_parent(link))
+        inv_old_origin = first_joint.origin.inv(relative_to=first_joint)
+        first_joint.origin = representation.Pose(relative_to=link) if link.joint_relative_origin is None else link.joint_relative_origin.inv(relative_to=link)
+        first_joint.origin.link_with_robot(self)
+        first_joint.child = first_joint.parent
+        first_joint._child.origin = inv_old_origin.dot(first_joint._child.origin)
+        first_joint._child.origin.link_with_robot(self)
+        first_joint.parent = link
+        link.origin = None
+        for jointname in flip_joints:
+            if jointname == first_joint.name:
+                continue
+            joint = self.get_joint(jointname)
+            new_parent_jointname = [c for c in old_robot.get_children(joint.child) if c in flip_joints][0]
+            new_parent_joint = old_robot.get_joint(new_parent_jointname)
+            inv_old_origin = joint.origin.inv(relative_to=joint)
+            joint.origin = new_parent_joint.origin.inv(relative_to=new_parent_jointname)
+            joint.origin.link_with_robot(self)
+            new_parent_link = joint.child
+            joint.child = joint.parent
+            joint.parent = new_parent_link
+            joint._child.origin = inv_old_origin
+            joint._child.origin.link_with_robot(self)
+            for child in self.get_children(joint.child):
+                if child in flip_joints:
+                    continue
+                child_joint = self.get_joint(child)
+                child_joint.origin = inv_old_origin.dot(child_joint.origin)
+                child_joint.origin.link_with_robot(self)
         self.regenerate_tree_maps()
 
     def remove_visuals(self):
@@ -1029,7 +1066,7 @@ class Robot(SMURFRobot):
         elif name is None and robotname is None:
             raise ValueError("Neither name nor robotname given")
 
-        submodel = type(self)(name=robotname)
+        submodel = type(self)(name=robotname, assert_validity=False)
 
         if stop is None:
             include_unstopped_branches = True
@@ -1351,7 +1388,7 @@ class Robot(SMURFRobot):
         else:
             T = create_transformation(xyz=translation, rpy=rotation)
         # Transform the origin
-        assert transform_object(inertial, T)
+        inertial.origin = inertial.origin.transformed_by(T, relative_to=inertial.origin.relative_to)
         rot_part = create_transformation(rpy=inertial.origin.rpy, xyz=[0, 0, 0])
         inertial.origin.rotation = [0, 0, 0]
 
@@ -1379,7 +1416,7 @@ class Robot(SMURFRobot):
         log.info(" Transform Visuals")
         # Transform
         T = create_transformation(translation, rotation)
-        assert transform_object(visual, T)
+        visual.origin = collisvisualvisualon.origin.transformed_by(T, relative_to=visual.object.relative_to)
         return True
 
     def transform_collision(self, linkname, translation, rotation):
@@ -1390,7 +1427,7 @@ class Robot(SMURFRobot):
         log.info(" Transform Collisions")
         # Transform
         T = create_transformation(translation, rotation)
-        assert transform_object(collision, T)
+        collision.origin = collision.origin.transformed_by(T, relative_to=collision.object.relative_to)
         return True
 
     def enforce_zero(self, xyz_tolerance=1E-5, rad_tolerance=1E-6, mass_tolerance=1E-4, i_tolerance=1E-12):
@@ -2199,7 +2236,7 @@ class Robot(SMURFRobot):
             exclude_meshes = []
         if mirror_plane is None:
             mirror_plane = [0, 1, 0]
-        robot = type(self)(self.name)
+        robot = type(self)(self.name, assert_validity=False)
         # add everything on which mirroring has no influence
         for mat in self.materials:
             robot.add_aggregate("material", mat)

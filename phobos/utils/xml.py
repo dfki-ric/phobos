@@ -44,7 +44,7 @@ def sort_children_by(parent, attr):
         sort_children_by(child, attr)
 
 
-def transform_object(obj, T):
+def transform_object(obj, T, relative_to):
     """ Transform a given object with a given homogeneous transformation T.
     """
     if isinstance(obj, list):
@@ -52,14 +52,10 @@ def transform_object(obj, T):
             assert transform_object(o, T)
         return True
 
-    if obj is None or not hasattr(obj, "origin"):
+    if obj is None or not hasattr(obj, "origin") or obj.origin is None:
         return False
 
-    if obj.origin is not None:
-        origin = np.matmul(T, obj.origin.to_matrix())
-        obj.origin = representation.Pose.from_matrix(origin)
-    else:
-        obj.origin = representation.Pose.from_matrix(T)
+    obj.origin.transformed_by(T)
     return True
 
 

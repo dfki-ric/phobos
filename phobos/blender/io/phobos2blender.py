@@ -129,7 +129,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
     # place geometric object relative to its parent link
     if linkobj:
         eUtils.parentObjectsTo(newgeom, linkobj)
-        newgeom.matrix_local = mathutils.Matrix(viscol.origin.to_matrix())
+        newgeom.matrix_local = mathutils.Matrix(viscol.joint_relative_origin.to_matrix())
 
     bUtils.sortObjectToCollection(newgeom, cname=geomsrc)
     # # make object smooth
@@ -148,8 +148,6 @@ def createInertial(inertial: representation.Inertial, newlink: bpy.types.Object,
 
     assert newlink is not None
 
-    origin = mathutils.Vector(inertial.origin.position)
-
     # create new inertial object
     name = nUtils.getUniqueName('inertial_' + newlink.name, bpy.data.objects)
     inertialobject = bUtils.createPrimitive(
@@ -161,9 +159,8 @@ def createInertial(inertial: representation.Inertial, newlink: bpy.types.Object,
         phobostype='inertial',
     )
     eUtils.parentObjectsTo(inertialobject, newlink)
-    inertialobject.matrix_local.translation = origin
+    inertialobject.matrix_local = mathutils.Matrix(inertial.joint_relative_origin.to_matrix())
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
 
     inertialobject["inertia"] = inertial.inertia.to_list()
     inertialobject["mass"] = inertial.mass
@@ -237,7 +234,7 @@ def createLink(link):
     for newgeom, viscol in geometries:
         eUtils.parentObjectsTo(newgeom, newlink)
         _scale = deepcopy(newgeom.scale)
-        newgeom.matrix_local = mathutils.Matrix(viscol.origin.to_matrix())
+        newgeom.matrix_local = mathutils.Matrix(viscol.joint_relative_origin.to_matrix())
         newgeom.scale = _scale
 
     # create inertial
@@ -471,7 +468,11 @@ def createRobot(robot: core.Robot):
     log("  Creating links... ({} total)".format(len(robot.links)), 'INFO')
     for link in robot.links:
         newlink = createLink(link)
-        newlink.matrix_world = mathutils.Matrix(robot.get_transformation(link.name))
+        parent_joint = robot.get_parent(link)
+        if parent_joint is not None:
+            newlink.matrix_world = mathutils.Matrix(robot.get_transformation(parent_joint))
+        else:
+            newlink.matrix_world = mathutils.Matrix(np.identity(4))
         newlinks[link.name] = newlink
         newobjects.append(newlink)
 
@@ -482,7 +483,7 @@ def createRobot(robot: core.Robot):
         child = newlinks[joint.child]
         child.matrix_world = parent.matrix_world
         eUtils.parentObjectsTo(child, parent)
-        child.matrix_local = mathutils.Matrix(joint.origin.to_matrix())
+        child.matrix_local = mathutils.Matrix(joint.joint_relative_origin.to_matrix())
         createJoint(joint, child)
 
     log("Creating {} motors...".format(len(robot.motors)), 'INFO')

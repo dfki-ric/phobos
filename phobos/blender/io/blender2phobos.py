@@ -29,12 +29,13 @@ def deriveObjectPose(obj, effectiveparent=None, logging=True):
         effectiveparent = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True)
 
     if effectiveparent is not None:
-        w2p = representation.Pose.from_matrix(effectiveparent.matrix_world.normalized())
+        w2p = representation.Pose.from_matrix(effectiveparent.matrix_world.normalized(), relative_to=effectiveparent.name)
     else:
         w2p = representation.Pose()
 
-    w2o = representation.Pose.from_matrix(obj.matrix_world.normalized())
-    p2o = w2p.inv().dot(w2o)
+    w2o = representation.Pose.from_matrix(obj.matrix_world.normalized(), relative_to=effectiveparent.name)
+    p2o = w2p.inv(relative_to=effectiveparent.name).dot(w2o)
+    p2o.relative_to = effectiveparent.name
 
     if logging:
         log(

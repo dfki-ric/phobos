@@ -239,6 +239,8 @@ class SMURFRobot(XMLRobot):
             for link in self.annotations['links']:
                 link_instance = self.get_link(link['name'])
                 if link_instance is not None:
+                    if "origin" in link:
+                        link_instance.origin = representation.Pose(**link.pop("origin"))
                     link_instance.add_annotations(overwrite=False, **link)
 
         if 'materials' in self.annotations:

@@ -71,9 +71,9 @@ class Pose(Representation, SmurfBase):
         elif "rotation" in kwargs:
             self.rotation = kwargs["rotation"]
 
-    def check_valid(self):
-        assert (len(self.xyz) == 3) and \
-               (len(self.rpy) == 3)
+    def check_linkage(self, attribute=None):
+        assert self.relative_to is not None
+        return super(Pose, self).check_linkage(attribute=attribute)
 
     # Aliases for backwards compatibility
     @property
@@ -171,20 +171,29 @@ class Pose(Representation, SmurfBase):
         return xyz.tolist() + rpy.tolist()
 
     @staticmethod
-    def from_matrix(T, relative_to=None):
-        return Pose(matrix=np.array(T),relative_to=relative_to)
+    def from_matrix(T, relative_to):
+        return Pose(matrix=np.array(T), relative_to=relative_to)
 
     def to_matrix(self):
         return self._matrix
 
-    def transform_by(self, T, relative_to=None):
+    def transformed_by(self, T, relative_to):
         """T.dot(this)"""
         return Pose.from_matrix(
             T.dot(self._matrix),
             relative_to
         )
 
-    def inv(self, relative_to=None):
+    def transformed_relative_to(self, relative_to):
+        assert self._related_robot_instance is not None
+        assert self.relative_to is not None
+        r2x = self._related_robot_instance.get_transformation
+        return Pose.from_matrix(
+            inv(r2x(relative_to)).dot(r2x(self.relative_to).dot(self._matrix)),
+            relative_to=relative_to
+        )
+
+    def inv(self, relative_to):
         return Pose.from_matrix(
             inv(self._matrix),
             relative_to=relative_to
@@ -1199,6 +1208,38 @@ class Collision(Representation, SmurfBase):
         assert type(primitive.geometry) in (Box, Sphere, Cylinder)
         self.primitive.append(primitive)
 
+    @property
+    def joint_relative_origin(self):
+        assert self._related_robot_instance is not None
+        assert self.origin is not None
+        assert self.origin.relative_to is not None
+        out = self.origin
+        if self.origin.relative_to == self._related_robot_instance.get_parent(self.link):
+            return out
+        if self.origin.relative_to != self.link:
+            assert self._related_robot_instance is not None, "Trying to get joint_relative_origin while robot is not linked"
+            r2x = self._related_robot_instance.get_transformation
+            out = Pose.from_matrix(
+                inv(r2x(self.link)).dot(r2x(self.origin.relative_to).dot(self.origin.to_matrix())),
+                relative_to=self.link
+            )
+            out.link_with_robot(self._related_robot_instance)
+        if self._link.origin is not None:
+            out = self._link.origin.dot(out)
+        out.relative_to = self._related_robot_instance.get_parent(self.link)
+        return out
+
+    @joint_relative_origin.setter
+    def joint_relative_origin(self, value):
+        """This setter should only be used from the urdf import"""
+        value = _singular(value)
+        assert isinstance(value, Pose), type(value)
+        if value.relative_to is None:  # urdf, as sdf provides this value
+            self.origin = value
+            if self._related_robot_instance is not None:
+                self.origin = self._link.origin.inv().dot(self.origin)
+            self.origin.relative_to = self.link
+
 
 class Visual(Representation, SmurfBase):
     _class_variables = ["name", "link", "geometry", "material", "origin"]
@@ -1268,6 +1309,38 @@ class Visual(Representation, SmurfBase):
         angle, axis = self.origin_from_root.angle_axis
         return [axis[0], axis[1], axis[2], angle]
 
+    @property
+    def joint_relative_origin(self):
+        assert self._related_robot_instance is not None
+        assert self.origin is not None
+        assert self.origin.relative_to is not None
+        out = self.origin
+        if self.origin.relative_to == self._related_robot_instance.get_parent(self.link):
+            return out
+        if self.origin.relative_to != self.link:
+            assert self._related_robot_instance is not None, "Trying to get joint_relative_origin while robot is not linked"
+            r2x = self._related_robot_instance.get_transformation
+            out = Pose.from_matrix(
+                inv(r2x(self.link)).dot(r2x(self.origin.relative_to).dot(self.origin.to_matrix())),
+                relative_to=self.link
+            )
+            out.link_with_robot(self._related_robot_instance)
+        if self._link.origin is not None:
+            out = self._link.origin.dot(out)
+        out.relative_to = self._related_robot_instance.get_parent(self.link)
+        return out
+
+    @joint_relative_origin.setter
+    def joint_relative_origin(self, value):
+        """This setter should only be used from the urdf import"""
+        value = _singular(value)
+        assert isinstance(value, Pose), type(value)
+        if value.relative_to is None:  # urdf, as sdf provides this value
+            self.origin = value
+            if self._related_robot_instance is not None:
+                self.origin = self._link.origin.inv().dot(self.origin)
+            self.origin.relative_to = self.link
+
 
 class Inertia(Representation, SmurfBase):
     _class_variables = ['ixx', 'ixy', 'ixz', 'iyy', 'iyz', 'izz']
@@ -1312,19 +1385,20 @@ class Inertial(Representation, SmurfBase):
     _class_variables = ["mass", "inertia", "origin", "link"]
 
     def __init__(self, mass=0.0, inertia=None, origin=None, link=None, **kwargs):
-        super().__init__()
+
         self.mass = mass
         self.inertia = _singular(inertia)
-        if origin is None:
-            origin = Pose()
-        self.origin = _singular(origin)
-        assert type(self.origin) == Pose, f"{origin} is not Pose"
         _parent_xml = kwargs.get("_parent_xml", None)
         if _parent_xml is not None and link is None:
             link = _parent_xml.attrib.get("name")
         self.link = link
+        if origin is None:
+            origin = Pose()
+        self.origin = _singular(origin)
+        assert type(self.origin) == Pose, f"{origin} is not Pose"
         if self.origin.relative_to is None:
             self.origin.relative_to = self.link
+        SmurfBase.__init__(self, **kwargs)
         assert self.origin.relative_to is not None
 
     def stringable(self):
@@ -1348,6 +1422,38 @@ class Inertial(Representation, SmurfBase):
         M[0:3, 0:3] = np.eye(3) * m
         M[3::, 3::] = I
         return M
+
+    @property
+    def joint_relative_origin(self):
+        assert self._related_robot_instance is not None
+        assert self.origin is not None
+        assert self.origin.relative_to is not None
+        out = self.origin
+        if self.origin.relative_to == self._related_robot_instance.get_parent(self.link):
+            return out
+        if self.origin.relative_to != self.link:
+            assert self._related_robot_instance is not None, "Trying to get joint_relative_origin while robot is not linked"
+            r2x = self._related_robot_instance.get_transformation
+            out = Pose.from_matrix(
+                inv(r2x(self.link)).dot(r2x(self.origin.relative_to).dot(self.origin.to_matrix())),
+                relative_to=self.link
+            )
+            out.link_with_robot(self._related_robot_instance)
+        if self._link.origin is not None:
+            out = self._link.origin.dot(out)
+        out.relative_to = self._related_robot_instance.get_parent(self.link)
+        return out
+
+    @joint_relative_origin.setter
+    def joint_relative_origin(self, value):
+        """This setter should only be used from the urdf import"""
+        value = _singular(value)
+        assert isinstance(value, Pose), type(value)
+        if value.relative_to is None:  # urdf, as sdf provides this value
+            self.origin = value
+            if self._related_robot_instance is not None:
+                self.origin = self._link.origin.inv().dot(self.origin)
+            self.origin.relative_to = self.link
 
 
 class KCCDHull(Representation, SmurfBase):
@@ -1414,7 +1520,7 @@ class Link(Representation, SmurfBase):
     _class_variables = ["name", "visuals", "collisions", "inertial", "kccd_hull", "origin"]
 
     def __init__(self, name=None, visuals=None, inertial=None, collisions=None, origin=None,
-                 noDataPackage=False, reducedDataPackage=False, is_human=None, kccd_hull=None, **kwargs):
+                 noDataPackage=False, reducedDataPackage=False, is_human=None, kccd_hull=None, joint=None, **kwargs):
         SmurfBase.__init__(self, **kwargs)
         self.name = name
         self.origin = _singular(origin)
@@ -1466,6 +1572,28 @@ class Link(Representation, SmurfBase):
         elif type(value) == str:
             for visual in self.visuals:
                 visual.material = value
+
+    @property
+    def joint_relative_origin(self):
+        assert self._related_robot_instance is not None
+        assert self.origin is not None
+        assert self.origin.relative_to is not None
+        out = self.origin
+        if self.origin.relative_to == self._related_robot_instance.get_parent(self):
+            return out
+        else:
+            r2x = self._related_robot_instance.get_transformation
+            return Pose.from_matrix(
+                inv(r2x(self)).dot(r2x(self.origin.relative_to).dot(self.origin.to_matrix())),
+                relative_to=self._related_robot_instance.get_parent(self)
+            )
+
+    @joint_relative_origin.setter
+    def joint_relative_origin(self, value):
+        """This setter should only be used from the xml import"""
+        assert value is None or isinstance(value, Pose), type(value)
+        self.origin = _singular(value)
+        assert self.origin is None or self.origin.relative_to is not None
 
 
 class JointDynamics(Representation):
@@ -1608,6 +1736,8 @@ class Joint(Representation, SmurfBase):
                                            relative_to=self.parent)
         for jd in self._joint_dependencies:
             jd.link_with_robot(robot, check_linkage_later=True)
+        if self._child.origin is not None and self._child.origin.relative_to is None:
+            self._child.origin.relative_to = self
         if not check_linkage_later:
             self.check_linkage()
 
@@ -1637,21 +1767,28 @@ class Joint(Representation, SmurfBase):
                   self._related_robot_instance.get_link(self.child) is not None)))
 
     @property
-    # [TODO v2.1.0] for enhanced sdf support these properties have to be implemented for visual, collision etc. as well
-    @property
-    def parent_relative_origin(self):
-        if self._origin is not None and self._origin.relative_to is None:
-            self._origin.relative_to = self.parent
-        elif self._origin is not None and self._origin.relative_to != self.parent:
-            assert self._related_robot_instance is not None, "Trying to get parent_relative_origin while robot is not linked"
+    def joint_relative_origin(self):
+        assert self.origin is None or self.origin.relative_to is not None
+        if self.origin is None:
+            return None
+        assert self._related_robot_instance is not None, "Trying to get joint_relative_origin while robot is not linked"
+        parent_joint_name = self._related_robot_instance.get_parent(self.parent)
+        if parent_joint_name is None:
+            # This a joint from the root link
+            assert str(self.origin.relative_to) == str(self._related_robot_instance.get_root()) == str(self.parent)
+            return self.origin
+        elif self.origin.relative_to != parent_joint_name:
             r2x = self._related_robot_instance.get_transformation
-            out = r2x(self.parent).inv().dot(r2x(self._origin.relative_to).dot(self._origin))
-            out.relative_to = self.parent
+            out = Pose.from_matrix(
+                inv(r2x(parent_joint_name)).dot(r2x(self.origin.relative_to).dot(self.origin.to_matrix())),
+                relative_to=parent_joint_name
+            )
+            out.link_with_robot(self._related_robot_instance)
             return out
         return self.origin
 
-    @parent_relative_origin.setter
-    def parent_relative_origin(self, origin):
+    @joint_relative_origin.setter
+    def joint_relative_origin(self, origin):
         origin = _singular(origin)
         assert origin.relative_to is None or origin.relative_to == self.parent
         self.origin = _singular(origin)
@@ -1771,6 +1908,8 @@ class Interface(Representation, SmurfBase):
         self.origin = _singular(origin)
         self.parent = parent
         assert self.parent is not None
+        if self.origin is not None and self.origin.relative_to is None:
+            self.origin.relative_to = self.parent
         SmurfBase.__init__(self, returns=["parent", "position", "rotation"], **kwargs)
         self.excludes += ["origin"]
 

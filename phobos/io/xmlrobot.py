@@ -86,6 +86,9 @@ class XMLRobot(Representation):
         self._related_world_instance = None
         self._related_entity_instance = None
 
+    def assert_validity(self):
+        assert self.get_root().origin is None or all((self.get_root().origin.to_matrix() == np.identity(4)).flatten())
+
     @property
     def collisions(self):
         return self.get_all_collisions()
@@ -99,6 +102,20 @@ class XMLRobot(Representation):
             link.is_human = True
 
     def link_entities(self, check_linkage_later=False):
+        root = self.get_root()
+        assert root.origin is None
+
+        for link in self.links:
+            for child_entity in ([link.inertial] if link.inertial is not None else []) + link.visuals + link.collisions:
+                child_entity.link = link
+                if child_entity.origin is not None and child_entity.origin.relative_to is None:
+                    child_entity.origin.relative_to = link
+            if link != root and link.origin is None:
+                link.origin = representation.Pose(relative_to=None)  # will be set in the joints link_with_robot
+        for joint in self.joints:
+            if joint.origin.relative_to is None:
+                parent = self.get_parent(joint.name)
+                joint.origin.relative_to = parent if parent is not None else self.get_root().name
         for entity in self.links + self.joints + self.motors + self.sensors + self.materials:
             entity.link_with_robot(self, check_linkage_later=True)
         if not check_linkage_later:
@@ -763,20 +780,37 @@ class XMLRobot(Representation):
         :param start: the start link of the transformation (default is root)
         :return: the transformation matrix
         """
+        assert end is not None
         if start is None:
             start = self.get_root()
-        transformation = create_transformation((0, 0, 0), (0, 0, 0))
+            root2start = np.identity(4)
+        if str(start) == str(end):
+            return np.identity(4)
 
-        link = str(end)
-        while link != str(start):
-            parent = self.get_parent(link)
+        root2start = self.get_transformation(start)
+
+        frame = self.get_link(end)
+        if frame is None:
+            frame = self.get_joint(end)
+        if frame is None:
+            raise AssertionError(f"There is neither a joint nor a link with name {end}")
+
+        if isinstance(frame, representation.Link) and frame.origin is None:
+            parent = self.get_parent(frame)
             if parent is None:
-                raise Exception(link, "has no parent, but is different from start", start)
-            pjoint = self.get_joint(parent)
-            transformation = create_transformation(pjoint.origin.xyz, pjoint.origin.rpy).dot(transformation)
-            link = str(pjoint.parent)
-
-        return transformation
+                # end == root
+                return inv(root2start)
+            else:
+                return self.get_transformation(end=parent, start=start)
+        elif str(start) == str(frame.origin.relative_to):
+            return frame.origin.to_matrix()
+        else:
+            try:
+                root2end = self.get_transformation(frame.origin.relative_to).dot(frame.origin.to_matrix())
+            except RecursionError:
+                raise ReferenceError(f"The transformation of root to {end} can not be determined. "
+                                     f"No valid relative_to chain to root.")
+            return inv(root2start).dot(root2end)
 
     def global_origin(self, stop):
         """ Get the global pose of the link.
