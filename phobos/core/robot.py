@@ -769,7 +769,7 @@ class Robot(SMURFRobot):
                 robotfile=xml_file_in_smurf,
                 check_submechs=check_submechs,
                 with_submodel_defs=True,
-                with_meshes=False # has been done before
+                with_meshes=False  # has been done before
             )
         # export ros package files
         if ros_pkg and not ros_pkg_later:

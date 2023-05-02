@@ -35,7 +35,7 @@ class XMLRobot(Representation):
         self.parent_map = {}
         self.child_map = {}
         self.materials = []
-        self.transmissions = []
+        self.transmissions = [] # [TODO v2.1.0] currently not fully supported
         self.sensors = []
         self.plugins = []  # Currently just a place holder
         self.motors = []
@@ -72,7 +72,8 @@ class XMLRobot(Representation):
         if is_human:
             self.annotate_as_human()
 
-        self.link_entities()
+        if self.links:
+            self.link_entities()
 
     def __str__(self):
         return self.name

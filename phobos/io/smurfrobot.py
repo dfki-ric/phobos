@@ -106,13 +106,13 @@ class SMURFRobot(XMLRobot):
         self._init_annotations()
         if is_human:
             self.annotate_as_human()
-        self.link_entities()
+
+        if len(self.links) > 0 and len(self.joints) > 0:
+            self.link_entities()
+            self.joints = self.get_joints_ordered_df()
 
         if verify_meshes_on_import:
             self.verify_meshes()
-
-        if len(self.links) > 0 and len(self.joints) > 0:
-            self.joints = self.get_joints_ordered_df()
 
         if self.name is None and self.xmlfile is not None:
             self.name, _ = os.path.splitext(self.xmlfile)
