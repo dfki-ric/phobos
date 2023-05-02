@@ -1577,7 +1577,9 @@ class Joint(Representation, SmurfBase):
             self.axis = None
         if origin is None and cut_joint is False:
             origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=self.parent)
-        self._origin = _singular(origin)
+        self.origin = _singular(origin)
+        if self.origin.relative_to is None:
+            self.origin.relative_to = self.parent
         self.limit = _singular(limit) if self.joint_type != "fixed" else None
         if joint_dependencies is not None:
             self.joint_dependencies = _plural(joint_dependencies) + _plural(mimic)
@@ -1635,15 +1637,6 @@ class Joint(Representation, SmurfBase):
                   self._related_robot_instance.get_link(self.child) is not None)))
 
     @property
-    def origin(self):
-        if self._origin is not None and self._origin.relative_to is None:
-            self._origin.relative_to = self.parent
-        return self._origin
-
-    @origin.setter
-    def origin(self, origin):
-        self._origin = _singular(origin)
-
     # [TODO v2.1.0] for enhanced sdf support these properties have to be implemented for visual, collision etc. as well
     @property
     def parent_relative_origin(self):
@@ -1655,14 +1648,14 @@ class Joint(Representation, SmurfBase):
             out = r2x(self.parent).inv().dot(r2x(self._origin.relative_to).dot(self._origin))
             out.relative_to = self.parent
             return out
-        return self._origin
+        return self.origin
 
     @parent_relative_origin.setter
     def parent_relative_origin(self, origin):
         origin = _singular(origin)
         assert origin.relative_to is None or origin.relative_to == self.parent
-        self._origin = _singular(origin)
-        self._origin.relative_to = self.parent
+        self.origin = _singular(origin)
+        self.origin.relative_to = self.parent
 
     @property
     def mimic(self):
