@@ -12,7 +12,7 @@ class Linkable(object):
         "joint": "joints",
         "frame": "links",
         "material": "materials",
-        "relative_to": "links",
+        "relative_to": ["links", "joints"],
     }
     _related_robot_instance = None
     # _related_robot_instances need to have a _related_world_instance and a _related_entity_instance (where the latter has be set if the first is set)
@@ -46,7 +46,7 @@ class Linkable(object):
         """
         return True
 
-    def _converter(self, varname, new_value):
+    def _converter(self, varname, new_value, allow_not_found=False):
         """
         Converts the string reference to a python-reference
         Args:
@@ -57,23 +57,36 @@ class Linkable(object):
             The corresponding object
         """
         if self._related_robot_instance is None:
-            return new_value
+            return new_value, None
         if isinstance(new_value, Representation):
+            assert new_value._related_robot_instance is None or new_value._related_robot_instance == self._related_robot_instance
             # this way we ensure linking to the correct robot instance
-            new_value = str(new_value)
-        vtype = self.type_dict[varname].lower()
-        if self._related_robot_instance._related_world_instance is not None and "::" in new_value:
-            if self._related_robot_instance._related_entity_instance+"::" in new_value:
-                converted = self._related_robot_instance.get_aggregate(f"{vtype}", new_value.rsplit("::", 1)[-1])
+            # if new_value._related_robot_instance is None:
+            #     new_value.link_with_robot(self._related_robot_instance, check_linkage_later=True)
+            # else:
+            #     assert new_value._related_robot_instance == self._related_robot_instance
+            return new_value, None
+        vtypes = self.type_dict[varname]
+        if type(vtypes) == str:
+            vtypes = [vtypes]
+        converted = None
+        vtype = None
+        for _vtype in vtypes:
+            vtype = _vtype.lower()
+            if self._related_robot_instance._related_world_instance is not None and "::" in new_value:
+                if self._related_robot_instance._related_entity_instance+"::" in new_value:
+                    converted = self._related_robot_instance.get_aggregate(f"{vtype}", new_value.rsplit("::", 1)[-1])
+                else:
+                    converted = self._related_robot_instance._related_world_instance.get_aggregate(f"{vtype}", new_value)
             else:
-                converted = self._related_robot_instance._related_world_instance.get_aggregate(f"{vtype}", new_value)
-        else:
-            converted = self._related_robot_instance.get_aggregate(f"{vtype}", new_value)
-        if converted is None and new_value is not None:
+                converted = self._related_robot_instance.get_aggregate(f"{vtype}", new_value)
+            if converted is not None:
+                break
+        if not allow_not_found and converted is None and new_value is not None:
             log.warning(f"There is no {vtype} with name {new_value} in {self._related_robot_instance.name}; setting {varname} to None")
             log.warning(f"Available are: {repr([str(x) for x in getattr(self._related_robot_instance, vtype)])}")
             raise AssertionError(f"{str(type(self))}, can not convert {new_value} to value type {vtype} for variable {varname}")
-        return converted
+        return converted, vtype
 
     def _attr_get_name(self, attribute):
         if getattr(self, "_" + attribute) is None:
@@ -84,14 +97,14 @@ class Linkable(object):
 
     def _attr_set_name(self, attribute, new_value, no_check=False):
         if type(new_value) == list and all([type(v) == str or isinstance(v, Linkable) for v in new_value]):
-            setattr(self, "_" + attribute, [self._converter(attribute, str(v)) for v in new_value])
+            setattr(self, "_" + attribute, [self._converter(attribute, v)[0] for v in new_value])
         elif type(new_value) == str:
-            setattr(self, "_" + attribute, self._converter(attribute, new_value))
+            setattr(self, "_" + attribute, self._converter(attribute, new_value)[0])
         elif isinstance(new_value, Linkable):
             if self._related_robot_instance is not None:
-                existing = self._related_robot_instance.get_aggregate(self.type_dict[attribute].lower(), str(new_value))
+                existing, vtype = self._converter(attribute, str(new_value), allow_not_found=True)
                 if existing is None:
-                    self._related_robot_instance.add_aggregate(self.type_dict[attribute].lower(), new_value)
+                    self._related_robot_instance.add_aggregate(vtype, new_value)
                     new_value.link_with_robot(self._related_robot_instance, check_linkage_later=True)
                     setattr(self, "_" + attribute, new_value)
                     log.debug(f"Added {type(new_value)} {str(new_value)} to robot")
@@ -101,7 +114,7 @@ class Linkable(object):
                     else:
                         new_name = new_value.name
                         index = 1
-                        while self._related_robot_instance.get_aggregate(self.type_dict[attribute].lower(), new_name) is not None:
+                        while self._related_robot_instance.get_aggregate(vtype, new_name) is not None:
                             new_name = str(new_value) + "_" + str(index)
                             index += 1
                         try:
@@ -113,6 +126,8 @@ class Linkable(object):
                         assert self._handle_ambiguous
                         new_value.name = new_name
                     new_value.link_with_robot(self._related_robot_instance, check_linkage_later=True)
+                    setattr(self, "_" + attribute, new_value)
+                else:
                     setattr(self, "_" + attribute, new_value)
             else:
                 setattr(self, "_" + attribute, new_value)
