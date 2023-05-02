@@ -79,11 +79,9 @@ class Sensor(Representation, SmurfBase):
         assert self.origin is not None
         self.origin.rotation = val
 
-    def transform(self, transformation):
-        if hasattr(self, "origin"):
-            self.origin.transform_by(transformation)
-        else:
-            self.origin = Pose.from_matrix(transformation)
+    def transform(self, transformation, relative_to):
+        assert self.origin is not None
+        self.origin = Pose.from_matrix(transformation, relative_to=relative_to)
 
     def get_refl_vars(self):
         if hasattr(self, "origin") and self.origin is not None:
@@ -105,6 +103,11 @@ class Sensor(Representation, SmurfBase):
             return self.link
         return None
 
+    def link_with_robot(self, robot, check_linkage_later=False):
+        if self.origin is not None and self.origin.relative_to is None:
+            self.origin.relative_to = self.frame
+            assert self.origin.relative_to is not None
+        super(Sensor, self).link_with_robot(robot, check_linkage_later=check_linkage_later)
 
 class Joint6DOF(Sensor):
     _class_variables = ["name", "link"]

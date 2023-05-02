@@ -315,7 +315,7 @@ class XMLRobot(Representation):
                                              np.array(parent.inertial.origin.xyz) * parent.inertial.mass +
                                              COM_Cp[0:3, 3] * child.inertial.mass) / (
                                                  parent.inertial.mass + child.inertial.mass)
-                        new_origin = representation.Pose(xyz=new_origin, rpy=[0, 0, 0])
+                        new_origin = representation.Pose(xyz=new_origin, rpy=[0, 0, 0], relative_to=parent)
                         IC_T_IP = inv(parent.inertial.origin.to_matrix()).dot(IC_T_P)
                         M_p = parent.inertial.to_mass_matrix()
                         A = get_adjoint(new_origin.to_matrix())
@@ -323,7 +323,7 @@ class XMLRobot(Representation):
                     else:
                         IC_T_IP = IC_T_P
                         M_p = np.zeros((6, 6))
-                        new_origin = representation.Pose.from_matrix(inv(IC_T_P))
+                        new_origin = representation.Pose.from_matrix(inv(IC_T_P), relative_to=parent)
 
                     A = get_adjoint(IC_T_IP.dot(new_origin.to_matrix()))
                     M = np.dot(np.transpose(A), np.dot(M_c, A)) + M_p
@@ -331,13 +331,13 @@ class XMLRobot(Representation):
 
                 for vis in child.visuals:
                     VC_T_P = C_T_P.dot(vis.origin.to_matrix())
-                    vis.origin = representation.Pose.from_matrix(VC_T_P)
+                    vis.origin = representation.Pose.from_matrix(VC_T_P, relative_to=parent)
                     vis.link = parent.name
                     parent.add_aggregate('visual', vis)
 
                 for col in child.collisions:
                     CC_T_P = C_T_P.dot(col.origin.to_matrix())
-                    col.origin = representation.Pose.from_matrix(CC_T_P)
+                    col.origin = representation.Pose.from_matrix(CC_T_P, relative_to=parent)
                     col.link = parent.name
                     parent.add_aggregate('collision', col)
             # reparent the following joints
@@ -345,7 +345,10 @@ class XMLRobot(Representation):
             for j in self.joints:
                 if j is not joint:
                     if j.name in next_joints:
-                        j.origin = representation.Pose.from_matrix(C_T_P.dot(j.origin.to_matrix()))
+                        _parent = self.get_parent(parent)
+                        if _parent is None:
+                            _parent = parent
+                        j.origin = representation.Pose.from_matrix(C_T_P.dot(j.origin.to_matrix()), relative_to=_parent)
                         j.parent = parent.name
                     new_joints += [j]
             # remove the joint and links
@@ -363,7 +366,7 @@ class XMLRobot(Representation):
                     if not hasattr(sensor, "joint") or sensor.joint != joint.name:
                         new_sensors += [sensor]
                     elif hasattr(sensor, "link") and sensor.link == joint.child:
-                        sensor.transform(joint.origin.to_matrix())
+                        sensor.transform(joint.origin.to_matrix(), relative_to=joint.origin.relative_to)
                         sensor.link = str(parent)
                         new_sensors += [sensor]
             self.sensors = new_sensors
@@ -778,7 +781,7 @@ class XMLRobot(Representation):
     def global_origin(self, stop):
         """ Get the global pose of the link.
         """
-        return representation.Pose.from_matrix(self.get_transformation(stop))
+        return representation.Pose.from_matrix(self.get_transformation(stop), relative_to=self.get_root())
 
     def post_read_xml(self):
         """Version and validity check"""

@@ -1284,15 +1284,15 @@ class Robot(SMURFRobot):
         if pjoint is not None:
             if transform_to:
                 Tinv = inv(inv(pjoint.origin.to_matrix()).dot(T))
-                pjoint.origin = representation.Pose.from_matrix(T)
+                pjoint.origin = representation.Pose.from_matrix(T, relative_to=pjoint.origin.relative_to)
             else:
-                pjoint.origin = representation.Pose.from_matrix(pjoint.origin.to_matrix().dot(T))
+                pjoint.origin = representation.Pose.from_matrix(pjoint.origin.to_matrix().dot(T), relative_to=pjoint.origin.relative_to)
         if only_frame:
             for joint in cjoint:
-                joint.origin = representation.Pose.from_matrix(Tinv.dot(joint.origin.to_matrix()))
+                joint.origin = representation.Pose.from_matrix(Tinv.dot(joint.origin.to_matrix()), relative_to=joint.origin.relative_to)
 
             for ent in link.collisions + link.visuals:
-                ent.origin = representation.Pose.from_matrix(Tinv.dot(ent.origin.to_matrix()))
+                ent.origin = representation.Pose.from_matrix(Tinv.dot(ent.origin.to_matrix()), relative_to=ent.origin.relative_to)
 
             self.transform_inertial(linkname, transformation=Tinv)
 
@@ -2126,9 +2126,8 @@ class Robot(SMURFRobot):
         for cPose in new_poses:
             self.add_aggregate('pose', cPose)
 
-        self.link_entities()
-        joint.link_with_robot(self)
         self.add_aggregate('joint', joint)
+        self.link_entities()
         assert joint.check_valid()
         assert str(other.get_root()) == str(joint.child)
         assert len(set([str(l) for l in self.links])) == len(self.links)
@@ -2238,7 +2237,7 @@ class Robot(SMURFRobot):
 
             if new_link.inertial is not None:
                 T = T_R.dot(T_link.dot(link_.inertial.origin.to_matrix()))
-                new_origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T))
+                new_origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T), relative_to=new_link)
                 new_origin.rotation = [0, 0, 0]
 
                 # Process the rotation
@@ -2253,7 +2252,7 @@ class Robot(SMURFRobot):
 
             for vis in new_link.visuals:
                 T = T_R.dot(T_link.dot(vis.origin.to_matrix()))
-                vis.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T.dot(T_flip)))
+                vis.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T.dot(T_flip)), relative_to=new_link)
                 if isinstance(vis.geometry, representation.Mesh) and not (
                         (vis.geometry.original_mesh_name in exclude_meshes or "ALL" in exclude_meshes)):
                     vis.geometry.mirror(mirror_transform=inv(T_root_to_link.dot(vis.origin.to_matrix())).dot(T),
@@ -2261,7 +2260,7 @@ class Robot(SMURFRobot):
 
             for col in new_link.collisions:
                 T = T_R.dot(T_link.dot(col.origin.to_matrix()))
-                col.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T.dot(T_flip)))
+                col.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(T.dot(T_flip)), relative_to=new_link)
                 if isinstance(col.geometry, representation.Mesh) and not (
                         (col.geometry.original_mesh_name in exclude_meshes or "ALL" in exclude_meshes)):
                     col.geometry.mirror(mirror_transform=inv(T_root_to_link.dot(col.origin.to_matrix())).dot(T),
@@ -2276,7 +2275,12 @@ class Robot(SMURFRobot):
 
                 # now we transform the local coordinate system using t_flip to make it right handed
                 new_root_to_joint = T_R.dot(T_link.dot(joint_.origin.to_matrix().dot(T_flip)))
-                new_joint.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(new_root_to_joint))
+                relative_to = self.get_parent(link_.name)
+                if relative_to is None:
+                    assert new_link.origin is None or all((new_link.origin.to_matrix() == np.identity(4)).flatten())
+                    relative_to = new_link
+                assert relative_to is not None
+                new_joint.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(new_root_to_joint), relative_to=str(relative_to))
                 # the joint axes are mirrored so that there movement happens symmetrically
                 if new_joint.joint_type != "fixed":
                     assert new_joint.axis is not None and np.linalg.norm(new_joint.axis) > 0.0
@@ -2319,13 +2323,15 @@ class Robot(SMURFRobot):
         if target_smurf is not None:
             robot.smurffile = target_smurf
 
+        if not final_linking_optional:
+            robot.link_entities()
+        robot.assert_validity()
+
         if only_return:
             return robot
 
         for k, v in robot.__dict__.items():
             setattr(self, k, v)
-        if not final_linking_optional:
-            self.link_entities()
 
     def split_robot(self, link_to_cut):
         """
