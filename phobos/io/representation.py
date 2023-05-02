@@ -193,7 +193,7 @@ class Pose(Representation, SmurfBase):
     def dot(self, other):
         return Pose.from_matrix(
             self._matrix.dot(other.to_matrix()),
-            relative_to=other.relative_to
+            relative_to=self.relative_to
         )
 
     def stringable(self):
