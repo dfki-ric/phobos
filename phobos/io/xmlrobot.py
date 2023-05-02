@@ -229,7 +229,11 @@ class XMLRobot(Representation):
         if type(elem) in (list, tuple):
             return [self.add_aggregate(typeName, e) for e in elem]
         if typeName in 'joints':
-            assert elem.name not in [str(j) for j in self.joints], f"Robot has already a joint with name {elem.name}"
+            if elem.name in [str(j) for j in self.joints]:
+                if id(self.get_aggregate("joint", elem.name)) != id(elem):
+                    raise AssertionError(f"Robot has already a joint with name {elem.name}")
+                else:
+                    return
             self.parent_map[str(elem.child)] = (elem.name, elem.parent)
             # self.parent_map[str(elem.name)] = (elem.name, elem.parent)
             if elem.parent in self.child_map:
