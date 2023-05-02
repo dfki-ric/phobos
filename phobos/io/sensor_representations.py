@@ -18,6 +18,7 @@ __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 class Sensor(Representation, SmurfBase):
     def __init__(self, name: str = None, joint=None, link=None, sensortype=None,
                  rate=None, always_on=True, visualize=False, topic=None, enable_metrics=False,
+                 origin=None,
                  _sdf_type=None, _blender_type=None, **kwargs):
         if link is not None:
             if type(link) != str:
@@ -30,7 +31,14 @@ class Sensor(Representation, SmurfBase):
         SmurfBase.__init__(self, name=name,
                            rate=rate, always_on=always_on, visualize=visualize, topic=topic,
                            enable_metrics=enable_metrics,
-                           returns=["type", "rate",], **kwargs)
+                           returns=["type", "rate"], **kwargs)
+        origin = _singular(origin)
+        if origin is not None and not isinstance(origin, Pose):
+            origin = Pose(**origin, relative_to=link)
+        elif origin is not None and origin.relative_to is None:
+            origin.relative_to = link
+        self.origin = origin
+        assert self.origin is None or self.origin.relative_to is not None
         self.type = sensortype
         self._sdf_type = _sdf_type
         self._blender_type = _blender_type
@@ -56,8 +64,7 @@ class Sensor(Representation, SmurfBase):
 
     @position_offset.setter
     def position_offset(self, val):
-        if self.origin is None:
-            self.origin = representation.Pose()
+        assert self.origin is not None
         self.origin.xyz = [val["x"], val["y"], val["z"]]
 
     @property
@@ -69,8 +76,7 @@ class Sensor(Representation, SmurfBase):
 
     @orientation_offset.setter
     def orientation_offset(self, val):
-        if self.origin is None:
-            self.origin = representation.Pose()
+        assert self.origin is not None
         self.origin.rotation = val
 
     def transform(self, transformation):
@@ -200,6 +206,7 @@ class RotatingRaySensor(Sensor):
         pass
 
 RaySensor = RotatingRaySensor
+__IMPORTS__ += ["RaySensor"]
 
 class CameraSensor(Sensor):
     _class_variables = ["name", "link", "height", "width", "hud_height", "hud_width", "opening_height", "opening_width",
@@ -210,10 +217,7 @@ class CameraSensor(Sensor):
             height=480, width=640, hud_height=240, hud_width=0,
             opening_height=90, opening_width=90,
             depth_image=True, show_cam=False, frame_offset=1, origin=None, **kwargs):
-        if origin is not None and not isinstance(origin, Pose):
-            origin = Pose(**origin, relative_to=link)
-        self.origin = origin if origin is not None else Pose()
-        super().__init__(name=name, joint=None, link=link, sensortype='CameraSensor',
+        super().__init__(name=name, joint=None, link=link, sensortype='CameraSensor', origin=origin,
                          _sdf_type="camera", _blender_type="Camera",
                          **kwargs)
         self.height = height
@@ -255,11 +259,10 @@ class CameraSensor(Sensor):
 class IMU(Sensor):
     _class_variables = ["name", "link", "frame"]
 
-    def __init__(self, name=None, link=None, frame=None, **kwargs):
-        super().__init__(name=name, joint=None, link=link, frame=frame, sensortype='NodeIMU', _sdf_type="imu",
+    def __init__(self, name=None, link=None, frame=None, origin=None, **kwargs):
+        super().__init__(name=name, joint=None, link=link, frame=frame, origin=None, sensortype='NodeIMU', _sdf_type="imu",
                          _blender_type="Inertial_measurement_unit", **kwargs)
         self.returns += ['link', 'id']
-
 
     @property
     def id(self):
