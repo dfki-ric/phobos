@@ -1339,9 +1339,10 @@ class CreateCollisionObjects(Operator):
 
             # make collision object relative if visual object has a parent
             if vis.parent:
-                ob.select_set(True)
-                bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
-                vis.parent.select_set(True)
+                # [ToDo v2.1.0] REVIEW: removal of this should be correct, please evaluate and remove
+                # ob.select_set(True)
+                # bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
+                # vis.parent.select_set(True)
                 eUtils.parentObjectsTo(context.selected_objects, vis.parent)
 
             # select created collision objects
