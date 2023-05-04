@@ -203,7 +203,9 @@ def parentObjectsTo(objects, parent, clear=False):
     Returns:
 
     """
-    if not isinstance(objects, list):
+    if isinstance(objects, tuple):
+        objects = list(objects)
+    elif not isinstance(objects, list):
         objects = [objects]
 
     # Store original layers

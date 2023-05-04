@@ -15,12 +15,13 @@ Contains all functions to model links within Blender.
 
 import re
 
+import bpy
 import mathutils
 
 from ..phoboslog import log
 from ..utils import editing as eUtils
 from ..utils import naming as nUtils
-from ..utils import selection as sUtils
+from ..utils import blender as bUtils
 
 
 def getGeometricElements(link):
@@ -42,8 +43,7 @@ def getGeometricElements(link):
     return visuals, collisions
 
 
-
-def deriveLinkfromObject(obj, scale=0.2, parent_link=True, parent_objects=False, nameformat=''):
+def deriveLinkfromObject(obj, scale=None, parent_link=True, parent_objects=True, reparent_children=True, nameformat=''):
     """Derives a link from an object using its name, transformation and parenting.
 
     Args:
@@ -58,26 +58,22 @@ def deriveLinkfromObject(obj, scale=0.2, parent_link=True, parent_objects=False,
 
     """
     log('Deriving link from ' + nUtils.getObjectName(obj), level="INFO")
-    if nameformat == '':
-        linkname = 'link_' + nUtils.getObjectName(obj)
-    else:
-        try:
-            nameparts = [p for p in re.split('[^a-zA-Z]', nUtils.getObjectName(obj)) if p != '']
-            linkname = nameformat.format(*nameparts)
-        except IndexError:
-            log('Invalid name format (indices) for naming: ' + nUtils.getObjectName(obj), 'WARNING')
-            linkname = 'link_' + nUtils.getObjectName(obj)
-    link = createLink({'scale': scale, 'name': linkname, 'matrix': obj.matrix_world})
-
-    # parent link to object's parent
-    if parent_link:
-        if obj.parent:
-            eUtils.parentObjectsTo(link, obj.parent)
-    # parent children of object to link
+    # create armature/bone
+    bUtils.toggleLayer('link', True)
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.ops.object.armature_add()
+    newlink = bpy.context.active_object
+    newlink.name = obj.name + "_link"
+    newlink.matrix_world = obj.matrix_world
+    newlink.phobostype = 'link'
+    newlink.scale = obj.scale if scale is None else scale
+    if obj.parent is not None and parent_link:
+        eUtils.parentObjectsTo(newlink, obj.parent)
     if parent_objects:
-        children = [obj] + sUtils.getImmediateChildren(obj)
-        eUtils.parentObjectsTo(children, link, clear=True)
-    return link
+        eUtils.parentObjectsTo(obj, newlink)
+    if reparent_children:
+        eUtils.parentObjectsTo(list(obj.children), newlink)
+    return newlink
 
 
 def setLinkTransformations(model, parent):

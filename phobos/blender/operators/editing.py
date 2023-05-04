@@ -56,8 +56,8 @@ from ...geometry import io as mesh_io, geometry as geo
 from ...utils import resources
 from ...io.sensor_representations import Sensor
 from ...utils.transform import create_transformation
-
 from ...io import sensor_representations
+
 
 class SafelyRemoveObjectsFromSceneOperator(Operator):
     """Removes all selected objects from scene, warning if they are deleted"""
@@ -1968,14 +1968,9 @@ class CreateLinksOperator(Operator):
         if self.location == '3D cursor':
             phobos2blender.createLink(representation.Link(name=self.linkname))
         else:
-            for obj in context.selected_objects:
-                modellinks.deriveLinkfromObject(
-                    obj,
-                    scale=self.size,
-                    parent_link=self.parent_link,
-                    parent_objects=self.parent_objects,
-                    nameformat=self.nameformat,
-                )
+            objs_to_create_links = context.selected_objects
+            for obj in objs_to_create_links:
+                modellinks.deriveLinkfromObject(obj)
         return {'FINISHED'}
 
     @classmethod
@@ -2649,7 +2644,7 @@ class AddHeightmapOperator(Operator):
         bpy.ops.phobos.smoothen_surface()
 
         # Add root link for heightmap
-        root = modellinks.deriveLinkfromObject(plane, scale=1.0, parenting=True, parentobjects=True)
+        root = modellinks.deriveLinkfromObject(plane, scale=1.0)
 
         # set names and custom properties
         # FIXME: what about the namespaces? @HEIGHTMAP (14)
