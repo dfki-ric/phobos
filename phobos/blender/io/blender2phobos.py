@@ -703,6 +703,7 @@ def deriveRobot(root, name='', objectlist=None):
         name=modelname,
         links=[deriveLink(obj) for obj in objectlist if obj.phobostype == 'link'],
         joints=[deriveJoint(obj) for obj in objectlist if obj.phobostype == 'link' and sUtils.getEffectiveParent(obj, include_hidden=True) is not None],
+        motors=[deriveMotor(obj) for obj in objectlist if obj.phobostype == 'link' and any([k.startswith("motor") for k in obj.keys()])],
         sensors=[deriveSensor(obj) for obj in objectlist if obj.phobostype == 'sensor']
         # [TODO v2.1.0] Add transmission support
     )
@@ -712,9 +713,6 @@ def deriveRobot(root, name='', objectlist=None):
     robot = core.Robot()
     robot.__dict__.update(xml_robot.__dict__)
     robot.description = bUtils.readTextFile('README.md')
-
-    for motor in [deriveMotor(obj) for obj in objectlist if obj.phobostype == 'link' and any([k.startswith("motor") for k in obj.keys()])]:
-        robot.add_motor(motor)
 
     for interface in [deriveInterface(obj) for obj in objectlist if obj.phobostype == 'interface']:
         robot.add_aggregate("interface", interface)
