@@ -954,9 +954,13 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
 
         # derive object information as dictionary
         joint = None
+        motor = None
         if obj.phobostype == 'link' and not sUtils.isRoot(obj):
             obj_repr = blender2phobos.deriveLink(obj)
-            joint = blender2phobos.deriveJoint(obj)
+            if any([k.startswith("joint/") for k in obj.keys()]):
+                joint = blender2phobos.deriveJoint(obj)
+            if any([k.startswith("motor/") for k in obj.keys()]):
+                motor = blender2phobos.deriveMotor(obj)
         else:
             obj_repr = blender2phobos.deriveRepresentation(obj, logging=False, adjust=False)
 
@@ -991,36 +995,49 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                 else:
                     log(f"PhobosPropertyInformationPanel: {str(obj.name)} has no entry for {key}", "DEBUG")
 
-        if obj.phobostype == "link" and not sUtils.isRoot(obj) and any([k.startswith("joint/") for k in obj.keys()]):
-            layout.label(text="Joint", icon=supportedCategories["joint"]['icon_value'])
-            box = layout.box()
-            row = box.split()
-            column = row.column()
-            categories["joint"] = [box, column, [0, 0]]
-            guiparams = {'object': obj}
-            for key in reserved_keys.JOINT_KEYS:
-                _key = "joint/" + key
-                if _key in obj:
-                    self.addProp([key], [obj[_key]], categories["joint"], [guiparams])
-                elif hasattr(joint, key) and key in ["parent", "child"] and sUtils.getObjectByName(getattr(joint, key)) is not None:
-                    self.addProp([key], [sUtils.getObjectByName(getattr(joint, key))], categories["joint"], [guiparams])
-                else:
-                    log(f"PhobosPropertyInformationPanel: {str(obj.name)} has no entry for {key}", "DEBUG")
-
-        if obj.phobostype == "link" and not sUtils.isRoot(obj) and any([k.startswith("pose/") for k in obj.keys()]):
-            layout.label(text="Pose", icon=supportedCategories["pose"]['icon_value'])
-            box = layout.box()
-            row = box.split()
-            column = row.column()
-            categories["pose"] = [box, column, [0, 0]]
-            guiparams = {'object': obj}
-            for _key in obj.keys():
-                if _key.startswith("pose/"):
-                    key = _key[5:]
+        if obj.phobostype == "link" and not sUtils.isRoot(obj):
+            if joint is not None:
+                layout.label(text="Joint", icon=supportedCategories["joint"]['icon_value'])
+                box = layout.box()
+                row = box.split()
+                column = row.column()
+                categories["joint"] = [box, column, [0, 0]]
+                guiparams = {'object': obj}
+                for key in reserved_keys.JOINT_KEYS:
+                    _key = "joint/" + key
                     if _key in obj:
-                        self.addProp([key], [obj[_key]], categories["pose"], [guiparams])
+                        self.addProp([key], [obj[_key]], categories["joint"], [guiparams])
+                    elif hasattr(joint, key) and key in ["parent", "child"] and sUtils.getObjectByName(getattr(joint, key)) is not None:
+                        self.addProp([key], [sUtils.getObjectByName(getattr(joint, key))], categories["joint"], [guiparams])
                     else:
                         log(f"PhobosPropertyInformationPanel: {str(obj.name)} has no entry for {key}", "DEBUG")
+            if motor is not None:
+                layout.label(text="Motor", icon=supportedCategories["motor"]['icon_value'])
+                box = layout.box()
+                row = box.split()
+                column = row.column()
+                categories["motor"] = [box, column, [0, 0]]
+                guiparams = {'object': obj}
+                for key in reserved_keys.MOTOR_KEYS:
+                    _key = "motor/" + key
+                    if _key in obj:
+                        self.addProp([key], [obj[_key]], categories["motor"], [guiparams])
+                    else:
+                        log(f"PhobosPropertyInformationPanel: {str(obj.name)} has no entry for {key}", "DEBUG")
+            if any([k.startswith("pose/") for k in obj.keys()]):
+                layout.label(text="Pose", icon=supportedCategories["pose"]['icon_value'])
+                box = layout.box()
+                row = box.split()
+                column = row.column()
+                categories["pose"] = [box, column, [0, 0]]
+                guiparams = {'object': obj}
+                for _key in obj.keys():
+                    if _key.startswith("pose/"):
+                        key = _key[5:]
+                        if _key in obj:
+                            self.addProp([key], [obj[_key]], categories["pose"], [guiparams])
+                        else:
+                            log(f"PhobosPropertyInformationPanel: {str(obj.name)} has no entry for {key}", "DEBUG")
 
         # The following has been replaced and is obsolete
         # # generate general category only if needed
@@ -1716,10 +1733,11 @@ def register():
         'collision': {'icon_value': 'PHYSICS'},
         'visual': {'icon_value': 'RESTRICT_VIEW_OFF'},
         'inertial': {'icon_value': 'SHADING_TEXTURE'},
-        'joint': {'icon_value': 'FORCE_HARMONIC'},
+        'joint': {'icon_value': 'CON_KINEMATIC'},
         'sensor': {'icon_value': 'OUTLINER_OB_FORCE_FIELD'},
         'pose': {'icon_value': 'POSE_HLT'},
-        'link': {'icon_value': 'LINK_BLEND'}
+        'link': {'icon_value': 'LINK_BLEND'},
+        'motor': {'icon_value': 'PREFERENCES'}
     }
 
     # TODO delete me?
