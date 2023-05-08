@@ -47,8 +47,8 @@ def deriveObjectPose(obj, effectiveparent=None, logging=True):
 
 # @validate("material")
 def deriveMaterial(mat, logging=False, errors=None):
-    if "No material defined." in errors:
-        return None
+    # if errors is not None and "No material defined." in errors:
+    #     return None
     # textures
     diffuseTexture = None
     normalTexture = None
