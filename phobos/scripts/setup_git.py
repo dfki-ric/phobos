@@ -14,6 +14,7 @@ INFO = 'Sets-up a git repository for a simulation/control model.'
 def main(args):
     import argparse
     import os
+    import pkg_resources
     from ..utils import git, misc
     from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
@@ -60,6 +61,22 @@ def main(args):
 
     git.ignore(args.directory, ["*.blend1", "*.log", "*.gv"])
     misc.execute_shell_command("git add .gitignore", cwd=args.directory)
+
+    # add manifest.xml if necessary
+    manifest_path = os.path.join(args.directory, "manifest.xml")
+    author, maintainer, url = git.get_repo_data(args.directory)
+    if not os.path.isfile(manifest_path):
+        misc.copy(None, pkg_resources.resource_filename("phobos", "data/manifest.xml.in"), manifest_path)
+        with open(manifest_path, "r") as manifest:
+            content = manifest.read()
+            content = misc.regex_replace(content, {
+                "\$INPUTNAME": os.path.basename(args.directory),
+                "\$AUTHOR": "<author>" + author + "</author>",
+                "\$MAINTAINER": "<maintainer>"+maintainer+"</maintainer>",
+                "\$URL": "<url>" + url + "</url>",
+            })
+        with open(manifest_path, "w") as manifest:
+            manifest.write(content)
 
     return 0
 
