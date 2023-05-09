@@ -1,5 +1,7 @@
 import json
 import os
+from .misc import merge_default
+from ..defs import BPY_AVAILABLE
 
 
 def get_resources_path(*filepath):
@@ -14,8 +16,21 @@ def get_resources_path(*filepath):
     return os.path.normpath(path)
 
 
+def get_user_resources_path():
+    path = os.getenv("PHOBOS_CONFIG_PATH", None)
+    if BPY_AVAILABLE:
+        # [Todo v2.1.0] Re-add user config dir in phobos settings and use that path here
+        pass
+    if path is not None:
+        return os.path.normpath(path)
+    return None
+
+
 with open(get_resources_path("defaults.json"), "r") as f:
     DEFAULTS = json.load(f)
+if get_user_resources_path() is not None:
+    with open(get_user_resources_path(), "r") as f:
+        DEFAULTS = merge_default(json.load(f), DEFAULTS)
 
 
 def get_sensor(sensor_category, sensor_type = "default"):
@@ -27,6 +42,7 @@ def get_sensor(sensor_category, sensor_type = "default"):
         return DEFAULTS["sensors"][sensor_category][sensor_type]
     except KeyError:
         return {}
+
 
 def get_sensor_info(sensor_category):
     result = {
