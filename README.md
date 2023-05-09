@@ -1,3 +1,5 @@
+# NOTE: This is the alpha version of phobos2.0.0. Please test and report all issues [here](https://github.com/dfki-ric/phobos/issues). Thanks for your contribution!
+
 [![latest-release](https://img.shields.io/github/tag/dfki-ric/phobos.svg?label=version&style=flat)](https://github.com/dfki-ric/phobos/releases)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.01326/status.svg)](https://doi.org/10.21105/joss.01326)
 [![license](https://img.shields.io/github/license/dfki-ric/phobos.svg?style=flat)](https://github.com/dfki-ric/phobos/blob/master/COPYING)
