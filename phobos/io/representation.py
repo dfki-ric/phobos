@@ -38,6 +38,39 @@ if BPY_AVAILABLE:
 from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
+
+def _joint_relative_origin_getter(instance):
+    assert instance._related_robot_instance is not None
+    assert instance.origin is not None
+    assert instance.origin.relative_to is not None
+    out = instance.origin
+    if instance.origin.relative_to == instance._related_robot_instance.get_parent(instance.link):
+        return out
+    if instance.origin.relative_to != instance.link:
+        assert instance._related_robot_instance is not None, "Trying to get joint_relative_origin while robot is not linked"
+        r2x = instance._related_robot_instance.get_transformation
+        out = Pose.from_matrix(
+            inv(r2x(instance.link)).dot(r2x(instance.origin.relative_to).dot(instance.origin.to_matrix())),
+            relative_to=self.link
+        )
+        out.link_with_robot(instance._related_robot_instance)
+    if instance._link.origin is not None:
+        out = instance._link.origin.dot(out)
+    out.relative_to = instance._related_robot_instance.get_parent(instance.link)
+    return out
+
+
+def _joint_relative_origin_setter(instance, value):
+    """This setter should only be used from the urdf import"""
+    value = _singular(value)
+    assert isinstance(value, Pose), type(value)
+    if value.relative_to is None:  # urdf, as sdf provides this value
+        instance.origin = value
+        if instance._related_robot_instance is not None:
+            instance.origin = instance._link.origin.inv().dot(instance.origin)
+        instance.origin.relative_to = instance.link
+
+
 __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 
 
@@ -1215,35 +1248,12 @@ class Collision(Representation, SmurfBase):
 
     @property
     def joint_relative_origin(self):
-        assert self._related_robot_instance is not None
-        assert self.origin is not None
-        assert self.origin.relative_to is not None
-        out = self.origin
-        if self.origin.relative_to == self._related_robot_instance.get_parent(self.link):
-            return out
-        if self.origin.relative_to != self.link:
-            assert self._related_robot_instance is not None, "Trying to get joint_relative_origin while robot is not linked"
-            r2x = self._related_robot_instance.get_transformation
-            out = Pose.from_matrix(
-                inv(r2x(self.link)).dot(r2x(self.origin.relative_to).dot(self.origin.to_matrix())),
-                relative_to=self.link
-            )
-            out.link_with_robot(self._related_robot_instance)
-        if self._link.origin is not None:
-            out = self._link.origin.dot(out)
-        out.relative_to = self._related_robot_instance.get_parent(self.link)
-        return out
+        return _joint_relative_origin_getter(self)
 
     @joint_relative_origin.setter
     def joint_relative_origin(self, value):
         """This setter should only be used from the urdf import"""
-        value = _singular(value)
-        assert isinstance(value, Pose), type(value)
-        if value.relative_to is None:  # urdf, as sdf provides this value
-            self.origin = value
-            if self._related_robot_instance is not None:
-                self.origin = self._link.origin.inv().dot(self.origin)
-            self.origin.relative_to = self.link
+        _joint_relative_origin_setter(self, value)
 
 
 class Visual(Representation, SmurfBase):
@@ -1316,35 +1326,12 @@ class Visual(Representation, SmurfBase):
 
     @property
     def joint_relative_origin(self):
-        assert self._related_robot_instance is not None
-        assert self.origin is not None
-        assert self.origin.relative_to is not None
-        out = self.origin
-        if self.origin.relative_to == self._related_robot_instance.get_parent(self.link):
-            return out
-        if self.origin.relative_to != self.link:
-            assert self._related_robot_instance is not None, "Trying to get joint_relative_origin while robot is not linked"
-            r2x = self._related_robot_instance.get_transformation
-            out = Pose.from_matrix(
-                inv(r2x(self.link)).dot(r2x(self.origin.relative_to).dot(self.origin.to_matrix())),
-                relative_to=self.link
-            )
-            out.link_with_robot(self._related_robot_instance)
-        if self._link.origin is not None:
-            out = self._link.origin.dot(out)
-        out.relative_to = self._related_robot_instance.get_parent(self.link)
-        return out
+        return _joint_relative_origin_getter(self)
 
     @joint_relative_origin.setter
     def joint_relative_origin(self, value):
         """This setter should only be used from the urdf import"""
-        value = _singular(value)
-        assert isinstance(value, Pose), type(value)
-        if value.relative_to is None:  # urdf, as sdf provides this value
-            self.origin = value
-            if self._related_robot_instance is not None:
-                self.origin = self._link.origin.inv().dot(self.origin)
-            self.origin.relative_to = self.link
+        _joint_relative_origin_setter(self, value)
 
 
 class Inertia(Representation, SmurfBase):
@@ -1430,35 +1417,12 @@ class Inertial(Representation, SmurfBase):
 
     @property
     def joint_relative_origin(self):
-        assert self._related_robot_instance is not None
-        assert self.origin is not None
-        assert self.origin.relative_to is not None
-        out = self.origin
-        if self.origin.relative_to == self._related_robot_instance.get_parent(self.link):
-            return out
-        if self.origin.relative_to != self.link:
-            assert self._related_robot_instance is not None, "Trying to get joint_relative_origin while robot is not linked"
-            r2x = self._related_robot_instance.get_transformation
-            out = Pose.from_matrix(
-                inv(r2x(self.link)).dot(r2x(self.origin.relative_to).dot(self.origin.to_matrix())),
-                relative_to=self.link
-            )
-            out.link_with_robot(self._related_robot_instance)
-        if self._link.origin is not None:
-            out = self._link.origin.dot(out)
-        out.relative_to = self._related_robot_instance.get_parent(self.link)
-        return out
+        return _joint_relative_origin_getter(self)
 
     @joint_relative_origin.setter
     def joint_relative_origin(self, value):
         """This setter should only be used from the urdf import"""
-        value = _singular(value)
-        assert isinstance(value, Pose), type(value)
-        if value.relative_to is None:  # urdf, as sdf provides this value
-            self.origin = value
-            if self._related_robot_instance is not None:
-                self.origin = self._link.origin.inv().dot(self.origin)
-            self.origin.relative_to = self.link
+        _joint_relative_origin_setter(self, value)
 
 
 class KCCDHull(Representation, SmurfBase):

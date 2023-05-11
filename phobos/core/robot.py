@@ -825,7 +825,7 @@ class Robot(SMURFRobot):
         return
 
     # tools
-    def exchange_root(self, link):
+    def exchange_root(self, new_root):
         """
         This function adapts all joints in this robot in that way, that the given link becomes the new root.
         Args:
@@ -834,52 +834,57 @@ class Robot(SMURFRobot):
         Returns:
             None, this method works in place
         """
-        if str(self.get_root()) == str(link):
+        if str(self.get_root()) == str(new_root):
             return
-        if type(link) == str:
-            link = self.get_link(link)
-        flip_joints = self.get_chain(self.get_root(), link, links=False)
-        # make sure everything is according to convention where needed so we dont have to transform mid-process
-        for jointname in flip_joints:
-            joint = self.get_joint(jointname)
-            joint.origin = joint.joint_relative_origin
-            joint.origin.link_with_robot(self)
-            for child in self.get_children(joint.child):
-                cjoint = self.get_joint(child)
-                cjoint.origin = cjoint.joint_relative_origin
-                cjoint.origin.link_with_robot(self)
+        if type(new_root) == str:
+            new_root = self.get_link(new_root)
+        flip_joints = self.get_chain(self.get_root(), new_root, links=False)
         old_robot = self.duplicate()
-        # get all joints on the parent side recursively and flip them
-        first_joint = self.get_joint(self.get_parent(link))
-        inv_old_origin = first_joint.origin.inv(relative_to=first_joint)
-        first_joint.origin = representation.Pose(relative_to=link) if link.joint_relative_origin is None else link.joint_relative_origin.inv(relative_to=link)
-        first_joint.origin.link_with_robot(self)
-        first_joint.child = first_joint.parent
-        first_joint._child.origin = inv_old_origin.dot(first_joint._child.origin)
-        first_joint._child.origin.link_with_robot(self)
-        first_joint.parent = link
-        link.origin = None
+        or2x = old_robot.get_transformation
+        nr2x = lambda x: old_robot.get_transformation(x, start=str(new_root))
+        # 0. make sure all link parts follow the convention that they have to be relative_to that link
+        for link in self.links:
+            for vc in self.visuals + self.collisions:
+                if str(vc.origin.relative_to) != str(link):
+                    vc.origin = representation.Pose.from_matrix(
+                        inv(or2x(link)).dot(or2x(vc.origin.relative_to).dot(vc.origin.to_matrix())),
+                        relative_to=link
+                    )
+                    vc.origin.link_with_robot(self)
+                if link.inertial is not None:
+                    link.inertial.origin = representation.Pose.from_matrix(
+                        inv(or2x(link)).dot(or2x(vc.origin.relative_to).dot(link.inertial.origin.to_matrix())),
+                        relative_to=link
+                    )
+                    link.inertial.origin.link_with_robot(self)
+        # 1. get the tree structure correct
         for jointname in flip_joints:
-            if jointname == first_joint.name:
-                continue
             joint = self.get_joint(jointname)
-            new_parent_jointname = [c for c in old_robot.get_children(joint.child) if c in flip_joints][0]
-            new_parent_joint = old_robot.get_joint(new_parent_jointname)
-            inv_old_origin = joint.origin.inv(relative_to=joint)
-            joint.origin = new_parent_joint.origin.inv(relative_to=new_parent_jointname)
+            _temp = joint.parent
+            joint.parent = joint.child
+            joint.child = _temp
+        # 2. go through all joints and links and set the origins according to new root
+        for joint in self.joints:
+            joint.origin = representation.Pose.from_matrix(
+                nr2x(joint.name),
+                relative_to=str(new_root)
+            )
             joint.origin.link_with_robot(self)
-            new_parent_link = joint.child
-            joint.child = joint.parent
-            joint.parent = new_parent_link
-            joint._child.origin = inv_old_origin
-            joint._child.origin.link_with_robot(self)
-            for child in self.get_children(joint.child):
-                if child in flip_joints:
-                    continue
-                child_joint = self.get_joint(child)
-                child_joint.origin = inv_old_origin.dot(child_joint.origin)
-                child_joint.origin.link_with_robot(self)
+        for link in self.links:
+            link.origin = representation.Pose.from_matrix(
+                nr2x(link.name),
+                relative_to=str(new_root)
+            )
+            link.origin.link_with_robot(self)
+        new_root.origin = None
+        # 3. regenerate tree
         self.regenerate_tree_maps()
+        # 4. make all origins follow the convention
+        for jl in self.links + self.joints:
+            if jl.origin is None:
+                continue
+            jl.origin = jl.joint_relative_origin
+            jl.origin.link_with_robot(self)
 
     def remove_visuals(self):
         """

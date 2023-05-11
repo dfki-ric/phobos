@@ -784,10 +784,11 @@ class XMLRobot(Representation):
         if start is None:
             start = self.get_root()
             root2start = np.identity(4)
+        else:
+            root2start = self.get_transformation(start)
+
         if str(start) == str(end):
             return np.identity(4)
-
-        root2start = self.get_transformation(start)
 
         frame = self.get_link(end)
         if frame is None:
