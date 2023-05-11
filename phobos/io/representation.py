@@ -75,6 +75,9 @@ class Pose(Representation, SmurfBase):
         assert self.relative_to is not None
         return super(Pose, self).check_linkage(attribute=attribute)
 
+    def is_zero(self):
+        return all((self._matrix == np.identity(4)).flatten())
+
     # Aliases for backwards compatibility
     @property
     def xyz(self):

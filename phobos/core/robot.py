@@ -2318,7 +2318,7 @@ class Robot(SMURFRobot):
                 new_root_to_joint = T_R.dot(T_link.dot(joint_.origin.to_matrix().dot(T_flip)))
                 relative_to = self.get_parent(link_.name)
                 if relative_to is None:
-                    assert new_link.origin is None or all((new_link.origin.to_matrix() == np.identity(4)).flatten())
+                    assert new_link.origin is None or new_link.is_zero()
                     relative_to = new_link
                 assert relative_to is not None
                 new_joint.origin = representation.Pose.from_matrix(inv(T_root_to_link).dot(new_root_to_joint), relative_to=str(relative_to))

@@ -87,7 +87,7 @@ class XMLRobot(Representation):
         self._related_entity_instance = None
 
     def assert_validity(self):
-        assert self.get_root().origin is None or all((self.get_root().origin.to_matrix() == np.identity(4)).flatten())
+        assert self.get_root().origin is None or self.get_root().origin.is_zero()
 
     @property
     def collisions(self):
@@ -103,7 +103,7 @@ class XMLRobot(Representation):
 
     def link_entities(self, check_linkage_later=False):
         root = self.get_root()
-        assert root.origin is None
+        self.assert_validity()
 
         for link in self.links:
             for child_entity in ([link.inertial] if link.inertial is not None else []) + link.visuals + link.collisions:
