@@ -1076,6 +1076,7 @@ class Robot(SMURFRobot):
             start=start, stop=stop, include_unstopped_branches=include_unstopped_branches
         )
 
+        # [ToDo] In the following we have to go through all origins and check whether their relative_to is in the submodel as well and if not they have to be transformed
         links = self.get_link(linknames)
         materials = set()
         for link in links:
@@ -1151,6 +1152,7 @@ class Robot(SMURFRobot):
             if k not in submodel.__dict__.keys() or submodel.__dict__[k] is None:
                 submodel.__dict__[k] = v
 
+        submodel.get_root().origin = None
         submodel.link_entities()
 
         if abstract_model and len(self.submechanisms) > 0:
