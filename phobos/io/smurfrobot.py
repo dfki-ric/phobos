@@ -41,12 +41,14 @@ class SMURFRobot(XMLRobot):
 
         if inputfile is None and smurffile is not None:
             inputfile = smurffile
+        elif inputfile is None and xmlfile is not None:
+            inputfile = xmlfile
         inputfile = misc.sys_path(inputfile)
         if inputfile is not None:
             inputfile = os.path.abspath(inputfile)
-            if inputfile.lower().endswith(".smurf") and smurffile is None:
+            if inputfile.lower().endswith(".smurf"):
                 smurffile = inputfile
-            elif inputfile.lower().endswith(".urdf") or inputfile.lower().endswith(".sdf") and xmlfile is None:
+            elif inputfile.lower().endswith(".urdf") or inputfile.lower().endswith(".sdf"):
                 xmlfile = inputfile
             elif os.path.isdir(inputfile):
                 relevant_files = []
