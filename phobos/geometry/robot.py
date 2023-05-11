@@ -127,17 +127,17 @@ def replace_geometry(element, shape='box', oriented=False, scale=1.0):
 
     if shape == 'sphere':
         element.geometry, transform = geometry.create_sphere(mesh, scale=scale)
-        element.origin = representation.Pose.from_matrix(transform)
+        element.origin = representation.Pose.from_matrix(transform, relative_to=element.link)
     elif shape == 'cylinder':
         element.geometry, transform = geometry.create_cylinder(mesh, scale=scale)
-        element.origin = representation.Pose.from_matrix(transform)
+        element.origin = representation.Pose.from_matrix(transform, relative_to=element.link)
     elif shape == 'box':
         element.geometry, transform = geometry.create_box(mesh, oriented=oriented, scale=scale)
-        element.origin = representation.Pose.from_matrix(transform)
+        element.origin = representation.Pose.from_matrix(transform, relative_to=element.link)
     elif shape == 'convex':
         element.geometry.to_convex_hull()
         element.geometry.scale = scale
-        element.origin = representation.Pose.from_matrix(np.identity(4))
+        element.origin = representation.Pose.from_matrix(np.identity(4), relative_to=element.link)
     else:
         raise Exception('Shape {} not implemented. Please choose sphere, cylinder, box or convex.'.format(shape))
     return

@@ -996,7 +996,8 @@ class Robot(SMURFRobot):
 
         T0_old = self.get_transformation(link_name)
         T0_newp = self.get_transformation(new_parent_name)
-        joint.origin = representation.Pose.from_matrix(inv(T0_newp).dot(T0_old))
+        joint.origin = representation.Pose.from_matrix(inv(T0_newp).dot(T0_old), relative_to=new_parent_name)
+        joint.origin.link_with_robot(self)
         joint.parent = new_parent_name
 
     def define_submodel(self, name, start=None, stop=None, robotname=None, only_urdf=False, abstract_model=False,
@@ -1250,6 +1251,7 @@ class Robot(SMURFRobot):
             else:
                 M = np.zeros((6, 6))
                 origin = representation.Pose.from_matrix(np.eye(4), relative_to=link)
+                origin.link_with_robot(self)
             m = M[0, 0]
             if m <= limit:
                 M[:3, :3] = np.eye(3) * limit
@@ -2355,7 +2357,7 @@ class Robot(SMURFRobot):
                 T_link = self.get_transformation(sensor.link)
                 T_root2link = robot.get_transformation(sensor.link)
                 T = T_R.dot(T_link.dot(sensor.origin.to_matrix()))
-                sensor.origin = representation.Pose.from_matrix(transform.inv(T_root2link).dot(T))
+                sensor.origin = representation.Pose.from_matrix(transform.inv(T_root2link).dot(T), relative_to=sensor.link)
 
         if target_smurf is not None:
             robot.smurffile = target_smurf

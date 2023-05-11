@@ -267,9 +267,9 @@ class BaseModel(yaml.YAMLObject):
                     src_T = parent_model.get_transformation(child["joint"]["parent"])
                     dst_T = att_model.get_transformation(child["joint"]["child"])
                     T = np.linalg.inv(src_T).dot(T).dot(dst_T)
-                    origin = representation.Pose.from_matrix(T)
-                    child["joint"]["xyz"] = origin.xyz
-                    child["joint"]["rpy"] = origin.rpy
+                    _temp = representation.Pose.from_matrix(T, relative_to=child["joint"]["parent"])
+                    child["joint"]["xyz"] = _temp.xyz
+                    child["joint"]["rpy"] = _temp.rpy
 
                 if "name_editing" in child.keys():
                     att_model.edit_names(child["name_editing"])

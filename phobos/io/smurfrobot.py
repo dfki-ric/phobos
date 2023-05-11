@@ -340,8 +340,9 @@ class SMURFRobot(XMLRobot):
             # interfaces
             for interf in self.interfaces:
                 if interf.parent == elem.child:
-                    interf.origin = representation.Pose.from_matrix(elem.origin.to_matrix().dot(interf.origin.to_matrix()))
                     interf.parent = elem.parent
+                    interf.origin = representation.Pose.from_matrix(elem.origin.to_matrix().dot(interf.origin.to_matrix()), relative_to=interf.parent)
+                    interf.origin.link_with_robot(self)
             # poses
             poses_to_remove = []
             for p in self.poses:
