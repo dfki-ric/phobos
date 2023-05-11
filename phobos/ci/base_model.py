@@ -340,7 +340,8 @@ class BaseModel(yaml.YAMLObject):
                     joint_type=child["joint"]["type"] if "type" in child["joint"].keys() else "fixed",
                     origin=representation.Pose(
                         child["joint"]["xyz"] if "xyz" in child["joint"].keys() else [0, 0, 0],
-                        child["joint"]["rpy"] if "rpy" in child["joint"].keys() else [0, 0, 0]
+                        child["joint"]["rpy"] if "rpy" in child["joint"].keys() else [0, 0, 0],
+                        relative_to=parent.get_parent(child["joint"]["parent"])
                     ),
                     limit=representation.JointLimit(
                         effort=child["joint"]["eff"] if "eff" in child["joint"].keys() else 0,
@@ -419,10 +420,13 @@ class BaseModel(yaml.YAMLObject):
                     assert "joint" in config
                     _joint_def = config.pop("joint")
                     _joint_def = misc.merge_default(_joint_def, resources.get_default_joint(_joint_def["type"]))
+                    parent_link = _joint_def.pop("parent")
+                    parent_joint = self.robot.get_parent(parent_link)
                     _joint = representation.Joint(
                         child=linkname,
-                        parent=_joint_def.pop("parent"),
-                        origin=representation.Pose(xyz=_joint_def.pop("xyz"), rpy=_joint_def.pop("rpy")),
+                        parent=parent_link,
+                        origin=representation.Pose(xyz=_joint_def.pop("xyz"), rpy=_joint_def.pop("rpy"),
+                                                   relative_to=parent_joint),
                         **_joint_def
                     )
                     self.robot.add_link_by_properties(linkname, _joint, **config)

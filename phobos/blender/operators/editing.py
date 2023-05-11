@@ -1191,14 +1191,14 @@ class GenerateInertialObjectsOperator(Operator):
                 pose = mathutils.Vector((0.0, 0.0, 0.0))
 
             # create object from dictionary
-            inertial = representation.Inertial(
-                mass=mass,
-                inertia=representation.Inertia(*inertia),
-                origin=representation.Pose(xyz=pose)
-            )
             if not sUtils.getEffectiveParent(obj, include_hidden=True, ignore_selection=True):
                 ErrorMessageWithBox(f"{obj.name} has no parent link to which the inertial could be added", reporter=self)
                 continue
+            inertial = representation.Inertial(
+                mass=mass,
+                inertia=representation.Inertia(*inertia),
+                origin=representation.Pose(xyz=pose, relative_to=sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True).name)
+            )
             newinertial = phobos2blender.createInertial(inertial, sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True), adjust=True, logging=True)
 
             if newinertial:

@@ -2202,7 +2202,7 @@ class Robot(SMURFRobot):
                     iyy=1e-6,
                     izz=1e-6,
                 ),
-                origin=representation.Pose(xyz=[0, 0, 0], rpy=[0, 0, 0])
+                origin=representation.Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=name)
             )
         else:
             inertial = None

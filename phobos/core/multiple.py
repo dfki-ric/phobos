@@ -13,7 +13,7 @@ __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 class Entity(Representation, SmurfBase):
     _class_variables = ["origin"]
 
-    def __init__(self, name=None, world=None, model=None, file=None, origin=None, frames=None, anchor=None,
+    def __init__(self, name=None, world=None, model=None, file=None, origin=None, frames=None, anchor=None, parent="WORLD",
                  **kwargs):
         Representation.__init__(self)
         assert world is not None

@@ -31,7 +31,7 @@ def deriveObjectPose(obj, effectiveparent=None, logging=True):
     if effectiveparent is not None:
         w2p = representation.Pose.from_matrix(effectiveparent.matrix_world.normalized(), relative_to=effectiveparent.name)
     else:
-        w2p = representation.Pose()
+        w2p = representation.Pose(relative_to=effectiveparent.name)
 
     w2o = representation.Pose.from_matrix(obj.matrix_world.normalized(), relative_to=effectiveparent.name)
     p2o = w2p.inv(relative_to=effectiveparent.name).dot(w2o)
@@ -383,7 +383,7 @@ def deriveLink(obj, objectlist=None, logging=True, errors=None):
         inertial = representation.Inertial(
             mass=mass,
             inertia=representation.Inertia(*inertiamodel.inertiaMatrixToList(inertia)),
-            origin=representation.Pose(xyz=list(com))
+            origin=representation.Pose(xyz=list(com), relative_to=obj.name)
         )
 
     # further annotations
