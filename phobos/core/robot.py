@@ -2487,7 +2487,8 @@ class Robot(SMURFRobot):
         scale = np.array([scale_x, scale_y, scale_z])
         for geo in link.visuals + link.collisions:
             _geo_scale = inv(geo.origin.to_matrix())[:3, :3].dot(scale)
-            geo.geometry.scale_geometry(x=_geo_scale[0], y=_geo_scale[1], z=_geo_scale[2])
+            geo.geometry.multiply_scale(_geo_scale)
+            # geo.geometry.apply_scale()
             geo.origin.xyz = [v*s for v, s in zip(geo.origin.xyz, scale)]
         joints = self.get_children(link.name)
         for jointname in joints:
