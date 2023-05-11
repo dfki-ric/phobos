@@ -2509,3 +2509,4 @@ class Robot(SMURFRobot):
         else:
             raise TypeError("geometry_for_inertia holds invalid type "+type(geometry_for_inertia))
         link.inertial.inertia = representation.Inertia(*inertia_list)
+        link.inertial.inertia.link_with_robot(self)
