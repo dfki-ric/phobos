@@ -72,8 +72,9 @@ class Pose(Representation, SmurfBase):
             self.rotation = kwargs["rotation"]
 
     def check_linkage(self, attribute=None):
-        assert self.relative_to is not None
-        return super(Pose, self).check_linkage(attribute=attribute)
+        if self.relative_to is None:
+            log.error("Pose without definition for relative_to during check_linkage")
+        return self.relative_to is not None and super(Pose, self).check_linkage(attribute=attribute)
 
     def is_zero(self):
         return all((self._matrix == np.identity(4)).flatten())
