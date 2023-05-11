@@ -212,7 +212,7 @@ class ModelTest(object):
             link_name = k + (max_length - len(k)) * " "
             if k not in root2old_links.keys():
                 log.info("%s doesn't exist in compare model" % link_name)
-                _temp_pose = Pose.from_matrix(root2new_links[k], relative_to=self.new.get_root())
+                _temp_pose = Pose.from_matrix(root2new_links[k], relative_to=self.new.robot.get_root())
                 log.info("root2link: xyz: %.5f %.5f %.5f\trpy: %.5f %.5f %.5f" % tuple(_temp_pose.xyz + _temp_pose.rpy))
                 continue
             diff = np.linalg.inv(root2old_links[k]).dot(root2new_links[k])
