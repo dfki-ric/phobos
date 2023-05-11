@@ -1004,7 +1004,7 @@ class Mesh(Representation, SmurfBase):
         self._operations.append({"scale": [self._scale]})
 
     def multiply_scale(self, factor):
-        if type(factor) == list:
+        if type(factor) in [list, tuple, np.ndarray]:
             assert len(factor) == 3
             self.scale = [v * s for v, s in zip(self.scale, factor)]
         elif type(factor) in [float, int]:
