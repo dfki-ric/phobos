@@ -711,7 +711,7 @@ class Robot(SMURFRobot):
                         start=export.get("start", None),
                         stop=export.get("stop", None),
                         include_unstopped_branches=export.get("include_unstopped_branches", None),
-                        no_submechanisms=export["no_submechanisms"] if "no_submechanisms" in export else False,
+                        no_submechanisms=export.get("no_submechanisms", False),
                         abstract_model=export.get("abstract_model", False),
                         include_human_in_abstract=export.get("include_human_in_abstract", False),
                         only_urdf=export.get("only_urdf", False),
@@ -719,10 +719,10 @@ class Robot(SMURFRobot):
                         move_joint_axis_to_intersection=export.get("move_joint_axis_to_intersection", None)
                     )
                 else:
-                    assert export["start"] == self.submodel_defs["start"]
-                    assert export["stop"] == self.submodel_defs["stop"]
-                    assert export["include_unstopped_branches"] == self.submodel_defs["include_unstopped_branches"]
-                    assert export["no_submechanisms"] == self.submodel_defs["no_submechanisms"]
+                    assert export.get("start", None) == self.submodel_defs[export["name"]]["start"]
+                    assert export.get("stop", None) == self.submodel_defs[export["name"]]["stop"]
+                    assert export.get("include_unstopped_branches", False) == self.submodel_defs[export["name"]]["include_unstopped_branches"]
+                    assert export.get("no_submechanisms", False) == self.submodel_defs[export["name"]]["no_submechanisms"]
                     export_robot_instance = self.instantiate_submodel(**export)
                 if "add_floating_base" in export and export["add_floating_base"]:
                     export_robot_instance = export_robot_instance.add_floating_base()
