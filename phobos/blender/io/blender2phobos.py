@@ -79,6 +79,8 @@ def deriveMaterial(mat, logging=False, errors=None):
         diffuse_color = mat.diffuse_color
     if specular_color is None:
         specular_color = mat.specular_color
+    if len(specular_color) == 3 and hasattr(mat, "specular_intensity") and mat.specular_intensity is not None:
+        specular_color = list(specular_color) + [mat.specular_intensity]
     if shininess is None:
         shininess = 1-mat.roughness
 

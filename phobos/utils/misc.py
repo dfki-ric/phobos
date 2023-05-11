@@ -319,11 +319,10 @@ def color_parser(*args, rgba=None):
     elif count == 0:
         out = None
     if out is not None:
-        if len(out) == 3 and type(out) == list:
-            out += [1.]
-        elif len(out) == 3 and type(out) == tuple:
-            out += (1.,)
+        if type(out) != list:
             out = list(out)
+        if len(out) == 3:
+            out += [1.]
         if len(out) != 4:
             raise Exception(f'Invalid color argument count for argument "{out}"')
     else:
