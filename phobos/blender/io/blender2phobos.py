@@ -554,7 +554,10 @@ def deriveMotor(obj):
                 and not k.startswith("joint/") and not k.startswith("link/"):
             k = k.replace("motor/", "")
             annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
-
+    if "name" in annotations:
+        annotations.pop("name")
+    if "joint" in annotations:
+        annotations.pop("joint")
     return representation.Motor(
         name=obj.get("motor/name", obj.name),
         joint=obj.get("joint/name", obj.name),
