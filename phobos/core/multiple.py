@@ -13,8 +13,8 @@ __IMPORTS__ = [x for x in dir() if not x.startswith("__")]
 class Entity(Representation, SmurfBase):
     _class_variables = ["origin"]
 
-    def __init__(self, name=None, world=None, model=None, file=None, origin=None, frames=None, anchor=None, parent="WORLD",
-                 **kwargs):
+    def __init__(self, name=None, world=None, model=None, file=None, origin=None, frames=None,
+                 anchor=None, parent="WORLD", child=None, **kwargs):
         Representation.__init__(self)
         assert world is not None
         self.model = _singular(model)
@@ -37,7 +37,9 @@ class Entity(Representation, SmurfBase):
         for frame in _plural(frames):
             self._frames.append(frame)
         self.anchor = anchor
-        SmurfBase.__init__(self, name=name, returns=["name", "type", "parent", "position", "rotation", "anchor", "root", "file"], **kwargs)
+        self.parent = parent.upper()
+        self.child = child
+        SmurfBase.__init__(self, name=name, returns=["name", "type", "parent", "position", "rotation", "anchor", "root", "file", "child"], **kwargs)
         self.excludes += ["origin", "model"]
 
     def link_with_world(self, world, check_linkage_later=False):
@@ -306,6 +308,12 @@ class Arrangement(Representation, SmurfBase):
                         attach_model = entity.model.assemble()
                     else:
                         raise TypeError(f"Wrong model type of entity {entity.name}: {type(entity.model)}")
+                    if entity.child is None or str(entity.child) == str(attach_model.get_root()):
+                        child_link = attach_model.get_root()
+                    else:
+                        child_link = attach_model.get_link(entity.child)
+                        # make sure that we have a consistent downward tree
+                        attach_model.exchange_root(child_link)
                     attach_model.unlink_from_world()
                     attach_model.rename_all(prefix=entity.name + "_")
                     origin = entity.origin.duplicate()
@@ -315,7 +323,7 @@ class Arrangement(Representation, SmurfBase):
                         joint=representation.Joint(
                             name=str(parent_entity)+"2"+str(entity),
                             parent=parent_link,
-                            child=attach_model.get_root(),
+                            child=child_link,
                             type="fixed",
                             origin=origin
                         )
