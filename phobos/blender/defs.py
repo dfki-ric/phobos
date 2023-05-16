@@ -36,6 +36,7 @@ layerTypes = {
     'interface': 10,
     'submodel': 10,
     'annotation': 14,
+    'submechanism': 15
 }
 
 # types of blender objects phobos differentiates
@@ -54,6 +55,7 @@ phobostypes = (
     ('interface',) * 3,
     ('submodel',) * 3,
     ('annotation',) * 3,
+    ('submechanism',) * 3,
 )
 
 jointtypes = (
@@ -93,6 +95,7 @@ type_properties = {
     "interface_default": (),
     "submodel": (),
     "submodel_default": (),
+    # TODO add submechanism?
 }
 
 # definitions of model elements to be read in

@@ -1195,7 +1195,6 @@ class PhobosModelPanel(bpy.types.Panel):
         mc1.label(text='Mechanisms')
         mc1.operator('phobos.assign_submechanism')
         mc1.operator('phobos.select_submechanism')
-        mc1.operator('phobos.delete_submechanism')
 
         # Poses
         mc2.label(text='Poses', icon='POSE_HLT')

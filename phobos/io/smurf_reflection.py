@@ -2,7 +2,7 @@ from ..io.yaml_reflection import YamlReflection
 
 
 # [Todo v2.1.0] we need to introduce a key dict for the return properties to store properties under different smurf keys
-class SmurfBase(YamlReflection):
+class  SmurfBase(YamlReflection):
     """Base class for a smurf object related to a urdf.
     Wraps methods for joint and link as properties and additionally which variables get exported.
     """
