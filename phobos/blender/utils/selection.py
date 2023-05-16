@@ -461,23 +461,6 @@ def getObjectByProperty(property, value):
     return candidate
 
 
-def getSubmechanismRoots(selection_only=False):
-    """
-
-    Args:
-      selection_only: (Default value = False)
-
-    Returns:
-
-    """
-    if selection_only:
-        objs = bpy.context.selected_objects
-    else:
-        objs = bpy.context.scene.objects
-
-    return [obj for obj in objs if 'submechanism/name' in obj]
-
-
 def getSubmechanismRootForJoint(jointobj):
     """
 

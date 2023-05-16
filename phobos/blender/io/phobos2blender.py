@@ -16,7 +16,8 @@ from ..utils import naming as nUtils
 from ..utils import selection as sUtils
 
 from ... import core
-from ...io import representation, sensor_representations
+from ...io import representation, sensor_representations, submechanism_representations
+from ...io.submechanism_representations import Submechanism
 from ...utils.resources import get_default_joint
 
 """
@@ -358,7 +359,6 @@ def createSensor(sensor: sensor_representations.Sensor, linkobj=None):
         'box',
         [1, 1, 1],
         None,
-        #pmaterial=defs.def_settings['sensors'][sensor.blender_type]['material'], #TODO
         phobostype='sensor'
     )
 
@@ -400,6 +400,59 @@ def createSensor(sensor: sensor_representations.Sensor, linkobj=None):
     # select the new sensor
     sUtils.selectObjects([newsensor], clear=True, active=0)
     return newsensor
+
+def createSubmechanism(submechanism: submechanism_representations.Submechanism, linkobj=None):
+    bUtils.toggleLayer('submechanism', value=True)
+
+    print("Create submech")
+    print("name")
+    print(submechanism.name)
+
+    newsubm = bUtils.createPrimitive(
+        submechanism.name,
+        'box',
+        [0.05, 0.05, 0.05],
+        None,
+        phobostype='submechanism'  # TODO:'submechanism'?
+    )
+
+    # TODO: Create submechanism objects
+    # use resource name provided as: "resource:whatever_name"
+    # resource_obj = ioUtils.getResource(['sensor'] + defs.def_settings['sensors'][submechanism.blender_type]['shape'].split('://')[1].split('_'))
+    # if resource_obj:
+    #     log("Assigned resource mesh and materials to new sensor object.", 'DEBUG')
+    #     newsensor.data = resource_obj.data
+    #     newsensor.scale = (defs.def_settings['sensors'][sensor.blender_type]['size'],) * 3
+    # else:
+    #     log("Could not use resource mesh for sensor. Default cube used instead.", 'WARNING')
+
+    # assign the parent if available
+    if linkobj is not None:
+        eUtils.parentObjectsTo(newsubm, nUtils.getObjectName(linkobj) if type(linkobj) == str else linkobj)
+        # newsensor.matrix_local = sensor.origin.to_matrix() #TODO
+
+    # set sensor properties
+    newsubm.phobostype = 'submechanism'
+    newsubm.name = submechanism.name
+    newsubm['type'] = submechanism.blender_type
+
+    # write generic custom properties
+    for prop, value in submechanism.to_yaml().items():
+        if type(value) == dict:
+            for k, v in value.items():
+                newsubm[f"{prop}/{k}"] = v
+        else:
+            newsubm[f"{prop}"] = value
+
+    # throw warning if type is not known
+    # TODO check if type is known
+    # TODO we need to link this error to the type specifications
+
+
+    # select the new submechanism
+    #sUtils.selectObjects([newsubm], clear=True, active=0)
+    return newsubm
+
 
 
 def createMotor(motor: representation.Motor, linkobj: bpy.types.Object):
