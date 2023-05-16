@@ -15,7 +15,7 @@ from ..utils import selection as sUtils
 from ..utils.validation import validate
 
 from ... import core
-from ...io import representation, sensor_representations, xmlrobot
+from ...io import representation, sensor_representations, xmlrobot, submechanism_representations
 from ...io.poses import JointPoseSet
 
 """
@@ -590,9 +590,46 @@ def derivePoses(root, robot):
     return pose_objects
 
 
-# [TODO v2.0.0] Add submechanisms
-def deriveSubmechanism(obj):
-    raise NotImplementedError
+
+
+def deriveSubmechanism(obj, logging=False):
+    """This function derives a submechanism from a given blender object
+
+    Args:
+      obj(bpy_types.Object): The blender object to derive the submechanism from.
+      logging(bool, optional): whether to write log messages or not (Default value = False)
+
+    Returns:
+      : dict -- phobos representation of the submechanism
+
+    """
+
+    if logging:
+        log(
+            "Deriving submechanism from object " + nUtils.getObjectName(obj, phobostype='submechanism') + ".",
+            'DEBUG',
+        )
+
+    values = {
+        k: v for k, v in obj.items()
+        if k not in reserved_keys.INTERNAL_KEYS+reserved_keys.SUBMECHANISM_KEYS+["type", "subtype"]
+    }
+    for prop in reserved_keys.SUBMECHANISM_KEYS:
+        jointIDs = obj[prop]
+        if "Array" in str(type(jointIDs)):
+            joints = []
+            for jointID in jointIDs:
+                joints.append(sUtils.getObjectByProperty("submechanism/id", jointID))
+        else:
+            joints = {}
+            for key, jointID in jointIDs.items():
+                joints[key] = sUtils.getObjectByProperty("submechanism/id", jointID)
+        values[prop] = joints
+
+    values["submechtype"] = obj["type"]
+    values["submechsubtype"] = obj["subtype"]
+
+    return submechanism_representations.Submechanism(**values)
 
 
 # [TODO v2.1.0] Re-add light support
@@ -735,7 +772,8 @@ def deriveRobot(root, name='', objectlist=None):
     for pose in derivePoses(root, robot):
         robot.add_aggregate("pose", pose)
 
-    # [TODO v2.0.0] Add submechanisms
+    for subm in [deriveSubmechanism(obj) for obj in objectlist if obj.phobostype == 'submechanism']:
+        robot.add_aggregate("submechanisms", subm)
 
     # Until here we have added all entities that are linkable
     robot.relink_entities()

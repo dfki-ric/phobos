@@ -3011,20 +3011,6 @@ class AssignSubmechanism(Operator):
                 layout.label(text=t)
 
 
-    def assignIDtoJoint(self, context, joint):
-        if "submechanism/id" in joint:
-            return joint["submechanism/id"]
-        usedIDs = []
-        for link in context.scene.objects:
-            if link.phobostype == "link":
-                if "submechanism/id" in link:
-                    usedIDs.append(link["submechanism/id"])
-        maxID = 0 if len(usedIDs) == 0 else max(usedIDs)
-        jointID = maxID+1
-        joint["submechanism/id"] = jointID
-        return jointID
-
-
     def execute(self, context):
         """
 
@@ -3058,12 +3044,11 @@ class AssignSubmechanism(Operator):
                 ]
                 base = roots[0]
                 parameters = {
-                    'submechanism/type': '{0}R'.format(len(self.joints)),
-                    'submechanism/spanningtree': jointIDs,
-                    'submechanism/active': jointIDs,
-                    'submechanism/independent': jointIDs,
-                    'submechanism/name': self.mechanism_name,
-                    'name': self.mechanism_name
+                    'submechtype': '{0}R'.format(len(self.joints)),
+                    'spanningtree': list(self.joints),
+                    'active': list(self.joints),
+                    'independent': list(self.joints),
+                    'name': self.mechanism_name,
                 }
 
                 subm = submechanism_representations.Submechanism(**parameters)
@@ -3079,29 +3064,26 @@ class AssignSubmechanism(Operator):
                 size = len(mechanismdata['joints']['spanningtree'])
                 if len(self.joints) == size:
                     jointmap = {
-                        getattr(self, 'jointtype' + str(i)): self.assignIDtoJoint(context, self.joints[i])
+                        getattr(self, 'jointtype' + str(i)): self.joints[i]
                         for i in range(len(self.joints))
                     }
                     if len(jointmap) == size: # Every joint is assigned a different type for this submechanism
                         # assign attributes
                         parameters = {
-                            'submechanism/type': mechanismdata['type'],
-                            'submechanism/subtype': context.window_manager.mechanismpreview,
+                            'submechtype': mechanismdata['type'],
+                            'submechsubtype': context.window_manager.mechanismpreview,
                             'name': self.mechanism_name,
-                            'submechanism/name': self.mechanism_name,
-                            'submechanism/jointtype': jointmap,
-                            'submechanism/spanningtree': [
+                            'jointtypes': jointmap,
+                            'spanningtree': [
                                 jointmap[j] for j in mechanismdata['joints']['spanningtree']
                             ],
-                            'submechanism/active': [
+                            'active': [
                                 jointmap[j] for j in mechanismdata['joints']['active']
                             ],
-                            'submechanism/independent': [
+                            'independent': [
                                 jointmap[j] for j in mechanismdata['joints']['independent']
                             ],
-                            'submechanism/freeloader': [
-                                self.assignIDtoJoint(context, j) for j in freeloader_joints
-                            ]
+                            'freeloader': freeloader_joints
                         }
 
                         subm = submechanism_representations.Submechanism(**parameters)
@@ -3139,7 +3121,7 @@ class SelectSubmechanism(Operator):
 
         """
         return bUtils.compileEnumPropertyList(
-            [r['submechanism/name'] for r in context.scene.objects if r.phobostype == "submechanism"]
+            [r['name'] for r in context.scene.objects if r.phobostype == "submechanism"]
         )
 
     def get_submechanism_roots(self, context):
