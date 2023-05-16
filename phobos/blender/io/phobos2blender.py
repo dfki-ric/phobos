@@ -433,13 +433,26 @@ def createSubmechanism(submechanism: submechanism_representations.Submechanism, 
     newsubm.name = submechanism.name
     newsubm['type'] = submechanism.blender_type
 
+    # Assign each joint an ID
+    for prop in reserved_keys.SUBMECHANISM_KEYS:
+        joints = submechanism.__getattribute__(prop)
+        jointIDs = type(joints)()
+        if type(joints) == dict:
+            for key, joint in joints.items():
+                jointIDs[key] = assignIDtoJoint(joint)
+        else:
+            for joint in joints:
+                jointIDs.append(assignIDtoJoint(joint))
+        newsubm[f"{prop}"] = jointIDs
+
     # write generic custom properties
     for prop, value in submechanism.to_yaml().items():
-        if type(value) == dict:
-            for k, v in value.items():
-                newsubm[f"{prop}/{k}"] = v
-        else:
-            newsubm[f"{prop}"] = value
+        if prop not in reserved_keys.SUBMECHANISM_KEYS:
+            if type(value) == dict:
+                for k, v in value.items():
+                    newsubm[f"{prop}/{k}"] = v
+            else:
+                newsubm[f"{prop}"] = value
 
     # throw warning if type is not known
     # TODO check if type is known
@@ -450,6 +463,19 @@ def createSubmechanism(submechanism: submechanism_representations.Submechanism, 
     #sUtils.selectObjects([newsubm], clear=True, active=0)
     return newsubm
 
+
+def assignIDtoJoint(joint):
+    if "submechanism/id" in joint:
+        return joint["submechanism/id"]
+    usedIDs = []
+    for link in bpy.context.scene.objects:
+        if link.phobostype == "link":
+            if "submechanism/id" in link:
+                usedIDs.append(link["submechanism/id"])
+    maxID = 0 if len(usedIDs) == 0 else max(usedIDs)
+    jointID = maxID+1
+    joint["submechanism/id"] = jointID
+    return jointID
 
 
 def createMotor(motor: representation.Motor, linkobj: bpy.types.Object):
