@@ -32,6 +32,7 @@ from bpy.props import (
 )
 from bpy.types import Operator
 from idprop.types import IDPropertyGroup
+from phobos.io import hyrodyn
 
 from .. import defs as defs
 from .. import display as display
@@ -51,7 +52,7 @@ from ..utils import naming as nUtils
 from ..utils import selection as sUtils
 from ..utils import validation as vUtils
 
-from ...io import representation, submechanism_representations
+from ...io import representation
 from ...geometry import io as mesh_io, geometry as geo
 from ...utils import resources
 from ...io.sensor_representations import Sensor
@@ -3014,20 +3015,19 @@ class AssignSubmechanism(Operator):
                         self.executeMessage.append("Another mechanism with this name already exists")
                         return {'FINISHED'} # TODO Ignore if joints are same - delete instead
             if self.linear_chain:
-                jointIDs = [
-                    self.assignIDtoJoint(context, j)
-                    for j in self.joints
-                ]
                 base = roots[0]
                 parameters = {
-                    'submechtype': '{0}R'.format(len(self.joints)),
-                    'spanningtree': list(self.joints),
-                    'active': list(self.joints),
-                    'independent': list(self.joints),
+                    'type': '{0}R'.format(len(self.joints)),
+                    'jointnames': [j["joint/name"] for j in self.joints],
+                    'jointnames_spanningtree': [j["joint/name"] for j in self.joints],
+                    'jointnames_active': [j["joint/name"] for j in self.joints],
+                    'jointnames_independent': [j["joint/name"] for j in self.joints],
+                    'jointnames_dependent': [], #TODO
                     'name': self.mechanism_name,
+                    'contextual_name': self.mechanism_name
                 }
 
-                subm = submechanism_representations.Submechanism(**parameters)
+                subm = hyrodyn.Submechanism(**parameters)
                 root = phobos2blender.createSubmechanism(submechanism = subm, linkobj=base)
             elif len(context.window_manager.mechanismpreview) > 0:
                 base, freeloader_joints = eUtils.getNearestCommonParent(self.joints)
@@ -3040,29 +3040,37 @@ class AssignSubmechanism(Operator):
                 size = len(mechanismdata['joints']['spanningtree'])
                 if len(self.joints) == size:
                     jointmap = {
-                        getattr(self, 'jointtype' + str(i)): self.joints[i]
+                        getattr(self, 'jointtype' + str(i)): self.joints[i]["joint/name"]
                         for i in range(len(self.joints))
                     }
                     if len(jointmap) == size: # Every joint is assigned a different type for this submechanism
                         # assign attributes
+                        dependent = [j for j in mechanismdata['joints']['spanningtree'] if j not in mechanismdata['joints']['independent']]
                         parameters = {
-                            'submechtype': mechanismdata['type'],
-                            'submechsubtype': context.window_manager.mechanismpreview,
+                            'type': mechanismdata['type'],
+                            'subtype': context.window_manager.mechanismpreview,
                             'name': self.mechanism_name,
+                            'contextual_name': self.mechanism_name,
                             'jointtypes': jointmap,
-                            'spanningtree': [
+                            'jointnames': list(jointmap.values()),
+                            'jointnames_spanningtree': [
                                 jointmap[j] for j in mechanismdata['joints']['spanningtree']
                             ],
-                            'active': [
+                            'jointnames_active': [
                                 jointmap[j] for j in mechanismdata['joints']['active']
                             ],
-                            'independent': [
+                            'jointnames_independent': [
                                 jointmap[j] for j in mechanismdata['joints']['independent']
                             ],
-                            'freeloader': freeloader_joints
+                            'jointnames_dependent': [
+                                jointmap[j] for j in dependent
+                            ],
+                            'freeloader': [
+                                j["joint/name"] for j in freeloader_joints
+                            ]
                         }
 
-                        subm = submechanism_representations.Submechanism(**parameters)
+                        subm = hyrodyn.Submechanism(**parameters)
                         root = phobos2blender.createSubmechanism(submechanism = subm, linkobj=base)
                     else:
                         self.executeMessage.append("Define joints")

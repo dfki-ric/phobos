@@ -202,7 +202,7 @@ class Submechanism(HyrodynAnnotation):
 
     def __init__(self, name, contextual_name,
                  jointnames_spanningtree=None, jointnames_active=None, jointnames_independent=None, jointnames=None,
-                 file_path=None, type="numerical",
+                 file_path=None, type="numerical", subtype=None,
                  loop_constraints=None, multi_joint_dependencies=None, auto_gen=False, **kwargs):
         if jointnames_independent is None:
             jointnames_independent = []
@@ -215,7 +215,7 @@ class Submechanism(HyrodynAnnotation):
             jointnames_spanningtree=jointnames_spanningtree,
             jointnames_active=jointnames_active, jointnames_independent=jointnames_independent,
             jointnames=jointnames, file_path=file_path,
-            type=type, around=None, auto_gen=auto_gen, **kwargs
+            type=type, subtype=subtype, around=None, auto_gen=auto_gen, **kwargs
         )
         if multi_joint_dependencies is None:
             multi_joint_dependencies = []
