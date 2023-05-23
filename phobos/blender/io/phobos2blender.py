@@ -16,9 +16,7 @@ from ..utils import naming as nUtils
 from ..utils import selection as sUtils
 
 from ... import core
-from ...io import representation, sensor_representations, submechanism_representations
-from ...io.submechanism_representations import Submechanism
-from ...utils.resources import get_default_joint
+from ...io import representation, sensor_representations
 
 """
 Factory functions for creating blender Instances from phobos.io instance
@@ -401,19 +399,15 @@ def createSensor(sensor: sensor_representations.Sensor, linkobj=None):
     sUtils.selectObjects([newsensor], clear=True, active=0)
     return newsensor
 
-def createSubmechanism(submechanism: submechanism_representations.Submechanism, linkobj=None):
+def createSubmechanism(submechanism, linkobj=None):
     bUtils.toggleLayer('submechanism', value=True)
-
-    print("Create submech")
-    print("name")
-    print(submechanism.name)
 
     newsubm = bUtils.createPrimitive(
         submechanism.name,
         'box',
         [0.05, 0.05, 0.05],
         None,
-        phobostype='submechanism'  # TODO:'submechanism'?
+        phobostype='submechanism'
     )
 
     # TODO: Create submechanism objects
@@ -433,18 +427,19 @@ def createSubmechanism(submechanism: submechanism_representations.Submechanism, 
 
     # set sensor properties
     newsubm.phobostype = 'submechanism'
-    newsubm.name = submechanism.name
-    newsubm['type'] = submechanism.blender_type
 
     # Assign each joint an ID
     for prop in reserved_keys.SUBMECHANISM_KEYS:
+        print(prop)
         joints = submechanism.__getattribute__(prop)
         jointIDs = type(joints)()
         if type(joints) == dict:
-            for key, joint in joints.items():
+            for key, jointName in joints.items():
+                joint = sUtils.getObjectByProperty("joint/name", jointName)
                 jointIDs[key] = assignIDtoJoint(joint)
         else:
-            for joint in joints:
+            for jointName in joints:
+                joint = sUtils.getObjectByProperty("joint/name", jointName)
                 jointIDs.append(assignIDtoJoint(joint))
         newsubm[f"{prop}"] = jointIDs
 

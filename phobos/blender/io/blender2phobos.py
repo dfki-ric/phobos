@@ -3,6 +3,7 @@ from copy import deepcopy
 
 import bpy
 import numpy as np
+from phobos.io import hyrodyn
 
 from .. import reserved_keys
 from ..model import inertia as inertiamodel
@@ -15,7 +16,7 @@ from ..utils import selection as sUtils
 from ..utils.validation import validate
 
 from ... import core
-from ...io import representation, sensor_representations, xmlrobot, submechanism_representations
+from ...io import representation, sensor_representations, xmlrobot
 from ...io.poses import JointPoseSet
 
 """
@@ -619,17 +620,18 @@ def deriveSubmechanism(obj, logging=False):
         if "Array" in str(type(jointIDs)):
             joints = []
             for jointID in jointIDs:
-                joints.append(sUtils.getObjectByProperty("submechanism/id", jointID))
+                joints.append(sUtils.getObjectByProperty("submechanism/id", jointID)["joint/name"])
         else:
             joints = {}
             for key, jointID in jointIDs.items():
-                joints[key] = sUtils.getObjectByProperty("submechanism/id", jointID)
+                joints[key] = sUtils.getObjectByProperty("submechanism/id", jointID["joint/name"])
         values[prop] = joints
 
-    values["submechtype"] = obj["type"]
-    values["submechsubtype"] = obj["subtype"]
+    values["type"] = obj["type"]
+    if "subtype" in obj:
+        values["subtype"] = obj["subtype"]
 
-    return submechanism_representations.Submechanism(**values)
+    return hyrodyn.Submechanism(**values)
 
 
 # [TODO v2.1.0] Re-add light support
@@ -748,6 +750,7 @@ def deriveRobot(root, name='', objectlist=None):
         )
 
     # XMLVersion [TODO v2.1.0] Add matching constructor to phobos.core.Robot
+    # TODO ErrorMessageWithBox(message="Link {} is not defined as a joint. Use Model Editing > Kinematics > Define Joint".format(obj.name))
     xml_robot = xmlrobot.XMLRobot(
         name=modelname,
         links=[deriveLink(obj) for obj in objectlist if obj.phobostype == 'link'],
