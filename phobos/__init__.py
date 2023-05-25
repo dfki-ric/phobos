@@ -13,6 +13,7 @@
 Handles different import attempts to cope with Blender's *Reload script* functionality.
 """
 import sys
+import subprocess
 
 BPY_AVAILABLE = False
 try:
@@ -38,6 +39,77 @@ bl_info = {
     "tracker_url": "https://github.com/dfki-ric/phobos/issues",
     "category": "Development",
 }
+
+requirements = {
+    "yaml": "pyyaml",
+    "numpy": "numpy",
+    "scipy": "scipy",
+    "pkg_resources": "setuptools",
+    "collada": "pycollada",
+    "pydot": "pydot"
+}
+
+optional_requirements = {
+    "lxml": "lxml",
+    "networkx": "networkx",  # optional for blender
+    "trimesh": "trimesh",  # optional for blender
+}
+
+extra_requirements = {
+    "pybullet": "pybullet",  # optional for blender
+    "open3d": "open3d",  # optional for blender
+    "python-fcl": "python-fcl",  # optional for blender,
+    "PIL": "Pillow"  # optional for blender,
+}
+
+
+def install_requirement(package_name, upgrade_pip=False, lib=None, ensure_pip=True):
+    if lib is None and BPY_AVAILABLE:
+        lib = bpy.utils.user_resource("SCRIPTS", path="modules")
+    if ensure_pip:
+        # Ensure pip is installed
+        subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
+    # Update pip (not mandatory)
+    if upgrade_pip:
+        print("  Upgrading pip...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
+    # Install package
+    print("  Installing package", package_name)
+    if lib is None:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", package_name])
+    else:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", f"--target={str(lib)}", package_name])
+
+
+def check_requirements(optional=False, extra=False, force=False, upgrade_pip=False, lib=None):
+    import importlib
+    print("Checking requirements:")
+    # Ensure pip is installed
+    subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
+    reqs = [requirements]
+    if optional:
+        reqs += [optional_requirements]
+    if extra:
+        reqs += [extra_requirements]
+    if upgrade_pip:
+        print("  Upgrading pip...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
+    for r in reqs:
+        for import_name, req_name in r.items():
+            print("  Checking", import_name)
+            try:
+                if importlib.util.find_spec(import_name) is None:
+                    install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
+            except AttributeError:  # when using importlib before v3.4
+                loader = importlib.find_loader(import_name)
+                if not issubclass(type(loader), importlib.machinery.SourceFileLoader):
+                    install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
+            except subprocess.CalledProcessError as e:
+                if import_name in list(optional_requirements.keys()) + list(extra_requirements.keys()):
+                    print(f"Couldn't install optional requirement {import_name} ({req_name})")
+                else:
+                    raise e
+    importlib.invalidate_caches()
 
 
 def register():
@@ -140,12 +212,30 @@ if not "blender" in sys.executable.lower() and not BPY_AVAILABLE:
     finally:
         del get_distribution, DistributionNotFound
 
-from . import defs
-from . import io
-from . import core
-from . import geometry
-from . import utils
-from . import ci
-from . import scripts
+if BPY_AVAILABLE:
+    try:
+        from . import defs
+        from . import io
+        from . import core
+        from . import geometry
+        from . import utils
+        from . import ci
+        from . import scripts
+    except ImportError as e:
+        # this might be the first installation in blender so check the requirements
+        check_requirements(optional=True, upgrade_pip=True, extra=False)
+        message = "Phobos requirements have been installed.\nPlease restart Blender to activate the Phobos add-on!"
+        def draw(self, context):
+            self.layout.label(text=message)
+        bpy.context.window_manager.popup_menu(draw, title="Please restart Blender") # , icon=icon)
+        raise ImportWarning(message)
+else:
+        from . import defs
+        from . import io
+        from . import core
+        from . import geometry
+        from . import utils
+        from . import ci
+        from . import scripts
 
 del sys
