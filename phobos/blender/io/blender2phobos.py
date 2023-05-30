@@ -759,7 +759,7 @@ def deriveRobot(root, name='', objectlist=None):
 
     # Full robot
     xml_robot.unlink_entities()
-    robot = core.Robot()
+    robot = core.Robot(assert_validity=False)
     robot.__dict__.update(xml_robot.__dict__)
     robot.description = bUtils.readTextFile('README.md')
 
@@ -779,4 +779,5 @@ def deriveRobot(root, name='', objectlist=None):
     for named_annotation in [deriveAnnotation(obj) for obj in objectlist if obj.phobostype == 'annotation']:
         robot.add_categorized_annotation(named_annotation["$name"], {k: v for k, v in named_annotation.items() if k.startswith("$")})
 
+    robot.assert_validity()
     return robot
