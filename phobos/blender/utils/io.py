@@ -216,10 +216,15 @@ def getExportPath():
     Returns:
 
     """
-    if not bpy.context.scene.phobosexportsettings.path.endswith('/'):
-        bpy.context.scene.phobosexportsettings.path += '/'
-    assert os.path.isabs(getExpSettings().path)
-    return getExpSettings().path
+    out = bpy.context.scene.phobosexportsettings.path
+    if not os.path.isabs(out):
+        out = os.path.join(
+            os.path.dirname(bpy.data.filepath),
+            bpy.context.scene.phobosexportsettings.path)
+    out = os.path.normpath(out)
+    if not out.endswith('/'):
+        out += '/'
+    return out
 
 
 def getAbsolutePath(path):

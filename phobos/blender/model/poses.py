@@ -22,7 +22,7 @@ import numpy as np
 from ..phoboslog import log
 from ..utils import blender as bUtils
 from ..utils import selection as sUtils
-from ..utils.io import securepath
+from ..utils.io import securepath, getExportPath
 
 
 def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimate_parameter=0.1):
@@ -39,16 +39,16 @@ def bakeModel(objlist, modelname, posename="", decimate_type='COLLAPSE', decimat
     Returns:
 
     """
-    if not os.path.isabs(bpy.context.scene.phobosexportsettings.path):
+    if not os.path.isabs(getExportPath()):
         # CHECK careful with path consistency (Windows)
         outpath = securepath(
             os.path.expanduser(
-                os.path.join(bpy.path.abspath("//"), bpy.context.scene.phobosexportsettings.path)
+                os.path.join(bpy.path.abspath("//"), getExportPath())
             )
         )
     else:
         # CHECK careful with path consistency (Windows)
-        outpath = securepath(os.path.expanduser(bpy.context.scene.phobosexportsettings.path))
+        outpath = securepath(os.path.expanduser(getExportPath()))
 
     # TODO delete me?
     # bake_outpath = securepath(os.path.join(outpath, modelname) if savetosubfolder else outpath)

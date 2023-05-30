@@ -182,18 +182,11 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
         """
         # DOCU missing description
-        if not os.path.isabs(bpy.context.scene.phobosexportsettings.path):
-            if bpy.data.filepath == "":
-                bpy.context.scene.phobosexportsettings.path = os.path.join(
-                    bpy.context.preferences.addons["phobos"].preferences.modelsfolder,
-                    bpy.context.scene.phobosexportsettings.path)
-            else:
-                bpy.context.scene.phobosexportsettings.path = os.path.join(
-                    os.path.dirname(bpy.data.filepath),
-                    bpy.context.scene.phobosexportsettings.path)
-        bpy.context.scene.phobosexportsettings.path = os.path.normpath(bpy.context.scene.phobosexportsettings.path)
-        if not bpy.context.scene.phobosexportsettings.path.endswith('/'):
-            bpy.context.scene.phobosexportsettings.path += '/'
+        if bpy.data.filepath and bpy.context.scene.phobosexportsettings.path == "":
+            bpy.context.scene.phobosexportsettings.path = "//"
+        elif (not bpy.data.filepath and bpy.context.scene.phobosexportsettings.path.startswith("//")) or\
+                bpy.context.scene.phobosexportsettings.path == "":
+            bpy.context.scene.phobosexportsettings.path = bpy.context.preferences.addons["phobos"].preferences.modelsfolder
 
     def getXMLTypeListForEnumProp(self, context):
         """
@@ -224,7 +217,9 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
     path : StringProperty(
         name='path',
         subtype='DIR_PATH',
-        default=os.path.expanduser("~"),
+        default=(""
+                 if bpy.context.preferences.addons["phobos"].preferences is None
+                 else bpy.context.preferences.addons["phobos"].preferences.modelsfolder),
         update=updateExportPath
     )
 
