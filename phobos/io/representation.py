@@ -671,7 +671,7 @@ class Mesh(Representation, SmurfBase):
                 out[fmt] = {
                     k: (
                         v if k != "filepath" else
-                        os.path.relpath(v, os.path.dirname(self._related_robot_instance.smurffile))
+                        os.path.relpath(v, os.path.dirname(getattr(self._related_robot_instance, "smurffile", self._related_robot_instance.xmlfile)))
                     ) for k, v in value.items()
                 }
             return out
