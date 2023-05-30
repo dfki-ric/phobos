@@ -146,6 +146,7 @@ def deriveCollision(obj, linkobj=None, duplicate_mesh=False, fast_init=True, **k
     # further annotations
     annotations = {}
     for k, v in obj.items():
+        k = k.replace("collision/", "").replace("$collision/", "")  # Backwards compatibility
         if k not in reserved_keys.VISCOL_KEYS+reserved_keys.INTERNAL_KEYS:
             if "/" not in k:
                 annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
@@ -191,8 +192,9 @@ def deriveVisual(obj, logging=True, duplicate_mesh=False, fast_init=True, **kwar
     material = deriveMaterial(obj.active_material, logging=logging)
 
     # further annotations
+    values = {k.replace("$visual/", "visual/").replace("visual/", ""): v for k, v in obj.items()}  # Backwards compatibility
     annotations = {}
-    for k, v in obj.items():
+    for k, v in values.items():
         if k not in reserved_keys.VISCOL_KEYS+reserved_keys.INTERNAL_KEYS:
             if "/" not in k:
                 annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
@@ -213,14 +215,15 @@ def deriveVisual(obj, logging=True, duplicate_mesh=False, fast_init=True, **kwar
 
 @validate('inertia_data')
 def deriveInertial(obj, logging=True, **kwargs):
-    if "inertia" in obj:
-        inertia = representation.Inertia(*(obj["inertia"][0] if type(obj["inertia"][0]) in [tuple, list] else obj["inertia"]))
+    values = {k.replace("$inertial/", "inertial/").replace("inertial/", ""): v for k, v in obj.items()}  # Backwards compatibility
+    if "inertia" in values:
+        inertia = representation.Inertia(*(values["inertia"][0] if type(values["inertia"][0]) in [tuple, list] else values["inertia"]))
     else:
         inertia = None
 
     # further annotations
     annotations = {}
-    for k, v in obj.items():
+    for k, v in values.items():
         if k not in ["mass", "inertia", "origin"]:
             if "/" not in k:
                 annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
@@ -231,7 +234,7 @@ def deriveInertial(obj, logging=True, **kwargs):
                 annotations[k1][k2] = v if not hasattr(v, "to_list") else v.to_list()
 
     return representation.Inertial(
-        mass=obj["mass"] if "mass" in obj else 0.0,
+        mass=values["mass"] if "mass" in values else 0.0,
         inertia=inertia,
         origin=deriveObjectPose(obj),
         **annotations
@@ -392,7 +395,7 @@ def deriveLink(obj, objectlist=None, logging=True, errors=None):
     annotations = {}
     for k, v in obj.items():
         if k not in reserved_keys.JOINT_KEYS+reserved_keys.MOTOR_KEYS+reserved_keys.LINK_KEYS+reserved_keys.INTERNAL_KEYS and not k.startswith("joint/") and not k.startswith("motor/"):
-            k = k.replace("link/", "")
+            k = k.replace("link/", "").replace("$link/", "")
             if "/" not in k:
                 annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
             else:
@@ -419,8 +422,13 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
         log(f"{obj.name} has no parent and therefore can not derive a joint.", "WARNING")
         return None
     # further annotations
+    values = {k.replace("$joint/", "joint/")
+               .replace("maxeffort", "limits/effort")
+               .replace("maxvelocity", "limits/velocity")
+               .replace("mimic_", "mimic/")
+               .replace(""): v for k, v in obj.items()}  # Backwards compatibility
     annotations = {}
-    for k, v in obj.items():
+    for k, v in values.items():
         if k not in reserved_keys.JOINT_KEYS+reserved_keys.MOTOR_KEYS+reserved_keys.LINK_KEYS+reserved_keys.INTERNAL_KEYS and not k.startswith("motor/") and not k.startswith("link/"):
             k = k.replace("joint/", "")
             if "/" not in k:
@@ -432,31 +440,31 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
                 annotations[k1][k2] = v if not hasattr(v, "to_list") else v.to_list()
 
     return representation.Joint(
-        name=obj.get("joint/name", obj.name),
+        name=values.get("joint/name", obj.name),
         parent=parent.name,
         child=obj.name,
-        joint_type=obj["joint/type"],
-        axis=obj["joint/axis"] if obj["joint/type"] in ["revolute", "prismatic", "continuous"] else None,
+        joint_type=values["joint/type"],
+        axis=values["joint/axis"] if values["joint/type"] in ["revolute", "prismatic", "continuous"] else None,
         origin=deriveObjectPose(obj),
         limit=representation.JointLimit(
-            effort=obj.get("joint/limits/effort", None),
-            velocity=obj.get("joint/limits/velocity", None),
-            lower=obj.get("joint/limits/lower", None),
-            upper=obj.get("joint/limits/upper", None)
-        ) if any([k.startswith("joint/limits/") for k in obj.keys()]) else None,
+            effort=values.get("joint/limits/effort", None),
+            velocity=values.get("joint/limits/velocity", None),
+            lower=values.get("joint/limits/lower", None),
+            upper=values.get("joint/limits/upper", None)
+        ) if any([k.startswith("joint/limits/") for k in values.keys()]) else None,
         dynamics=representation.JointDynamics(
-            damping=obj.get("joint/dynamics/damping", None),
-            friction=obj.get("joint/dynamics/friction", None),
-            spring_stiffness=obj.get("joint/dynamics/spring_stiffness", None),
-            spring_reference=obj.get("joint/dynamics/spring_reference", None)
-        ) if any([k.startswith("joint/dynamics/") for k in obj.keys()]) else None,
+            damping=values.get("joint/dynamics/damping", None),
+            friction=values.get("joint/dynamics/friction", None),
+            spring_stiffness=values.get("joint/dynamics/spring_stiffness", None),
+            spring_reference=values.get("joint/dynamics/spring_reference", None)
+        ) if any([k.startswith("joint/dynamics/") for k in values.keys()]) else None,
         # [TODO v2.1.0] Add possibility to depend on multiple joints
         mimic=representation.JointMimic(
-            joint=obj["joint/mimic/joint"],
-            multiplier=obj["joint/mimic/multiplier"],
-            offset=obj["joint/mimic/offset"]
-        ) if "joint/mimic/joint" in obj.keys() else None,
-        motor=obj.get("motor/name", None)
+            joint=values["joint/mimic/joint"],
+            multiplier=values["joint/mimic/multiplier"],
+            offset=values["joint/mimic/offset"]
+        ) if "joint/mimic/joint" in values.keys() else None,
+        motor=values.get("motor/name", None)
     )
 
 
@@ -525,7 +533,8 @@ def deriveSensor(obj, logging=False):
             'DEBUG',
         )
 
-    values = {k: v for k, v in obj.items() if k not in reserved_keys.INTERNAL_KEYS}
+    values = {k.replace("sensor/", ""): v  # Backwards compatiblity
+              for k, v in obj.items() if k not in reserved_keys.INTERNAL_KEYS}
     parent = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True)
     sensor_type = values.pop("type")
 
