@@ -93,7 +93,7 @@ if __name__ == "__main__":
     extra = False
     if not BPY_AVAILABLE:
         print("To install the requirements for the installation of the Phobos Blender-Add-on run this file with Blender's python:")
-        print("${YOUR_BLENDER_EXECUTABLE} -b --python install_blender_requirements.py")
+        print("${YOUR_BLENDER_EXECUTABLE} -b --python install_requirements.py")
         extra = True
     print("This script will try to install and update pip and the following python packages.")
     print("  Required:", list(requirements.values()))
