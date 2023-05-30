@@ -148,13 +148,17 @@ def deriveCollision(obj, linkobj=None, duplicate_mesh=False, fast_init=True, **k
     for k, v in obj.items():
         k = k.replace("collision/", "").replace("$collision/", "")  # Backwards compatibility
         if k not in reserved_keys.VISCOL_KEYS+reserved_keys.INTERNAL_KEYS:
+            if hasattr(v, "to_list"):
+                v = v.to_list()
+            elif "PropertyGroup" in repr(type(v)):
+                v = {_k: _v for _k, _v in v.items()}
             if "/" not in k:
-                annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
+                annotations[k] = v
             else:
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
-                annotations[k1][k2] = v if not hasattr(v, "to_list") else v.to_list()
+                annotations[k1][k2] = v
 
     return representation.Collision(
         name=obj.name,
@@ -196,13 +200,17 @@ def deriveVisual(obj, logging=True, duplicate_mesh=False, fast_init=True, **kwar
     annotations = {}
     for k, v in values.items():
         if k not in reserved_keys.VISCOL_KEYS+reserved_keys.INTERNAL_KEYS:
+            if hasattr(v, "to_list"):
+                v = v.to_list()
+            elif "PropertyGroup" in repr(type(v)):
+                v = {_k: _v for _k, _v in v.items()}
             if "/" not in k:
-                annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
+                annotations[k] = v
             else:
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
-                annotations[k1][k2] = v if not hasattr(v, "to_list") else v.to_list()
+                annotations[k1][k2] = v
 
     return representation.Visual(
         name=obj.name,
@@ -225,13 +233,17 @@ def deriveInertial(obj, logging=True, **kwargs):
     annotations = {}
     for k, v in values.items():
         if k not in ["mass", "inertia", "origin"]:
+            if hasattr(v, "to_list"):
+                v = v.to_list()
+            elif "PropertyGroup" in repr(type(v)):
+                v = {_k: _v for _k, _v in v.items()}
             if "/" not in k:
-                annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
+                annotations[k] = v
             else:
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
-                annotations[k1][k2] = v if not hasattr(v, "to_list") else v.to_list()
+                annotations[k1][k2] = v
 
     return representation.Inertial(
         mass=values["mass"] if "mass" in values else 0.0,
@@ -394,15 +406,19 @@ def deriveLink(obj, objectlist=None, logging=True, errors=None):
     # further annotations
     annotations = {}
     for k, v in obj.items():
+        k = k.replace("link/", "").replace("$link/", "")
         if k not in reserved_keys.JOINT_KEYS+reserved_keys.MOTOR_KEYS+reserved_keys.LINK_KEYS+reserved_keys.INTERNAL_KEYS and not k.startswith("joint/") and not k.startswith("motor/"):
-            k = k.replace("link/", "").replace("$link/", "")
+            if hasattr(v, "to_list"):
+                v = v.to_list()
+            elif "PropertyGroup" in repr(type(v)):
+                v = {_k: _v for _k, _v in v.items()}
             if "/" not in k:
-                annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
+                annotations[k] = v
             else:
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
-                annotations[k1][k2] = v if not hasattr(v, "to_list") else v.to_list()
+                annotations[k1][k2] = v
 
     return representation.Link(
         name=obj.name,
@@ -425,26 +441,29 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
     values = {k.replace("$joint/", "joint/")
                .replace("maxeffort", "limits/effort")
                .replace("maxvelocity", "limits/velocity")
-               .replace("mimic_", "mimic/")
-               .replace(""): v for k, v in obj.items()}  # Backwards compatibility
+               .replace("mimic_", "mimic/"): v for k, v in obj.items()}  # Backwards compatibility
     annotations = {}
     for k, v in values.items():
+        k = k.replace("joint/", "")
         if k not in reserved_keys.JOINT_KEYS+reserved_keys.MOTOR_KEYS+reserved_keys.LINK_KEYS+reserved_keys.INTERNAL_KEYS and not k.startswith("motor/") and not k.startswith("link/"):
-            k = k.replace("joint/", "")
+            if hasattr(v, "to_list"):
+                v = v.to_list()
+            elif "PropertyGroup" in repr(type(v)):
+                v = {_k: _v for _k, _v in v.items()}
             if "/" not in k:
-                annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
+                annotations[k] = v
             else:
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
-                annotations[k1][k2] = v if not hasattr(v, "to_list") else v.to_list()
+                annotations[k1][k2] = v
 
     return representation.Joint(
         name=values.get("joint/name", obj.name),
         parent=parent.name,
         child=obj.name,
         joint_type=values["joint/type"],
-        axis=values["joint/axis"] if values["joint/type"] in ["revolute", "prismatic", "continuous"] else None,
+        axis=list(values["joint/axis"]) if values["joint/type"] in ["revolute", "prismatic", "continuous"] else None,
         origin=deriveObjectPose(obj),
         limit=representation.JointLimit(
             effort=values.get("joint/limits/effort", None),
@@ -473,13 +492,17 @@ def deriveInterface(obj):
     annotations = {}
     for k, v in obj.items():
         if k not in reserved_keys.INTERFACE_KEYS+reserved_keys.INTERNAL_KEYS:
+            if hasattr(v, "to_list"):
+                v = v.to_list()
+            elif "PropertyGroup" in repr(type(v)):
+                v = {_k: _v for _k, _v in v.items()}
             if "/" not in k:
-                annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
+                annotations[k] = v
             else:
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
-                annotations[k1][k2] = v if not hasattr(v, "to_list") else v.to_list()
+                annotations[k1][k2] = v
 
     return representation.Interface(
         name=obj.name,
@@ -499,7 +522,11 @@ def deriveAnnotation(obj):
     props = {}
     for k, v in obj.items():
         if k not in reserved_keys.INTERNAL_KEYS:
-            props[k] = v if not hasattr(v, "to_list") else v.to_list()
+            if hasattr(v, "to_list"):
+                v = v.to_list()
+            elif "PropertyGroup" in repr(type(v)):
+                v = {_k: _v for _k, _v in v.items()}
+            props[k] = v
 
     props = misc.deepen_dict(props)
 
@@ -533,8 +560,12 @@ def deriveSensor(obj, logging=False):
             'DEBUG',
         )
 
-    values = {k.replace("sensor/", ""): v  # Backwards compatiblity
+    values = {k.replace("sensor/", ""):  # Backwards compatiblity
+              v.to_list() if hasattr(v, "to_list") else
+              {_k: _v for _k, _v in v.items()} if "PropertyGroup" in repr(type(v)) else
+              v
               for k, v in obj.items() if k not in reserved_keys.INTERNAL_KEYS}
+
     parent = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True)
     sensor_type = values.pop("type")
 
@@ -561,10 +592,14 @@ def deriveMotor(obj):
     # further annotations
     annotations = {}
     for k, v in obj.items():
+        k = k.replace("motor/", "")
         if k not in reserved_keys.JOINT_KEYS+reserved_keys.MOTOR_KEYS+reserved_keys.LINK_KEYS+reserved_keys.INTERNAL_KEYS\
                 and not k.startswith("joint/") and not k.startswith("link/"):
-            k = k.replace("motor/", "")
-            annotations[k] = v if not hasattr(v, "to_list") else v.to_list()
+            if hasattr(v, "to_list"):
+                v = v.to_list()
+            elif "PropertyGroup" in repr(type(v)):
+                v = {_k: _v for _k, _v in v.items()}
+            annotations[k] = v
     if "name" in annotations:
         annotations.pop("name")
     if "joint" in annotations:
