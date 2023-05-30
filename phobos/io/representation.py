@@ -858,14 +858,14 @@ class Mesh(Representation, SmurfBase):
         os.makedirs(targetpath, exist_ok=True)
         targetpath = os.path.join(targetpath, self.unique_name+"."+ext)
         if use_existing:
-            if os.path.isfile(targetpath):
-                self._exported[ext] = {
-                    "operations": self._operations,
-                    "filepath": targetpath,
-                    "export_operation": "None"
-                }
-                return
-            raise FileNotFoundError("Was told to use an existing file, that is not there")
+            self._exported[ext] = {
+                "operations": self._operations,
+                "filepath": targetpath,
+                "export_operation": "None"
+            }
+            if not os.path.isfile(targetpath):
+                log.warn(f"The file assumed as existing ({targetpath}), not there. Exporting anyways but you might encounter issues.")
+            return
         self.history.append(f"->trying export of {str(self.mesh_object)} to {targetpath}")
         # log.debug(f"Providing mesh {targetpath}...")
         # if there are no changes we can simply copy
