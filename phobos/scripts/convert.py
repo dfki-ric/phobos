@@ -22,9 +22,9 @@ def main(args):
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
     parser.add_argument('input', type=str, help='Path to the urdf or smurf file')
     parser.add_argument('output', type=str, help='Writes the result to the given file. '
-                                                      'The output is determined by the file ending, '
-                                                      'if the output has no ending like sdf, urdf or pdf and '
-                                                      'is a (non-existing) directory SMURF will be exported.',
+                                                 'The output is determined by the file ending, '
+                                                 'if the output has no ending like sdf, urdf or pdf and '
+                                                 'is a (non-existing) directory SMURF will be exported.',
                         action="store", default=None)
     parser.add_argument('-c', '--copy-meshes', help='Copies the meshes', action='store_true', default=False)
     parser.add_argument('-a', '--sdf-assemble', help='When converting a scene to sdf set this flag to get one assembled model', action='store_true', default=False)

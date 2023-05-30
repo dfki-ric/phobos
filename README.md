@@ -30,6 +30,15 @@ Please contact [Kai von Szadkowski](https://robotik.dfki-bremen.de/de/ueber-uns/
 for any inquiries, or any questions and feedback not suited for the issues
 page.
 
+## Version 2.0.0
+With version 2.0.0 we did a refactoring of Phobos and its now possible to use phobos as a normal python package and command line tool (see below).
+
+When running the new Phobos on a model created with an older version of Phobos, make sure to have a backup.
+For most cases you should be able to update your model by simply exporting it to smurf and then importing it again from that smurf file.
+Due to the changes between Blender 2 to 3 it might be necessary to check whether your materials already use the Specular BSDF or Principled BSDF shaders, if not you'd have to update this manually.
+
+If you encounter any problems with this new version please do not hesitate to open an issue [here](https://github.com/dfki-ric/phobos/issues).
+
 ## Questions or Ideas you want to discuss?
 Please have a look at our [GitHub discussions](https://github.com/dfki-ric/phobos/discussions).
 
@@ -37,7 +46,6 @@ Please have a look at our [GitHub discussions](https://github.com/dfki-ric/phobo
 Please let us know by opening an issue [here](https://github.com/dfki-ric/phobos/issues).
 
 ## Documentation
-
 - User documentation: [Phobos Wiki](https://github.com/dfki-ric/phobos/wiki)
 - Source documentation: [Phobos' Github Page](http://dfki-ric.github.io/phobos).
 
