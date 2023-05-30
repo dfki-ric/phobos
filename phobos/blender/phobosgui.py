@@ -1007,10 +1007,15 @@ class PhobosPropertyInformationPanel(bpy.types.Panel):
                     _key = "joint/" + key
                     if _key in obj:
                         self.addProp([key], [obj[_key]], categories["joint"], [guiparams])
-                    elif hasattr(joint, key) and key in ["parent", "child"] and sUtils.getObjectByName(getattr(joint, key)) is not None:
-                        self.addProp([key], [sUtils.getObjectByName(getattr(joint, key))], categories["joint"], [guiparams])
                     else:
-                        log(f"PhobosPropertyInformationPanel: {str(obj.name)} has no entry for {key}", "DEBUG")
+                        try:
+                            if hasattr(joint, key) and key in ["parent", "child"] and sUtils.getObjectByName(getattr(joint, key)) is not None:
+                                self.addProp([key], [sUtils.getObjectByName(getattr(joint, key))], categories["joint"], [guiparams])
+                            else:
+                                log(f"PhobosPropertyInformationPanel: {str(obj.name)} has no entry for {key}", "DEBUG")
+                        except AssertionError:
+                            log(f"PhobosPropertyInformationPanel: {str(obj.name)}: {key} can't be displayed without the representation.Robot instance!", "DEBUG")
+
             if motor is not None:
                 layout.label(text="Motor", icon=supportedCategories["motor"]['icon_value'])
                 box = layout.box()
