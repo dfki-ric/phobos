@@ -411,13 +411,13 @@ def createSubmechanism(submechanism, linkobj=None):
 
     # TODO: Create submechanism objects
     # use resource name provided as: "resource:whatever_name"
-    # resource_obj = ioUtils.getResource(['sensor'] + defs.def_settings['sensors'][submechanism.blender_type]['shape'].split('://')[1].split('_'))
-    # if resource_obj:
-    #     log("Assigned resource mesh and materials to new sensor object.", 'DEBUG')
-    #     newsensor.data = resource_obj.data
-    #     newsensor.scale = (defs.def_settings['sensors'][sensor.blender_type]['size'],) * 3
-    # else:
-    #     log("Could not use resource mesh for sensor. Default cube used instead.", 'WARNING')
+    resource_obj = ioUtils.getResource(['submechanism','default'])
+    if resource_obj:
+        log("Assigned resource mesh and materials to new sensor object.", 'DEBUG')
+        newsubm.data = resource_obj.data
+        newsubm.scale = (1, 1, 1)
+    else:
+        log("Could not use resource mesh for submechanism. Default cube used instead.", 'WARNING')
 
     # assign the parent if available
     if linkobj is not None:
