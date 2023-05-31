@@ -794,7 +794,11 @@ class Mesh(Representation, SmurfBase):
                 # leaving a rotation in the matrix_basis, which we here get rid of
                 bpy.ops.object.transform_apply(rotation=True)
                 if isinstance(mesh_io.import_mesh(self.input_file), trimesh.Trimesh):
-                    self._mesh_information = mesh_io.parse_obj(self.input_file)
+                    try:
+                        self._mesh_information = mesh_io.parse_obj(self.input_file)
+                    except Exception as e:
+                        traceback.print_exc()
+                        log.warning(f"{self.input_file} can't parse obj for bobj conversion:")
                 else:
                     log.debug(f"{self.input_file} can't be converted to bobj")
                 bpy.ops.object.delete()
@@ -834,7 +838,11 @@ class Mesh(Representation, SmurfBase):
             elif self.input_type == "file_obj":
                 self._mesh_object = mesh_io.import_mesh(self.input_file)
                 if isinstance(self.mesh_object, trimesh.Trimesh):
-                    self._mesh_information = mesh_io.parse_obj(self.input_file)
+                    try:
+                        self._mesh_information = mesh_io.parse_obj(self.input_file)
+                    except Exception as e:
+                        traceback.print_exc()
+                        log.warning(f"{self.input_file} can't parse obj for bobj conversion:")
                 else:
                     log.debug(f"{self.input_file} can't be converted to bobj")
             elif self.input_type == "file_dae":

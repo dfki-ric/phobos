@@ -210,6 +210,7 @@ def write_bobj(filepath, vertices=None, vertex_normals=None, faces=None, texture
     Returns:
         {"vertices": (n,3) single, "vertex_normals": (n,3) single, "faces": [n*[3*(n,3)]] intc, ["texture_coords": (n,2) single]}
     """
+    # [Todo v2.1.0] make the bobj export work for more inputs
     # check input
     assert faces is not None
     assert vertex_normals is not None
@@ -349,6 +350,7 @@ def import_mars_mesh(filepath, urdf_path=None):
 
 
 def parse_obj(filepath):
+    # [Todo v2.1.0] make this more stable
     assert os.path.isfile(filepath)
     # deal with material sections
     keys = ["vn", "vt", "vp", "v", "f"]  # , "l"]
