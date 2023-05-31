@@ -174,14 +174,8 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
     def updateExportPath(self, context):
         """
-
-        Args:
-          context:
-
-        Returns:
-
+        Makes sure that a valid path is given, if the path field is empty
         """
-        # DOCU missing description
         if bpy.data.filepath and bpy.context.scene.phobosexportsettings.path == "":
             bpy.context.scene.phobosexportsettings.path = "//"
         elif (not bpy.data.filepath and bpy.context.scene.phobosexportsettings.path.startswith("//")) or\
@@ -1300,7 +1294,6 @@ class PhobosExportPanel(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
     bl_category = 'Phobos'
-
 
     def draw_header(self, context):
         """
