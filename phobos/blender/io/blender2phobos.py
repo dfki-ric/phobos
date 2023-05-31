@@ -50,6 +50,8 @@ def deriveMaterial(mat, logging=False, errors=None):
     # if errors is not None and "No material defined." in errors:
     #     return None
     # textures
+    if mat is None:
+        return None
     diffuseTexture = None
     normalTexture = None
     diffuse_color = None
