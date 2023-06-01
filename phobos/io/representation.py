@@ -7,6 +7,7 @@ from xml.etree import ElementTree as ET
 import numpy
 import numpy as np
 import trimesh
+import traceback
 
 from .base import Representation
 from .smurf_reflection import SmurfBase
