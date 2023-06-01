@@ -6,7 +6,7 @@ import numpy as np
 
 from .. import reserved_keys
 from ..model import inertia as inertiamodel
-from ..phoboslog import log
+from ..phoboslog import log, ErrorMessageWithBox
 from ..utils import blender as bUtils
 from ..utils import editing as eUtils
 from ..utils import io as ioUtils
@@ -100,6 +100,9 @@ def deriveMaterial(mat, logging=False, errors=None):
 
 # @validate('geometry_type')
 def deriveGeometry(obj, duplicate_mesh=False, fast_init=True, **kwargs):
+    if 'geometry/type' not in obj:
+        ErrorMessageWithBox(f"The geometry of object {obj.name} has not yet been defined.")
+        raise AttributeError(f"The geometry of object {obj.name} has not yet been defined.")
     gtype = obj['geometry/type']
     if gtype == 'box':
         return representation.Box(size=list(obj.dimensions))
