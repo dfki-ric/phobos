@@ -8,5 +8,4 @@ MOTOR_KEYS = ["name", "type", "joint", "maxSpeed", "maxValue", "maxEffort", "min
 INTERFACE_KEYS = ["name", "type", "direction", "parent", "origin"]
 INTERNAL_KEYS = ["phobostype", "phobosmatrixinfo","submechanism/id"]
 ANNOTATION_KEYS = ["$name", "$category", "$include_parent", "$include_transform", "$transform"]
-SUBMECHANISM_KEYS = ["jointnames_spanningtree", "jointnames_active", "jointnames_independent",
-        "jointnames_dependent", "jointnames"]
+SUBMECHANISM_KEYS = ["jointnames_spanningtree", "jointnames_active", "jointnames_independent", "jointnames"]

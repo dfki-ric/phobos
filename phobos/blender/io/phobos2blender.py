@@ -436,7 +436,7 @@ def createSubmechanism(submechanism, linkobj=None):
             for key, jointName in joints.items():
                 joint = sUtils.getObjectByProperty("joint/name", jointName)
                 jointIDs[key] = assignIDtoJoint(joint)
-        else:
+        elif joints is not None:
             for jointName in joints:
                 joint = sUtils.getObjectByProperty("joint/name", jointName)
                 jointIDs.append(assignIDtoJoint(joint))
