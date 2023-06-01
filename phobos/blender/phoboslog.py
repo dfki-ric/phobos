@@ -173,7 +173,7 @@ def find_calling_operator(frame):
         return None
 
 
-def ErrorMessageWithBox(message = "", title = "Error", icon = 'ERROR', reporter=None):
+def ErrorMessageWithBox(message = "", title = "Phobos Error", icon = 'ERROR', reporter=None):
     def draw(self, context):
         self.layout.label(text=message)
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
@@ -182,7 +182,7 @@ def ErrorMessageWithBox(message = "", title = "Error", icon = 'ERROR', reporter=
         reporter.report({"ERROR"}, "Phobos: "+message)
 
 
-def WarnMessageWithBox(message = "", title = "Warning", icon = 'WARN', reporter=None):
+def WarnMessageWithBox(message = "", title = "Phobos Warning", icon = 'WARN', reporter=None):
     def draw(self, context):
         self.layout.label(text=message)
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
