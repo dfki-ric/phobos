@@ -799,7 +799,7 @@ class Mesh(Representation, SmurfBase):
                         self._mesh_information = mesh_io.parse_obj(self.input_file)
                     except Exception as e:
                         traceback.print_exc()
-                        log.warning(f"{self.input_file} can't parse obj for bobj conversion:")
+                        log.warning(f"{self.input_file} can't parse obj for bobj conversion.")
                 else:
                     log.debug(f"{self.input_file} can't be converted to bobj")
                 bpy.ops.object.delete()
@@ -843,7 +843,7 @@ class Mesh(Representation, SmurfBase):
                         self._mesh_information = mesh_io.parse_obj(self.input_file)
                     except Exception as e:
                         traceback.print_exc()
-                        log.warning(f"{self.input_file} can't parse obj for bobj conversion:")
+                        log.warning(f"{self.input_file} can't parse obj for bobj conversion.")
                 else:
                     log.debug(f"{self.input_file} can't be converted to bobj")
             elif self.input_type == "file_dae":

@@ -182,10 +182,10 @@ def ErrorMessageWithBox(message = "", title = "Phobos Error", icon = 'ERROR', re
         reporter.report({"ERROR"}, "Phobos: "+message)
 
 
-def WarnMessageWithBox(message = "", title = "Phobos Warning", icon = 'WARN', reporter=None):
+def WarnMessageWithBox(message = "", title = "Phobos Warning", icon = 'ERROR', reporter=None):
     def draw(self, context):
         self.layout.label(text=message)
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
-    log(message, "WARN")
+    log(message, "WARNING")
     if reporter:
-        reporter.report({"WARN"}, "Phobos: "+message)
+        reporter.report({"WARNING"}, "Phobos: "+message)

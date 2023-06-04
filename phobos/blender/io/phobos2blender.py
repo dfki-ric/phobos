@@ -203,17 +203,17 @@ def createLink(link):
     for viscol in link.visuals:
         geom = createGeometry(viscol, 'visual')
         bound_box = (
-            max(bound_box[0], max(geom.bound_box[0])),
-            max(bound_box[1], max(geom.bound_box[1])),
-            max(bound_box[2], max(geom.bound_box[2])),
+            max(bound_box[0], max([c[0] for c in geom.bound_box])),
+            max(bound_box[1], max([c[1] for c in geom.bound_box])),
+            max(bound_box[2], max([c[2] for c in geom.bound_box])),
         )
         geometries.append((geom, viscol))
     for viscol in link.collisions:
         geom = createGeometry(viscol, "collision")
         bound_box = (
-            max(bound_box[0], max(geom.bound_box[0])),
-            max(bound_box[1], max(geom.bound_box[1])),
-            max(bound_box[2], max(geom.bound_box[2])),
+            max(bound_box[0], max([c[0] for c in geom.bound_box])),
+            max(bound_box[1], max([c[1] for c in geom.bound_box])),
+            max(bound_box[2], max([c[2] for c in geom.bound_box])),
         )
         geometries.append((geom, viscol))
 
