@@ -657,7 +657,7 @@ def deriveSubmechanism(obj, logging=False):
 
     values = {
         k: v for k, v in obj.items()
-        if k not in reserved_keys.INTERNAL_KEYS+reserved_keys.SUBMECHANISM_KEYS+["type", "subtype"]
+        if k not in reserved_keys.INTERNAL_KEYS+reserved_keys.SUBMECHANISM_KEYS
     }
     for prop in reserved_keys.SUBMECHANISM_KEYS:
         jointIDs = obj[prop]
@@ -672,8 +672,6 @@ def deriveSubmechanism(obj, logging=False):
         values[prop] = joints
 
     values["type"] = obj["type"]
-    if "subtype" in obj:
-        values["subtype"] = obj["subtype"]
 
     return hyrodyn.Submechanism(**values)
 
