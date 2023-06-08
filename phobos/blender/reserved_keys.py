@@ -6,7 +6,7 @@ VISUAL_KEYS = COLLISION_KEYS = VISCOL_KEYS = ["name", "origin", "material", "geo
 INERTIAL_KEYS = ["inertia", "mass", "origin", "joint_relative_origin"]
 MOTOR_KEYS = ["name", "type", "joint", "maxSpeed", "maxValue", "maxEffort", "minValue"]
 INTERFACE_KEYS = ["name", "type", "direction", "parent", "origin"]
-INTERNAL_KEYS = ["phobostype", "phobosmatrixinfo","submechanism/id"]
+INTERNAL_KEYS = ["phobostype", "phobosmatrixinfo"]
 ANNOTATION_KEYS = ["$name", "$category", "$include_parent", "$include_transform", "$transform"]
 SUBMECHANISM_KEYS = ["type", "jointnames_spanningtree", "jointnames_active", "jointnames_independent",
                      "jointnames"]

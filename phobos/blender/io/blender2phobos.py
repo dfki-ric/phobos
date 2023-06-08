@@ -661,15 +661,7 @@ def deriveSubmechanism(obj, logging=False):
     }
     for prop in reserved_keys.SUBMECHANISM_KEYS:
         jointIDs = obj[prop]
-        if "Array" in str(type(jointIDs)):
-            joints = []
-            for jointID in jointIDs:
-                joints.append(sUtils.getObjectByProperty("submechanism/id", jointID)["joint/name"])
-        else:
-            joints = {}
-            for key, jointID in jointIDs.items():
-                joints[key] = sUtils.getObjectByProperty("submechanism/id", jointID["joint/name"])
-        values[prop] = joints
+        values[prop] = jointIDs
 
     values["type"] = obj["type"]
 

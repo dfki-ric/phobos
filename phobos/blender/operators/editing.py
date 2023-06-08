@@ -3173,12 +3173,10 @@ class SelectSubmechanism(Operator):
         Returns:
 
         """
-        root = sUtils.getObjectByProperty('submechanism/name', self.submechanism)
-        jointIDs = root['submechanism/spanningtree']
-        print("jointIDs")
-        print(jointIDs)
+        root = sUtils.getObjectByProperty('contextual_name', self.submechanism)
+        jointIDs = root['jointnames_spanningtree']
         jointlist = [
-            sUtils.getObjectByProperty('submechanism/id', id) for id in jointIDs
+            sUtils.getObjectByProperty('joint/name', id) for id in jointIDs
         ]
         sUtils.selectObjects([root] + jointlist, clear=True, active=0)
         return {'FINISHED'}

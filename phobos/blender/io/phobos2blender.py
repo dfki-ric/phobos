@@ -429,18 +429,19 @@ def createSubmechanism(submechanism, linkobj=None):
 
     # Assign each joint an ID
     for prop in reserved_keys.SUBMECHANISM_KEYS:
-        print(prop)
-        joints = submechanism.__getattribute__(prop)
-        jointIDs = type(joints)()
-        if type(joints) == dict:
+        joints = submechanism.__getattribute__(prop) # Can be a list/dict of joints or a string
+        value = type(joints)()
+        if type(joints) == str:
+            value = joints
+        elif type(joints) == dict:
             for key, jointName in joints.items():
                 joint = sUtils.getObjectByProperty("joint/name", jointName)
-                jointIDs[key] = assignIDtoJoint(joint)
+                value[key] = assignIDtoJoint(joint)
         elif joints is not None:
             for jointName in joints:
                 joint = sUtils.getObjectByProperty("joint/name", jointName)
-                jointIDs.append(assignIDtoJoint(joint))
-        newsubm[f"{prop}"] = jointIDs
+                value.append(assignIDtoJoint(joint))
+        newsubm[f"{prop}"] = value
 
     # write generic custom properties
     for prop, value in submechanism.to_yaml().items():
@@ -462,17 +463,7 @@ def createSubmechanism(submechanism, linkobj=None):
 
 
 def assignIDtoJoint(joint):
-    if "submechanism/id" in joint:
-        return joint["submechanism/id"]
-    usedIDs = []
-    for link in bpy.context.scene.objects:
-        if link.phobostype == "link":
-            if "submechanism/id" in link:
-                usedIDs.append(link["submechanism/id"])
-    maxID = 0 if len(usedIDs) == 0 else max(usedIDs)
-    jointID = maxID+1
-    joint["submechanism/id"] = jointID
-    return jointID
+    return joint["joint/name"]
 
 
 def createMotor(motor: representation.Motor, linkobj: bpy.types.Object):
