@@ -402,7 +402,7 @@ def createSubmechanism(submechanism, linkobj=None):
     bUtils.toggleLayer('submechanism', value=True)
 
     newsubm = bUtils.createPrimitive(
-        submechanism.name,
+        submechanism.contextual_name,
         'box',
         [0.05, 0.05, 0.05],
         None,
