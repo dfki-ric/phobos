@@ -1312,11 +1312,15 @@ class CreateCollisionObjects(Operator):
                     geometry = blender2phobos.deriveGeometry(vis, duplicate_mesh=True)
                     geometry.to_convex_hull()
                     geometry.apply_scale()
+                link = sUtils.getEffectiveParent(vis, include_hidden=True, ignore_selection=True)
+                if link is None:
+                    ErrorMessageWithBox(message="Before creating collision parent visual to a link")
+                    return {'CANCELLED'}
                 collision = representation.Collision(
                     name=collname,
-                    link=sUtils.getEffectiveParent(vis, include_hidden=True, ignore_selection=True),
+                    link=link.name,
                     geometry=geometry,
-                    origin=representation.Pose.from_matrix(phobos_vis.origin.to_matrix().dot(transform))
+                    origin=representation.Pose.from_matrix(phobos_vis.origin.to_matrix().dot(transform), relative_to=link.name)
                 )
                 ob = phobos2blender.createGeometry(collision, geomsrc="collision", linkobj=sUtils.getEffectiveParent(vis, include_hidden=True, ignore_selection=True))
             else:

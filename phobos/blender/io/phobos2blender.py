@@ -129,7 +129,10 @@ def createGeometry(viscol, geomsrc, linkobj=None):
     # place geometric object relative to its parent link
     if linkobj:
         eUtils.parentObjectsTo(newgeom, linkobj)
-        newgeom.matrix_local = mathutils.Matrix(viscol.joint_relative_origin.to_matrix())
+        newgeom.matrix_local = mathutils.Matrix(
+            viscol.joint_relative_origin.to_matrix()
+            if viscol._related_robot_instance is not None and viscol.relative_to != linkobj.name else viscol.origin.to_matrix()
+        )
 
     bUtils.sortObjectToCollection(newgeom, cname=geomsrc)
     # # make object smooth

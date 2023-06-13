@@ -62,14 +62,15 @@ def create_sphere(mesh, scale=1.0):
         mesh.apply_transform(np.diag((scale if type(scale) == list else [scale]*3) + [1]))
         half_ext = mesh.bounding_box.extents
         transform = mesh.bounding_box.primitive.transform
-        r = np.amax(half_ext)
     elif BPY_AVAILABLE and isinstance(mesh, bpy.types.Object):
-        r = np.max(np.max(mesh.bound_box, axis=0) - np.min(mesh.bound_box, axis=0))
+        half_ext = np.max(mesh.bound_box, axis=0) - np.min(mesh.bound_box, axis=0)
         transform = np.identity(4)
         transform[0:3, 3] = np.average(mesh.bound_box, axis=0)
         # transform = np.array(mesh.matrix_local).dot(transform)
     else:
         raise ValueError(f"Received {type(mesh)}")
+
+    r = np.sqrt(half_ext[0]**2 + half_ext[1]**2 + half_ext[2]**2)
 
     return representation.Sphere(radius=r * 0.5), transform
 
