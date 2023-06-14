@@ -660,8 +660,14 @@ def deriveSubmechanism(obj, logging=False):
         if k not in reserved_keys.INTERNAL_KEYS+reserved_keys.SUBMECHANISM_KEYS
     }
     for prop in reserved_keys.SUBMECHANISM_KEYS:
-        jointIDs = obj[prop]
-        values[prop] = jointIDs
+        if type(obj[prop]) == str:
+            values[prop] = obj[prop]
+        elif type(obj[prop]) == dict:
+            values[prop] = {}
+            for key, j in obj[prop]:
+                values[prop][key] = j.get("joint/name",j.name)
+        elif prop is not None:
+            values[prop] = [j.get("joint/name",j.name) for j in obj[prop]]
 
     values["type"] = obj["type"]
 

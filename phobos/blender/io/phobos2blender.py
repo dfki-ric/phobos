@@ -430,20 +430,18 @@ def createSubmechanism(submechanism, linkobj=None):
     # set sensor properties
     newsubm.phobostype = 'submechanism'
 
-    # Assign each joint an ID
+    # Handle submechanism keys
     for prop in reserved_keys.SUBMECHANISM_KEYS:
-        joints = submechanism.__getattribute__(prop) # Can be a list/dict of joints or a string
-        value = type(joints)()
-        if type(joints) == str:
-            value = joints
-        elif type(joints) == dict:
-            for key, jointName in joints.items():
-                joint = sUtils.getObjectByProperty("joint/name", jointName)
-                value[key] = assignIDtoJoint(joint)
-        elif joints is not None:
-            for jointName in joints:
-                joint = sUtils.getObjectByProperty("joint/name", jointName)
-                value.append(assignIDtoJoint(joint))
+        attr = getattr(submechanism, prop)
+        if type(attr) == str:
+            value = attr
+        else: # Can be a list or dict of joints
+            if type(attr) == dict:
+                value = {}
+                for key, joint in attr.items():
+                    value[key] = sUtils.getObjectByName(str(joint))
+            elif attr is not None: # Is a list
+                value = [sUtils.getObjectByName(str(j)) for j in attr]
         newsubm[f"{prop}"] = value
 
     # write generic custom properties
@@ -463,10 +461,6 @@ def createSubmechanism(submechanism, linkobj=None):
     # select the new submechanism
     #sUtils.selectObjects([newsubm], clear=True, active=0)
     return newsubm
-
-
-def assignIDtoJoint(joint):
-    return joint["joint/name"]
 
 
 def createMotor(motor: representation.Motor, linkobj: bpy.types.Object):
