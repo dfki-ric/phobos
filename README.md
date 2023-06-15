@@ -4,6 +4,7 @@
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.01326/status.svg)](https://doi.org/10.21105/joss.01326)
 [![license](https://img.shields.io/github/license/dfki-ric/phobos.svg?style=flat)](https://github.com/dfki-ric/phobos/blob/master/COPYING)
 [![made-with-sphinx-doc](https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/)
+[![API-Docs](https://github.com/dfki-ric/phobos/actions/workflows/gh-pages.yml/badge.svg)](http://dfki-ric.github.io/phobos)
 
 ![Phobos](https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png)
 
