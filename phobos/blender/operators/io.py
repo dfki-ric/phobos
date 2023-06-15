@@ -215,7 +215,8 @@ class ExportModelOperator(Operator):
             rel_mesh_pathes=get_default_rel_mesh_pathes(),
             ros_pkg_name=None if len(ioUtils.getRosPackageName()) == 0 else ioUtils.getRosPackageName(),
             with_meshes=True,
-            use_existing_meshes=len([mt for mt in phobos_defs.MESH_TYPES if getattr(bpy.context.scene, "export_mesh_"+mt, False)]) == 0
+            use_existing_meshes=len([mt for mt in phobos_defs.MESH_TYPES if getattr(bpy.context.scene, "export_mesh_"+mt, False)]) == 0,
+            no_smurf=not getattr(bpy.context.scene, f'export_entity_smurf', False)
         )
 
     def execute(self, context):

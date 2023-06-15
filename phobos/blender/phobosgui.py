@@ -313,7 +313,6 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
 
 
 
-
 # class Mesh_Export_UIList(bpy.types.UIList):
 #     """TODO Missing documentation"""
 #
@@ -1337,7 +1336,7 @@ class PhobosExportPanel(bpy.types.Panel):
         cmodel = inlayout.column(align=True)
         cmodel.label(text="Models")
         for entitytype in phobos_defs.EXPORT_TYPES:
-            cmodel.prop(bpy.context.scene, "export_entity_"+entitytype, toggle=0 if entitytype == "smurf" else -1)
+            cmodel.prop(bpy.context.scene, "export_entity_"+entitytype)
 
         cmesh = inlayout.column(align=True)
         cmesh.label(text="Meshes")
@@ -1690,10 +1689,7 @@ def register():
 
     for entitytype in phobos_defs.EXPORT_TYPES:
         typename = "export_entity_" + entitytype
-        if entitytype == "smurf":
-            setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, get=lambda self: True))
-        else:
-            setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, default=False))
+        setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, default=entitytype == "smurf"))
 
     # [TODO v2.1.0] Re-add scene export
     # for scenetype in scenes.scene_types:

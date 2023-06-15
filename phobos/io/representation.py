@@ -1555,11 +1555,11 @@ class Link(Representation, SmurfBase):
     def joint_relative_origin(self):
         assert self._related_robot_instance is not None
         assert self.origin is not None
-        assert self.origin.relative_to is not None
         out = self.origin
         if self.origin.relative_to == self._related_robot_instance.get_parent(self):
             return out
         else:
+            assert self.origin.relative_to is not None
             r2x = self._related_robot_instance.get_transformation
             return Pose.from_matrix(
                 inv(r2x(self)).dot(r2x(self.origin.relative_to).dot(self.origin.to_matrix())),

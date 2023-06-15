@@ -72,6 +72,7 @@ class XMLRobot(Representation):
         if is_human:
             self.annotate_as_human()
 
+        self.regenerate_tree_maps()
         if self.links:
             self.link_entities()
 
@@ -464,7 +465,11 @@ class XMLRobot(Representation):
         root = None
         for link in self.links:
             if link.name not in self.parent_map:
-                assert root is None, f"Multiple roots detected, invalid URDF. Already found: {root.name, link.name}"
+                if root is not None:
+                    print("Joints:", [(str(j), j.parent, j.child) for j in self.joints])
+                    print("Links:", [str(l) for l in self.links])
+                    print(self.parent_map)
+                    raise AssertionError(f"Multiple roots detected, invalid URDF. Already found: {root.name, link.name}")
                 root = link
         assert root is not None, "No roots detected, invalid URDF."
         return root

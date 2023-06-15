@@ -216,7 +216,7 @@ def getExportPath():
     Returns:
 
     """
-    out = bpy.context.scene.phobosexportsettings.path
+    out = bpy.path.abspath(bpy.context.scene.phobosexportsettings.path)
     if not os.path.isabs(out):
         out = os.path.join(
             os.path.dirname(bpy.data.filepath),
