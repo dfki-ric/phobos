@@ -1,0 +1,23 @@
+name: API-Docs
+on:
+  push:
+    branches: [master] # branch to trigger deployment
+
+jobs:
+  pages:
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: actions/checkout@v3
+    - uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    - id: install
+      run: pip install -e .
+    - id: deployment
+      uses: sphinx-notes/pages@v3
+      with:
+        publish: false
+    - uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ${{ steps.deployment.outputs.artifact }}
