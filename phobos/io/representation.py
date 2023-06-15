@@ -252,10 +252,10 @@ class Texture(Representation):
         super(Texture, self).__init__()
         self.unique_name = name
         filepath = filepath if posix_path is None else posix_path
+        self.input_file = None
         if image is not None:
             self.unique_name = None
             self.image = image
-            self.input_file = None
             self.input_type = "img"
             if BPY_AVAILABLE and isinstance(image, bpy.types.Image):
                 self.input_file = os.path.normpath(bpy.path.abspath(misc.sys_path(image.filepath)))
@@ -270,15 +270,18 @@ class Texture(Representation):
             self.input_type = "file"
             self.image = None
 
-        if not os.path.isabs(self.input_file) and "_xmlfile" in kwargs and kwargs["_xmlfile"] is not None:
-            self.input_file = os.path.join(os.path.dirname(kwargs["_xmlfile"]), self.input_file)
-        elif not os.path.isabs(self.input_file) and "_smurffile" in kwargs and kwargs["_smurffile"] is not None:
-            self.input_file = os.path.join(os.path.dirname(kwargs["_smurffile"]), self.input_file)
-        if not os.path.isabs(self.input_file) or not os.path.isfile(self.input_file):
-            raise IOError(f"Texture file {self.input_file} couldn't be found!")
+        if self.input_file is not None:
+            if not os.path.isabs(self.input_file) and "_xmlfile" in kwargs and kwargs["_xmlfile"] is not None:
+                self.input_file = os.path.normpath(os.path.join(os.path.dirname(kwargs["_xmlfile"]), self.input_file))
+            elif not os.path.isabs(self.input_file) and "_smurffile" in kwargs and kwargs["_smurffile"] is not None:
+                self.input_file = os.path.normpath(os.path.join(os.path.dirname(kwargs["_smurffile"]), self.input_file))
+            if not os.path.isabs(self.input_file) or not os.path.isfile(self.input_file):
+                raise IOError(f"Texture file {self.input_file} couldn't be found!")
 
-        if self.unique_name is None:
-            self.unique_name, ext = os.path.splitext(os.path.basename(self.input_file))
+            if self.unique_name is None:
+                self.unique_name, ext = os.path.splitext(os.path.basename(self.input_file))
+        else:
+            log.warn("Instantiated an empty texture")
 
         self.exported = None
 
@@ -318,6 +321,7 @@ class Texture(Representation):
         else:
             from PIL import Image
             self.image = Image.open(self.input_file)
+        return self.image
 
     def provide_image_file(self, targetpath, format=None):
         if format is None:

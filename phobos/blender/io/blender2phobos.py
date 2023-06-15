@@ -62,9 +62,9 @@ def deriveMaterial(mat, logging=False, errors=None):
     shininess = None
     if mat.use_nodes:
         for tex in [node for node in mat.node_tree.nodes if "Image Texture" in node.name]:
-            if tex.outputs["Color"].links[0].to_socket.name == "Base Color":
+            if tex.outputs["Color"].links[0].to_socket.name == "Base Color" and tex.image is not None:
                 diffuseTexture = representation.Texture(image=tex.image)
-            elif tex.outputs["Color"].links[0].to_socket.node.name == "Normal Map":
+            elif tex.outputs["Color"].links[0].to_socket.node.name == "Normal Map" and tex.image is not None:
                 normalTexture = representation.Texture(image=tex.image)
         if "Specular BSDF" in mat.node_tree.nodes.keys():
             diffuse_color = mat.node_tree.nodes["Specular BSDF"].inputs["Base Color"].default_value
