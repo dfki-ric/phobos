@@ -153,7 +153,7 @@ def deriveCollision(obj, linkobj=None, duplicate_mesh=False, fast_init=True, **k
     annotations = {}
     for k, v in obj.items():
         k = k.replace("collision/", "").replace("$collision/", "")  # Backwards compatibility
-        if k not in reserved_keys.VISCOL_KEYS+reserved_keys.INTERNAL_KEYS:
+        if k not in reserved_keys.VISCOL_KEYS+reserved_keys.INTERNAL_KEYS+["primitives"]:
             if hasattr(v, "to_list"):
                 v = v.to_list()
             elif "PropertyGroup" in repr(type(v)):
@@ -518,7 +518,7 @@ def deriveInterface(obj):
     return representation.Interface(
         name=obj.name,
         origin=deriveObjectPose(obj),
-        parent=sUtils.getEffectiveParent(obj).get("link/name", objsUtils.getEffectiveParent(obj).name),
+        parent=sUtils.getEffectiveParent(obj).get("link/name", sUtils.getEffectiveParent(obj).name),
         type=obj["type"],
         direction=obj["direction"],
         **annotations
