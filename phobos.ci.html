@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>phobos ci module &#8212; Phobos 2.0.0 (df6482b) documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="phobos scripts" href="phobos.scripts.html" />
+    <link rel="prev" title="phobos utils module" href="phobos.utils.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="phobos.scripts.html" title="phobos scripts"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="phobos.utils.html" title="phobos utils module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (df6482b) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">phobos ci module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="phobos-ci-module">
+<h1>phobos ci module<a class="headerlink" href="#phobos-ci-module" title="Permalink to this heading">¶</a></h1>
+<p>This module enables the usage of phobos in a CI-pipeline like GitLab-CI.</p>
+<p>For further usage information see the [phobos wiki](<a class="reference external" href="https://github.com/dfki-ric/phobos/wiki">https://github.com/dfki-ric/phobos/wiki</a>)</p>
+</section>
+<section id="submodules">
+<h1>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h1>
+<section id="module-phobos.ci.pipeline">
+<span id="phobos-ci-pipeline-module"></span><h2>phobos.ci.pipeline module<a class="headerlink" href="#module-phobos.ci.pipeline" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="phobos.ci.pipeline.Pipeline">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">phobos.ci.pipeline.</span></span><span class="sig-name descname"><span class="pre">Pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processed_model_exists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subclass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.Pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">YAMLObject</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.pipeline.Pipeline.deploy_models">
+<span class="sig-name descname"><span class="pre">deploy_models</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.Pipeline.deploy_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Moves everything from the temp to the repositories and pushes it to the repos</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.pipeline.Pipeline.get_coverage">
+<span class="sig-name descname"><span class="pre">get_coverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_na</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.Pipeline.get_coverage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.pipeline.Pipeline.has_failure">
+<span class="sig-name descname"><span class="pre">has_failure</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.Pipeline.has_failure" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.pipeline.Pipeline.number_unfinished_models">
+<span class="sig-name descname"><span class="pre">number_unfinished_models</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.Pipeline.number_unfinished_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of models that have not been successfully or completely processed</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.pipeline.Pipeline.print_fail_log">
+<span class="sig-name descname"><span class="pre">print_fail_log</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file=&lt;_io.TextIOWrapper</span> <span class="pre">name='&lt;stdout&gt;'</span> <span class="pre">mode='w'</span> <span class="pre">encoding='utf-8'&gt;</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.Pipeline.print_fail_log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.pipeline.Pipeline.process_models">
+<span class="sig-name descname"><span class="pre">process_models</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.Pipeline.process_models" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.pipeline.Pipeline.relpath">
+<span class="sig-name descname"><span class="pre">relpath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.Pipeline.relpath" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.pipeline.Pipeline.test_models">
+<span class="sig-name descname"><span class="pre">test_models</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.Pipeline.test_models" title="Permalink to this definition">¶</a></dt>
+<dd><p>Runs the configured test_routines over all models</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="phobos.ci.pipeline.TestingPipeline">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">phobos.ci.pipeline.</span></span><span class="sig-name descname"><span class="pre">TestingPipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">place_temp_in</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.TestingPipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#phobos.ci.pipeline.Pipeline" title="phobos.ci.pipeline.Pipeline"><code class="xref py py-class docutils literal notranslate"><span class="pre">Pipeline</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.pipeline.TestingPipeline.get_coverage">
+<span class="sig-name descname"><span class="pre">get_coverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.TestingPipeline.get_coverage" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.pipeline.TestingPipeline.relpath">
+<span class="sig-name descname"><span class="pre">relpath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.TestingPipeline.relpath" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-phobos.ci.base_model">
+<span id="phobos-ci-base-model-module"></span><h2>phobos.ci.base_model module<a class="headerlink" href="#module-phobos.ci.base_model" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="phobos.ci.base_model.BaseModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">phobos.ci.base_model.</span></span><span class="sig-name descname"><span class="pre">BaseModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processed_model_exists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.base_model.BaseModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">YAMLObject</span></code></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.base_model.BaseModel.deploy">
+<span class="sig-name descname"><span class="pre">deploy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh_commit</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">failed_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uses_lfs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.base_model.BaseModel.deploy" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.base_model.BaseModel.export">
+<span class="sig-name descname"><span class="pre">export</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.base_model.BaseModel.export" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.base_model.BaseModel.get_exported_model_path">
+<em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get_exported_model_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configfile</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.base_model.BaseModel.get_exported_model_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.base_model.BaseModel.get_input_meshes">
+<span class="sig-name descname"><span class="pre">get_input_meshes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.base_model.BaseModel.get_input_meshes" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.base_model.BaseModel.process">
+<span class="sig-name descname"><span class="pre">process</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.base_model.BaseModel.process" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.base_model.BaseModel.recreate_sym_links">
+<span class="sig-name descname"><span class="pre">recreate_sym_links</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.base_model.BaseModel.recreate_sym_links" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-phobos.ci.test_model">
+<span id="phobos-ci-test-model-module"></span><h2>phobos.ci.test_model module<a class="headerlink" href="#module-phobos.ci.test_model" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="phobos.ci.test_model.TestModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">phobos.ci.test_model.</span></span><span class="sig-name descname"><span class="pre">TestModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_in_repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submechanisms_in_repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floating_base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floatingbase_submechanisms_in_repo</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">swing_my_robot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tempdir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.test_model.TestModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<dl class="py property">
+<dt class="sig sig-object py" id="phobos.ci.test_model.TestModel.exportdir">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">exportdir</span></span><a class="headerlink" href="#phobos.ci.test_model.TestModel.exportdir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="phobos.ci.test_model.TestModel.floatingbase_submechanisms_file_path">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">floatingbase_submechanisms_file_path</span></span><a class="headerlink" href="#phobos.ci.test_model.TestModel.floatingbase_submechanisms_file_path" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="phobos.ci.test_model.TestModel.floatingbase_urdf">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">floatingbase_urdf</span></span><a class="headerlink" href="#phobos.ci.test_model.TestModel.floatingbase_urdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Convenience getter related to class TestModel</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="phobos.ci.test_model.TestModel.modeldir">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modeldir</span></span><a class="headerlink" href="#phobos.ci.test_model.TestModel.modeldir" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="phobos.ci.test_model.TestModel.modelname">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">modelname</span></span><a class="headerlink" href="#phobos.ci.test_model.TestModel.modelname" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.test_model.TestModel.recreate_sym_links">
+<span class="sig-name descname"><span class="pre">recreate_sym_links</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.test_model.TestModel.recreate_sym_links" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="phobos.ci.test_model.TestModel.robotname">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">robotname</span></span><a class="headerlink" href="#phobos.ci.test_model.TestModel.robotname" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="phobos.ci.test_model.TestModel.submechanisms_file">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">submechanisms_file</span></span><a class="headerlink" href="#phobos.ci.test_model.TestModel.submechanisms_file" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="phobos.ci.test_model.TestModel.urdf">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">urdf</span></span><a class="headerlink" href="#phobos.ci.test_model.TestModel.urdf" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="module-phobos.ci.compare_model">
+<span id="phobos-ci-compare-model-module"></span><h2>phobos.ci.compare_model module<a class="headerlink" href="#module-phobos.ci.compare_model" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="phobos.ci.compare_model.CompareModel">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">phobos.ci.compare_model.</span></span><span class="sig-name descname"><span class="pre">CompareModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robotfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submechanisms_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">directory</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.compare_model.CompareModel" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Robot</span></code></p>
+</dd></dl>
+
+</section>
+<section id="module-phobos.ci.model_testing">
+<span id="phobos-ci-model-testing-module"></span><h2>phobos.ci.model_testing module<a class="headerlink" href="#module-phobos.ci.model_testing" title="Permalink to this heading">¶</a></h2>
+<dl class="py class">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">phobos.ci.model_testing.</span></span><span class="sig-name descname"><span class="pre">ModelTest</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">compare_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Checks the general validity of a new model possibly against an old model.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.info_swing_my_robot">
+<span class="sig-name descname"><span class="pre">info_swing_my_robot</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.info_swing_my_robot" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.move_hyrodyn_model">
+<span class="sig-name descname"><span class="pre">move_hyrodyn_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">new_joint_angles</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.move_hyrodyn_model" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_compare_amount_joints">
+<span class="sig-name descname"><span class="pre">test_compare_amount_joints</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_compare_amount_joints" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_compare_link_masses">
+<span class="sig-name descname"><span class="pre">test_compare_link_masses</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_compare_link_masses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_compare_link_transformations">
+<span class="sig-name descname"><span class="pre">test_compare_link_transformations</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_compare_link_transformations" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_file_consistency">
+<span class="sig-name descname"><span class="pre">test_file_consistency</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_file_consistency" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_hyrodyn_compare_com">
+<span class="sig-name descname"><span class="pre">test_hyrodyn_compare_com</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_hyrodyn_compare_com" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_hyrodyn_compare_link_positions">
+<span class="sig-name descname"><span class="pre">test_hyrodyn_compare_link_positions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">end_effectors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_hyrodyn_compare_link_positions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_hyrodyn_compare_masses">
+<span class="sig-name descname"><span class="pre">test_hyrodyn_compare_masses</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_hyrodyn_compare_masses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_hyrodyn_compare_torques">
+<span class="sig-name descname"><span class="pre">test_hyrodyn_compare_torques</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_hyrodyn_compare_torques" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_hyrodyn_load_in_hyrodyn">
+<span class="sig-name descname"><span class="pre">test_hyrodyn_load_in_hyrodyn</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_hyrodyn_load_in_hyrodyn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_hyrodyn_symmetry_check">
+<span class="sig-name descname"><span class="pre">test_hyrodyn_symmetry_check</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left_right_end_effectors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_hyrodyn_symmetry_check" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_hyrodyn_symmetry_check_torques">
+<span class="sig-name descname"><span class="pre">test_hyrodyn_symmetry_check_torques</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left_right_end_effectors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_hyrodyn_symmetry_check_torques" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_load_in_pybullet">
+<span class="sig-name descname"><span class="pre">test_load_in_pybullet</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_load_in_pybullet" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_process_double_check">
+<span class="sig-name descname"><span class="pre">test_process_double_check</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_process_double_check" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_symmetry_check_masses">
+<span class="sig-name descname"><span class="pre">test_symmetry_check_masses</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">left_right_end_effectors</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_symmetry_check_masses" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_topological_self_consistency">
+<span class="sig-name descname"><span class="pre">test_topological_self_consistency</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_topological_self_consistency" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">phobos ci module</a></li>
+<li><a class="reference internal" href="#submodules">Submodules</a><ul>
+<li><a class="reference internal" href="#module-phobos.ci.pipeline">phobos.ci.pipeline module</a><ul>
+<li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline"><code class="docutils literal notranslate"><span class="pre">Pipeline</span></code></a><ul>
+<li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline.deploy_models"><code class="docutils literal notranslate"><span class="pre">Pipeline.deploy_models()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline.get_coverage"><code class="docutils literal notranslate"><span class="pre">Pipeline.get_coverage()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline.has_failure"><code class="docutils literal notranslate"><span class="pre">Pipeline.has_failure()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline.number_unfinished_models"><code class="docutils literal notranslate"><span class="pre">Pipeline.number_unfinished_models()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline.print_fail_log"><code class="docutils literal notranslate"><span class="pre">Pipeline.print_fail_log()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline.process_models"><code class="docutils literal notranslate"><span class="pre">Pipeline.process_models()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline.relpath"><code class="docutils literal notranslate"><span class="pre">Pipeline.relpath()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline.test_models"><code class="docutils literal notranslate"><span class="pre">Pipeline.test_models()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#phobos.ci.pipeline.TestingPipeline"><code class="docutils literal notranslate"><span class="pre">TestingPipeline</span></code></a><ul>
+<li><a class="reference internal" href="#phobos.ci.pipeline.TestingPipeline.get_coverage"><code class="docutils literal notranslate"><span class="pre">TestingPipeline.get_coverage()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.pipeline.TestingPipeline.relpath"><code class="docutils literal notranslate"><span class="pre">TestingPipeline.relpath()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-phobos.ci.base_model">phobos.ci.base_model module</a><ul>
+<li><a class="reference internal" href="#phobos.ci.base_model.BaseModel"><code class="docutils literal notranslate"><span class="pre">BaseModel</span></code></a><ul>
+<li><a class="reference internal" href="#phobos.ci.base_model.BaseModel.deploy"><code class="docutils literal notranslate"><span class="pre">BaseModel.deploy()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.base_model.BaseModel.export"><code class="docutils literal notranslate"><span class="pre">BaseModel.export()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.base_model.BaseModel.get_exported_model_path"><code class="docutils literal notranslate"><span class="pre">BaseModel.get_exported_model_path()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.base_model.BaseModel.get_input_meshes"><code class="docutils literal notranslate"><span class="pre">BaseModel.get_input_meshes()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.base_model.BaseModel.process"><code class="docutils literal notranslate"><span class="pre">BaseModel.process()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.base_model.BaseModel.recreate_sym_links"><code class="docutils literal notranslate"><span class="pre">BaseModel.recreate_sym_links()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-phobos.ci.test_model">phobos.ci.test_model module</a><ul>
+<li><a class="reference internal" href="#phobos.ci.test_model.TestModel"><code class="docutils literal notranslate"><span class="pre">TestModel</span></code></a><ul>
+<li><a class="reference internal" href="#phobos.ci.test_model.TestModel.exportdir"><code class="docutils literal notranslate"><span class="pre">TestModel.exportdir</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.test_model.TestModel.floatingbase_submechanisms_file_path"><code class="docutils literal notranslate"><span class="pre">TestModel.floatingbase_submechanisms_file_path</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.test_model.TestModel.floatingbase_urdf"><code class="docutils literal notranslate"><span class="pre">TestModel.floatingbase_urdf</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.test_model.TestModel.modeldir"><code class="docutils literal notranslate"><span class="pre">TestModel.modeldir</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.test_model.TestModel.modelname"><code class="docutils literal notranslate"><span class="pre">TestModel.modelname</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.test_model.TestModel.recreate_sym_links"><code class="docutils literal notranslate"><span class="pre">TestModel.recreate_sym_links()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.test_model.TestModel.robotname"><code class="docutils literal notranslate"><span class="pre">TestModel.robotname</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.test_model.TestModel.submechanisms_file"><code class="docutils literal notranslate"><span class="pre">TestModel.submechanisms_file</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.test_model.TestModel.urdf"><code class="docutils literal notranslate"><span class="pre">TestModel.urdf</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-phobos.ci.compare_model">phobos.ci.compare_model module</a><ul>
+<li><a class="reference internal" href="#phobos.ci.compare_model.CompareModel"><code class="docutils literal notranslate"><span class="pre">CompareModel</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-phobos.ci.model_testing">phobos.ci.model_testing module</a><ul>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest"><code class="docutils literal notranslate"><span class="pre">ModelTest</span></code></a><ul>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.info_swing_my_robot"><code class="docutils literal notranslate"><span class="pre">ModelTest.info_swing_my_robot()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.move_hyrodyn_model"><code class="docutils literal notranslate"><span class="pre">ModelTest.move_hyrodyn_model()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_compare_amount_joints"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_compare_amount_joints()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_compare_link_masses"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_compare_link_masses()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_compare_link_transformations"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_compare_link_transformations()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_file_consistency"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_file_consistency()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_hyrodyn_compare_com"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_hyrodyn_compare_com()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_hyrodyn_compare_link_positions"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_hyrodyn_compare_link_positions()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_hyrodyn_compare_masses"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_hyrodyn_compare_masses()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_hyrodyn_compare_torques"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_hyrodyn_compare_torques()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_hyrodyn_load_in_hyrodyn"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_hyrodyn_load_in_hyrodyn()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_hyrodyn_symmetry_check"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_hyrodyn_symmetry_check()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_hyrodyn_symmetry_check_torques"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_hyrodyn_symmetry_check_torques()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_load_in_pybullet"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_load_in_pybullet()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_process_double_check"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_process_double_check()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_symmetry_check_masses"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_symmetry_check_masses()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_topological_self_consistency"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_topological_self_consistency()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="phobos.utils.html"
+                          title="previous chapter">phobos utils module</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="phobos.scripts.html"
+                          title="next chapter">phobos scripts</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/phobos.ci.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="phobos.scripts.html" title="phobos scripts"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="phobos.utils.html" title="phobos utils module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (df6482b) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">phobos ci module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2022, DFKI GmbH and University of Bremen.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.1.
+    </div>
+  </body>
+</html>

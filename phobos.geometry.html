@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>phobos geometry module &#8212; Phobos 2.0.0 (df6482b) documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="phobos utils module" href="phobos.utils.html" />
+    <link rel="prev" title="phobos scenes module" href="phobos.scenes.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="phobos.utils.html" title="phobos utils module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="phobos.scenes.html" title="phobos scenes module"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (df6482b) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">phobos geometry module</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="phobos-geometry-module">
+<h1>phobos geometry module<a class="headerlink" href="#phobos-geometry-module" title="Permalink to this heading">¶</a></h1>
+<p>This module provides all utilities that are related to mesh handling</p>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+<section id="module-phobos.geometry.geometry">
+<span id="phobos-geometry-geometry-module"></span><h3>phobos.geometry.geometry module<a class="headerlink" href="#module-phobos.geometry.geometry" title="Permalink to this heading">¶</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.geometry.create_box">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.geometry.</span></span><span class="sig-name descname"><span class="pre">create_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oriented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.geometry.create_box" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a box element.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.geometry.create_cylinder">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.geometry.</span></span><span class="sig-name descname"><span class="pre">create_cylinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.geometry.create_cylinder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a cylinder.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.geometry.create_sphere">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.geometry.</span></span><span class="sig-name descname"><span class="pre">create_sphere</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.geometry.create_sphere" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create a sphere</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.geometry.get_reflection_matrix">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.geometry.</span></span><span class="sig-name descname"><span class="pre">get_reflection_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">point</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0,</span> <span class="pre">0,</span> <span class="pre">0])</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">array([0,</span> <span class="pre">1,</span> <span class="pre">0])</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.geometry.get_reflection_matrix" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.geometry.get_vertex_id">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.geometry.</span></span><span class="sig-name descname"><span class="pre">get_vertex_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertices</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.geometry.get_vertex_id" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.geometry.identical">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.geometry.</span></span><span class="sig-name descname"><span class="pre">identical</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh_a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mesh_b</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.geometry.identical" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.geometry.improve_mesh">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.geometry.</span></span><span class="sig-name descname"><span class="pre">improve_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.geometry.improve_mesh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.geometry.reduce_mesh">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.geometry.</span></span><span class="sig-name descname"><span class="pre">reduce_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.geometry.reduce_mesh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+<section id="module-phobos.geometry.io">
+<span id="phobos-geometry-io-module"></span><h3>phobos.geometry.io module<a class="headerlink" href="#module-phobos.geometry.io" title="Permalink to this heading">¶</a></h3>
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.io.as_trimesh">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.io.</span></span><span class="sig-name descname"><span class="pre">as_trimesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">scene_or_mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.io.as_trimesh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.io.blender_2_mesh_info_dict">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.io.</span></span><span class="sig-name descname"><span class="pre">blender_2_mesh_info_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.io.blender_2_mesh_info_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the mesh info dict
+:param mesh: bpy.types.Mesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(n,3) single, “vertex_normals”: (n,3) single, “faces”: [n*[3*(n,3)]] intc, [“texture_coords”: (n,2) single]}</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>{“vertices”</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.io.export_mesh">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.io.</span></span><span class="sig-name descname"><span class="pre">export_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">urdf_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dae_mesh_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.io.export_mesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Export the mesh to a given filepath with an urdf_path. Detects the format by file ending.
+NOTE: For bobj it’s necessary to pass a trimesh.Trimesh as mesh other will raise an AssertionError.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mesh</strong> – trimesh.Trimesh or trimesh.Scene</p></li>
+<li><p><strong>filepath</strong> – the filepath where to write the file</p></li>
+<li><p><strong>**mesh_info_dict</strong> – {“vertices”: (n,3) single, “vertex_normals”: (n,3) single, “faces”: [n*[n*(n,3)]] intc, [“texture_coords”: (n,2) single]}</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(n,3) single, “vertex_normals”: (n,3) single, “faces”: [n*[3*(n,3)]] intc, [“texture_coords”: (n,2) single]}</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>{“vertices”</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.io.import_mars_mesh">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.io.</span></span><span class="sig-name descname"><span class="pre">import_mars_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">urdf_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.io.import_mars_mesh" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.io.import_mesh">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.io.</span></span><span class="sig-name descname"><span class="pre">import_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">urdf_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.io.import_mesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Import the mesh from a given filepath with an urdf_path.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.io.mesh_info_dict_2_blender">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.io.</span></span><span class="sig-name descname"><span class="pre">mesh_info_dict_2_blender</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">faces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_normals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture_coords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">mesh_info_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.io.mesh_info_dict_2_blender" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the blender mesh from the mesh info dict
+:param name: the name of the mesh
+:param **mesh_info_dict: {“vertices”: (n,3) single, “vertex_normals”: (n,3) single, “faces”: [n*[3*(n,3)]] intc, [“texture_coords”: (n,2) single]}</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bpy.types.Mesh</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Remember to link the object to a valid collection</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.io.mesh_info_dict_2_trimesh">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.io.</span></span><span class="sig-name descname"><span class="pre">mesh_info_dict_2_trimesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vertices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">faces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_normals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture_coords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">mesh_info_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.io.mesh_info_dict_2_trimesh" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the trimesh from the mesh info dict
+:param **mesh_info_dict: {“vertices”: (n,3) single, “vertex_normals”: (n,3) single, “faces”: [n*[3*(n,3)]] intc, [“texture_coords”: (n,2) single]}</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>trimesh.Trimesh</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.io.parse_bobj">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.io.</span></span><span class="sig-name descname"><span class="pre">parse_bobj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.io.parse_bobj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parses the mesh_info_dict from bobj format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filepath</strong> – the filepath where to write the file</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(n,3) single, “vertex_normals”: (n,3) single, “faces”: [n*[3*(n,3)]] intc, [“texture_coords”: (n,2) single]}</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>{“vertices”</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.io.parse_dae">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.io.</span></span><span class="sig-name descname"><span class="pre">parse_dae</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.io.parse_dae" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.io.parse_obj">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.io.</span></span><span class="sig-name descname"><span class="pre">parse_obj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.io.parse_obj" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.io.triangulate_faces_in_info_dict">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.io.</span></span><span class="sig-name descname"><span class="pre">triangulate_faces_in_info_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">faces</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">mesh_info_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.io.triangulate_faces_in_info_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Triangulates the faces of the given mesh info dict.
+:param **mesh_info_dict: {“vertices”: (n,3) single, “vertex_normals”: (n,3) single, “faces”: [n*[n*(n,3)]] intc, [“texture_coords”: (n,2) single]}</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(n,3) single, “vertex_normals”: (n,3) single, “faces”: [n*[3*(n,3)]] intc, [“texture_coords”: (n,2) single]}</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>{“vertices”</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.io.trimesh_2_mesh_info_dict">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.io.</span></span><span class="sig-name descname"><span class="pre">trimesh_2_mesh_info_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.io.trimesh_2_mesh_info_dict" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates the mesh info dict
+:param mesh: trimesh.Trimesh</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(n,3) single, “vertex_normals”: (n,3) single, “faces”: [n*[3*(n,3)]] intc, [“texture_coords”: (n,2) single]}</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>{“vertices”</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.io.write_bobj">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.io.</span></span><span class="sig-name descname"><span class="pre">write_bobj</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertices</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_normals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">faces</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture_coords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">mesh_info_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.io.write_bobj" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the mesh_info_dict to bobj format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filepath</strong> – the filepath where to write the file</p></li>
+<li><p><strong>**mesh_info_dict</strong> – {“vertices”: (n,3) single, “vertex_normals”: (n,3) single, “faces”: [n*[n*(n,3)]] intc, [“texture_coords”: (n,2) single]}</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(n,3) single, “vertex_normals”: (n,3) single, “faces”: [n*[3*(n,3)]] intc, [“texture_coords”: (n,2) single]}</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>{“vertices”</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="phobos-geometry-robot-module">
+<h3>phobos.geometry.robot module<a class="headerlink" href="#phobos-geometry-robot-module" title="Permalink to this heading">¶</a></h3>
+<p>Tools for visual and collision editing.</p>
+<span class="target" id="module-phobos.geometry.robot"></span><dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.robot.find_zero_pose_collisions">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">find_zero_pose_collisions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.find_zero_pose_collisions" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.robot.generate_kccd_optimizer_ready_collision">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">generate_kccd_optimizer_ready_collision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">outputdir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">join_first</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">merge_additionally</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mars_meshes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduce_meshes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.generate_kccd_optimizer_ready_collision" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes the convexhulls of all visuals of the link and joins them to one mesh.
+If the join_first option is set to true then the meshes will be joint before the convexhull is generated.</p>
+<p>WARNING: This function will edit the meshes pathes to absolute ones and should therefore only be used with a URDF
+that’S only purpose is to generate the kccd model</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.robot.join_collisions">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">join_collisions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collisionnames</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_return</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.join_collisions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replaces a series of visuals/collisions with a joined version of those given</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.robot.reduce_mesh_collision">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">reduce_mesh_collision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collisionname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.4</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.reduce_mesh_collision" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reduces the mesh collision(s) of the link(s) which have the corresponding collisionname.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.robot.remove_collision">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">remove_collision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collisionname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.remove_collision" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the collision(s) of the link(s) which have the corresponding collisionname.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.robot.remove_visual">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">remove_visual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">visualname</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.remove_visual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove the visual(s) of the link(s) which have the corresponding visualname.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.robot.replace_collision">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">replace_collision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'box'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oriented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.replace_collision" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace the collision(s) stated in linkname of the robot with an oriented shape.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.robot.replace_collisions">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">replace_collisions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'box'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oriented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.replace_collisions" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace all collisions of the robot ( except exclude’s ) with a given shape. This can be
+a ‘sphere’, ‘cylinder’, ‘box’ or ‘convex’.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.robot.replace_geometry">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">replace_geometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'box'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oriented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.replace_geometry" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace the geometry of the element with an oriented shape. urdf_path is needed for mesh loading.
+:param element: An geometry element representation.Visual or representation.Collision
+:param shape: [‘box’, ‘sphere’, ‘cylinder’, ‘convex’]
+:param oriented: Whether the bounding box should be oriented to have the minimum volume to cover the element
+:param scale: whether the created shape shall be scaled by the given value</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.robot.replace_visual">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">replace_visual</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'box'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oriented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.replace_visual" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace the visual(s) stated in linkname of the robot with an oriented shape.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.geometry.robot.replace_visuals">
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">replace_visuals</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'box'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oriented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.replace_visuals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replace all visuals of the robot ( except exclude’s ) with a given shape. This can be
+a ‘sphere’, ‘cylinder’, ‘box’ or ‘convex’.</p>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">phobos geometry module</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a><ul>
+<li><a class="reference internal" href="#module-phobos.geometry.geometry">phobos.geometry.geometry module</a><ul>
+<li><a class="reference internal" href="#phobos.geometry.geometry.create_box"><code class="docutils literal notranslate"><span class="pre">create_box()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.geometry.create_cylinder"><code class="docutils literal notranslate"><span class="pre">create_cylinder()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.geometry.create_sphere"><code class="docutils literal notranslate"><span class="pre">create_sphere()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.geometry.get_reflection_matrix"><code class="docutils literal notranslate"><span class="pre">get_reflection_matrix()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.geometry.get_vertex_id"><code class="docutils literal notranslate"><span class="pre">get_vertex_id()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.geometry.identical"><code class="docutils literal notranslate"><span class="pre">identical()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.geometry.improve_mesh"><code class="docutils literal notranslate"><span class="pre">improve_mesh()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.geometry.reduce_mesh"><code class="docutils literal notranslate"><span class="pre">reduce_mesh()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-phobos.geometry.io">phobos.geometry.io module</a><ul>
+<li><a class="reference internal" href="#phobos.geometry.io.as_trimesh"><code class="docutils literal notranslate"><span class="pre">as_trimesh()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.io.blender_2_mesh_info_dict"><code class="docutils literal notranslate"><span class="pre">blender_2_mesh_info_dict()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.io.export_mesh"><code class="docutils literal notranslate"><span class="pre">export_mesh()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.io.import_mars_mesh"><code class="docutils literal notranslate"><span class="pre">import_mars_mesh()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.io.import_mesh"><code class="docutils literal notranslate"><span class="pre">import_mesh()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.io.mesh_info_dict_2_blender"><code class="docutils literal notranslate"><span class="pre">mesh_info_dict_2_blender()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.io.mesh_info_dict_2_trimesh"><code class="docutils literal notranslate"><span class="pre">mesh_info_dict_2_trimesh()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.io.parse_bobj"><code class="docutils literal notranslate"><span class="pre">parse_bobj()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.io.parse_dae"><code class="docutils literal notranslate"><span class="pre">parse_dae()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.io.parse_obj"><code class="docutils literal notranslate"><span class="pre">parse_obj()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.io.triangulate_faces_in_info_dict"><code class="docutils literal notranslate"><span class="pre">triangulate_faces_in_info_dict()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.io.trimesh_2_mesh_info_dict"><code class="docutils literal notranslate"><span class="pre">trimesh_2_mesh_info_dict()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.io.write_bobj"><code class="docutils literal notranslate"><span class="pre">write_bobj()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#phobos-geometry-robot-module">phobos.geometry.robot module</a><ul>
+<li><a class="reference internal" href="#phobos.geometry.robot.find_zero_pose_collisions"><code class="docutils literal notranslate"><span class="pre">find_zero_pose_collisions()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.robot.generate_kccd_optimizer_ready_collision"><code class="docutils literal notranslate"><span class="pre">generate_kccd_optimizer_ready_collision()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.robot.join_collisions"><code class="docutils literal notranslate"><span class="pre">join_collisions()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.robot.reduce_mesh_collision"><code class="docutils literal notranslate"><span class="pre">reduce_mesh_collision()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.robot.remove_collision"><code class="docutils literal notranslate"><span class="pre">remove_collision()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.robot.remove_visual"><code class="docutils literal notranslate"><span class="pre">remove_visual()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.robot.replace_collision"><code class="docutils literal notranslate"><span class="pre">replace_collision()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.robot.replace_collisions"><code class="docutils literal notranslate"><span class="pre">replace_collisions()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.robot.replace_geometry"><code class="docutils literal notranslate"><span class="pre">replace_geometry()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.robot.replace_visual"><code class="docutils literal notranslate"><span class="pre">replace_visual()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.geometry.robot.replace_visuals"><code class="docutils literal notranslate"><span class="pre">replace_visuals()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="phobos.scenes.html"
+                          title="previous chapter">phobos scenes module</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="phobos.utils.html"
+                          title="next chapter">phobos utils module</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/phobos.geometry.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="phobos.utils.html" title="phobos utils module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="phobos.scenes.html" title="phobos scenes module"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (df6482b) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">phobos geometry module</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2022, DFKI GmbH and University of Bremen.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.1.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>phobos.blender.utils package &#8212; Phobos 2.0.0 (df6482b) documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="phobos io module" href="phobos.io.html" />
+    <link rel="prev" title="phobos.blender.operators package" href="phobos.blender.operators.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="phobos.io.html" title="phobos io module"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="phobos.blender.operators.html" title="phobos.blender.operators package"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (df6482b) documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="phobos.blender.html" accesskey="U">phobos blender package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">phobos.blender.utils package</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <section id="phobos-blender-utils-package">
+<h1>phobos.blender.utils package<a class="headerlink" href="#phobos-blender-utils-package" title="Permalink to this heading">¶</a></h1>
+<section id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this heading">¶</a></h2>
+<section id="phobos-blender-utils-blender-module">
+<h3>phobos.blender.utils.blender module<a class="headerlink" href="#phobos-blender-utils-blender-module" title="Permalink to this heading">¶</a></h3>
+</section>
+<section id="phobos-blender-utils-editing-module">
+<h3>phobos.blender.utils.editing module<a class="headerlink" href="#phobos-blender-utils-editing-module" title="Permalink to this heading">¶</a></h3>
+</section>
+<section id="phobos-blender-utils-general-module">
+<h3>phobos.blender.utils.general module<a class="headerlink" href="#phobos-blender-utils-general-module" title="Permalink to this heading">¶</a></h3>
+</section>
+<section id="phobos-blender-utils-git-module">
+<h3>phobos.blender.utils.git module<a class="headerlink" href="#phobos-blender-utils-git-module" title="Permalink to this heading">¶</a></h3>
+</section>
+<section id="phobos-blender-utils-io-module">
+<h3>phobos.blender.utils.io module<a class="headerlink" href="#phobos-blender-utils-io-module" title="Permalink to this heading">¶</a></h3>
+</section>
+<section id="module-phobos.blender.utils.naming">
+<span id="phobos-blender-utils-naming-module"></span><h3>phobos.blender.utils.naming module<a class="headerlink" href="#module-phobos.blender.utils.naming" title="Permalink to this heading">¶</a></h3>
+<p>Contains the utility functions to rename objects, add/remove namespaces etc.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.blender.utils.naming.addNamespace">
+<span class="sig-prename descclassname"><span class="pre">phobos.blender.utils.naming.</span></span><span class="sig-name descname"><span class="pre">addNamespace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.blender.utils.naming.addNamespace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Namespaces a given blender object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>bpy.types.Object</em>) – The object to namespace.</p></li>
+<li><p><strong>namespace</strong> – (Default value = None)</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.blender.utils.naming.addNamespaceToName">
+<span class="sig-prename descclassname"><span class="pre">phobos.blender.utils.naming.</span></span><span class="sig-name descname"><span class="pre">addNamespaceToName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.blender.utils.naming.addNamespaceToName" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> – </p></li>
+<li><p><strong>namespace</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.blender.utils.naming.gatherNamespaces">
+<span class="sig-prename descclassname"><span class="pre">phobos.blender.utils.naming.</span></span><span class="sig-name descname"><span class="pre">gatherNamespaces</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">separator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'::'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.blender.utils.naming.gatherNamespaces" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gathers all existing namespaces.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>separator</strong> – (Default value = ‘::’)</p>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.blender.utils.naming.getModelName">
+<span class="sig-prename descclassname"><span class="pre">phobos.blender.utils.naming.</span></span><span class="sig-name descname"><span class="pre">getModelName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.blender.utils.naming.getModelName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of the model encoded by obj, provided that obj is a valid model root.</p>
+<p>If obj does not contain a defined ‘model/name’, the object name is returned with a ‘*’ added
+ad the start, ensuring that the return value will not be treated as a valid model name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<em>bpy.types.Object</em>) – root object of the model</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>str – modelname of the object or object name with ‘*’ prepended if undefined</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.blender.utils.naming.getObjectName">
+<span class="sig-prename descclassname"><span class="pre">phobos.blender.utils.naming.</span></span><span class="sig-name descname"><span class="pre">getObjectName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phobostype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.blender.utils.naming.getObjectName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the name of an object relevant to Phobos.
+An optional <em>phobostype</em> parameter can be provided for objects with multiple
+uses, such as link objects (which also contain joint and motor information).
+If no <em>phobostype</em> is provided, the phobostype of the object is used.
+The object name itself is returned, stripped of namespaces.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>bpy.types.Object</em>) – object for which the name is requested</p></li>
+<li><p><strong>phobostype</strong> – phobostype if relevant (e.g. ‘motor’) (Default value = None)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>str – The object’s name</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.blender.utils.naming.getUniqueName">
+<span class="sig-prename descclassname"><span class="pre">phobos.blender.utils.naming.</span></span><span class="sig-name descname"><span class="pre">getUniqueName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">newname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">names</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.blender.utils.naming.getUniqueName" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generates a new name similar to the Blender internal convention.</p>
+<p>This ensures, that the Blender internal limit to object name lengths (63 characters) is matched
+without omitting the number. That way, unwanted naming behaviour is avoided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>newname</strong> – desired object name</p></li>
+<li><p><strong>names</strong> – list of existing names (e.g. bpy.data.objects)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>str – new name that is unique in the Blender namespace</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.blender.utils.naming.isValidModelname">
+<span class="sig-prename descclassname"><span class="pre">phobos.blender.utils.naming.</span></span><span class="sig-name descname"><span class="pre">isValidModelname</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.blender.utils.naming.isValidModelname" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns if a name contains characters other than alphanumeric, ‘_’ and ‘-‘.
+Also, empyt strings are not valid model names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – potential name for a model</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool – True if the name is a valid model name according to convention, False if not.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.blender.utils.naming.removeNamespace">
+<span class="sig-prename descclassname"><span class="pre">phobos.blender.utils.naming.</span></span><span class="sig-name descname"><span class="pre">removeNamespace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.blender.utils.naming.removeNamespace" title="Permalink to this definition">¶</a></dt>
+<dd><p>Removes the namespace from an object if present.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>obj</strong> (<em>bpy.types.Object</em>) – The object to remove the namespace from.</p>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.blender.utils.naming.replaceNameElement">
+<span class="sig-prename descclassname"><span class="pre">phobos.blender.utils.naming.</span></span><span class="sig-name descname"><span class="pre">replaceNameElement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">old</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.blender.utils.naming.replaceNameElement" title="Permalink to this definition">¶</a></dt>
+<dd><p>For all selected elements in Blender, replace an <em>old</em> part of a string <em>prop*erty with *new</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prop</strong> – </p></li>
+<li><p><strong>old</strong> – </p></li>
+<li><p><strong>new</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.blender.utils.naming.safelyName">
+<span class="sig-prename descclassname"><span class="pre">phobos.blender.utils.naming.</span></span><span class="sig-name descname"><span class="pre">safelyName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">phobostype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.blender.utils.naming.safelyName" title="Permalink to this definition">¶</a></dt>
+<dd><dl>
+<dt>Assigns a name to an object in a safe way with regard to the internal</dt><dd><p>name handling in Blender.</p>
+<p>If no <code class="docutils literal notranslate"><span class="pre">phobostype</span></code> is provided or the phobostype is the same as the object itself, the actual
+object is renamed, generating a name that no other object in Blender has, using Blender’s own
+naming scheme. This prevents Blender to assign the name and change another object’s name that
+previously held that name.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>bpy.types.Object</em>) – object to rename</p></li>
+<li><p><strong>name</strong> (<em>str</em>) – new name for the object</p></li>
+<li><p><strong>phobostype</strong> (<em>str</em><em>, </em><em>optional</em>) – only rename if the specified phobostype is matched (Default value =</p></li>
+</ul>
+</dd>
+</dl>
+<p>None)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>new name of the Blender object</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.blender.utils.naming.stripNamespaceFromName">
+<span class="sig-prename descclassname"><span class="pre">phobos.blender.utils.naming.</span></span><span class="sig-name descname"><span class="pre">stripNamespaceFromName</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.blender.utils.naming.stripNamespaceFromName" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> – </p>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.blender.utils.naming.toggleNamespace">
+<span class="sig-prename descclassname"><span class="pre">phobos.blender.utils.naming.</span></span><span class="sig-name descname"><span class="pre">toggleNamespace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">namespace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.blender.utils.naming.toggleNamespace" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – </p></li>
+<li><p><strong>namespace</strong> – (Default value = ‘’)</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+</section>
+<section id="phobos-blender-utils-selection-module">
+<h3>phobos.blender.utils.selection module<a class="headerlink" href="#phobos-blender-utils-selection-module" title="Permalink to this heading">¶</a></h3>
+</section>
+<section id="phobos-blender-utils-validation-module">
+<h3>phobos.blender.utils.validation module<a class="headerlink" href="#phobos-blender-utils-validation-module" title="Permalink to this heading">¶</a></h3>
+</section>
+</section>
+<section id="module-phobos.blender.utils">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-phobos.blender.utils" title="Permalink to this heading">¶</a></h2>
+</section>
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">phobos.blender.utils package</a><ul>
+<li><a class="reference internal" href="#submodules">Submodules</a><ul>
+<li><a class="reference internal" href="#phobos-blender-utils-blender-module">phobos.blender.utils.blender module</a></li>
+<li><a class="reference internal" href="#phobos-blender-utils-editing-module">phobos.blender.utils.editing module</a></li>
+<li><a class="reference internal" href="#phobos-blender-utils-general-module">phobos.blender.utils.general module</a></li>
+<li><a class="reference internal" href="#phobos-blender-utils-git-module">phobos.blender.utils.git module</a></li>
+<li><a class="reference internal" href="#phobos-blender-utils-io-module">phobos.blender.utils.io module</a></li>
+<li><a class="reference internal" href="#module-phobos.blender.utils.naming">phobos.blender.utils.naming module</a><ul>
+<li><a class="reference internal" href="#phobos.blender.utils.naming.addNamespace"><code class="docutils literal notranslate"><span class="pre">addNamespace()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.blender.utils.naming.addNamespaceToName"><code class="docutils literal notranslate"><span class="pre">addNamespaceToName()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.blender.utils.naming.gatherNamespaces"><code class="docutils literal notranslate"><span class="pre">gatherNamespaces()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.blender.utils.naming.getModelName"><code class="docutils literal notranslate"><span class="pre">getModelName()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.blender.utils.naming.getObjectName"><code class="docutils literal notranslate"><span class="pre">getObjectName()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.blender.utils.naming.getUniqueName"><code class="docutils literal notranslate"><span class="pre">getUniqueName()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.blender.utils.naming.isValidModelname"><code class="docutils literal notranslate"><span class="pre">isValidModelname()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.blender.utils.naming.removeNamespace"><code class="docutils literal notranslate"><span class="pre">removeNamespace()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.blender.utils.naming.replaceNameElement"><code class="docutils literal notranslate"><span class="pre">replaceNameElement()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.blender.utils.naming.safelyName"><code class="docutils literal notranslate"><span class="pre">safelyName()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.blender.utils.naming.stripNamespaceFromName"><code class="docutils literal notranslate"><span class="pre">stripNamespaceFromName()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.blender.utils.naming.toggleNamespace"><code class="docutils literal notranslate"><span class="pre">toggleNamespace()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#phobos-blender-utils-selection-module">phobos.blender.utils.selection module</a></li>
+<li><a class="reference internal" href="#phobos-blender-utils-validation-module">phobos.blender.utils.validation module</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-phobos.blender.utils">Module contents</a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="phobos.blender.operators.html"
+                          title="previous chapter">phobos.blender.operators package</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="phobos.io.html"
+                          title="next chapter">phobos io module</a></p>
+  </div>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/phobos.blender.utils.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>document.getElementById('searchbox').style.display = "block"</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="phobos.io.html" title="phobos io module"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="phobos.blender.operators.html" title="phobos.blender.operators package"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (df6482b) documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="phobos.blender.html" >phobos blender package</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">phobos.blender.utils package</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2014-2022, DFKI GmbH and University of Bremen.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.0.1.
+    </div>
+  </body>
+</html>
