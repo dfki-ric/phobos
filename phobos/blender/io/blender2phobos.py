@@ -666,8 +666,8 @@ def deriveSubmechanism(obj, logging=False):
             values[prop] = {}
             for key, j in obj[prop]:
                 values[prop][key] = j.get("joint/name",j.name)
-        elif prop is not None:
-            values[prop] = [j.get("joint/name",j.name) for j in obj[prop]]
+        elif type(obj[prop]) == list or "Array" in repr(type(obj[prop])):
+            values[prop] = [j.get("joint/name", j.name) for j in obj[prop]]
 
     values["type"] = obj["type"]
 
