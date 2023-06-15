@@ -855,7 +855,7 @@ class Mesh(Representation, SmurfBase):
         self.history.append(f"loaded {'bpy-Mesh' if BPY_AVAILABLE else 'trimesh'} from {self.input_type} {self.input_file}")
         return self.mesh_object
 
-    def provide_mesh_file(self, targetpath, format=None, throw_on_invalid_bobj=False, use_existing=False):
+    def provide_mesh_file(self, targetpath, format=None, throw_on_invalid_bobj=False, use_existing=False, apply_scale=False):
         if format is None and self._related_robot_instance is not None:
             format = self._related_robot_instance.mesh_format
         if format in [None, "input_type"] and self.input_type.startswith("file"):
@@ -875,6 +875,8 @@ class Mesh(Representation, SmurfBase):
             if not os.path.isfile(targetpath):
                 log.warn(f"The file assumed as existing ({targetpath}), not there. Exporting anyways but you might encounter issues.")
             return
+        if apply_scale:
+            self.apply_scale()
         self.history.append(f"->trying export of {str(self.mesh_object)} to {targetpath}")
         # log.debug(f"Providing mesh {targetpath}...")
         # if there are no changes we can simply copy
@@ -1059,15 +1061,29 @@ class Mesh(Representation, SmurfBase):
         self.load_mesh()
         if isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene):
             self.mesh_object.apply_transform(np.diag(list(self.scale) + [1]))
-            self._operations.append("apply_scale")
-            self.history.append(f"apply_scale {self.scale}")
-            self._changed = True
-            self.scale = 1
-            if self._mesh_information is not None:
-                self._mesh_information["vertices"] = self._mesh_information["vertices"] * np.array(self.scale)
-                self._mesh_information["vertex_normals"] = self._mesh_information["vertex_normals"] / np.array(self.scale)
         elif BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
-            raise NotImplementedError
+            from ..blender.utils import blender as bUtils
+            objname = "tmp_export_" + self.unique_name
+            tmpobject = bUtils.createPrimitive(objname, 'box', self.scale)
+            # copy the mesh here
+            tmpobject.data = self.mesh_object
+            bpy.ops.object.select_all(action='DESELECT')
+            tmpobject.select_set(True)
+            bpy.ops.object.transform_apply(scale=True)
+            bpy.ops.object.select_all(action='DESELECT')
+            tmpobject.select_set(True)
+            bpy.ops.object.delete()
+        else:
+            raise NotImplentedError()
+
+        self._operations.append("apply_scale")
+        self.history.append(f"apply_scale {self.scale}")
+        self._changed = True
+        self.scale = 1
+        if self._mesh_information is not None:
+            self._mesh_information["vertices"] = self._mesh_information["vertices"] * np.array(self.scale)
+            self._mesh_information["vertex_normals"] = self._mesh_information["vertex_normals"] / np.array(self.scale)
+
 
     def improve_mesh(self):
         self.load_mesh()

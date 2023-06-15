@@ -221,6 +221,11 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
     selectedOnly : BoolProperty(
         name="Selected only", default=False, description="Export only selected objects"
     )
+
+    applyMeshScale: BoolProperty(
+        name="Apply mesh scale", default=False, description="Before Exporting Mesh scales are applied."
+    )
+
     # smurfDecimalPlaces : IntProperty(
     #     name="decimals", description="Number of " + "decimal places to export in smurf", default=5, min=3
     # )
@@ -1324,6 +1329,7 @@ class PhobosExportPanel(bpy.types.Panel):
         g1 = ginlayout.column(align=True)
         g1.prop(expsets, "exportTextures")
         g1.prop(expsets, "selectedOnly")
+        g1.prop(expsets, "applyMeshScale")
         g2 = ginlayout.column(align=True)
         g2.prop(expsets, "ensurePositiveSemiDefinite")
         g2.prop(expsets, "enforceZero")
