@@ -3,6 +3,7 @@ from copy import deepcopy
 
 import bpy
 import numpy as np
+from phobos.io import hyrodyn
 
 from .. import reserved_keys
 from ..model import inertia as inertiamodel
@@ -634,9 +635,43 @@ def derivePoses(root, robot):
     return pose_objects
 
 
-# [TODO v2.0.0] Add submechanisms
-def deriveSubmechanism(obj):
-    raise NotImplementedError
+
+
+def deriveSubmechanism(obj, logging=False):
+    """This function derives a submechanism from a given blender object
+
+    Args:
+      obj(bpy_types.Object): The blender object to derive the submechanism from.
+      logging(bool, optional): whether to write log messages or not (Default value = False)
+
+    Returns:
+      : dict -- phobos representation of the submechanism
+
+    """
+
+    if logging:
+        log(
+            "Deriving submechanism from object " + nUtils.getObjectName(obj, phobostype='submechanism') + ".",
+            'DEBUG',
+        )
+
+    values = {
+        k: v for k, v in obj.items()
+        if k not in reserved_keys.INTERNAL_KEYS+reserved_keys.SUBMECHANISM_KEYS
+    }
+    for prop in reserved_keys.SUBMECHANISM_KEYS:
+        if type(obj[prop]) == str:
+            values[prop] = obj[prop]
+        elif type(obj[prop]) == dict:
+            values[prop] = {}
+            for key, j in obj[prop]:
+                values[prop][key] = j.get("joint/name",j.name)
+        elif type(obj[prop]) == list or "Array" in repr(type(obj[prop])):
+            values[prop] = [j.get("joint/name", j.name) for j in obj[prop]]
+
+    values["type"] = obj["type"]
+
+    return hyrodyn.Submechanism(**values)
 
 
 # [TODO v2.1.0] Re-add light support
@@ -753,6 +788,7 @@ def deriveRobot(root, name='', objectlist=None):
         )
 
     # XMLVersion [TODO v2.1.0] Add matching constructor to phobos.core.Robot
+    # TODO ErrorMessageWithBox(message="Link {} is not defined as a joint. Use Model Editing > Kinematics > Define Joint".format(obj.name))
     xml_robot = xmlrobot.XMLRobot(
         name=modelname,
         links=[deriveLink(obj) for obj in objectlist if obj.phobostype == 'link'],
@@ -774,7 +810,8 @@ def deriveRobot(root, name='', objectlist=None):
     for pose in derivePoses(root, robot):
         robot.add_aggregate("pose", pose)
 
-    # [TODO v2.0.0] Add submechanisms
+    for subm in [deriveSubmechanism(obj) for obj in objectlist if obj.phobostype == 'submechanism']:
+        robot.add_aggregate("submechanisms", subm)
 
     # Until here we have added all entities that are linkable
     robot.link_entities()

@@ -32,6 +32,7 @@ from bpy.props import (
 )
 from bpy.types import Operator
 from idprop.types import IDPropertyGroup
+from phobos.io import hyrodyn
 
 from .. import defs as defs
 from .. import display as display
@@ -1311,11 +1312,15 @@ class CreateCollisionObjects(Operator):
                     geometry = blender2phobos.deriveGeometry(vis, duplicate_mesh=True)
                     geometry.to_convex_hull()
                     geometry.apply_scale()
+                link = sUtils.getEffectiveParent(vis, include_hidden=True, ignore_selection=True)
+                if link is None:
+                    ErrorMessageWithBox(message="Before creating collision parent visual to a link")
+                    return {'CANCELLED'}
                 collision = representation.Collision(
                     name=collname,
-                    link=sUtils.getEffectiveParent(vis, include_hidden=True, ignore_selection=True),
+                    link=link.name,
                     geometry=geometry,
-                    origin=representation.Pose.from_matrix(phobos_vis.origin.to_matrix().dot(transform))
+                    origin=representation.Pose.from_matrix(phobos_vis.origin.to_matrix().dot(transform), relative_to=link.name)
                 )
                 ob = phobos2blender.createGeometry(collision, geomsrc="collision", linkobj=sUtils.getEffectiveParent(vis, include_hidden=True, ignore_selection=True))
             else:
@@ -2179,11 +2184,7 @@ class AddSensorOperator(Operator):
         Returns: The parameters entered by the user for the selected sensor
 
         """
-        data = resources.get_sensor(self.category, self.sensorType)
-        result = {}
-        for prop in self.sensorProperties:
-            if prop.isEnabled:
-                result[prop.name] = prop.getValue()
+        result = DynamicProperty.collectDict(self.sensorProperties)
         return result
 
     @classmethod
@@ -2870,7 +2871,6 @@ class DefineSubmodel(Operator):
         return {'FINISHED'}
 
 
-# [TODO v2.0.0] REVIEW this
 class AssignSubmechanism(Operator):
     """Assign a submechanism to the model"""
 
@@ -2893,7 +2893,11 @@ class AssignSubmechanism(Operator):
 
     mechanism_name : StringProperty(name='Name')
 
+    contextual_name : StringProperty(name='Contextual name')
+
     joints = []
+
+    executeMessage = []
 
     def compileSubmechanismTreeEnum(self, context):
         """
@@ -2975,13 +2979,19 @@ class AssignSubmechanism(Operator):
         """
         wm = context.window_manager
         layout = self.layout
-        layout.label(text='Selection contains {0} joints.'.format(len(self.joints)))
+        nSelectedJoints = len(self.joints)
+        layout.label(text='Selection contains {0} joint{1}.'.format(
+            nSelectedJoints, "s" if nSelectedJoints is not 1 else ""))
         layout.prop(self, 'linear_chain')
+        layout.label(text='(Joints that have not been assigned')
+        layout.label(text='to a submechanism will be considered')
+        layout.label(text='serial chains automatically)')
         layout.prop(self, 'mechanism_name')
+        layout.prop(self, 'contextual_name')
         if not self.linear_chain:
             layout.template_icon_view(wm, 'mechanismpreview', show_labels=True, scale=5.0)
             layout.prop(wm, 'mechanismpreview')
-            size = len(
+            size = -1 if wm.mechanismpreview == "" else len(
                 defs.definitions['submechanisms'][wm.mechanismpreview]['joints']['spanningtree']
             )
             if size == len(self.joints):
@@ -2993,6 +3003,10 @@ class AssignSubmechanism(Operator):
                     c2.prop(self, "jointtype" + str(i), text='')
             else:
                 layout.label(text='Please choose a valid type for selected joints.')
+        if len(self.executeMessage) > 0:
+            for t in self.executeMessage:
+                layout.label(text=t)
+
 
     def execute(self, context):
         """
@@ -3003,76 +3017,111 @@ class AssignSubmechanism(Operator):
         Returns:
 
         """
+        self.executeMessage = []
         self.joints = self.isLinearChain(
             [obj for obj in bpy.context.selected_objects if obj.phobostype == 'link']
         )
         # prepare data used in both cases
         roots = [link for link in self.joints if link.parent not in self.joints]
         if len(roots) != 1:
-            log("Selected joints are not all connected.", 'WARNING')
+            self.executeMessage.append("Careful, the selected joints are not all connected")
             if self.linear_chain:
-                return {'CANCELLED'}
-        if self.mechanism_name:
+                return {'FINISHED'}
+        if self.mechanism_name and self.contextual_name:
+            for ob in context.scene.objects:
+                if ob.phobostype == "submechanism":
+                    if ob.name == self.contextual_name:
+                        self.executeMessage.append("Another mechanism with this contextual name already exists")
+                        return {'FINISHED'}
             if self.linear_chain:
-                root = roots[0]
-                root['submechanism/type'] = '{0}R'.format(len(self.joints))
-                root['submechanism/spanningtree'] = list(self.joints)
-                root['submechanism/active'] = list(self.joints)
-                root['submechanism/independent'] = list(self.joints)
-                for i in range(len(self.joints)):
-                    self.joints[i]['submechanism/jointname'] = str(i + 1)
-            else:
-                root, freeloader_joints = eUtils.getNearestCommonParent(self.joints)
+                base = roots[0]
+                parameters = {
+                    'type': '{0}R'.format(len(self.joints)),
+                    #'jointnames': [j["joint/name"] for j in self.joints], #Is autogenerated
+                    'jointnames_spanningtree': [j.get("joint/name",j.name) for j in self.joints],
+                    'jointnames_active': [j.get("joint/name",j.name) for j in self.joints],
+                    'jointnames_independent': [j.get("joint/name",j.name) for j in self.joints],
+                    'name': self.mechanism_name,
+                    'contextual_name': self.contextual_name
+                }
+
+                subm = hyrodyn.Submechanism(**parameters)
+                root = phobos2blender.createSubmechanism(submechanism = subm, linkobj=base)
+            elif len(context.window_manager.mechanismpreview) > 0:
+                base, freeloader_joints = eUtils.getNearestCommonParent(self.joints)
+                if base is None:
+                    self.executeMessage.append("The selected links require a common parent link")
+                    return {'FINISHED'}
                 mechanismdata = defs.definitions['submechanisms'][
                     context.window_manager.mechanismpreview
                 ]
                 size = len(mechanismdata['joints']['spanningtree'])
                 if len(self.joints) == size:
                     jointmap = {
-                        getattr(self, 'jointtype' + str(i)): self.joints[i]
+                        getattr(self, 'jointtype' + str(i)): self.joints[i].get("joint/name",self.joints[i].name)
                         for i in range(len(self.joints))
                     }
-                    # assign attributes
-                    try:
-                        for i in range(len(self.joints)):
-                            self.joints[i]['submechanism/jointname'] = getattr(
-                                self, 'jointtype' + str(i)
-                            )
-                        root['submechanism/type'] = mechanismdata['type']
-                        root['submechanism/subtype'] = context.window_manager.mechanismpreview
-                        root['submechanism/spanningtree'] = [
-                            jointmap[j] for j in mechanismdata['joints']['spanningtree']
-                        ]
-                        root['submechanism/active'] = [
-                            jointmap[j] for j in mechanismdata['joints']['active']
-                        ]
-                        root['submechanism/independent'] = [
-                            jointmap[j] for j in mechanismdata['joints']['independent']
-                        ]
-                        root['submechanism/root'] = root
-                        root['submechanism/freeloader'] = freeloader_joints
-                    except KeyError:
-                        log("Incomplete joint definition.")
+                    for j in mechanismdata['joints']['spanningtree']:
+                        if j not in jointmap:
+                            self.executeMessage.append("Define joints")
+                            return {'FINISHED'}
+                    if len(jointmap) == size: # Every joint is assigned a different type for this submechanism
+                        # assign attributes
+                        parameters = {
+                            'type': mechanismdata['type'],
+                            #'subtype': context.window_manager.mechanismpreview,
+                            'name': self.mechanism_name,
+                            'contextual_name': self.contextual_name,
+                            #'jointnames': list(jointmap.values()), # Is autogenerated
+                            'jointnames_spanningtree': [
+                                jointmap[j] for j in mechanismdata['joints']['spanningtree']
+                            ],
+                            'jointnames_active': [
+                                jointmap[j] for j in mechanismdata['joints']['active']
+                            ],
+                            'jointnames_independent': [
+                                jointmap[j] for j in mechanismdata['joints']['independent']
+                            ],
+                        }
+
+                        subm = hyrodyn.Submechanism(**parameters)
+                        root = phobos2blender.createSubmechanism(submechanism = subm, linkobj=base)
+                    else:
+                        self.executeMessage.append("Define joints")
+                        return {'FINISHED'}
                 else:
-                    log(
-                        'Number of joints not valid for selected submechanism type: '
-                        + context.window_manager.mechanismpreview,
-                        'ERROR',
-                    )
+                    self.executeMessage.append("Got {} joints, {} required".format(len(self.joints), size))
                     return {'FINISHED'}
-            root['submechanism/name'] = self.mechanism_name
+            else:  # No submechanism selected
+                return {'FINISHED'}
         else:
-            log('Submechanism definition requires valid name.', 'WARNING')
+            self.executeMessage.append("Give your submechanism a recognizable name")
+            self.executeMessage.append("Contextual name has to be unique")
+            return {'FINISHED'}
+        self.executeMessage.append("Submechanism assigned")
         return {'FINISHED'}
 
 
-# [TODO v2.0.0] REVIEW this
 class SelectSubmechanism(Operator):
     """Select all objects of a submechanism"""
 
     bl_idname = "phobos.select_submechanism"
     bl_label = "Select Submechanism"
     bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def get_submechanism_roots_static(cls, context):
+        """
+
+        Args:
+          context:
+
+        Returns:
+
+        """
+        return bUtils.compileEnumPropertyList(
+            [r['name'] for r in context.scene.objects if r.phobostype == "submechanism"]
+        )
 
     def get_submechanism_roots(self, context):
         """
@@ -3083,9 +3132,7 @@ class SelectSubmechanism(Operator):
         Returns:
 
         """
-        return bUtils.compileEnumPropertyList(
-            [r['submechanism/name'] for r in sUtils.getSubmechanismRoots()]
-        )
+        return SelectSubmechanism.get_submechanism_roots_static(context)
 
     submechanism : EnumProperty(
         name="Submechanism",
@@ -3104,7 +3151,7 @@ class SelectSubmechanism(Operator):
 
         """
         # make sure we have a root object with mechanisms
-        if not sUtils.getSubmechanismRoots():
+        if not cls.get_submechanism_roots_static(context):
             return False
         return True
 
@@ -3142,94 +3189,15 @@ class SelectSubmechanism(Operator):
         Returns:
 
         """
-        root = sUtils.getObjectByProperty('submechanism/name', self.submechanism)
-        jointlist = root['submechanism/spanningtree']
+        root = sUtils.getObjectByProperty('contextual_name', self.submechanism)
+        jointIDs = root['jointnames_spanningtree']
+        jointlist = [
+            sUtils.getObjectByProperty('joint/name', id) for id in jointIDs
+        ]
         sUtils.selectObjects([root] + jointlist, clear=True, active=0)
         return {'FINISHED'}
 
 
-# [TODO v2.0.0] REVIEW this
-class DeleteSubmechanism(Operator):
-    """Delete an existing submechanism"""
-
-    bl_idname = "phobos.delete_submechanism"
-    bl_label = "Delete Submechanism"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def get_submechanism_roots(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        return bUtils.compileEnumPropertyList(
-            [r['submechanism/name'] for r in sUtils.getSubmechanismRoots()]
-        )
-
-    submechanism : EnumProperty(
-        name="Submechanism", description="submechanism to remove", items=get_submechanism_roots
-    )
-
-    @classmethod
-    def poll(cls, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        # make sure we have a root object with mechanisms
-        if not sUtils.getSubmechanismRoots():
-            return False
-        return True
-
-    def invoke(self, context, event):
-        """
-
-        Args:
-          context:
-          event:
-
-        Returns:
-
-        """
-        return context.window_manager.invoke_props_dialog(self, width=300)
-
-    def draw(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        layout = self.layout
-
-        layout.prop(self, 'submechanism')
-
-    def execute(self, context):
-        """
-
-        Args:
-          context:
-
-        Returns:
-
-        """
-        root = sUtils.getObjectByProperty('submechanism/name', self.submechanism)
-        jointlist = root['submechanism/spanningtree']
-        objects = [root] + jointlist
-        sUtils.selectObjects(objects, clear=True, active=0)
-
-        for obj in objects:
-            eUtils.removeProperties(obj, ['submechanism*'])
-        return {'FINISHED'}
 
 
 # [TODO v2.0.0] REVIEW this
@@ -3526,6 +3494,7 @@ class ParentOperator(Operator):
 
 
 classes = (
+    DynamicProperty,
     SafelyRemoveObjectsFromSceneOperator,
     MoveToSceneOperator,
     SortObjectsToLayersOperator,
@@ -3554,7 +3523,6 @@ classes = (
     DefineSubmodel,
     AssignSubmechanism,
     SelectSubmechanism,
-    DeleteSubmechanism,
     MergeLinks,
     SetModelRoot,
     # [TODO v2.1.0] Make this work again
@@ -3568,7 +3536,6 @@ classes = (
 def register():
     """TODO Missing documentation"""
     print("Registering operators.editing...")
-    bpy.utils.register_class(DynamicProperty)
     for classdef in classes:
         bpy.utils.register_class(classdef)
 
@@ -3576,6 +3543,5 @@ def register():
 def unregister():
     """TODO Missing documentation"""
     print("Unregistering operators.editing...")
-    bpy.utils.unregister_class(DynamicProperty)
     for classdef in classes:
         bpy.utils.unregister_class(classdef)

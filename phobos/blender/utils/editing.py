@@ -258,7 +258,7 @@ def getNearestCommonParent(objs):
                 in_all = False
                 break
     if not in_all:  # this is only true if none of the branches set it to False and broke afterwards
-        return None
+        return None, []
     else:
         inter_objects.remove(parent)
         return parent, list(inter_objects)
@@ -665,7 +665,7 @@ def removeProperties(obj, props, recursive=False):
         if prop in obj:
             del obj[prop]
         elif prop[-1] == '*':
-            for objprop in obj.keys():
+            for objprop in list(obj.keys()):
                 if objprop.startswith(prop[:-1]):
                     del obj[objprop]
 

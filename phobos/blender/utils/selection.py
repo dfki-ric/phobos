@@ -325,6 +325,29 @@ def selectObjects(objects, clear=True, active=-1):
         bpy.context.view_layer.objects.active = objects[active]
 
 
+storedSelection = []
+storedActive = -1
+
+def storeSelectedObjects():
+    global storedSelection, storedActive
+    storedSelection = list(bpy.context.selected_objects)
+    try:
+        storedActive = storedSelection.index(bpy.context.view_layer.objects.active)
+    except ValueError:
+        storedActive = -1
+    print("Storage:")
+    print(storedSelection)
+    print(storedActive)
+
+
+def restoreSelectedObjects():
+    global storedSelection, storedActive
+    print("Retrieve:")
+    print(storedSelection)
+    print(storedActive)
+    selectObjects(storedSelection, active=storedActive)
+
+
 def getObjectByName(name, phobostypes=()):
     """Returns list of objects that either have a specific *name* or contain a custom
     name property with that name.
@@ -436,23 +459,6 @@ def getObjectByProperty(property, value):
             candidate = obj
             break
     return candidate
-
-
-def getSubmechanismRoots(selection_only=False):
-    """
-
-    Args:
-      selection_only: (Default value = False)
-
-    Returns:
-
-    """
-    if selection_only:
-        objs = bpy.context.selected_objects
-    else:
-        objs = bpy.context.scene.objects
-
-    return [obj for obj in objs if 'submechanism/name' in obj]
 
 
 def getSubmechanismRootForJoint(jointobj):

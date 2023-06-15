@@ -129,7 +129,10 @@ def createGeometry(viscol, geomsrc, linkobj=None):
     # place geometric object relative to its parent link
     if linkobj:
         eUtils.parentObjectsTo(newgeom, linkobj)
-        newgeom.matrix_local = mathutils.Matrix(viscol.joint_relative_origin.to_matrix())
+        newgeom.matrix_local = mathutils.Matrix(
+            viscol.joint_relative_origin.to_matrix()
+            if viscol._related_robot_instance is not None and viscol.relative_to != linkobj.name else viscol.origin.to_matrix()
+        )
 
     bUtils.sortObjectToCollection(newgeom, cname=geomsrc)
     # # make object smooth
@@ -356,7 +359,6 @@ def createSensor(sensor: sensor_representations.Sensor, linkobj=None):
         'box',
         [1, 1, 1],
         None,
-        #pmaterial=defs.def_settings['sensors'][sensor.blender_type]['material'], #TODO
         phobostype='sensor'
     )
 
@@ -398,6 +400,69 @@ def createSensor(sensor: sensor_representations.Sensor, linkobj=None):
     # select the new sensor
     sUtils.selectObjects([newsensor], clear=True, active=0)
     return newsensor
+
+def createSubmechanism(submechanism, linkobj=None):
+    bUtils.toggleLayer('submechanism', value=True)
+
+    newsubm = bUtils.createPrimitive(
+        submechanism.contextual_name,
+        'box',
+        [0.05, 0.05, 0.05],
+        None,
+        phobostype='submechanism'
+    )
+
+    # TODO: Create submechanism objects
+    # use resource name provided as: "resource:whatever_name"
+    resource_obj = ioUtils.getResource(['submechanism','default'])
+    if resource_obj:
+        log("Assigned resource mesh and materials to new sensor object.", 'DEBUG')
+        newsubm.data = resource_obj.data
+        newsubm.scale = (1, 1, 1)
+    else:
+        log("Could not use resource mesh for submechanism. Default cube used instead.", 'WARNING')
+
+    # assign the parent if available
+    if linkobj is not None:
+        eUtils.parentObjectsTo(newsubm, nUtils.getObjectName(linkobj) if type(linkobj) == str else linkobj)
+        # newsensor.matrix_local = sensor.origin.to_matrix() #TODO
+
+    # set sensor properties
+    newsubm.phobostype = 'submechanism'
+
+    # Handle submechanism keys
+    for prop in reserved_keys.SUBMECHANISM_KEYS:
+        attr = getattr(submechanism, prop)
+        if type(attr) == str:
+            value = attr
+        elif type(attr) == dict:
+            value = {}
+            for key, joint in attr.items():
+                value[key] = sUtils.getObjectByName(str(joint))
+        elif attr is not None: # Is a list
+            value = [sUtils.getObjectByName(str(j)) for j in attr]
+        else:
+            log(f"Unknown property type {type(attr)}", "WARNING")
+            continue
+        newsubm[f"{prop}"] = value
+
+    # write generic custom properties
+    for prop, value in submechanism.to_yaml().items():
+        if prop not in reserved_keys.SUBMECHANISM_KEYS:
+            if type(value) == dict:
+                for k, v in value.items():
+                    newsubm[f"{prop}/{k}"] = v
+            else:
+                newsubm[f"{prop}"] = value
+
+    # throw warning if type is not known
+    # TODO check if type is known
+    # TODO we need to link this error to the type specifications
+
+
+    # select the new submechanism
+    #sUtils.selectObjects([newsubm], clear=True, active=0)
+    return newsubm
 
 
 def createMotor(motor: representation.Motor, linkobj: bpy.types.Object):

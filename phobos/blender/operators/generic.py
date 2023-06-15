@@ -99,12 +99,35 @@ class DynamicProperty(PropertyGroup):
     INT = 2
     BOOL = 3
     FLOAT = 4
+    DICT = 5
     valueType : bpy.props.IntProperty()
 
     isEnabled : bpy.props.BoolProperty()
     isEnabledOption : bpy.props.BoolProperty() # Whether this property can be disabled
 
-    def getValue(self):
+    dictName: bpy.props.StringProperty()
+
+    def assignParent(self, name):
+        """
+        Assign a parent if this property is part of a dict
+
+        Args:
+            name: Parent's name
+
+        Returns:
+
+        """
+        self.dictName = name
+
+    def getValue(self, properties=[]):
+        """
+        Args:
+            properties: List of all DynamicProperties. Pass this to a dict property.
+            Allows it to collect the data
+
+        Returns: This property's value
+
+        """
         if self.valueType == self.INT:
             return self.intProp
         elif self.valueType == self.BOOL:
@@ -113,6 +136,22 @@ class DynamicProperty(PropertyGroup):
             return self.stringProp
         elif self.valueType == self.FLOAT:
             return self.floatProp
+        elif self.valueType == self.DICT:
+            result = {}
+            for prop in properties:
+                if prop.dictName == self.name:
+                    result[prop.name] = prop.getValue()
+            return result
+
+    def isDictElement(self):
+        """
+
+        Args:
+
+        Returns: True if this property is part of a dict, False otherwise
+
+        """
+        return len(self.dictName) > 0
 
     def allowDisabling(self):
         """
@@ -155,6 +194,8 @@ class DynamicProperty(PropertyGroup):
             self.valueType = self.INT
             self.isEnabled = False
             self.allowDisabling()
+        elif isinstance(value, dict):
+            self.valueType = self.DICT
         else:
             print("DynamicProperty - Unknown type:")
             print(type(value))
@@ -163,6 +204,7 @@ class DynamicProperty(PropertyGroup):
 
         self.name = name
 
+    @staticmethod
     def assignDict(addfunc, dictionary, ignore=[]):
         """
 
@@ -179,13 +221,16 @@ class DynamicProperty(PropertyGroup):
             if propname in ignore:
                 continue
 
-            # skip subcategories
-            if isinstance(dictionary[propname], dict):
-                unsupported[propname] = dictionary[propname]
-                continue
-
             subprop = addfunc()
             subprop.assignValue(propname, dictionary[propname])
+
+            # add subcategories
+            if isinstance(dictionary[propname], dict):
+                unsupported[propname] = dictionary[propname]
+                for name, value in dictionary[propname].items():
+                    dictprop = addfunc()
+                    dictprop.assignValue(name, value)
+                    dictprop.assignParent(propname)
 
         return unsupported
 
@@ -200,12 +245,15 @@ class DynamicProperty(PropertyGroup):
 
         """
         if self.isEnabledOption:
-            line = layout.split(factor=0.2)
+            line = layout.split(factor=0.1)
             line.prop(self, 'isEnabled', text="")
             row = line.row()
             row.enabled = self.isEnabled
         else:
             row = layout
+
+        if len(self.dictName) > 0:
+            row.separator(factor=0.03)
 
         if self.valueType == self.INT:
             row.prop(self, 'intProp', text=name)
@@ -215,6 +263,25 @@ class DynamicProperty(PropertyGroup):
             row.prop(self, 'stringProp', text=name)
         elif self.valueType == self.FLOAT:
             row.prop(self, 'floatProp', text=name)
+        elif self.valueType == self.DICT:
+            row.label(text=name+":")
+
+    @staticmethod
+    def collectDict(properties):
+        """
+
+        Args:
+          properties (list of DynamicProperty):
+
+        Returns:
+          A dict like the one passed to assignDict with the data the user changed
+
+        """
+        result = {}
+        for prop in properties:
+            if prop.isEnabled and not prop.isDictElement():
+                result[prop.name] = prop.getValue(properties)
+        return result
 
 
 def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops=[]):
