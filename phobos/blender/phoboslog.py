@@ -10,6 +10,7 @@
 # -------------------------------------------------------------------------------
 
 import inspect
+import time
 from datetime import datetime
 from enum import Enum
 from types import SimpleNamespace
@@ -172,8 +173,14 @@ def find_calling_operator(frame):
     else:
         return None
 
-
-def ErrorMessageWithBox(message = "", title = "Error", icon = 'ERROR', reporter=None):
+recentMessageBoxes = {}
+def ErrorMessageWithBox(message = "", title = "Error", icon = 'ERROR', reporter=None, silentFor=0):
+    if silentFor > 0:
+        if message in recentMessageBoxes:
+            timePassed = time.time()-recentMessageBoxes[message]
+            if timePassed < silentFor:
+                return
+        recentMessageBoxes[message] = time.time()
     def draw(self, context):
         self.layout.label(text=message)
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)

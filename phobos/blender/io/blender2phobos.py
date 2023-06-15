@@ -463,34 +463,37 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
                 annotations[k1][k2] = v
-
-    return representation.Joint(
-        name=values.get("joint/name", obj.name),
-        parent=parent.name,
-        child=obj.name,
-        joint_type=values["joint/type"],
-        axis=list(values["joint/axis"]) if values["joint/type"] in ["revolute", "prismatic", "continuous"] else None,
-        origin=deriveObjectPose(obj),
-        limit=representation.JointLimit(
-            effort=values.get("joint/limits/effort", None),
-            velocity=values.get("joint/limits/velocity", None),
-            lower=values.get("joint/limits/lower", None),
-            upper=values.get("joint/limits/upper", None)
-        ) if any([k.startswith("joint/limits/") for k in values.keys()]) else None,
-        dynamics=representation.JointDynamics(
-            damping=values.get("joint/dynamics/damping", None),
-            friction=values.get("joint/dynamics/friction", None),
-            spring_stiffness=values.get("joint/dynamics/spring_stiffness", None),
-            spring_reference=values.get("joint/dynamics/spring_reference", None)
-        ) if any([k.startswith("joint/dynamics/") for k in values.keys()]) else None,
-        # [TODO v2.1.0] Add possibility to depend on multiple joints
-        mimic=representation.JointMimic(
-            joint=values["joint/mimic/joint"],
-            multiplier=values["joint/mimic/multiplier"],
-            offset=values["joint/mimic/offset"]
-        ) if "joint/mimic/joint" in values.keys() else None,
-        motor=values.get("motor/name", None)
-    )
+    try:
+        return representation.Joint(
+            name=values.get("joint/name", obj.name),
+            parent=parent.name,
+            child=obj.name,
+            joint_type=values["joint/type"],
+            axis=list(values["joint/axis"]) if values["joint/type"] in ["revolute", "prismatic", "continuous"] else None,
+            origin=deriveObjectPose(obj),
+            limit=representation.JointLimit(
+                effort=values.get("joint/limits/effort", None),
+                velocity=values.get("joint/limits/velocity", None),
+                lower=values.get("joint/limits/lower", None),
+                upper=values.get("joint/limits/upper", None)
+            ) if any([k.startswith("joint/limits/") for k in values.keys()]) else None,
+            dynamics=representation.JointDynamics(
+                damping=values.get("joint/dynamics/damping", None),
+                friction=values.get("joint/dynamics/friction", None),
+                spring_stiffness=values.get("joint/dynamics/spring_stiffness", None),
+                spring_reference=values.get("joint/dynamics/spring_reference", None)
+            ) if any([k.startswith("joint/dynamics/") for k in values.keys()]) else None,
+            # [TODO v2.1.0] Add possibility to depend on multiple joints
+            mimic=representation.JointMimic(
+                joint=values["joint/mimic/joint"],
+                multiplier=values["joint/mimic/multiplier"],
+                offset=values["joint/mimic/offset"]
+            ) if "joint/mimic/joint" in values.keys() else None,
+            motor=values.get("motor/name", None)
+        )
+    except:
+        ErrorMessageWithBox(message="Cannot derive joint {}. Try operator [Define Joint(s)] on link {}".
+                            format(values.get("joint/name", obj.name), obj.name), silentFor=120)
 
 
 def deriveInterface(obj):
