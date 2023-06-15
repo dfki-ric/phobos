@@ -778,7 +778,7 @@ class XMLRobot(Representation):
             leaves = [l for l in leaves if not any([s in chains_to_leave[l] for s in stop])] + stop
         return leaves
 
-    def get_transformation(self, end, start=None):
+    def get_transformation(self, end, start=None, end_type=None):
         """
         Returns the transformation from start to end
         :param end: the end link of the transformation
@@ -792,12 +792,15 @@ class XMLRobot(Representation):
         else:
             root2start = self.get_transformation(start)
 
-        if str(start) == str(end):
+        if start == end:
             return np.identity(4)
-
-        frame = self.get_link(end)
+        frame = None
+        l_frame = self.get_link(end)
+        j_frame = self.get_joint(end)
+        if j_frame is not None:
+            frame = j_frame
         if frame is None:
-            frame = self.get_joint(end)
+            frame = l_frame
         if frame is None:
             raise AssertionError(f"There is neither a joint nor a link with name {end}")
 
