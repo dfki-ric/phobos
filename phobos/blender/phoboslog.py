@@ -16,7 +16,7 @@ from types import SimpleNamespace
 
 import bpy
 
-import phobos.blender.display as display
+from . import display
 
 #: Levels of detail for the logging information.
 LOGLEVELS = ('NONE', 'ERROR', 'WARNING', 'INFO', 'DEBUG')
@@ -171,3 +171,21 @@ def find_calling_operator(frame):
             break
     else:
         return None
+
+
+def ErrorMessageWithBox(message = "", title = "Phobos Error", icon = 'ERROR', reporter=None):
+    def draw(self, context):
+        self.layout.label(text=message)
+    bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
+    log(message, "ERROR")
+    if reporter:
+        reporter.report({"ERROR"}, "Phobos: "+message)
+
+
+def WarnMessageWithBox(message = "", title = "Phobos Warning", icon = 'ERROR', reporter=None):
+    def draw(self, context):
+        self.layout.label(text=message)
+    bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
+    log(message, "WARNING")
+    if reporter:
+        reporter.report({"WARNING"}, "Phobos: "+message)

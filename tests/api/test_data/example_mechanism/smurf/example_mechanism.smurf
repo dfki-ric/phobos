@@ -1,0 +1,13 @@
+{
+  "description": "",
+  "files": [
+    "../urdf/example_mechanism.urdf",
+    "example_mechanism_collisions.yml",
+    "example_mechanism_joints.yml",
+    "example_mechanism_links.yml",
+    "example_mechanism_materials.yml",
+    "example_mechanism_sensors.yml",
+    "example_mechanism_submechanisms.yml"
+  ],
+  "modelname": "example_mechanism"
+}

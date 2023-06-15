@@ -13,23 +13,17 @@
 Contains the Blender operators used to edit/add poses for Phobos models.
 """
 
-import sys
-import inspect
-
-import bpy
-import blf
 import bgl
-from bpy.props import StringProperty, FloatProperty, FloatVectorProperty, EnumProperty
+import blf
+import bpy
+from bpy.props import StringProperty, EnumProperty
 from bpy.types import Operator
-from phobos.blender.phoboslog import log
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.model.poses as poses
-import phobos.blender.model.models as models
 
-# FIXME: this is ugly
-current_robot_name = ''
+from ..model import poses as poses
+from ..utils import blender as bUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
+
 
 # this is partly redundant, but currently only needed here
 def get_robot_names(scene, context):
@@ -42,12 +36,12 @@ def get_robot_names(scene, context):
     Returns:
 
     """
-    robot_names = [(nUtils.getModelName(root),) * 3 for root in sUtils.getRootsOfSelection()]
+    robot_names = [(nUtils.getModelName(root),) * 3 for root in (sUtils.getRootsOfSelection() if sUtils.getRootsOfSelection() else sUtils.getRoots())]
     return robot_names
 
 
-# currently only needed here, no point in putting in in poses.py
-def get_pose_names(scene, context):
+# currently only needed here, no point in putting it in poses.py
+def get_pose_names(current_robot_name):
     """
 
     Args:
@@ -58,92 +52,7 @@ def get_pose_names(scene, context):
 
     """
     poselist = poses.getPoses(current_robot_name)
-    pose_items = [(pose,) * 3 for pose in poselist]
-    return pose_items
-
-
-# class StorePoseOperator2(Operator):
-#     """Store the current pose of selected links in one of the scene's robots"""
-#     bl_idname = 'phobos.store_pose2'
-#     bl_label = "Store Current Pose"
-#
-#     robot_name = EnumProperty(
-#         items=get_robot_names,
-#         name="Robot",
-#         description="Robot to store pose for"
-#     )
-#
-#     pose_name = StringProperty(
-#         name="Pose Name",
-#         default="New Pose",
-#         description="Name of new pose"
-#     )
-#
-#     @classmethod
-#     def poll(self, context):
-#         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
-#         activeModelPoseIndex = bpy.context.scene.active_ModelPose
-#         root = sUtils.isRoot(context.view_layer.objects.active)
-#         return root and bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()
-#
-#     def invoke(self, context, event):
-#         wm = context.window_manager
-#         return wm.invoke_props_dialog(self,width=300,height=100)
-#
-#     def draw(self, context):
-#         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
-#         activeModelPoseIndex = bpy.context.scene.active_ModelPose
-#         row = self.layout
-#         if modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].type == 'robot_pose':
-#             self.pose_name = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].label
-#         else:
-#             self.pose_name = "New Pose"
-#         row.prop(self, "pose_name")
-#
-#     def execute(self, context):
-#         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
-#         activeModelPoseIndex = bpy.context.scene.active_ModelPose
-#         robot_name = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name
-#         poses.storePose(robot_name, self.pose_name)
-#         bpy.ops.scene.reload_models_and_poses_operator()
-#         newPose = modelsPosesColl.add()
-#         newPose.parent = robot_name
-#         newPose.name = robot_name + '_' + self.pose_name
-#         newPose.label = self.pose_name
-#         # TODO delete me?
-#         #newPose.path = pose["robotpath"]
-#         newPose.type = "robot_pose"
-#         newPose.robot_name = robot_name
-#         newPose.icon = "X_VEC"
-#         return {'FINISHED'}
-#
-#
-# class LoadPoseOperator2(Operator):
-#     """Load a previously stored pose for one of the scene's robots"""
-#     bl_idname = 'phobos.load_pose2'
-#     bl_label = "Load Selected Pose"
-#
-#     @classmethod
-#     def poll(self, context):
-#         result = False
-#         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
-#         activeModelPoseIndex = bpy.context.scene.active_ModelPose
-#         root = sUtils.isRoot(context.view_layer.objects.active)
-#         if root and \
-#            (bpy.data.images[activeModelPoseIndex].name in modelsPosesColl.keys()) and \
-#            (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].robot_name == root["model/name"]) and \
-#            (modelsPosesColl[bpy.data.images[activeModelPoseIndex].name].type == 'robot_pose'):
-#             result = True
-#         return result
-#
-#     def execute(self, context):
-#         modelsPosesColl = bUtils.getPhobosPreferences().models_poses
-#         activeModelPoseIndex = bpy.context.scene.active_ModelPose
-#         modelPose = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name]
-#         root = sUtils.getRoot(context.view_layer.objects.active)
-#         bpy.context.view_layer.objects.active = root
-#         poses.loadPose(modelPose.robot_name, modelPose.label)
-#         return {'FINISHED'}
+    return poselist
 
 
 class StorePoseOperator(Operator):
@@ -153,11 +62,19 @@ class StorePoseOperator(Operator):
     bl_label = "Store Current Pose"
     bl_options = {'REGISTER', 'UNDO'}
 
+    def updatePoseName(self, context):
+        self.pose_name = self.pose_name.replace(" ", "_").replace(":", "_").replace("'", "_").replace('"', "_")
+
     robot_name : EnumProperty(
         items=get_robot_names, name="Robot", description="Robot to store pose for"
     )
 
-    pose_name : StringProperty(name="Pose Name", default="New Pose", description="Name of new pose")
+    pose_name : StringProperty(
+        name="Pose Name",
+        default="",
+        description="Name of new pose",
+        update=updatePoseName
+    )
 
     def execute(self, context):
         """
@@ -180,12 +97,15 @@ class LoadPoseOperator(Operator):
     bl_label = "Load Pose"
     bl_options = {'REGISTER', 'UNDO'}
 
+    def getPoseNames(self, context):
+        return ((p,)*3 for p in ["No pose selected"] + get_pose_names(self.robot_name))
+
     robot_name : EnumProperty(
         items=get_robot_names, name="Robot Name", description="Robot to load a pose for"
     )
 
     pose_name : EnumProperty(
-        items=get_pose_names, name="Pose Name", description="Name of pose to load"
+        items=getPoseNames, name="Pose Name", description="Name of pose to load"
     )
 
     def execute(self, context):
@@ -197,9 +117,41 @@ class LoadPoseOperator(Operator):
         Returns:
 
         """
-        global current_robot_name
-        current_robot_name = self.robot_name
-        poses.loadPose(self.robot_name, self.pose_name)
+        if self.pose_name != "No pose selected":
+            poses.loadPose(self.robot_name, self.pose_name)
+        return {'FINISHED'}
+
+
+class DeletePoseOperator(Operator):
+    # [ToDo v2.1.0] make this a dialog like DissolveLink
+    """Load a previously stored pose for one of the scene's robots"""
+
+    bl_idname = 'phobos.delete_pose'
+    bl_label = "Delete Pose"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def getPoseNames(self, context):
+        return ((p,)*3 for p in ["No pose selected"] + get_pose_names(self.robot_name))
+
+    robot_name : EnumProperty(
+        items=get_robot_names, name="Robot Name", description="Robot to load a pose for"
+    )
+
+    pose_name : EnumProperty(
+        items=getPoseNames, name="Pose Name", description="Name of pose to load"
+    )
+
+    def execute(self, context):
+        """
+
+        Args:
+          context:
+
+        Returns:
+
+        """
+        if self.pose_name != "No pose selected":
+            poses.deletePose(self.robot_name, self.pose_name)
         return {'FINISHED'}
 
 
@@ -398,6 +350,7 @@ class DrawPreviewOperator(bpy.types.Operator):
 classes = (
     StorePoseOperator,
     LoadPoseOperator,
+    DeletePoseOperator,
     ChangePreviewOperator,
     DrawPreviewOperator,
 )

@@ -1,0 +1,49 @@
+<robot name="floatingbase">
+  <link name="base_link">
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+      <mass value="0.0"/>
+      <inertia ixx="0.0" ixy="0.0" ixz="0.0" iyy="0.0" iyz="0.0" izz="0.0"/>
+    </inertial>
+  </link>
+  <joint name="FreeFlyerRX" type="revolute">
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <axis xyz="1.0 0.0 0.0"/>
+    <parent link="FreeFlyerZ_Link"/>
+    <child link="FreeFlyerRX_Link"/>
+    <limit effort="0.0" lower="-1.57" upper="1.57" velocity="0.0"/>
+  </joint>
+  <link name="FreeFlyerRX_Link"/>
+  <joint name="FreeFlyerRY" type="revolute">
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <axis xyz="0.0 1.0 0.0"/>
+    <parent link="FreeFlyerRX_Link"/>
+    <child link="FreeFlyerRY_Link"/>
+    <limit effort="0.0" lower="-1.57" upper="1.57" velocity="0.0"/>
+  </joint>
+  <link name="FreeFlyerRY_Link"/>
+  <joint name="FreeFlyerX" type="prismatic">
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <axis xyz="1.0 0.0 0.0"/>
+    <parent link="base_link"/>
+    <child link="FreeFlyerX_Link"/>
+    <limit effort="0.0" lower="-1.57" upper="1.57" velocity="0.0"/>
+  </joint>
+  <link name="FreeFlyerX_Link"/>
+  <joint name="FreeFlyerY" type="prismatic">
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <axis xyz="0.0 1.0 0.0"/>
+    <parent link="FreeFlyerX_Link"/>
+    <child link="FreeFlyerY_Link"/>
+    <limit effort="0.0" lower="-1.57" upper="1.57" velocity="0.0"/>
+  </joint>
+  <link name="FreeFlyerY_Link"/>
+  <joint name="FreeFlyerZ" type="prismatic">
+    <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0"/>
+    <axis xyz="0.0 0.0 1.0"/>
+    <parent link="FreeFlyerY_Link"/>
+    <child link="FreeFlyerZ_Link"/>
+    <limit effort="0.0" lower="-1.57" upper="1.57" velocity="0.0"/>
+  </joint>
+  <link name="FreeFlyerZ_Link"/>
+</robot>

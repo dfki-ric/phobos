@@ -13,89 +13,31 @@
 Contains all functions to model inertias within Blender.
 """
 
-import math
-import numpy
-import bpy
 import mathutils
-import phobos.blender.defs as defs
-from phobos.blender.phoboslog import log
-import phobos.blender.utils.general as gUtils
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.editing as eUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.naming as nUtils
-from phobos.blender.model.geometries import deriveGeometry
-from phobos.blender.model.poses import deriveObjectPose
-from phobos.blender.utils.validation import validate
+import numpy
+import numpy as np
 
+from .. import reserved_keys
+from ..phoboslog import log
+from ..utils import general as gUtils
+from ..utils import selection as sUtils
+from ..utils.io import getExpSettings
+from ..utils.validation import validate, validateInertiaData
 
-@validate('inertia_data')
-def createInertial(inertialdict, obj, size=0.03, errors=None, adjust=False, logging=False):
-    """Creates the Blender representation of a given inertial provided a dictionary.
-
-    Args:
-      inertialdict(dict): intertial data
-      obj: 
-      size: (Default value = 0.03)
-      errors: (Default value = None)
-      adjust: (Default value = False)
-      logging: (Default value = False)
-
-    Returns:
-      : bpy_types.Object -- newly created blender inertial object
-
-    """
-    if errors and not adjust:
-        log('Can not create inertial object.', 'ERROR')
-
-    try:
-        origin = mathutils.Vector(inertialdict['pose']['translation'])
-    except KeyError:
-        origin = mathutils.Vector()
-
-    # create new inertial object
-    name = nUtils.getUniqueName('inertial_' + nUtils.getObjectName(obj), bpy.data.objects)
-    inertialobject = bUtils.createPrimitive(
-        name,
-        'box',
-        (size,) * 3,
-        defs.layerTypes["inertial"],
-        pmaterial='phobos_inertial',
-        phobostype='inertial',
-    )
-    sUtils.selectObjects((inertialobject,), clear=True, active=0)
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
-
-    # set position according to the parent link
-    inertialobject.matrix_world = obj.matrix_world
-    inertialobject.location[0] += origin[0]
-    inertialobject.location[1] += origin[1]
-    inertialobject.location[2] += origin[2]
-    parent = obj
-    if parent.phobostype != 'link':
-        parent = sUtils.getEffectiveParent(obj, ignore_selection=True)
-    eUtils.parentObjectsTo(inertialobject, parent)
-
-    # position and parent the inertial object relative to the link
-    # inertialobject.matrix_local = mathutils.Matrix.Translation(origin)
-    sUtils.selectObjects((inertialobject,), clear=True, active=0)
-    #bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
-
-    # add properties to the object
-    for prop in ('mass', 'inertia'):
-        inertialobject['inertial/' + prop] = inertialdict[prop]
-    return inertialobject
+from ...io import representation
+from ...utils.inertia import calculateBoxInertia, calculateCylinderInertia, calculateSphereInertia, \
+    calculateMeshInertia
 
 
 @validate('geometry_type')
-def calculateInertia(obj, mass, geometry_dict=None, errors=None, adjust=False, logging=False):
+def calculateInertia(obj, mass, geometry, errors=None, adjust=False, logging=False):
     """Calculates the inertia of an object using the specified mass and
        optionally geometry.
 
     Args:
       obj(bpy.types.Object): object to calculate inertia from
       mass(float): mass of object
-      geometry_dict(dict, optional): geometry part of the object dictionary
+      geometry(representation.Geometry instance, optional): geometry part of the object dictionary
     Returns(tuple): (Default value = None)
       geometry_dict(dict, optional): geometry part of the object dictionary
     Returns(tuple):
@@ -113,345 +55,24 @@ def calculateInertia(obj, mass, geometry_dict=None, errors=None, adjust=False, l
         return None
 
     inertia = None
-    if not geometry_dict:
-        geometry = deriveGeometry(obj)
 
     # Get the rotation of the object
-    object_rotation = obj.rotation_euler.to_matrix()
+    object_rotation = np.array(obj.rotation_euler.to_matrix())
 
-    if geometry['type'] == 'box':
-        inertia = calculateBoxInertia(mass, geometry['size'])
-    elif geometry['type'] == 'cylinder':
-        inertia = calculateCylinderInertia(mass, geometry['radius'], geometry['length'])
-    elif geometry['type'] == 'sphere':
-        inertia = calculateSphereInertia(mass, geometry['radius'])
-    elif geometry['type'] == 'mesh':
+    if isinstance(geometry, representation.Box):
+        inertia = calculateBoxInertia(mass, geometry.size)
+    elif isinstance(geometry, representation.Cylinder):
+        inertia = calculateCylinderInertia(mass, geometry.radius, geometry.length)
+    elif isinstance(geometry, representation.Sphere):
+        inertia = calculateSphereInertia(mass, geometry.radius)
+    elif isinstance(geometry, representation.Mesh):
         sUtils.selectObjects((obj,), clear=True, active=0)
         inertia = calculateMeshInertia(mass, obj.data, scale=obj.scale)
 
     # Correct the inertia orientation to account for Cylinder / mesh orientation issues
-    inertia = object_rotation * inertiaListToMatrix(inertia) * object_rotation.transposed()
+    inertia = object_rotation.dot(inertiaListToMatrix(inertia)).dot(object_rotation.transpose())
 
     return inertiaMatrixToList(inertia)
-
-
-def calculateBoxInertia(mass, size):
-    """Returns upper diagonal of inertia tensor of a box as tuple.
-
-    Args:
-      mass(float): The box' mass.
-      size(iterable): The box' size.
-
-    Returns:
-      : tuple(6)
-
-    """
-    i = mass / 12
-    ixx = i * (size[1] ** 2 + size[2] ** 2)
-    ixy = 0
-    ixz = 0
-    iyy = i * (size[0] ** 2 + size[2] ** 2)
-    iyz = 0
-    izz = i * (size[0] ** 2 + size[1] ** 2)
-    return ixx, ixy, ixz, iyy, iyz, izz
-
-
-def calculateCylinderInertia(mass, r, h):
-    """Returns upper diagonal of inertia tensor of a cylinder as tuple.
-
-    Args:
-      mass(float): The cylinders mass.
-      r(float): The cylinders radius.
-      h(float): The cylinders height.
-
-    Returns:
-      : tuple(6)
-
-    """
-    i = mass / 12 * (3 * r ** 2 + h ** 2)
-    ixx = i
-    ixy = 0
-    ixz = 0
-    iyy = i
-    iyz = 0
-    izz = 0.5 * mass * r ** 2
-    return ixx, ixy, ixz, iyy, iyz, izz
-
-
-def calculateSphereInertia(mass, r):
-    """Returns upper diagonal of inertia tensor of a sphere as tuple.
-
-    Args:
-      mass(float): The spheres mass.
-      r(float): The spheres radius.
-
-    Returns:
-      : tuple(6)
-
-    """
-    i = 0.4 * mass * r ** 2
-    ixx = i
-    ixy = 0
-    ixz = 0
-    iyy = i
-    iyz = 0
-    izz = i
-    return ixx, ixy, ixz, iyy, iyz, izz
-
-
-def calculateEllipsoidInertia(mass, size):
-    """Returns upper diagonal of inertia tensor of an ellipsoid as tuple.
-
-    Args:
-      mass(float): The ellipsoids mass.
-      size: The ellipsoids size.
-
-    Returns:
-      : tuple(6)
-
-    """
-    i = mass / 5
-    ixx = i * (size[1] ** 2 + size[2] ** 2)
-    ixy = 0
-    ixz = 0
-    iyy = i * (size[0] ** 2 + size[2] ** 2)
-    iyz = 0
-    izz = i * (size[0] ** 2 + size[1] ** 2)
-    return ixx, ixy, ixz, iyy, iyz, izz
-
-
-def calculateMeshInertia(mass, data, scale=None):
-    """Calculates and returns the inertia tensor of arbitrary mesh objects.
-
-    Implemented after the general idea of 'Finding the Inertia Tensor of a 3D Solid Body,
-    Simply and Quickly' (2004) by Jonathan Blow (1) with formulas for tetrahedron inertia
-    from 'Explicit Exact Formulas for the 3-D Tetrahedron Inertia Tensor in Terms of its
-    Vertex Coordinates' (2004) by F. Tonon. (2). The latter has an issue, according the
-    element order of the inertia tensor: b' and c' are exchanged. According to 'Technische
-    Mechanik 3 - Dynamik' (2012) by Russel C. Hibbeler this has been fixed.
-
-    Links: (1) http://number-none.com/blow/inertia/body_i.html
-           (2) http://docsdrive.com/pdfs/sciencepublications/jmssp/2005/8-11.pdf
-           (3) https://elibrary.pearson.de/book/99.150005/9783863265151
-    Args:
-      data(bpy.types.BlendData): mesh data of the object
-      mass(float): mass of the object
-      scale(list): scale vector
-    Returns:
-      6: inertia tensor
-    """
-    if scale is None:
-        scale = [1.0, 1.0, 1.0]
-    scale = numpy.asarray(scale)
-    tetrahedra = []
-    mesh_volume = 0
-    origin = mathutils.Vector((0.0, 0.0, 0.0))
-
-    vertices = numpy.asarray([numpy.asarray(scale*v.co) for v in data.vertices])
-    prev_mode = bpy.context.mode
-    bpy.ops.object.mode_set(mode='EDIT')
-    bpy.ops.mesh.quads_convert_to_tris(quad_method='FIXED')
-    bpy.ops.object.mode_set(mode=prev_mode)
-    triangles = [[v for v in p.vertices] for p in data.polygons]
-    triangle_normals = numpy.asarray([t.normal for t in data.polygons])
-
-    com = numpy.mean(vertices, axis=0)
-    vertices = vertices - com[numpy.newaxis]
-
-    mesh_volume = 0.0
-    signs = []
-    abs_det_Js = []
-    Js = []
-
-    for triangle_idx in range(len(triangles)):
-        verts = vertices[triangles[triangle_idx]]
-        triangle_normal = triangle_normals[triangle_idx]
-        triangle_center = numpy.mean(verts, axis=0)
-        normal_angle = mathutils.Vector(triangle_center).angle(mathutils.Vector(triangle_normal))
-        sign = -1.0 if normal_angle > numpy.pi / 2.0 else 1.0
-
-        J = numpy.array([
-            [verts[0, 0], verts[0, 1], verts[0, 2], 1.0],
-            [verts[1, 0], verts[1, 1], verts[1, 2], 1.0],
-            [verts[2, 0], verts[2, 1], verts[2, 2], 1.0],
-            [0.0, 0.0, 0.0, 1.0],
-        ])
-
-        abs_det_J = numpy.linalg.det(J)
-
-        signs.append(sign)
-        abs_det_Js.append(abs_det_J)
-        Js.append(J)
-
-        volume = sign * abs_det_J / 6.0
-        mesh_volume += volume
-
-    signs = numpy.array(signs)
-    abs_det_Js = numpy.array(abs_det_Js)
-    Js = numpy.array(Js)
-
-    density = mass / mesh_volume
-
-    A = (signs
-         * density
-         * abs_det_Js
-         * (Js[:, 0, 1] ** 2
-            + Js[:, 0, 1] * Js[:, 1, 1]
-            + Js[:, 1, 1] ** 2
-            + Js[:, 0, 1] * Js[:, 2, 1]
-            + Js[:, 1, 1] * Js[:, 2, 1]
-            + Js[:, 2, 1] ** 2
-            + Js[:, 0, 1] * Js[:, 3, 1]
-            + Js[:, 1, 1] * Js[:, 3, 1]
-            + Js[:, 2, 1] * Js[:, 3, 1]
-            + Js[:, 3, 1] ** 2
-            + Js[:, 0, 2] ** 2
-            + Js[:, 0, 2] * Js[:, 1, 2]
-            + Js[:, 1, 2] ** 2
-            + Js[:, 0, 2] * Js[:, 2, 2]
-            + Js[:, 1, 2] * Js[:, 2, 2]
-            + Js[:, 2, 2] ** 2
-            + Js[:, 0, 2] * Js[:, 3, 2]
-            + Js[:, 1, 2] * Js[:, 3, 2]
-            + Js[:, 2, 2] * Js[:, 3, 2]
-            + Js[:, 3, 2] ** 2
-            )
-         / 60
-         )
-
-    B = (signs
-         * density
-         * abs_det_Js
-         * (
-                 Js[:, 0, 0] ** 2
-                 + Js[:, 0, 0] * Js[:, 1, 0]
-                 + Js[:, 1, 0] ** 2
-                 + Js[:, 0, 0] * Js[:, 2, 0]
-                 + Js[:, 1, 0] * Js[:, 2, 0]
-                 + Js[:, 2, 0] ** 2
-                 + Js[:, 0, 0] * Js[:, 3, 0]
-                 + Js[:, 1, 0] * Js[:, 3, 0]
-                 + Js[:, 2, 0] * Js[:, 3, 0]
-                 + Js[:, 3, 0] ** 2
-                 + Js[:, 0, 2] ** 2
-                 + Js[:, 0, 2] * Js[:, 1, 2]
-                 + Js[:, 1, 2] ** 2
-                 + Js[:, 0, 2] * Js[:, 2, 2]
-                 + Js[:, 1, 2] * Js[:, 2, 2]
-                 + Js[:, 2, 2] ** 2
-                 + Js[:, 0, 2] * Js[:, 3, 2]
-                 + Js[:, 1, 2] * Js[:, 3, 2]
-                 + Js[:, 2, 2] * Js[:, 3, 2]
-                 + Js[:, 3, 2] ** 2
-         )
-         / 60
-         )
-
-    C = (signs
-         * density
-         * abs_det_Js
-         * (
-                 Js[:, 0, 0] ** 2
-                 + Js[:, 0, 0] * Js[:, 1, 0]
-                 + Js[:, 1, 0] ** 2
-                 + Js[:, 0, 0] * Js[:, 2, 0]
-                 + Js[:, 1, 0] * Js[:, 2, 0]
-                 + Js[:, 2, 0] ** 2
-                 + Js[:, 0, 0] * Js[:, 3, 0]
-                 + Js[:, 1, 0] * Js[:, 3, 0]
-                 + Js[:, 2, 0] * Js[:, 3, 0]
-                 + Js[:, 3, 0] ** 2
-                 + Js[:, 0, 1] ** 2
-                 + Js[:, 0, 1] * Js[:, 1, 1]
-                 + Js[:, 1, 1] ** 2
-                 + Js[:, 0, 1] * Js[:, 2, 1]
-                 + Js[:, 1, 1] * Js[:, 2, 1]
-                 + Js[:, 2, 1] ** 2
-                 + Js[:, 0, 1] * Js[:, 3, 1]
-                 + Js[:, 1, 1] * Js[:, 3, 1]
-                 + Js[:, 2, 1] * Js[:, 3, 1]
-                 + Js[:, 3, 1] ** 2
-         )
-         / 60
-         )
-
-    A_bar = (signs
-             * density
-             * abs_det_Js
-             * (2 * Js[:, 0, 1] * Js[:, 0, 2]
-                + Js[:, 1, 1] * Js[:, 0, 2]
-                + Js[:, 2, 1] * Js[:, 0, 2]
-                + Js[:, 3, 1] * Js[:, 0, 2]
-                + Js[:, 0, 1] * Js[:, 1, 2]
-                + 2 * Js[:, 1, 1] * Js[:, 1, 2]
-                + Js[:, 2, 1] * Js[:, 1, 2]
-                + Js[:, 3, 1] * Js[:, 1, 2]
-                + Js[:, 0, 1] * Js[:, 2, 2]
-                + Js[:, 1, 1] * Js[:, 2, 2]
-                + 2 * Js[:, 2, 1] * Js[:, 2, 2]
-                + Js[:, 3, 1] * Js[:, 2, 2]
-                + Js[:, 0, 1] * Js[:, 3, 2]
-                + Js[:, 1, 1] * Js[:, 3, 2]
-                + Js[:, 2, 1] * Js[:, 3, 2]
-                + 2 * Js[:, 3, 1] * Js[:, 3, 2]
-                )
-             / 120
-             )
-
-    B_bar = (signs
-             * density
-             * abs_det_Js
-             * (2 * Js[:, 0, 0] * Js[:, 0, 2]
-                + Js[:, 1, 0] * Js[:, 0, 2]
-                + Js[:, 2, 0] * Js[:, 0, 2]
-                + Js[:, 3, 0] * Js[:, 0, 2]
-                + Js[:, 0, 0] * Js[:, 1, 2]
-                + 2 * Js[:, 1, 0] * Js[:, 1, 2]
-                + Js[:, 2, 0] * Js[:, 1, 2]
-                + Js[:, 3, 0] * Js[:, 1, 2]
-                + Js[:, 0, 0] * Js[:, 2, 2]
-                + Js[:, 1, 0] * Js[:, 2, 2]
-                + 2 * Js[:, 2, 0] * Js[:, 2, 2]
-                + Js[:, 3, 0] * Js[:, 2, 2]
-                + Js[:, 0, 0] * Js[:, 3, 2]
-                + Js[:, 1, 0] * Js[:, 3, 2]
-                + Js[:, 2, 0] * Js[:, 3, 2]
-                + 2 * Js[:, 3, 0] * Js[:, 3, 2]
-                )
-             / 120
-             )
-
-    C_bar = (signs
-             * density
-             * abs_det_Js
-             * (2 * Js[:, 0, 0] * Js[:, 0, 1]
-                + Js[:, 1, 0] * Js[:, 0, 1]
-                + Js[:, 2, 0] * Js[:, 0, 1]
-                + Js[:, 3, 0] * Js[:, 0, 1]
-                + Js[:, 0, 0] * Js[:, 1, 1]
-                + 2 * Js[:, 1, 0] * Js[:, 1, 1]
-                + Js[:, 2, 0] * Js[:, 1, 1]
-                + Js[:, 3, 0] * Js[:, 1, 1]
-                + Js[:, 0, 0] * Js[:, 2, 1]
-                + Js[:, 1, 0] * Js[:, 2, 1]
-                + 2 * Js[:, 2, 0] * Js[:, 2, 1]
-                + Js[:, 3, 0] * Js[:, 2, 1]
-                + Js[:, 0, 0] * Js[:, 3, 1]
-                + Js[:, 1, 0] * Js[:, 3, 1]
-                + Js[:, 2, 0] * Js[:, 3, 1]
-                + 2 * Js[:, 3, 0] * Js[:, 3, 1]
-                )
-             / 120
-             )
-
-    a_bar = -numpy.sum(A_bar)
-    b_bar = -numpy.sum(B_bar)
-    c_bar = -numpy.sum(C_bar)
-
-    I = numpy.array([[numpy.sum(A), c_bar, b_bar],
-                     [c_bar, numpy.sum(B), a_bar],
-                     [b_bar, a_bar, numpy.sum(C)]])
-    return inertiaMatrixToList(I)
 
 
 def inertiaListToMatrix(inertialist):
@@ -466,7 +87,7 @@ def inertiaListToMatrix(inertialist):
     """
     il = inertialist
     inertia = [[il[0], il[1], il[2]], [il[1], il[3], il[4]], [il[2], il[4], il[5]]]
-    return mathutils.Matrix(inertia)
+    return np.array(inertia)
 
 
 def inertiaMatrixToList(im):
@@ -502,14 +123,11 @@ def fuse_inertia_data(inertials):
 
     """
 
-    from phobos.blender.utils.io import getExpSettings
 
-    expsetting = 10**(-getExpSettings().decimalPlaces)
+    expsetting = 1e-10
 
     # Find objects who have some inertial data
-    for obj in inertials:
-        if not any([True for key in obj.keys() if key.startswith('inertial/')]):
-            inertials.remove(obj)
+    inertials = [obj for obj in inertials if any([key in reserved_keys.INERTIAL_KEYS for key in obj.keys()])]
 
     # Check for an empty list -> No inertials to fuse
     if not inertials:
@@ -532,7 +150,7 @@ def fuse_inertia_data(inertials):
     for obj in inertials:
         # Get the rotation of the inertia
         current_Rotation = numpy.array(obj.matrix_local.to_3x3())
-        current_Inertia = numpy.array(inertiaListToMatrix(obj['inertial/inertia']))
+        current_Inertia = numpy.array(inertiaListToMatrix(obj['inertia']))
         # Rotate the inertia into the current frame
         current_Inertia = numpy.dot(
             numpy.dot(current_Rotation.T, current_Inertia), current_Rotation
@@ -541,7 +159,7 @@ def fuse_inertia_data(inertials):
         # Get the current relative position of the center of mass
         relative_position = numpy.array(obj.matrix_local.translation) - fused_com
         # Calculate the translational influence
-        current_Inertia += obj['inertial/mass'] * (
+        current_Inertia += obj['mass'] * (
             relative_position.T * relative_position * numpy.eye(3)
             - numpy.outer(relative_position, relative_position)
         )
@@ -581,8 +199,8 @@ def combine_com_3x3(objects):
     combined_com = mathutils.Vector((0.0,) * 3)
     combined_mass = 0
     for obj in objects:
-        combined_com = combined_com + obj.matrix_local.translation * obj['inertial/mass']
-        combined_mass += obj['inertial/mass']
+        combined_com = combined_com + obj.matrix_local.translation * obj['mass']
+        combined_mass += obj['mass']
     combined_com = combined_com / combined_mass
     log("  Combined center of mass: " + str(combined_com), 'DEBUG')
     return combined_mass, combined_com
@@ -723,7 +341,6 @@ def gatherInertialChilds(obj, objectlist):
       : list(bpy.types.Object) -- inertial objects which belong to the specified obj
 
     """
-    from phobos.blender.utils.validation import validateInertiaData
 
     # only gather the links that are not in the list
     childlinks = [

@@ -13,17 +13,15 @@
 Contains all functions to model links within Blender.
 """
 
+import re
+
 import bpy
 import mathutils
-import re
-import phobos.blender.defs as defs
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.editing as eUtils
-import phobos.blender.model.inertia as inertia
-import phobos.blender.model.geometries as geometrymodel
-from phobos.blender.phoboslog import log
+
+from ..phoboslog import log
+from ..utils import editing as eUtils
+from ..utils import naming as nUtils
+from ..utils import blender as bUtils
 
 
 def getGeometricElements(link):
@@ -45,91 +43,7 @@ def getGeometricElements(link):
     return visuals, collisions
 
 
-# DOCU we should add the parameters, that can be inserted in the dictionary
-def createLink(link):
-    """Creates the blender representation of a given link and its parent joint.
-    
-    The link is added to the link layer.
-    
-    These entries in the dictionary are mandatory:
-        *name*: name for the link
-    
-    The specified dictionary may contain these entries:
-        *matrix*: world matrix for the new link transformation
-        *scale*: scale for the new link (single float)
-        *visual*: list of visual dictionaries
-        *collision*: list of collision dictionaries
-        *inertial*: inertial dictionary (an inertial object will be created on the fly)
-    
-    Furthermore any generic properties, prepended by a `$` will be added as custom properties to the
-    link. E.g. $test/etc would be put to link/test/etc. However, these properties are extracted
-    only in the first layer of hierarchy.
-
-    Args:
-      link(dict): The link you want to create a representation of.
-
-    Returns:
-      : bpy_types.Object -- the newly created blender link object.
-
-    """
-    log("Creating link object '{}'...".format(link['name']), 'DEBUG', prefix='\n')
-    # create armature/bone
-    bUtils.toggleLayer('link', True)
-    bpy.ops.object.select_all(action='DESELECT')
-    bpy.ops.object.armature_add()
-    newlink = bpy.context.active_object
-
-    # Move bone when adding at selected objects location
-    if 'matrix' in link:
-        newlink.matrix_world = link['matrix']
-
-    # give it a proper name
-    newlink.phobostype = 'link'
-    if link['name'] in bpy.data.objects.keys():
-        log('Object with name of new link already exists: ' + link['name'], 'WARNING')
-    nUtils.safelyName(newlink, link['name'])
-
-    # set the size of the link
-    visuals, collisions = getGeometricElements(link)
-    if visuals or collisions:
-        scale = max(
-            (geometrymodel.getLargestDimension(e['geometry']) for e in visuals + collisions)
-        )
-    else:
-        scale = 0.2
-
-    # use scaling factor provided by user
-    if 'scale' in link:
-        scale *= link['scale']
-    newlink.scale = (scale, scale, scale)
-    bpy.ops.object.transform_apply(location=False, rotation=False, scale=True, properties=False)
-
-    # add custom properties
-    for prop in link:
-        if prop.startswith('$'):
-            for tag in link[prop]:
-                newlink['link/' + prop[1:] + '/' + tag] = link[prop][tag]
-
-    # create inertial
-    if 'inertial' in link:
-        inertia.createInertial(link['inertial'], newlink)
-
-    # create geometric elements
-    log(
-        "Creating visual and collision objects for link '{0}':\n{1}".format(
-            link['name'], '    \n'.join([elem['name'] for elem in visuals + collisions])
-        ),
-        'DEBUG',
-    )
-    for vis in visuals:
-        geometrymodel.createGeometry(vis, 'visual', newlink)
-    for col in collisions:
-        geometrymodel.createGeometry(col, 'collision', newlink)
-    bUtils.sortObjectToCollection(newlink, 'link')
-    return newlink
-
-
-def deriveLinkfromObject(obj, scale=0.2, parent_link=True, parent_objects=False, nameformat=''):
+def deriveLinkfromObject(obj, scale=None, parent_link=True, parent_objects=True, reparent_children=True, nameformat=''):
     """Derives a link from an object using its name, transformation and parenting.
 
     Args:
@@ -144,26 +58,28 @@ def deriveLinkfromObject(obj, scale=0.2, parent_link=True, parent_objects=False,
 
     """
     log('Deriving link from ' + nUtils.getObjectName(obj), level="INFO")
-    if nameformat == '':
-        linkname = 'link_' + nUtils.getObjectName(obj)
-    else:
-        try:
-            nameparts = [p for p in re.split('[^a-zA-Z]', nUtils.getObjectName(obj)) if p != '']
-            linkname = nameformat.format(*nameparts)
-        except IndexError:
-            log('Invalid name format (indices) for naming: ' + nUtils.getObjectName(obj), 'WARNING')
-            linkname = 'link_' + nUtils.getObjectName(obj)
-    link = createLink({'scale': scale, 'name': linkname, 'matrix': obj.matrix_world})
-
-    # parent link to object's parent
-    if parent_link:
-        if obj.parent:
-            eUtils.parentObjectsTo(link, obj.parent)
-    # parent children of object to link
+    # create armature/bone
+    bUtils.toggleLayer('link', True)
+    bpy.ops.object.select_all(action='DESELECT')
+    bpy.ops.object.armature_add()
+    newlink = bpy.context.active_object
+    newlink.name = obj.name + "_link"
+    newlink.matrix_world = obj.matrix_world
+    newlink.phobostype = 'link'
+    bound_box = (
+        max([c[0] for c in obj.bound_box]),
+        max([c[1] for c in obj.bound_box]),
+        max([c[2] for c in obj.bound_box]),
+    )
+    print(bound_box, type(bound_box), type(bound_box[0]))
+    newlink.scale = [max(bound_box)]*3 if scale is None else scale
+    if obj.parent is not None and parent_link:
+        eUtils.parentObjectsTo(newlink, obj.parent)
     if parent_objects:
-        children = [obj] + sUtils.getImmediateChildren(obj)
-        eUtils.parentObjectsTo(children, link, clear=True)
-    return link
+        eUtils.parentObjectsTo(obj, newlink)
+    if reparent_children:
+        eUtils.parentObjectsTo(list(obj.children), newlink)
+    return newlink
 
 
 def setLinkTransformations(model, parent):

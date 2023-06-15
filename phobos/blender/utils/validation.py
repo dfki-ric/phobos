@@ -12,10 +12,10 @@
 from copy import deepcopy as dc
 
 import bpy
-import phobos.blender.defs as defs
-import phobos.blender.utils.naming as nUtils
-from phobos.blender.phoboslog import log
 
+from .. import defs
+from ..phoboslog import log
+from ..utils import naming as nUtils
 
 checkMessages = {"NoObject": []}
 
@@ -289,46 +289,6 @@ class ValidateMessage:
             return False
 
 
-def validateObjectNames(obj):
-    """Check for naming errors of the specified object.
-    
-    This checks:
-        - the *phobostype*/names
-
-    Args:
-      obj(bpy.types.Object): object to be checked
-
-    Returns:
-      list: :class:ValidateMessage list
-
-    """
-    phobtype = obj.phobostype
-    objname = obj.name
-    errors = []
-
-    if phobtype + '/name' in obj:
-        nameset = set([ptype[0] for ptype in defs.phobostypes if ptype[0] + '/name' in obj])
-
-        # links are allowed to contain additional joint information
-        if phobtype == 'link' and 'joint' in nameset:
-            nameset = nameset.difference(set(['joint']))
-        nameset = nameset.difference(set([phobtype]))
-
-        for key in nameset:
-            errors.append(
-                ValidateMessage(
-                    "Redundant name: '" + key + "/name'!",
-                    "WARNING",
-                    obj,
-                    "phobos.fix_object_names",
-                    key + '/name',
-                )
-            )
-
-    # TODO add unique name checks etc
-    return errors
-
-
 def validateJoint(link, adjust=False):
     """Checks for errors in the joint definitions of the specified link.
     
@@ -515,7 +475,7 @@ def validateMaterial(material, adjust=False):
                         )
                     )
     else:
-        if 'name' not in material:
+        if not hasattr(material, "name"):
             if adjust:
                 material = {'name': 'phobos_error'}
                 loglevel = 'WARNING'
@@ -559,7 +519,7 @@ def validateMaterial(material, adjust=False):
     return errors, material
 
 
-def validateGeometryType(obj, *args, adjust=False, geometry_dict=None):
+def validateGeometryType(obj, *args, adjust=False, geometry_dict=None, **kwargs):
     """
 
     Args:
@@ -606,8 +566,8 @@ def validateGeometryType(obj, *args, adjust=False, geometry_dict=None):
 def validateInertiaData(obj, *args, adjust=False):
     """Validates an inertia dictionary or object.
     
-    This checks for the *inertia* and *mass* values in the dictionary (*inertial/inertia* and
-    *inertial/mass* for an object respectively).
+    This checks for the *inertia* and *mass* values in the dictionary (*inertia* and
+    *mass* for an object respectively).
     
     Also, the inertia values are checked to be positive definite (for diagonal, determinant and
     eigenvalues).
@@ -630,16 +590,32 @@ def validateInertiaData(obj, *args, adjust=False):
 
     errors = []
 
-    expsetting = 10**(-getExpSettings().decimalPlaces)
+    # [TODO v2.1.0] REVIEW this
+    expsetting = 10**(-getExpSettings().urdfDecimalPlaces)
+
+    if obj.phobostype != 'inertial':
+        errors.append(
+            ValidateMessage(
+                "Object '{0}' is not of phobostype 'inertial'.".format(obj.name),
+                "ERROR",
+                obj
+            )
+        )
 
     # check dictionary parameters (most of the time pre object creation)
+    inertia = (1e-3, 0., 0., 1e-3, 0., 1e-3)
+    mass = 1e-3
     if isinstance(obj, dict):
         missing = []
         if 'inertia' not in obj:
             missing.append('inertia')
+        else:
+            inertia = obj['inertia']
 
         if 'mass' not in obj:
             missing.append('mass')
+        else:
+            mass = obj['mass']
 
         if missing:
             errors.append(
@@ -655,17 +631,10 @@ def validateInertiaData(obj, *args, adjust=False):
                     },
                 )
             )
-
-            if 'inertia' in missing:
-                obj['inertia'] = (1e-3, 0., 0., 1e-3, 0., 1e-3)
-            if 'mass' in missing:
-                obj['mass'] = 1e-3
-
-        inertia = obj['inertia']
-        mass = obj['mass']
     # check existing object properties
     elif isinstance(obj, bpy.types.Object):
-        if 'inertial/inertia' not in obj:
+        missing = []
+        if 'inertia' not in obj:
             errors.append(
                 ValidateMessage(
                     "Inertia not defined!",
@@ -675,9 +644,9 @@ def validateInertiaData(obj, *args, adjust=False):
                     {'log_info': "Set to default 1e-3."},
                 )
             )
-            obj['inertial/inertia'] = (1e-3, 0., 0., 1e-3, 0., 1e-3)
+            missing.append('inertia')
 
-        if 'inertial/mass' not in obj:
+        if 'mass' not in obj:
             errors.append(
                 ValidateMessage(
                     "Mass is not defined!",
@@ -687,15 +656,15 @@ def validateInertiaData(obj, *args, adjust=False):
                     {'log_info': "Set to default 1e-3."},
                 )
             )
-            obj['inertial/mass'] = 1e-3
-        inertia = obj['inertial/inertia']
-        mass = obj['inertial/mass']
+            missing.append('mass')
 
-    # Check inertia vector for various properties, round to export precision
-    inertia = numpy.around(
-        numpy.array(inertiaListToMatrix(inertia)), decimals=getExpSettings().decimalPlaces
-    )
-    if any(element <= expsetting for element in inertia.diagonal()):
+    else:
+        raise AssertionError(type(obj))
+
+    # Check inertia vector for various properties
+    inertia = numpy.array(inertiaListToMatrix(inertia))
+
+    if any(element <= 0. for element in inertia.diagonal()):
         errors.append(
             ValidateMessage(
                 "Negative semidefinite main diagonal in inertia data!",
@@ -707,7 +676,7 @@ def validateInertiaData(obj, *args, adjust=False):
         )
 
     # Calculate the determinant if consistent, quick check
-    if numpy.linalg.det(inertia) <= expsetting:
+    if numpy.linalg.det(inertia) <= 0.:
         errors.append(
             ValidateMessage(
                 "Negative semidefinite determinant in inertia data! Checking singular values.",
@@ -719,11 +688,10 @@ def validateInertiaData(obj, *args, adjust=False):
         )
 
         # Calculate the eigenvalues if not consistent
-        if any(element <= expsetting for element in numpy.linalg.eigvals(inertia)):
+        if any(element <= 0. for element in numpy.linalg.eigvals(inertia)):
             # Apply singular value decomposition and correct the values
             S, V = numpy.linalg.eig(inertia)
             S[S <= expsetting] = expsetting
-            inertia = V.dot(numpy.diag(S).dot(V.T))
             errors.append(
                 ValidateMessage(
                     "Negative semidefinite eigenvalues in inertia data!",
@@ -733,6 +701,7 @@ def validateInertiaData(obj, *args, adjust=False):
                     {'log_info': "Eigenvalues: " + str(numpy.linalg.eigvals(inertia))},
                 )
             )
+            inertia = V.dot(numpy.diag(S).dot(V.T))
 
     if mass <= 0.:
         errors.append(
@@ -748,17 +717,14 @@ def validateInertiaData(obj, *args, adjust=False):
 
     inertia = inertiaMatrixToList(inertia)
 
-    if adjust and isinstance(obj, bpy.types.Object):
-        obj['inertial/inertia'] = inertia
-        obj['inertial/mass'] = mass
-    elif adjust:
+    if adjust:
         obj['inertia'] = inertia
         obj['mass'] = mass
 
     return errors, obj
 
 
-def validateVisual(obj, *args, adjust=False, geometry_dict=None):
+def validateVisual(obj, *args, adjust=False, geometry_dict=None, **kwargs):
     """
 
     Args:

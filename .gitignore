@@ -7,3 +7,9 @@ installation.conf
 *.pyc
 __pycache__
 doc/_build
+*build
+*.egg-info
+*.egg
+*_wip**
+tests/api/test_data/.temp**
+*.zip

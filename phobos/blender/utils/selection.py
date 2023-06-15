@@ -14,8 +14,9 @@ Contains the utility functions for selecting objects in Blender based on differe
 """
 
 import bpy
-import phobos.blender.defs as defs
-from phobos.blender.phoboslog import log
+
+from ..phoboslog import log
+from . import naming as nUtils
 
 
 def getLeaves(roots, objects=[]):
@@ -125,7 +126,7 @@ def getImmediateChildren(obj, phobostypes=(), selected_only=False, include_hidde
 
 
 def getRecursiveChildren(
-    obj, recursion_depth=0, phobostypes=(), selected_only=False, include_hidden=False
+    obj, recursion_depth=None, phobostypes=(), selected_only=False, include_hidden=False
 ):
     """Returns all children for a given object and phobostypes (if provided) within the given recursion depth.
     Search can be limited to selected objects and non-hidden objects.
@@ -141,24 +142,21 @@ def getRecursiveChildren(
       list: Blender objects which are children of obj within recursion depth.
 
     """
-    if recursion_depth > -1:
-        # If no recursion, than find current children
-        children = getImmediateChildren(obj, phobostypes, selected_only, include_hidden)
-    else:
-        return []
+    # If no recursion, than find current children
+    children = getImmediateChildren(obj, phobostypes, selected_only, include_hidden)
 
-    if recursion_depth > 0 and children:
+    if recursion_depth is None or recursion_depth > 0 and children:
         new_children = []
         for child in children:
             new_children += getRecursiveChildren(
-                child, recursion_depth - 1, phobostypes, selected_only, include_hidden
+                child, recursion_depth - 1 if recursion_depth is not None else None, phobostypes, selected_only, include_hidden
             )
         children += new_children
 
     return children
 
 
-def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, objectlist=[]):
+def getEffectiveParent(obj, ignore_selection=True, include_hidden=True, objectlist=[]):
     """Returns the parent of an object, i.e. the first *link* ascending the
     object tree that is selected, starting from the obj, optionally also excluding
     hidden objects.
@@ -179,6 +177,7 @@ def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, object
     while (
         parent
         and parent in objectlist
+        and parent.phobostype != "link"
         and (
             (parent.hide_viewport and not include_hidden)
             or (
@@ -186,7 +185,6 @@ def getEffectiveParent(obj, ignore_selection=False, include_hidden=False, object
                 and bpy.context.scene.phobosexportsettings.selectedOnly
                 and not ignore_selection
             )
-            or parent.phobostype != 'link'
         )
     ):
         parent = parent.parent
@@ -253,7 +251,7 @@ def isRoot(obj, scene=None):
     Returns:
 
     """
-    rootdefinition = obj is not None and obj.phobostype in ['link', 'submodel']
+    rootdefinition = obj is not None and obj.phobostype == "link"
     parentless = not obj.parent or (scene is not None and obj.parent.name not in scene.objects)
 
     return rootdefinition and parentless
@@ -274,6 +272,33 @@ def isEntity(obj):
 
     """
     return obj is not None and 'entity/type' in obj and 'entity/name' in obj
+
+
+def getModelRoot(modelname):
+    roots = getRoots()
+    for root in roots:
+        if nUtils.getModelName(root) == modelname:
+            return root
+
+
+def selectModel(modelname):
+    selection = []
+    if modelname:
+        log("phobos: Selecting model" + modelname, "INFO")
+        roots = getRoots()
+        for root in roots:
+            if nUtils.getModelName(root) == modelname:
+                selection = getChildren(root)
+        if not selection:
+            log("phobos: No proper modelname given", "ERROR")
+    else:
+        log("No model name provided, deriving from selection...", "INFO")
+        roots = set()
+        for obj in bpy.context.selected_objects:
+            roots.add(getRoot(obj))
+        for root in list(roots):
+            selection.extend(getChildren(root))
+    selectObjects(list(selection), True)
 
 
 def selectObjects(objects, clear=True, active=-1):
@@ -300,6 +325,30 @@ def selectObjects(objects, clear=True, active=-1):
         bpy.context.view_layer.objects.active = objects[active]
 
 
+storedSelection = []
+storedActive = -1
+
+
+def storeSelectedObjects():
+    global storedSelection, storedActive
+    storedSelection = list(bpy.context.selected_objects)
+    try:
+        storedActive = storedSelection.index(bpy.context.view_layer.objects.active)
+    except ValueError:
+        storedActive = -1
+    print("Storage:")
+    print(storedSelection)
+    print(storedActive)
+
+
+def restoreSelectedObjects():
+    global storedSelection, storedActive
+    print("Retrieve:")
+    print(storedSelection)
+    print(storedActive)
+    selectObjects(storedSelection, active=storedActive)
+
+
 def getObjectByName(name, phobostypes=()):
     """Returns list of objects that either have a specific *name* or contain a custom
     name property with that name.
@@ -315,21 +364,16 @@ def getObjectByName(name, phobostypes=()):
       : bpy.types.Object or list - one or list of objects matching name
 
     """
-    objlist = []
+    found = None
     searchobjs = [
         obj for obj in bpy.context.scene.objects if obj.phobostype in phobostypes or not phobostypes
     ]
     for obj in searchobjs:
-        if name == obj.name:
-            objlist.append(obj)
-        else:
-            for key in obj.keys():
-                try:
-                    if obj[key].endswith('/name') and name == obj[key]:
-                        objlist.append(obj)
-                except AttributeError:
-                    continue
-    return objlist[0] if len(objlist) == 1 else objlist
+        # the link/name handling is only for backwards compatibility
+        if name == obj.name or obj.get("joint/name", None) == name or obj.get("link/name", None) == name:
+            found = obj
+            break
+    return found
 
 
 def getObjectsByPattern(pattern, match_case=False):
@@ -417,23 +461,6 @@ def getObjectByProperty(property, value):
             candidate = obj
             break
     return candidate
-
-
-def getSubmechanismRoots(selection_only=False):
-    """
-
-    Args:
-      selection_only: (Default value = False)
-
-    Returns:
-
-    """
-    if selection_only:
-        objs = bpy.context.selected_objects
-    else:
-        objs = bpy.context.scene.objects
-
-    return [obj for obj in objs if 'submechanism/name' in obj]
 
 
 def getSubmechanismRootForJoint(jointobj):

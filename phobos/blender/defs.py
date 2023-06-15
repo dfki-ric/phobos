@@ -14,16 +14,13 @@ Contains different definitions for Phobos. Additional defintions are parsed from
 added to this module at runtime.
 """
 
-import os
 import glob
-import re
-
 import json
-import phobos.blender.phobossystem as phobossystem
+import os
+import re
+import math # Required to parse yaml files
 
-# Phobos information
-version = '1.0.1 "Capricious Choutengan"'
-repository = 'https://github.com/dfki-ric/phobos'
+from . import phobossystem
 
 # definitions of which elements are assigned to which default layers
 layerTypes = {
@@ -34,12 +31,12 @@ layerTypes = {
     "sensor": 4,
     "decoration": 5,
     "light": 6,
-    "motor": 7,
     "controller": 8,
     "approxsphere": 13,
     'interface': 10,
     'submodel': 10,
     'annotation': 14,
+    'submechanism': 15
 }
 
 # types of blender objects phobos differentiates
@@ -50,7 +47,6 @@ phobostypes = (
     ('visual',) * 3,
     ('collision',) * 3,
     ('sensor',) * 3,
-    ('motor',) * 3,
     ('controller',) * 3,
     ('approxsphere',) * 3,
     ('light',) * 3,
@@ -59,6 +55,7 @@ phobostypes = (
     ('interface',) * 3,
     ('submodel',) * 3,
     ('annotation',) * 3,
+    ('submechanism',) * 3,
 )
 
 jointtypes = (
@@ -73,7 +70,6 @@ jointtypes = (
 geometrytypes = (('box',) * 3, ('cylinder',) * 3, ('sphere',) * 3, ('mesh',) * 3)
 
 linkobjignoretypes = {'link', 'joint', 'submechanism', 'entity', 'model'}
-controllabletypes = ['motor']
 
 type_properties = {
     "undefined": (),
@@ -99,11 +95,11 @@ type_properties = {
     "interface_default": (),
     "submodel": (),
     "submodel_default": (),
+    # TODO add submechanism?
 }
 
 # definitions of model elements to be read in
 definitions = {
-    'motors': {},
     'sensors': {},
     'controllers': {},
     'algorithms': {},
@@ -127,6 +123,7 @@ def updateDefs(defsFolderPath):
     Returns:
 
     """
+    assert os.path.isdir(defsFolderPath)
     dicts = __parseAllYAML(defsFolderPath)
     for diction in dicts:
         for category in diction:
@@ -168,13 +165,12 @@ def __evaluateString(s):
     """
     # TODO math is not needed anymore...
     # needed for evaluation of strings (see below)
-    import math
 
     p = re.compile('&.*&')
     for ma in p.findall(s):
         try:
             s = s.replace(ma, str(eval(ma[1:-1])))
-        except ():
+        except:
             print("The expression " + ma + " could not be evaluated. Ignoring file")
             return ""
     return s
@@ -212,6 +208,6 @@ def __parseAllYAML(path):
 
 
 # Update definitions from files
-definitionpath = os.path.join(phobossystem.getConfigPath() + '/definitions')
+definitionpath = os.path.join(phobossystem.getConfigPath(), 'definitions')
 print("Parsing definitions from:", definitionpath)
 updateDefs(definitionpath)

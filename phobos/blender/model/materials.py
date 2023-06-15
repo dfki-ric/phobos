@@ -14,75 +14,9 @@ Contains the functions required to model a material in Blender.
 """
 
 import bpy
-import phobos.blender.defs as defs
-from phobos.blender.utils.validation import validate
-from phobos.blender.phoboslog import log
 
-
-@validate('material')
-def createMaterial(material, logging=False, adjust=False, errors=[]):
-    """
-
-    Args:
-      material: 
-      logging: (Default value = False)
-      adjust: (Default value = False)
-      errors: (Default value = [])
-
-    Returns:
-
-    """
-    # name, diffuse, specular, alpha, diffuse_intensity=1.0, texture=None):
-    """Returns a Blender material specified by the material dictionary.
-
-    This creates the appropriate Blender material based on the different dictionary parameters.
-
-    A material needs to contain these keys:
-        *name*: unique name of the material
-        *diffuse*: [r, g, b, a] color values as floats in range of [0, 1]
-
-    Optional are these keys:
-        *specular*: [r, g, b, a] specular color
-        *diffuse_intensity*: amount of diffuse reflection (float in range [0, 1])
-
-    Furthermore any generic properties, prepended by a `$` will be added as custom properties to the
-    Blender material. E.g. $test/etc would be put to test/etc in the Blender material.
-    However, these properties are extracted only in the first layer of hierarchy.
-
-    Args:
-        material (dict): representation of a material
-
-    Returns:
-        bpy.types.Material
-    """
-    log("  Creating material {}.".format(material), 'DEBUG')
-
-    mat = bpy.data.materials.new(material['name'])
-    mat.diffuse_color = tuple(material['diffuse'])
-    #mat.diffuse_shader = 'LAMBERT'
-
-    #if 'diffuse_intensity' in material:
-    #    mat.diffuse_intensity = material['diffuse_intensity']
-    if 'specular' in material:
-        mat.specular_color = tuple(material['specular'][:3])
-       # mat.specular_shader = 'COOKTORR'
-        mat.specular_intensity = 0.5
-    #mat.alpha = material['diffuse'][-1]
-    #if mat.alpha < 1.0:
-    #    mat.use_transparency = True
-    #mat.ambient = 1
-    # TODO: implement textures properly
-    # if texture is not None:
-    #     pass
-    #mat.use_fake_user = True
-
-    # write generic custom properties
-    for prop in material:
-        if prop.startswith('$'):
-            for tag in material[prop]:
-                mat[prop[1:] + '/' + tag] = material[prop][tag]
-
-    return mat
+from .. import defs
+from ..phoboslog import log
 
 
 def createPhobosMaterials():
@@ -90,12 +24,30 @@ def createPhobosMaterials():
     materials = bpy.data.materials.keys()
     for materialname in defs.definitions['materials']:
         mat = defs.definitions['materials'][materialname]
-        mat['name'] = materialname
         if materialname not in materials:
-            createMaterial(mat, logging=False, adjust=False)
+            new_material = bpy.data.materials.new(materialname)
+            new_material.use_nodes = True
+            principled_bsdf = new_material.node_tree.nodes.get('Principled BSDF')
+            if principled_bsdf is not None:
+                new_material.node_tree.nodes.remove(principled_bsdf)
+            shader_node = new_material.node_tree.nodes.new('ShaderNodeEeveeSpecular')
+            material_output = new_material.node_tree.nodes.get('Material Output')
+            new_material.node_tree.links.new(shader_node.outputs[0], material_output.inputs[0])
+            shader_node.inputs['Base Color'].default_value = tuple(mat['diffuse'])
+            new_material.show_transparent_back = False
+            if 'specular' in mat:
+                shader_node.inputs['Specular'].default_value = tuple(mat['specular'])
+                new_material.specular_intensity = 0.5
+            if "transparency" in mat:
+                shader_node.inputs['Transparency'].default_value = mat["transparency"]
+                new_material.show_transparent_back = mat.get("show_transparent_back", True)
+                new_material.blend_method = "BLEND"
+                new_material.use_backface_culling = False
+                new_material.diffuse_color = tuple(mat['diffuse'])
+                new_material.diffuse_color[3] = 1-mat["transparency"]
 
 
-def assignMaterial(obj, materialname):
+def assignMaterial(obj, materialname, override=True):
     """Assigns a material by name to an object.
     
     This avoids creating multiple copies and also omits duplicate material slots in the specified
@@ -114,6 +66,9 @@ def assignMaterial(obj, materialname):
         else:
             log("Material '" + materialname + "' is not defined.", "ERROR")
             return None
+
+    if override and len(obj.data.materials) >= 1:
+        obj.data.materials.clear()
 
     # add material slot never twice
     if materialname not in obj.data.materials:

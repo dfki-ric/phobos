@@ -15,16 +15,12 @@ help:
 		@echo 	'  format    - Formats the python code in the folder using the black code'
 		@echo 	'              formatter (github.com/ambv/black).'
 		@echo 	'  help      - Print this help information.'
-		@echo 	'  init      - Install the Phobos requirements using pip.'
 		@echo	'  install   - Install the Phobos code to your Blender installation.'
 		@echo	'              This also sets up the configuration folder for Phobos.'
 		@echo	'  version   - Prints some help relating to drafting a new version.'
 
-init:
-		pip install -r requirements.txt
-
 install:
-		python3 setup.py
+		pip3 install .
 
 clean:
 		rm installation.conf

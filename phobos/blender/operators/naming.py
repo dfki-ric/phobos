@@ -13,19 +13,18 @@
 Contains all Blender operators for naming of models/objects/properties.
 """
 
-import sys
-import inspect
-
 import bpy
+from bpy.props import BoolProperty, StringProperty
 from bpy.types import Operator
-from bpy.props import BoolProperty, StringProperty, EnumProperty
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.utils.io as ioUtils
-import phobos.blender.utils.validation as validation
-from phobos.blender.phoboslog import log
+
+from ..phoboslog import log
+from ..utils import io as ioUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
+from ..utils import validation as validation
 
 
+# [TODO v2.1.0] REVIEW this
 class ToggleNamespaces(Operator):
     """Toggle the use of namespaces for the selected objects"""
 
@@ -43,7 +42,7 @@ class ToggleNamespaces(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -83,7 +82,7 @@ class NameModelOperator(Operator):
         """Hide operator if there is no link present.
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -95,12 +94,14 @@ class NameModelOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
         """
+        root = sUtils.getRoot(context.active_object, verbose=False)
+        self.modelname = root["model/name"] if "model/name" in root else ""
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
@@ -108,7 +109,7 @@ class NameModelOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -145,7 +146,7 @@ class SetModelVersionOperator(Operator):
         """Hide operator if there is no link present.
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -157,8 +158,8 @@ class SetModelVersionOperator(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -170,7 +171,7 @@ class SetModelVersionOperator(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -204,27 +205,20 @@ class BatchRename(Operator):
         description="Add any string by representing the old name with '*'.",
     )
 
-    include_properties : BoolProperty(
-        name="Include Properties",
-        default=False,
-        description="Replace names stored in '*/name' properties?",
-    )
-
     def execute(self, context):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
         """
         for obj in context.selected_objects:
             obj.name = self.add.replace('*', obj.name.replace(self.find, self.replace))
-            if self.include_properties:
-                for key in obj.keys():
-                    if key.endswith('/name'):
-                        obj[key] = self.add.replace('*', obj[key].replace(self.find, self.replace))
+            for key in obj.keys():
+                if key == 'joint/name':
+                    obj[key] = self.add.replace('*', obj[key].replace(self.find, self.replace))
         return {'FINISHED'}
 
     @classmethod
@@ -232,51 +226,12 @@ class BatchRename(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
         """
         return len(context.selected_objects) > 0
-
-
-class FixObjectNames(Operator):
-    """Cleans up the redundant names of the active object"""
-
-    bl_idname = "phobos.fix_object_names"
-    bl_label = "Rename Object"
-    bl_options = {'REGISTER', 'UNDO'}
-
-    def execute(self, context):
-        """
-
-        Args:
-          context: 
-
-        Returns:
-
-        """
-        obj = context.active_object
-        errors = validation.validateObjectNames(obj)
-
-        for error in errors:
-            if error.message[:9] == 'Redundant':
-                log("Deleting redundant name '" + error.information + "'.", 'INFO')
-                del obj[error.information]
-
-        return {'FINISHED'}
-
-    @classmethod
-    def poll(cls, context):
-        """
-
-        Args:
-          context: 
-
-        Returns:
-
-        """
-        return context.active_object
 
 
 class ChangeObjectName(Operator):
@@ -294,7 +249,7 @@ class ChangeObjectName(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -314,10 +269,6 @@ class ChangeObjectName(Operator):
                 'INFO',
             )
             nUtils.safelyName(obj, self.newname)
-        elif self.newname == '':
-            log("Removing custom name from " + obj.phobostype + " '" + obj.name + "'.", 'INFO')
-            if obj.phobostype + '/name' in obj:
-                del obj[obj.phobostype + '/name']
 
         # only links have joint names
         if obj.phobostype == 'link':
@@ -353,7 +304,7 @@ class ChangeObjectName(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -364,8 +315,8 @@ class ChangeObjectName(Operator):
         """
 
         Args:
-          context: 
-          event: 
+          context:
+          event:
 
         Returns:
 
@@ -382,7 +333,7 @@ class ChangeObjectName(Operator):
         """
 
         Args:
-          context: 
+          context:
 
         Returns:
 
@@ -398,14 +349,16 @@ class ChangeObjectName(Operator):
             self.jointname = ''
             layout.label(text="Phobostype: " + obj.phobostype)
 
+
 classes = (
-    ToggleNamespaces,
+    # [TODO v2.1.0] Re-add ToggleNamespaces,
     NameModelOperator,
     SetModelVersionOperator,
     BatchRename,
-    FixObjectNames,
     ChangeObjectName,
 )
+
+
 def register():
     """TODO Missing documentation"""
     print("Registering operators.naming...")

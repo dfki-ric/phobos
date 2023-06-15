@@ -1,0 +1,42 @@
+{
+  "submechanisms": [
+    {
+      "contextual_name": "lambda_mechanism",
+      "jointnames": [
+        "passive_a_joint",
+        "passive_b_joint",
+        "prismatic_joint"
+      ],
+      "jointnames_active": [
+        "prismatic_joint"
+      ],
+      "jointnames_independent": [
+        "passive_a_joint"
+      ],
+      "jointnames_spanningtree": [
+        "passive_a_joint",
+        "passive_b_joint",
+        "prismatic_joint"
+      ],
+      "name": "lambda_mechanism",
+      "type": "RRPR"
+    },
+    {
+      "contextual_name": "end_effector",
+      "jointnames": [
+        "end_effector_joint"
+      ],
+      "jointnames_active": [
+        "end_effector_joint"
+      ],
+      "jointnames_independent": [
+        "end_effector_joint"
+      ],
+      "jointnames_spanningtree": [
+        "end_effector_joint"
+      ],
+      "name": "revolute",
+      "type": "R"
+    }
+  ]
+}

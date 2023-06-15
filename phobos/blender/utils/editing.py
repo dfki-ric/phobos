@@ -13,15 +13,17 @@
 Contains the utility functions for editing objects and Phobos models.
 """
 
+import math
+
 import bpy
 import mathutils
-import math
-from phobos.blender.phoboslog import log
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.io as ioUtils
-import phobos.blender.defs as defs
+
+from .. import defs
+from ..phoboslog import log
+from ..utils import blender as bUtils
+from ..utils import io as ioUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
 
 
 def dissolveLink(obj, delete_other=False):
@@ -56,7 +58,7 @@ def dissolveLink(obj, delete_other=False):
             other_children = sUtils.getRecursiveChildren(
                 obj,
                 recursion_depth=2,
-                phobostypes=('motor', 'controller', 'sensor', 'submodel'),
+                phobostypes=('sensor', 'submodel'),
                 include_hidden=True,
             )
             delete += [child for child in other_children if child not in children]
@@ -201,7 +203,9 @@ def parentObjectsTo(objects, parent, clear=False):
     Returns:
 
     """
-    if not isinstance(objects, list):
+    if isinstance(objects, tuple):
+        objects = list(objects)
+    elif not isinstance(objects, list):
         objects = [objects]
 
     # Store original layers
@@ -254,7 +258,7 @@ def getNearestCommonParent(objs):
                 in_all = False
                 break
     if not in_all:  # this is only true if none of the branches set it to False and broke afterwards
-        return None
+        return None, []
     else:
         inter_objects.remove(parent)
         return parent, list(inter_objects)
@@ -464,58 +468,6 @@ def removeSubmodel(submodelname, submodeltype, version='', interfaces=True):
     return False
 
 
-def createInterface(ifdict, parent=None):
-    """Create an interface object and optionally parent to existing object.
-    
-    ifdict is expected as:
-    
-    | **type**: str
-    | **direction**: str
-    | **model**: str
-    | **name**: str
-    | **parent**: bpy.types.Object (optional)
-    | **scale**: float (optional)
-
-    Args:
-      ifdict(dict): interface data
-      parent(bpy.types.Object, optional): designated parent object (Default value = None)
-
-    Returns:
-      bpy.data.Object: newly created interface object
-
-    """
-    if not parent:
-        try:
-            parent = ifdict['parent']
-            assert isinstance(parent, bpy.types.Object)
-        except (AttributeError, AssertionError, KeyError):
-            parent = None
-    location = parent.matrix_world.translation if parent else mathutils.Vector()
-    rotation = parent.matrix_world.to_euler() if parent else mathutils.Euler()
-
-    model = ifdict['model'] if 'model' in ifdict else 'default'
-    templateobj = ioUtils.getResource(('interface', model, ifdict['direction']))
-    scale = ifdict['scale'] if 'scale' in ifdict else 1.0
-    ifobj = bUtils.createPrimitive(
-        ifdict['name'],
-        'box',
-        (1.0, 1.0, 1.0),
-        defs.layerTypes['interface'],
-        plocation=location,
-        protation=rotation,
-        phobostype='interface',
-    )
-    nUtils.safelyName(ifobj, ifdict['name'], 'interface')
-    ifobj.data = templateobj.data
-    ifobj.scale = (scale,) * 3
-    ifobj['interface/type'] = ifdict['type']
-    ifobj['interface/direction'] = ifdict['direction']
-    if parent is not None:
-        ifobj['interface/parent'] = parent.name
-        parentObjectsTo(ifobj, parent)
-    bpy.ops.object.make_single_user(object=True, obdata=True)
-
-
 def toggleInterfaces(interfaces=None, modename='toggle'):
     """
 
@@ -543,8 +495,8 @@ def connectInterfaces(parentinterface, childinterface, transform=None):
     """
 
     Args:
-      parentinterface: 
-      childinterface: 
+      parentinterface:
+      childinterface:
       transform: (Default value = None)
 
     Returns:
@@ -608,8 +560,8 @@ def disconnectInterfaces(parentinterface, childinterface, transform=None):
     """
 
     Args:
-      parentinterface: 
-      childinterface: 
+      parentinterface:
+      childinterface:
       transform: (Default value = None)
 
     Returns:
@@ -713,7 +665,7 @@ def removeProperties(obj, props, recursive=False):
         if prop in obj:
             del obj[prop]
         elif prop[-1] == '*':
-            for objprop in obj.keys():
+            for objprop in list(obj.keys()):
                 if objprop.startswith(prop[:-1]):
                     del obj[objprop]
 
@@ -746,63 +698,65 @@ def mergeLinks(links, targetlink, movetotarget=False):
         del link
 
 
-def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None):
-    """Add a new annotation object with the specified annotations to the object.
-    
-    The annotation object will receive 'annotation_object' as its default name, unless a name is
-    provided. Naming is done using :func:`phobos.utils.naming.safelyName`.
-    
-    The annotation object will be scaled according to the **size** parameter.
-    
-    If ``namespace`` is provided, the annotations will be saved with this string prepended.
-    This is done using :func:`addAnnotation`.
 
-    Args:
-      obj(bpy.types.Object): object to add annotation object to
-      annotation(dict): annotations that will be added
-      name(str, optional): name for the new annotation object (Default value = None)
-      size(int/float, optional): size of the new annotation object (Default value = 0.1)
-      namespace(str, optional): namespace that will be prepended to the annotations (Default value = None)
 
-    Returns:
-      : bpy.types.Object - the new annotation object
-
-    """
-    loc = obj.matrix_world.to_translation()
-    if not name:
-        name = obj.name + '_annotation_object'
-
-    annot_obj = bUtils.createPrimitive(
-        name,
-        'box',
-        [1, 1, 1],
-        defs.layerTypes['annotation'],
-        plocation=loc,
-        phobostype='annotation',
-    )
-    annot_obj.scale = (size,) * 3
-
-    resource = ioUtils.getResource(['annotation', namespace.split('/')[-1]])
-    if resource:
-        annot_obj.data = resource.data
-    else:
-        annot_obj.data = ioUtils.getResource(['annotation', 'default']).data
-
-    # make sure all layers are enabled for parenting
-    originallayers = {}
-    for name, coll in bpy.context.window.view_layer.layer_collection.children.items():
-        originallayers[name] = coll.exclude
-        coll.exclude = False
-
-    # parent annotation object
-    parentObjectsTo(annot_obj, obj)
-
-    # Restore original layers
-    for key, value in originallayers.items():
-        bpy.context.window.view_layer.layer_collection.children[key].exclude = value
-
-    addAnnotation(annot_obj, annotation, namespace=namespace)
-    return annot_obj
+# def addAnnotationObject(obj, annotation, name=None, size=0.1, namespace=None, parent=None):
+#     """Add a new annotation object with the specified annotations to the object.
+#
+#     The annotation object will receive 'annotation_object' as its default name, unless a name is
+#     provided. Naming is done using :func:`phobos.utils.naming.safelyName`.
+#
+#     The annotation object will be scaled according to the **size** parameter.
+#
+#     If ``namespace`` is provided, the annotations will be saved with this string prepended.
+#     This is done using :func:`addAnnotation`.
+#
+#     Args:
+#       obj(bpy.types.Object): object to add annotation object to
+#       annotation(dict): annotations that will be added
+#       name(str, optional): name for the new annotation object (Default value = None)
+#       size(int/float, optional): size of the new annotation object (Default value = 0.1)
+#       namespace(str, optional): namespace that will be prepended to the annotations (Default value = None)
+#
+#     Returns:
+#       : bpy.types.Object - the new annotation object
+#
+#     """
+#     loc = obj.matrix_world.to_translation()
+#     if not name:
+#         name = obj.name + '_annotation_object'
+#
+#     annot_obj = bUtils.createPrimitive(
+#         name,
+#         'box',
+#         [1, 1, 1],
+#         defs.layerTypes['annotation'],
+#         plocation=loc,
+#         phobostype='annotation',
+#     )
+#     annot_obj.scale = (size,) * 3
+#
+#     resource = ioUtils.getResource(['annotation', namespace.split('/')[-1]])
+#     if resource:
+#         annot_obj.data = resource.data
+#     else:
+#         annot_obj.data = ioUtils.getResource(['annotation', 'default']).data
+#
+#     # make sure all layers are enabled for parenting
+#     originallayers = {}
+#     for name, coll in bpy.context.window.view_layer.layer_collection.children.items():
+#         originallayers[name] = coll.exclude
+#         coll.exclude = False
+#
+#     # parent annotation object
+#     parentObjectsTo(annot_obj, obj)
+#
+#     # Restore original layers
+#     for key, value in originallayers.items():
+#         bpy.context.window.view_layer.layer_collection.children[key].exclude = value
+#
+#     addAnnotation(annot_obj, annotation, namespace=namespace)
+#     return annot_obj
 
 
 def addAnnotation(obj, annotation, namespace=None, ignore=[]):
@@ -819,8 +773,21 @@ def addAnnotation(obj, annotation, namespace=None, ignore=[]):
     Returns:
 
     """
-    for key, value in annotation.items():
-        obj[str(namespace + '/' if namespace and key not in ignore else '') + key] = value
+    def flatten_dict(input_dict):
+        flat = {}
+        for k, v in input_dict.items():
+            if type(v) == dict:
+                flat_v = flatten_dict(v)
+                for k2, v2 in flat_v:
+                    flat[k+"/"+k2] = v2
+            else:
+                flat[k] = v
+        return flat
+
+    flat_annotations = flatten_dict(annotation)
+
+    for key, value in flat_annotations.items():
+        obj[key] = value
 
 
 def sortObjectsToLayers(objs):

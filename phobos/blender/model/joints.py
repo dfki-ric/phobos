@@ -15,120 +15,11 @@ Contains the functions required to model a joint within Blender.
 
 import bpy
 import mathutils
-from phobos.blender.phoboslog import log
-import phobos.blender.utils.naming as nUtils
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.io as ioUtils
-from phobos.blender.utils.validation import validate
+import numpy as np
 
-
-def createJoint(joint, linkobj=None, links=None):
-    """Adds joint data to a link object.
-    
-    If the linkobj is not specified, it is derived from the **child** entry in the joint (object is
-    searched in the current scene). This only works if the search for the child yields a single
-    object. Alternatively, it is possible to provide the model dictionary of links. In this case,
-    the link object is searched in the dictionary (make sure the **object** keys of the dictionary
-    are set properly).
-    
-    These entries are mandatory for the dictionary:
-    
-    |   **name**: name of the joint
-    
-    These entries are optional:
-    
-    |   **axis**: tuple which specifies the axis of the editbone
-    |   **limits**: limits of the joint movement
-    |       **lower**: lower limit (defaults to 0.)
-    |       **upper**: upper limit (defaults to 0.)
-    |       **effort**: maximum effort for the joint
-    |       **velocity**: maximum velocity for the joint
-    
-    Furthermore any generic properties, prepended by a ``$`` will be added as custom properties to
-    the joint. E.g. ``$test/etc`` would be put to joint/test/etc. However, these properties are
-    extracted only in the first layer of hierarchy.
-
-    Args:
-      joint(dict): dictionary containing the joint definition
-      linkobj(bpy.types.Object, optional): link object receiving joint (Default value = None)
-      links(dict, optional): model dictionary of links (Default value = None)
-
-    Returns:
-      None: None
-
-    """
-    # try deriving link object from joint['child']
-    if not linkobj:
-        # link dictionary provided -> search for child link object
-        if (
-            links
-            and 'child' in joint
-            and joint['child'] in links
-            and 'object' in links[joint['child']]
-        ):
-            linkobj = links[joint['child']]['object']
-        # search for child link in scene
-        else:
-            linkobj = sUtils.getObjectByName(joint['child'])
-            if isinstance(linkobj, list):
-                log(
-                    "Could not identify object to define joint '{0}'.".format(joint['name']),
-                    'ERROR',
-                )
-                return
-
-    # make sure the proper joint name is kept
-    if joint['name'] != linkobj.name:
-        linkobj['joint/name'] = joint['name']
-
-    # select the link object
-    bUtils.activateObjectCollection(linkobj)
-    sUtils.selectObjects([linkobj], clear=True, active=0)
-
-    # set axis
-    if 'axis' in joint:
-        if mathutils.Vector(tuple(joint['axis'])).length == 0.:
-            log('Axis of joint {0} is of zero length: '.format(joint['name']), 'ERROR')
-        else:
-            bpy.ops.object.mode_set(mode='EDIT')
-            editbone = linkobj.data.edit_bones[0]
-            length = editbone.length
-            axis = mathutils.Vector(tuple(joint['axis']))
-            editbone.tail = editbone.head + axis.normalized() * length
-
-    # add constraints to the joint
-    if 'limits' in joint:
-        for param,newName in {'effort': 'maxEffort', 'velocity': 'maxSpeed'}.items():
-            if param in joint['limits']:
-                linkobj['joint/' + newName] = joint['limits'][param]
-            else:
-                log(
-                    "Joint limits incomplete for joint {}. Missing {}.".format(
-                        joint['name'], param
-                    ),
-                    'ERROR',
-                )
-
-        if all(elem in joint['limits'] for elem in ['lower', 'upper']):
-            lower = joint['limits']['lower']
-            upper = joint['limits']['upper']
-        else:
-            log("Joint limits upper/lower is missing! Defaulted to [-1e-5, 1e-5].", 'WARNING')
-            lower = -1e-5
-            upper = 1e-5
-    else:
-        log("Joint limits upper/lower is missing! Defaulted both to [-1e-5, 1e-5].", 'WARNING')
-        lower = -1e-5
-        upper = 1e-5
-    setJointConstraints(linkobj, joint['type'], lower, upper)
-
-    # add generic properties
-    for prop in joint:
-        if prop.startswith('$'):
-            for tag in joint[prop]:
-                linkobj['joint/' + prop[1:] + '/' + tag] = joint[prop][tag]
-    log("Assigned joint information to {}.".format(linkobj.name), 'DEBUG')
+from ..phoboslog import log
+from ..utils import io as ioUtils
+from ..utils.validation import validate
 
 
 def getJointConstraints(joint):
@@ -227,10 +118,13 @@ def setJointConstraints(
     jointtype,
     lower=0.0,
     upper=0.0,
-    spring=0.0,
-    damping=0.0,
+    spring=None,
+    damping=None,
+    velocity=None,
+    effort=None,
     maxeffort_approximation=None,
     maxspeed_approximation=None,
+    axis = None
 ):
     """Sets the constraints for a given joint and jointtype.
     
@@ -246,6 +140,8 @@ def setJointConstraints(
       jointtype(str): joint type (revolute, continuous, prismatic, fixed, floating, planar)
       lower(float, optional): lower limit of the constraint (defaults to 0.)
       upper(float, optional): upper limit of the constraint (defaults to 0.)
+      velocity(float, optional): velocity limit of the constraint (defaults to 0.)
+      effort(float, optional): effort limit of the constraint (defaults to 0.)
       spring(float, optional): spring stiffness for the joint (Default value = 0.0)
       damping(float, optional): spring damping for the joint (Default value = 0.0)
       maxeffort_approximation(dict, optional): function and coefficients for maximum effort (Default value = None)
@@ -254,6 +150,21 @@ def setJointConstraints(
     Returns:
 
     """
+    if lower is None:
+        lower = 0.0
+    if upper is None:
+        upper = 0.0
+    if velocity is None:
+        velocity = 0.0
+    if effort is None:
+        effort = 0.0
+    if spring is None:
+        spring = 0.0
+    if damping is None:
+        damping = 0.0
+
+    bpy.ops.object.select_all(action='DESELECT')
+    joint.select_set(True)
     if joint.phobostype != 'link':
         log("Cannot set joint constraints. Not a link: {}".format(joint), 'ERROR')
         return
@@ -264,6 +175,19 @@ def setJointConstraints(
     # remove existing constraints from bone
     for cons in joint.pose.bones[0].constraints:
         joint.pose.bones[0].constraints.remove(cons)
+
+    # set axis
+    if axis is not None:
+        if mathutils.Vector(tuple(axis)).length == 0.:
+            log('Axis of joint {0} is of zero length: '.format(joint.name), 'ERROR')
+        axis = (np.array(axis) / np.linalg.norm(axis)).tolist()
+        if np.linalg.norm(axis) != 0:
+            bpy.ops.object.mode_set(mode='EDIT')
+            editbone = joint.data.edit_bones[0]
+            length = editbone.length
+            joint["joint/axis"] = mathutils.Vector(tuple(axis))
+            editbone.tail = editbone.head + mathutils.Vector(tuple(axis)).normalized() * length
+            bpy.ops.object.mode_set(mode='POSE')
 
     # add spring & damping
     if jointtype in ['revolute', 'prismatic'] and (spring or damping):
@@ -276,14 +200,14 @@ def setJointConstraints(
 
         # TODO we should make sure that the rigid body constraints gets changed
         # if the values below are changed manually by the user
-        joint['joint/dynamics/springStiffness'] = spring
-        joint['joint/dynamics/springDamping'] = damping
-        joint['joint/dynamics/spring_const_constraint_axis1'] = spring  # FIXME: this is a hack
-        joint[
-            'joint/dynamics/damping_const_constraint_axis1'
-        ] = damping  # FIXME: this is a hack, too
+        joint['joint/dynamics/spring_stiffness'] = spring
+        joint['joint/dynamics/damping'] = damping
 
     # set constraints accordingly
+    joint['joint/limits/lower'] = lower
+    joint['joint/limits/upper'] = upper
+    joint.data.bones.active = joint.pose.bones[0].bone
+    joint.data.bones.active.select = True
     if jointtype == 'revolute':
         set_revolute(joint, lower, upper)
     elif jointtype == 'continuous':
@@ -304,10 +228,12 @@ def setJointConstraints(
 
     # check for approximation functions of effort and speed
     if jointtype in ['revolute', 'continuous', 'prismatic']:
+        joint['joint/limits/velocity'] = velocity
+        joint['joint/limits/effort'] = effort
         if maxeffort_approximation:
             if all(elem in ['function', 'coefficients'] for elem in maxeffort_approximation):
-                joint['joint/maxeffort_approximation'] = maxeffort_approximation['function']
-                joint['joint/maxeffort_coefficients'] = maxeffort_approximation['coefficients']
+                joint['joint/limits/maxeffort_approximation'] = maxeffort_approximation['function']
+                joint['joint/limits/maxeffort_coefficients'] = maxeffort_approximation['coefficients']
             else:
                 log(
                     "Approximation for max effort ill-defined in joint object {}.".format(
@@ -317,8 +243,8 @@ def setJointConstraints(
                 )
         if maxspeed_approximation:
             if all(elem in ['function', 'coefficients'] for elem in maxspeed_approximation):
-                joint['joint/maxspeed_approximation'] = maxspeed_approximation['function']
-                joint['joint/maxspeed_coefficients'] = maxspeed_approximation['coefficients']
+                joint['joint/limits/maxspeed_approximation'] = maxspeed_approximation['function']
+                joint['joint/limits/maxspeed_coefficients'] = maxspeed_approximation['coefficients']
             else:
                 log(
                     "Approximation for max speed ill-defined in joint object {}.".format(
@@ -598,3 +524,31 @@ def set_planar(joint):
     crot.min_z = 0
     crot.max_z = 0
     crot.owner_space = 'LOCAL'
+
+
+def set_ball(joint):
+    """
+
+    Args:
+      joint:
+      lower:
+      upper:
+
+    Returns:
+
+    """
+    # fix location
+    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+    cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
+    cloc.use_min_x = True
+    cloc.use_min_y = True
+    cloc.use_min_z = True
+    cloc.use_max_x = True
+    cloc.use_max_y = True
+    cloc.use_max_z = True
+    cloc.owner_space = 'LOCAL'
+    # fix rotation x, z
+    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+    crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.owner_space = 'LOCAL'
+

@@ -1,0 +1,21 @@
+digraph G {
+esep=10;
+sep=10;
+nodesep=0.5;
+node [shape=box];
+"root" [label="root"];
+"passive_a" [label="passive_a"];
+"end_effector" [label="end_effector"];
+"passive_b" [label="passive_b"];
+"prismatic" [label="prismatic"];
+node [shape=box, color=cyan, fontcolor=black];
+"submech_lambda_mechanism" [label="Submechanism\ntype: RRPR \nname: lambda_mechanism \ncontextual_name: lambda_mechanism "];
+node [shape=box, color=darkslateblue, fontcolor=black];
+"submech_end_effector" [label="Submechanism\ntype: R \nname: revolute \ncontextual_name: end_effector "];
+node [shape=ellipse, color=cyan, fontcolor=black];
+"root" -> "passive_a_joint" [label="xyz: 0.0 0.0 0.0 \nrpy: 0.0 0.0 0.0 \naxis: 1.0 0.0 0.0 \ntype: revolute "] "passive_a_joint" -> "passive_a"
+"root" -> "passive_b_joint" [label="xyz: 0.0 1.0 0.0 \nrpy: 0.0 0.0 0.0 \naxis: 1.0 0.0 0.0 \ntype: revolute "] "passive_b_joint" -> "passive_b"
+"passive_b" -> "prismatic_joint" [label="xyz: 0.0 -0.5 0.5 \nrpy: 0.785398156308485 0.0 0.0 \naxis: 0.0 0.0 1.0 \ntype: prismatic "] "prismatic_joint" -> "prismatic"
+node [shape=ellipse, color=darkslateblue, fontcolor=black];
+"passive_a" -> "end_effector_joint" [label="xyz: 0.0 0.5 0.5 \nrpy: 0.0 0.0 0.0 \naxis: 1.0 0.0 0.0 \ntype: revolute "] "end_effector_joint" -> "end_effector"
+}

@@ -1,0 +1,1209 @@
+{
+  "urdf": {
+    "XMLRobot": {
+      "tag": "robot",
+      "attributes": {
+        "name": "name",
+        "version": "urdf_version"
+      },
+      "children": {
+        "link": {
+          "classname": "Link",
+          "varname": "links"
+        },
+        "joint": {
+          "classname": "Joint",
+          "varname": "joints"
+        },
+        "material": {
+          "classname": "Material",
+          "varname": "materials"
+        },
+        "sensor": {
+          "classname": "SensorFactory",
+          "varname": "sensors"
+        },
+        "transmission": {
+          "classname": "Transmission",
+          "varname": "transmissions"
+        }
+      }
+    },
+    "Link": {
+      "tag": "link",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "inertial": {
+          "classname": "Inertial",
+          "varname": "inertial"
+        },
+        "visual": {
+          "classname": "Visual",
+          "varname": "visuals"
+        },
+        "collision": {
+          "classname": "Collision",
+          "varname": "collisions"
+        }
+      }
+    },
+    "Texture": {
+      "tag": "texture",
+      "attributes": {
+        "filename": "posix_path"
+      }
+    },
+    "Material": {
+      "tag": "material",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "texture": {
+          "classname": "Texture",
+          "varname": "diffuseTexture"
+        }
+      },
+      "attribute_children": {
+        "color": {
+          "rgba": "diffuse"
+        }
+      }
+    },
+    "Inertial": {
+      "tag": "inertial",
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "joint_relative_origin"
+        },
+        "inertia": {
+          "classname": "Inertia",
+          "varname": "inertia"
+        }
+      },
+      "attribute_children": {
+        "mass": {
+          "value": "mass"
+        }
+      }
+    },
+    "Inertia": {
+      "tag": "inertia",
+      "attributes": {
+        "ixx": "ixx",
+        "ixy": "ixy",
+        "ixz": "ixz",
+        "iyy": "iyy",
+        "iyz": "iyz",
+        "izz": "izz"
+      }
+    },
+    "Visual": {
+      "tag": "visual",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "joint_relative_origin"
+        },
+        "material": {
+          "classname": "Material",
+          "varname": "material_"
+        }
+      },
+      "attribute_children": {
+        "material": {
+          "name": "material"
+        }
+      },
+      "nested_children": {
+        "geometry": {
+          "children": {
+            "cylinder": {
+              "classname": "Cylinder",
+              "varname": "geometry"
+            },
+            "box": {
+              "classname": "Box",
+              "varname": "geometry"
+            },
+            "sphere": {
+              "classname": "Sphere",
+              "varname": "geometry"
+            },
+            "mesh": {
+              "classname": "Mesh",
+              "varname": "geometry"
+            }
+          }
+        }
+      }
+    },
+    "Collision": {
+      "tag": "collision",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "joint_relative_origin"
+        }
+      },
+      "nested_children": {
+        "geometry": {
+          "children": {
+            "cylinder": {
+              "classname": "Cylinder",
+              "varname": "geometry"
+            },
+            "box": {
+              "classname": "Box",
+              "varname": "geometry"
+            },
+            "sphere": {
+              "classname": "Sphere",
+              "varname": "geometry"
+            },
+            "mesh": {
+              "classname": "Mesh",
+              "varname": "geometry"
+            }
+          }
+        }
+      }
+    },
+    "Pose": {
+      "tag": "origin",
+      "attributes": {
+        "rpy": "rpy",
+        "xyz": "xyz"
+      }
+    },
+    "Mesh": {
+      "tag": "mesh",
+      "attributes": {
+        "filename": "posix_path",
+        "scale": "scale"
+      }
+    },
+    "Box": {
+      "tag": "box",
+      "attributes": {
+        "size": "size"
+      }
+    },
+    "Cylinder": {
+      "tag": "cylinder",
+      "attributes": {
+        "radius": "radius",
+        "length": "length"
+      }
+    },
+    "Sphere": {
+      "tag": "sphere",
+      "attributes": {
+        "radius": "radius"
+      }
+    },
+    "Joint": {
+      "tag": "joint",
+      "attributes": {
+        "name": "name",
+        "type": "joint_type"
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "joint_relative_origin"
+        },
+        "limit": {
+          "classname": "JointLimit",
+          "varname": "limit"
+        },
+        "mimic": {
+          "classname": "JointMimic",
+          "varname": "mimic"
+        },
+        "dynamics": {
+          "classname": "JointDynamics",
+          "varname": "dynamics"
+        }
+      },
+      "attribute_children": {
+        "parent": {
+          "link": "parent"
+        },
+        "child": {
+          "link": "child"
+        },
+        "axis": {
+          "xyz": "axis"
+        }
+      }
+    },
+    "JointLimit": {
+      "tag": "limit",
+      "attributes": {
+        "lower": "lower",
+        "upper": "upper",
+        "effort": "effort",
+        "velocity": "velocity"
+      }
+    },
+    "JointMimic": {
+      "tag": "mimic",
+      "attributes":{
+        "multiplier": "multiplier",
+        "offset": "offset",
+        "joint": "joint"
+      }
+    },
+    "JointDynamics": {
+      "tag": "dynamics",
+      "attributes":{
+        "damping": "damping",
+        "friction": "friction"
+      }
+    },
+    "Actuator": {
+      "tag": "actuator",
+      "attributes": {
+        "name": "name"
+      },
+      "value_children": {
+        "mechanicalReduction": "mechanicalReduction",
+        "hardwareInterface": "hardwareInterface"
+      }
+    },
+    "TransmissionJoint": {
+      "tag": "transmission",
+      "attributes": {
+        "name": "name"
+      },
+      "value_children": {
+        "hardwareInterface": "hardwareInterface"
+      }
+    },
+    "Transmission": {
+      "tag": "transmission",
+      "attributes": {
+        "name": "name",
+        "type": "type"
+      },
+      "children": {
+        "joint": {
+          "classname": "TransmissionJoint",
+          "varname": "joints"
+        },
+        "actuator": {
+          "classname": "Actuator",
+          "varname": "actuators"
+        }
+      }
+    },
+    "SensorFactory": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "rate": "rate"
+      },
+      "attribute_children": {
+        "parent": {
+          "link": "link"
+        }
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
+        "force_torque": {
+          "value_children": {
+            "frame": "link"
+          }
+        },
+        "ray": {
+          "nested_children": {
+            "scan": {
+              "nested_children": {
+                "horizontal": {
+                  "value_children": {
+                    "samples": "bands",
+                    "min_angle": "min_horizontal_angle",
+                    "max_angle": "max_horizontal_angle",
+                    "resolution": "horizontal_resolution"
+                  }
+                },
+                "vertical": {
+                  "value_children": {
+                    "samples": "lasers",
+                    "min_angle": "min_vertical_angle",
+                    "max_angle": "max_vertical_angle",
+                    "resolution": "vertical_resolution"
+                  }
+                }
+              }
+            },
+            "range": {
+              "value_children": {
+                "max": "max_distance",
+                "min": "min_distance"
+              }
+            }
+          }
+        },
+        "camera": {
+          "nested_children": {
+            "image": {
+              "value_children": {
+                "width": "width",
+                "height": "height",
+                "hfov": "opening_width"
+              }
+            }
+          }
+        },
+        "contact": {
+          "value_children": {
+            "collision": "targets"
+          }
+        }
+      }
+    },
+    "Joint6DOF": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "rate": "rate"
+      },
+      "attribute_children": {
+        "parent": {
+          "link": "link"
+        }
+      },
+      "nested_children": {
+        "force_torque": {
+          "value_children": {
+            "frame": "link"
+          }
+        }
+      }
+    },
+    "RotatingRaySensor": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "rate": "rate"
+      },
+      "attribute_children": {
+        "parent": {
+          "link": "link"
+        }
+      },
+      "nested_children": {
+        "ray": {
+          "nested_children": {
+            "scan": {
+              "nested_children": {
+                "horizontal": {
+                  "value_children": {
+                    "samples": "bands",
+                    "min_angle": "min_horizontal_angle",
+                    "max_angle": "max_horizontal_angle",
+                    "resolution": "horizontal_resolution"
+                  }
+                },
+                "vertical": {
+                  "value_children": {
+                    "samples": "lasers",
+                    "min_angle": "min_vertical_angle",
+                    "max_angle": "max_vertical_angle",
+                    "resolution": "vertical_resolution"
+                  }
+                }
+              }
+            },
+            "range": {
+              "value_children": {
+                "max": "max_distance",
+                "min": "min_distance"
+              }
+            }
+          }
+        }
+      }
+    },
+    "CameraSensor": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "rate": "rate"
+      },
+      "attribute_children": {
+        "parent": {
+          "link": "link"
+        }
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
+        "camera": {
+          "nested_children": {
+            "image": {
+              "value_children": {
+                "width": "width",
+                "height": "height",
+                "hfov": "opening_width"
+              }
+            }
+          }
+        }
+      }
+    },
+    "NodeContact": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "rate": "rate"
+      },
+      "attribute_children": {
+        "parent": {
+          "link": "link"
+        }
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
+        "contact": {
+          "value_children": {
+            "collision": "targets"
+          }
+        }
+      }
+    }
+  },
+  "sdf": {
+    "World": {
+      "tag":  "world",
+      "children": {
+        "model": {
+          "classname": "Entity",
+          "varname": "entities"
+        },
+        "frames":{
+          "classname": "Frame",
+          "varname": "frames"
+        },
+        "physics": {
+          "classname": "Physics",
+          "varname": "physics"
+        }
+      },
+      "value_children": {
+        "gravity": "physics.gravity"
+      }
+    },
+    "Environment": {
+      "tag": "scene"
+    },
+    "Frame": {
+      "tag": "frame",
+      "value_children": {
+        "name": "name",
+        "attached_to": "attached_to"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      }
+    },
+    "Entity": {
+      "tag": "model",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "link": {
+          "classname": "Link",
+          "varname": "model.links"
+        },
+        "joint": {
+          "classname": "Joint",
+          "varname": "model.joints"
+        },
+        "material": {
+          "classname": "Material",
+          "varname": "model.materials"
+        },
+        "sensor": {
+          "classname": "SensorFactory",
+          "varname": "model.sensors"
+        },
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      }
+    },
+    "Physics": {
+      "tag": "physics",
+      "children": {
+        "ode": {
+          "classname": "ODE",
+          "varname": "ode"
+        }
+      }
+    },
+    "ODE": {
+      "tag": "ode",
+      "nested_children": {
+        "constraints": {
+          "value_children": {
+            "cfm": "cfm",
+            "erp": "erp"
+          }
+        }
+      }
+    },
+    "XMLRobot": {
+      "tag": "model",
+      "attributes": {
+        "name": "name",
+        "canonical_link": "root"
+      },
+      "children": {
+        "link": {
+          "classname": "Link",
+          "varname": "links"
+        },
+        "joint": {
+          "classname": "Joint",
+          "varname": "joints"
+        },
+        "sensor": {
+          "classname": "SensorFactory",
+          "varname": "sensors"
+        },
+        "plugin": {
+          "classname": "PluginFactory",
+          "varname": "plugins"
+        },
+        "motors": {
+          "classname": "PluginFactory",
+          "varname": "motors"
+        }
+      }
+    },
+    "Link": {
+      "tag": "link",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        },
+        "inertial": {
+          "classname": "Inertial",
+          "varname": "inertial"
+        },
+        "visual": {
+          "classname": "Visual",
+          "varname": "visuals"
+        },
+        "collision": {
+          "classname": "Collision",
+          "varname": "collisions"
+        }
+      }
+    },
+    "Material": {
+      "tag": "material",
+      "value_children": {
+        "diffuse": "diffuse",
+        "ambient": "ambient",
+        "specular": "specular",
+        "emissive": "emissive"
+      }
+    },
+    "Inertial": {
+      "tag": "inertial",
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        },
+        "inertia": {
+          "classname": "Inertia",
+          "varname": "inertia"
+        }
+      },
+      "value_children": {
+        "mass": "mass"
+      }
+    },
+    "Inertia": {
+      "tag": "inertia",
+      "value_children": {
+        "ixx": "ixx",
+        "ixy": "ixy",
+        "ixz": "ixz",
+        "iyy": "iyy",
+        "iyz": "iyz",
+        "izz": "izz"
+      }
+    },
+    "Visual": {
+      "tag": "visual",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        },
+        "material": {
+          "classname": "Material",
+          "varname": "material"
+        }
+      },
+      "nested_children": {
+        "geometry": {
+          "children": {
+            "cylinder": {
+              "classname": "Cylinder",
+              "varname": "geometry"
+            },
+            "box": {
+              "classname": "Box",
+              "varname": "geometry"
+            },
+            "sphere": {
+              "classname": "Sphere",
+              "varname": "geometry"
+            },
+            "mesh": {
+              "classname": "Mesh",
+              "varname": "geometry"
+            }
+          }
+        }
+      }
+    },
+    "Collision": {
+      "tag": "collision",
+      "attributes": {
+        "name": "name"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
+        "geometry": {
+          "children": {
+            "cylinder": {
+              "classname": "Cylinder",
+              "varname": "geometry"
+            },
+            "box": {
+              "classname": "Box",
+              "varname": "geometry"
+            },
+            "sphere": {
+              "classname": "Sphere",
+              "varname": "geometry"
+            },
+            "mesh": {
+              "classname": "Mesh",
+              "varname": "geometry"
+            }
+          }
+        },
+        "surface": {
+          "nested_children": {
+            "contact": {
+              "value_children": {
+                "collide_bitmask": "bitmask"
+              }
+            }
+          }
+        }
+      }
+    },
+    "Pose": {
+      "tag": "pose",
+      "value": "vec",
+      "attributes": {
+        "relative_to": "relative_to"
+      }
+    },
+    "Mesh": {
+      "tag": "mesh",
+      "value_children": {
+        "uri": "posix_path",
+        "scale": "scale"
+      }
+    },
+    "Box": {
+      "tag": "box",
+      "value_children": {
+        "size": "size"
+      }
+    },
+    "Cylinder": {
+      "tag": "cylinder",
+      "value_children": {
+        "radius": "radius",
+        "length": "length"
+      }
+    },
+    "Sphere": {
+      "tag": "sphere",
+      "value_children": {
+        "radius": "radius"
+      }
+    },
+    "Joint": {
+      "tag": "joint",
+      "attributes": {
+        "name": "name",
+        "type": "joint_type"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        },
+        "mimic": {
+          "classname": "JointMimic",
+          "varname": "mimic"
+        }
+      },
+      "nested_children": {
+        "axis": {
+          "tag": "axis",
+          "children": {
+            "limit": {
+              "classname": "JointLimit",
+              "varname": "limit"
+            },
+            "dynamics": {
+              "classname": "JointDynamics",
+              "varname": "dynamics"
+            }
+          },
+          "value_children": {
+            "xyz": "axis"
+          }
+        }
+      },
+      "value_children": {
+        "parent": "parent",
+        "child": "child"
+      }
+    },
+    "JointLimit": {
+      "tag": "limit",
+      "value_children": {
+        "lower": "lower",
+        "upper": "upper",
+        "effort": "effort",
+        "velocity": "velocity"
+      }
+    },
+    "JointMimic": {
+      "tag": "mimic",
+      "attributes":{
+        "multiplier": "multiplier",
+        "offset": "offset",
+        "joint": "joint"
+      }
+    },
+    "JointDynamics": {
+      "tag": "dynamics",
+      "value_children":{
+        "damping": "damping",
+        "friction": "friction",
+        "spring_stiffness": "spring_stiffness"
+      }
+    },
+    "SensorFactory": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "rate": "rate"
+      },
+      "attribute_children": {
+        "parent": {
+          "link": "link"
+        }
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
+        "force_torque": {
+          "value_children": {
+            "frame": "link"
+          }
+        },
+        "ray": {
+          "nested_children": {
+            "scan": {
+              "nested_children": {
+                "horizontal": {
+                  "value_children": {
+                    "samples": "bands",
+                    "min_angle": "min_horizontal_angle",
+                    "max_angle": "max_horizontal_angle",
+                    "resolution": "horizontal_resolution"
+                  }
+                },
+                "vertical": {
+                  "value_children": {
+                    "samples": "lasers",
+                    "min_angle": "min_vertical_angle",
+                    "max_angle": "max_vertical_angle",
+                    "resolution": "vertical_resolution"
+                  }
+                }
+              }
+            },
+            "range": {
+              "value_children": {
+                "max": "max_distance",
+                "min": "min_distance"
+              }
+            }
+          }
+        },
+        "camera": {
+          "nested_children": {
+            "image": {
+              "value_children": {
+                "width": "width",
+                "height": "height",
+                "hfov": "opening_width"
+              }
+            }
+          }
+        },
+        "contact": {
+          "value_children": {
+            "collision": "targets"
+          }
+        }
+      }
+    },
+    "Joint6DOF": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "type": "sdf_type"
+      },
+      "value_children": {
+        "always_on": "always_on",
+        "rate": "rate",
+        "visualize": "visualize",
+        "topic": "topic",
+        "enable_metrics": "enable_metrics"
+      },
+      "nested_children": {
+        "force_torque": {
+          "value_children": {
+            "frame": "link"
+          }
+        }
+      }
+    },
+    "RotatingRaySensor": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "type": "type"
+      },
+      "value_children": {
+        "always_on": "always_on",
+        "rate": "rate",
+        "visualize": "visualize",
+        "topic": "topic",
+        "enable_metrics": "enable_metrics"
+      },
+      "nested_children": {
+        "lidar": {
+          "nested_children": {
+            "scan": {
+              "nested_children": {
+                "horizontal": {
+                  "value_children": {
+                    "samples": "bands",
+                    "min_angle": "min_horizontal_angle",
+                    "max_angle": "max_horizontal_angle",
+                    "resolution": "horizontal_resolution"
+                  }
+                },
+                "vertical": {
+                  "value_children": {
+                    "samples": "lasers",
+                    "min_angle": "min_vertical_angle",
+                    "max_angle": "max_vertical_angle",
+                    "resolution": "vertical_resolution"
+                  }
+                }
+              }
+            },
+            "range": {
+              "value_children": {
+                "max": "max_distance",
+                "min": "min_distance"
+              }
+            }
+          }
+        }
+      }
+    },
+    "CameraSensor": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "type": "type"
+      },
+      "value_children": {
+        "always_on": "always_on",
+        "rate": "rate",
+        "visualize": "visualize",
+        "topic": "topic",
+        "enable_metrics": "enable_metrics"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
+        "camera": {
+          "attributes": {
+            "name": "name"
+          },
+          "nested_children": {
+            "image": {
+              "value_children": {
+                "width": "width",
+                "height": "height"
+              }
+            }
+          },
+          "value_children": {
+            "horizontal_fov": "opening_width"
+          },
+          "children": {
+            "pose": {
+              "classname": "Pose",
+              "varname": "origin"
+            }
+          }
+        }
+      }
+    },
+    "NodeContact": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "type": "type"
+      },
+      "value_children": {
+        "always_on": "always_on",
+        "rate": "rate",
+        "visualize": "visualize",
+        "topic": "topic",
+        "enable_metrics": "enable_metrics"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      },
+      "nested_children": {
+        "contact": {
+          "value_children": {
+            "collision": "collisions"
+          }
+        }
+      }
+    },
+    "PluginFactory": {
+      "tag": "plugin",
+      "attributes": {
+        "name": "plugin_name",
+        "filename": "plugin_filename"
+      },
+      "value_children": {
+        "joint_name": "joint_name",
+        "joint_index": "joint_index",
+        "use_force_commands": "use_force_commands",
+        "p_gain": "p_gain",
+        "i_gain":  "i_gain",
+        "d_gain": "d_gain",
+        "i_max":  "i_max",
+        "i_min": "i_min",
+        "cmd_max":  "cmd_max",
+        "cmd_min": "cmd_min",
+        "cmd_offset":  "cmd_offset"
+      }
+    },
+    "Motor": {
+      "tag": "plugin",
+      "attributes": {
+        "filename": "plugin_filename",
+        "name": "plugin_name"
+      },
+      "value_children": {
+        "joint_name": "joint",
+        "joint_index": "joint_index",
+        "use_force_commands": "force_control",
+        "p_gain": "p",
+        "i_gain":  "i",
+        "d_gain": "d",
+        "i_max":  "i_max",
+        "i_min": "i_min",
+        "cmd_max":  "cmd_max",
+        "cmd_min": "cmd_min",
+        "cmd_offset":  "cmd_offset"
+      }
+    }
+  },
+  "x3d": {
+    "XMLRobot": {
+      "tag": "Group",
+      "children": {
+        "Shape": {
+          "classname": "Visual",
+          "varname": "visuals"
+        }
+      }
+    },
+    "Mesh": {
+      "tag": "IndexedFaceSet",
+      "attributes": {
+        "coordIndex": "x3d_faces",
+        "colorPerVertex": "$false",
+        "normalPerVertex": "$false"
+      },
+      "attribute_children": {
+        "Coordinate": {
+          "point": "x3d_vertices"
+        },
+        "Normal": {
+          "vector": "x3d_face_normals"
+        }
+      }
+    },
+    "Cylinder": {
+      "tag": "Cylinder",
+      "attributes": {
+        "height": "length",
+        "radius": "radius"
+      }
+    },
+    "Box": {
+      "tag": "Cylinder",
+      "attributes": {
+        "size": "size"
+      }
+    },
+    "Sphere": {
+      "tag": "Cylinder",
+      "attributes": {
+        "radius": "radius"
+      }
+    },
+    "Material": {
+      "tag": "Appearance",
+      "attributes": {
+        "DEF": "name"
+      },
+      "nested_children": {
+        "CommonSurfaceShader": {
+          "attributes": {
+            "diffuseFactor": "diffuse_rgb",
+            "specularFactor": "specular_rgb",
+            "shininessFactor": "shininess",
+            "ambientFactor": "$.588 .588 .588",
+            "normalScale": "$2 2 2",
+            "normalBias": "$-1 -1 1"
+          },
+          "children": {
+            "ImageTexture": {
+              "classname": "Texture",
+              "varname": "diffuseTexture"
+            }
+          }
+        }
+      }
+    },
+    "Visual": {
+      "tag": "Transform",
+      "attributes": {
+        "translation": "position_from_root",
+        "rotation": "axis_angle_from_root"
+      },
+      "nested_children": {
+        "Shape": {
+          "attributes": {
+            "DEF": "name"
+          },
+          "children": {
+            "Cylinder": {
+              "classname": "Cylinder",
+              "varname": "geometry"
+            },
+            "box": {
+              "classname": "Box",
+              "varname": "geometry"
+            },
+            "sphere": {
+              "classname": "Sphere",
+              "varname": "geometry"
+            },
+            "mesh": {
+              "classname": "Mesh",
+              "varname": "geometry"
+            },
+            "Appearance": {
+              "classname": "Material",
+              "varname": "material"
+            }
+          }
+        }
+      }
+    }
+  }
+}

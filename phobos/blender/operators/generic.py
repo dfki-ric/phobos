@@ -14,25 +14,23 @@ Contains the generic Blender operators for adding yaml parsed objects and simila
 """
 
 import bpy
-import mathutils
-from bpy.types import Operator, PropertyGroup
 from bpy.props import (
     BoolProperty,
-    IntProperty,
-    StringProperty,
     EnumProperty,
-    FloatProperty,
-    FloatVectorProperty,
-    BoolVectorProperty,
     CollectionProperty,
+    StringProperty,
 )
+from bpy.types import Operator, PropertyGroup
+from numpy import isin
 
-import phobos.blender.defs as defs
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.editing as eUtils
-import phobos.blender.utils.io as ioUtils
-from phobos.blender.phoboslog import log
+from .. import defs as defs
+from ..io import phobos2blender, blender2phobos
+from ..phoboslog import log
+from ..utils import blender as bUtils
+from ..utils import editing as eUtils
+from ..utils import io as ioUtils
+from ..utils import selection as sUtils
+from ...io import representation
 
 
 def linkObjectLists(annotation, objectlist):
@@ -87,6 +85,7 @@ def linkObjectLists(annotation, objectlist):
     return newanno
 
 
+# [TODO v2.1.0] Review this and re-add property adding to AddAnnotationOperator
 class DynamicProperty(PropertyGroup):
     """A support class to handle dynamic properties in a temporary operator."""
 
@@ -95,6 +94,75 @@ class DynamicProperty(PropertyGroup):
     boolProp : bpy.props.BoolProperty()
     stringProp : bpy.props.StringProperty()
     floatProp : bpy.props.FloatProperty()
+
+    STRING = 1
+    INT = 2
+    BOOL = 3
+    FLOAT = 4
+    DICT = 5
+    valueType : bpy.props.IntProperty()
+
+    isEnabled : bpy.props.BoolProperty()
+    isEnabledOption : bpy.props.BoolProperty() # Whether this property can be disabled
+
+    dictName: bpy.props.StringProperty()
+
+    def assignParent(self, name):
+        """
+        Assign a parent if this property is part of a dict
+
+        Args:
+            name: Parent's name
+
+        Returns:
+
+        """
+        self.dictName = name
+
+    def getValue(self, properties=[]):
+        """
+        Args:
+            properties: List of all DynamicProperties. Pass this to a dict property.
+            Allows it to collect the data
+
+        Returns: This property's value
+
+        """
+        if self.valueType == self.INT:
+            return self.intProp
+        elif self.valueType == self.BOOL:
+            return self.boolProp
+        elif self.valueType == self.STRING:
+            return self.stringProp
+        elif self.valueType == self.FLOAT:
+            return self.floatProp
+        elif self.valueType == self.DICT:
+            result = {}
+            for prop in properties:
+                if prop.dictName == self.name:
+                    result[prop.name] = prop.getValue()
+            return result
+
+    def isDictElement(self):
+        """
+
+        Args:
+
+        Returns: True if this property is part of a dict, False otherwise
+
+        """
+        return len(self.dictName) > 0
+
+    def allowDisabling(self):
+        """
+        Call to allow the user to disable this property
+
+        Args:
+
+        Returns:
+
+        """
+        self.isEnabledOption = True
 
     def assignValue(self, name, value):
         """
@@ -106,29 +174,37 @@ class DynamicProperty(PropertyGroup):
         Returns:
 
         """
-        prefix = ''
-        if isinstance(value, int):
-            self.intProp = value
-            prefix = 'i'
-        elif isinstance(value, str):
-            import re
+        self.isEnabled = True
+        self.isEnabledOption = False
 
-            # make sure eval is called only with true or false
-            if re.match('true|false', value[1:], re.IGNORECASE):
-                booleanString = value[1:]
-                booleanString = booleanString[0].upper() + booleanString[1:].lower()
-                self.boolProp = eval(booleanString)
-                prefix = 'b'
-            else:
-                self.stringProp = value
-                prefix = 's'
+        if isinstance(value, bool):
+            self.boolProp = value
+            self.valueType = self.BOOL
+        elif isinstance(value, str):
+            self.stringProp = value
+            self.valueType = self.STRING
+        elif isinstance(value, int):
+            self.intProp = value
+            self.valueType = self.INT
         elif isinstance(value, float):
             self.floatProp = value
-            prefix = 'f'
+            self.valueType = self.FLOAT
+        elif value is None:
+            self.intProp = 0
+            self.valueType = self.INT
+            self.isEnabled = False
+            self.allowDisabling()
+        elif isinstance(value, dict):
+            self.valueType = self.DICT
+        else:
+            print("DynamicProperty - Unknown type:")
+            print(type(value))
+            print(value)
         # TODO what about lists?
 
-        self.name = prefix + '_' + name
+        self.name = name
 
+    @staticmethod
     def assignDict(addfunc, dictionary, ignore=[]):
         """
 
@@ -145,13 +221,16 @@ class DynamicProperty(PropertyGroup):
             if propname in ignore:
                 continue
 
-            # skip subcategories
-            if isinstance(dictionary[propname], dict):
-                unsupported[propname] = dictionary[propname]
-                continue
-
             subprop = addfunc()
             subprop.assignValue(propname, dictionary[propname])
+
+            # add subcategories
+            if isinstance(dictionary[propname], dict):
+                unsupported[propname] = dictionary[propname]
+                for name, value in dictionary[propname].items():
+                    dictprop = addfunc()
+                    dictprop.assignValue(name, value)
+                    dictprop.assignParent(propname)
 
         return unsupported
 
@@ -165,14 +244,44 @@ class DynamicProperty(PropertyGroup):
         Returns:
 
         """
-        if self.name[0] == 'i':
-            layout.prop(self, 'intProp', text=name)
-        elif self.name[0] == 'b':
-            layout.prop(self, 'boolProp', text=name)
-        elif self.name[0] == 's':
-            layout.prop(self, 'stringProp', text=name)
-        elif self.name[0] == 'f':
-            layout.prop(self, 'floatProp', text=name)
+        if self.isEnabledOption:
+            line = layout.split(factor=0.1)
+            line.prop(self, 'isEnabled', text="")
+            row = line.row()
+            row.enabled = self.isEnabled
+        else:
+            row = layout
+
+        if len(self.dictName) > 0:
+            row.separator(factor=0.03)
+
+        if self.valueType == self.INT:
+            row.prop(self, 'intProp', text=name)
+        elif self.valueType == self.BOOL:
+            row.prop(self, 'boolProp', text=name)
+        elif self.valueType == self.STRING:
+            row.prop(self, 'stringProp', text=name)
+        elif self.valueType == self.FLOAT:
+            row.prop(self, 'floatProp', text=name)
+        elif self.valueType == self.DICT:
+            row.label(text=name+":")
+
+    @staticmethod
+    def collectDict(properties):
+        """
+
+        Args:
+          properties (list of DynamicProperty):
+
+        Returns:
+          A dict like the one passed to assignDict with the data the user changed
+
+        """
+        result = {}
+        for prop in properties:
+            if prop.isEnabled and not prop.isDictElement():
+                result[prop.name] = prop.getValue(properties)
+        return result
 
 
 def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops=[]):
@@ -193,11 +302,6 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
     Returns:
 
     """
-    # unregister other temporary operators first
-    try:
-        bpy.utils.unregister_class(TempObjAddOperator)
-    except UnboundLocalError:
-        pass
 
     blender_name = name.replace(' ', '_').lower()
     operatorBlenderId = 'phobos.add_{}_{}'.format(phobtype, blender_name)
@@ -344,84 +448,30 @@ class AddAnnotationsOperator(bpy.types.Operator):
     bl_region_type = 'FILE'
     bl_options = {'REGISTER', 'UNDO'}
 
-    def getAnnotationTypes(self, context):
-        """
-
-        Args:
-          context: 
-
-        Returns:
-
-        """
-        return [(category,) * 3 for category in sorted(defs.definitions.keys())]
-
-    def getAnnotationCategories(self, context):
-        """
-
-        Args:
-          context: 
-
-        Returns:
-
-        """
-        subcategories = [
-            (category,) * 3 for category in sorted(defs.def_subcategories[self.annotationtype])
-        ]
-
-        # do not use single categories
-        if not subcategories:
-            subcategories = [('None',) * 3]
-        return subcategories
-
-    def getDeviceTypes(self, context):
-        """
-
-        Args:
-          context: 
-
-        Returns:
-
-        """
-        devicetypes = [
-            (device,) * 3
-            for device in sorted(defs.definitions[self.annotationtype].keys())
-            if self.annotationcategories
-            in defs.def_settings[self.annotationtype][device]['categories']
-        ]
-
-        if not devicetypes:
-            devicetypes = [('None',) * 3]
-        return devicetypes
-
-    asObject : BoolProperty(
-        name="Add as objects", description="Add annotation as object(s)", default=True
+    category : StringProperty(
+        name="Annotation Type", description="Annotation Types"
     )
 
-    annotationtype : EnumProperty(
-        items=getAnnotationTypes, name="Annotation Type", description="Annotation Types"
+    include_parent : BoolProperty(
+        name="Include parent link", default=False,
+        description="By using the string key $parent you can include the name of the parent link in your annotations.\n"
+                    "Using $parent.{property} let's you use the parents phobos.core properties e.g. the joint name"
     )
 
-    annotationcategories : EnumProperty(
-        items=getAnnotationCategories,
-        name="Categories",
-        description="Categories of this annotation type.",
+    include_transform : BoolProperty(
+        name="Includes transformation", default=False,
+        description="By using the string key $transform you can include the name of the parent link in your annotations.\n"
+                    "Using &transform.matrix/position/rotation_euler/quaternion let's you choose in which way it is stored."
     )
 
-    devicetype : EnumProperty(items=getDeviceTypes, name="Device Type", description="Device Types")
+    multiple_entries : BoolProperty(
+        name="Multiple Entries", default=True,
+        description="If you have multiple annotations in this category"
+    )
 
-    annotation_data : bpy.props.CollectionProperty(type=DynamicProperty)
-
-    @classmethod
-    def poll(cls, context):
-        """
-
-        Args:
-          context: 
-
-        Returns:
-
-        """
-        return context is not None
+    name : StringProperty(
+        name="Annotation name", description="This name will be used for the annotation, if there are multiple annotations in this category."
+    )
 
     def invoke(self, context, event):
         """
@@ -435,17 +485,6 @@ class AddAnnotationsOperator(bpy.types.Operator):
         """
         return context.window_manager.invoke_props_dialog(self, width=500)
 
-    def check(self, context):
-        """
-
-        Args:
-          context: 
-
-        Returns:
-
-        """
-        return True
-
     def draw(self, context):
         """
 
@@ -456,54 +495,19 @@ class AddAnnotationsOperator(bpy.types.Operator):
 
         """
         layout = self.layout
-        if self.asObject:
-            layout.prop(
-                self, 'asObject', text='add annotations as object(s)', icon='FORCE_LENNARDJONES'
-            )
-        else:
-            layout.prop(self, 'asObject', text='add annotations to object', icon='REC')
-        layout.separator()
+        layout.label(text="The category for your annotation")
+        layout.prop(self, 'category')
+        layout.prop(self, 'multiple')
+        layout.prop(self, 'name')
 
-        layout.prop(self, 'annotationtype')
+        layout.prop(self, 'include_parent')
+        layout.prop(self, 'include_transform')
 
-        if self.annotationcategories == 'None':
-            layout.label(text='No categories available.')
-        else:
-            layout.prop(self, 'annotationcategories')
-
-        # hide devicetype property when empty
-        if self.devicetype == 'None':
-            layout.label(text='No devices defined.')
-            return
-
-        layout.prop(self, 'devicetype')
-        data = defs.definitions[self.annotationtype][self.devicetype]
-
-        hidden_props = ['general']
-        # identify the property type for all the stuff in the definition
-        self.annotation_data.clear()
-        unsupported = DynamicProperty.assignDict(
-            self.annotation_data.add, data, ignore=hidden_props
-        )
-
-        # expose the parameters as the right Property
-        if self.annotation_data:
-            box = layout.box()
-            for i in range(len(self.annotation_data)):
-                name = self.annotation_data[i].name[2:].replace('_', ' ')
-
-                # use the dynamic props name in the GUI, but without the type id
-                self.annotation_data[i].draw(box, name)
-
-            # add unsupported stuff as labels
-            for item in unsupported:
-                box.label(text=item, icon='ERROR')
-
-        if unsupported:
-            log(
-                "These properties are not supported for generic editing: " + str(list(unsupported)),
-                'DEBUG',
-            )
+        layout.label(text="After you have created the annotation object, you can:\n"
+                          "- Position it in the 3d view\n"
+                          "- Parent it to other objects (as Bone Relative)\n"
+                          "- Define its properties in the custom property panel\n"
+                          "  To create nested entries use the prop/nest/key syntax for the property name")
 
     def execute(self, context):
         """
@@ -514,37 +518,31 @@ class AddAnnotationsOperator(bpy.types.Operator):
         Returns:
 
         """
-        objects = context.selected_objects
-        annotation = defs.definitions[self.annotationtype][self.devicetype]
 
-        # add annotation (objects) to the selected objects
-        annot_objects = []
-        for obj in objects:
-            if self.asObject:
-                annot_objects.append(
-                    eUtils.addAnnotationObject(
-                        obj,
-                        annotation,
-                        name=obj.name + '_annotation',
-                        namespace=self.annotationtype.rstrip('s'),
-                    )
-                )
-            else:
-                eUtils.addAnnotation(obj, annotation, namespace=self.annotationtype.rstrip('s'))
-
-        # reselect the original objects and additional annotation objects
-        sUtils.selectObjects(objects + annot_objects, clear=True)
+        parent = None
+        if not hasattr(context.active_object, "phobostype"):
+            log("Annotation will not be parented to the active object, as it is no phobos object", "WARN")
+        elif self.include_parent:
+            parent = context.active_object
+        phobos2blender.createAnnotation(
+            representation.GenericAnnotation(
+                GA_category=self.category,
+                GA_name=self.name,
+                GA_parent=parent if parent else None,
+                GA_parent_type=parent.phobostype if parent else None,
+                GA_transform=blender2phobos.deriveObjectPose(context.active_object)
+                if context.active_object is not None and self.include_transform else None
+            )
+        )
         bUtils.toggleLayer('annotation', value=True)
         return {'FINISHED'}
 
 
 def register():
     """TODO Missing documentation"""
-    bpy.utils.register_class(DynamicProperty)
     bpy.utils.register_class(AddAnnotationsOperator)
 
 
 def unregister():
     """TODO Missing documentation"""
-    bpy.utils.unregister_class(DynamicProperty)
     bpy.utils.unregister_class(AddAnnotationsOperator)

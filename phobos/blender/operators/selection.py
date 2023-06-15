@@ -13,17 +13,15 @@
 Contains all Blender operators used to select objects by different criteria.
 """
 
-import sys
-import inspect
-
 import bpy
-from bpy.types import Operator
 from bpy.props import EnumProperty, StringProperty
-import phobos.blender.defs as defs
-import phobos.blender.utils.selection as sUtils
-import phobos.blender.utils.blender as bUtils
-import phobos.blender.utils.naming as nUtils
-from phobos.blender.phoboslog import log
+from bpy.types import Operator
+
+from .. import defs as defs
+from ..phoboslog import log
+from ..utils import blender as bUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
 
 
 class SelectObjectsByPhobosType(Operator):
@@ -219,21 +217,7 @@ class SelectModelOperator(Operator):
         Returns:
 
         """
-        selection = []
-        if self.modelname:
-            log("phobos: Selecting model" + self.modelname, "INFO")
-            roots = sUtils.getRoots()
-            for root in roots:
-                if nUtils.getModelName(root) == self.modelname:
-                    selection = sUtils.getChildren(root)
-        else:
-            log("No model name provided, deriving from selection...", "INFO")
-            roots = set()
-            for obj in bpy.context.selected_objects:
-                roots.add(sUtils.getRoot(obj))
-            for root in list(roots):
-                selection.extend(sUtils.getChildren(root))
-        sUtils.selectObjects(list(selection), True)
+        sUtils.selectModel(self.modelname)
         return {'FINISHED'}
 
 classes = (

@@ -9,65 +9,18 @@
 # If not, see <https://opensource.org/licenses/BSD-3-Clause>.
 # -------------------------------------------------------------------------------
 
-import shutil
-import sys
 import os
+
 import bpy
 
-from phobos.blender import defs
-from phobos.blender import display
-from phobos.blender.phoboslog import log
+from .. import defs
+from ..phoboslog import log
+from ..utils import blender as bUtils
+from ..utils import naming as nUtils
+from ..utils import selection as sUtils
 
-from phobos.blender.io.entities import entity_types
-from phobos.blender.io.meshes import mesh_types
-from phobos.blender.io.scenes import scene_types
-
-from phobos.blender.utils import selection as sUtils
-from phobos.blender.utils import naming as nUtils
-from phobos.blender.utils import blender as bUtils
-
-
-indent = '  '
-xmlHeader = '<?xml version="1.0"?>\n<!-- created with Phobos ' + defs.version + ' -->\n'
-
-
-def xmlline(ind, tag, names, values):
-    """Generates an xml line with specified values.
-    To use this function you need to know the indentation level you need for this line.
-    Make sure the names and values list have the correct order.
-
-    Args:
-      ind(int >= 0): Indentation level
-      tag(String): xml element tag
-      names(list (same order as for values): Names of xml element's attributes
-      values(list (same order as for names): Values of xml element's attributes
-
-    Returns:
-      : String -- Generated xml line.
-
-    """
-    line = [indent * max(0, ind) + '<' + tag]
-    for i in range(len(names)):
-        line.append(' ' + names[i] + '="' + str(values[i]) + '"')
-    line.append('/>\n')
-    return ''.join(line)
-
-
-def l2str(items, start=0, end=None):
-    """Generates string from (part of) a list.
-
-    Args:
-      items(list): List from which the string is derived (elements need to implement str())
-      start(int, optional): Inclusive start index for iteration (Default value = 0)
-      end(int, optional): Exclusive end index for iteration (Default value = None)
-
-    Returns:
-      : str - Generated string.
-
-    """
-    start = max(start, 0)
-    end = end if end else len(items)
-    return ' '.join([str(i) for i in items[start:end]])
+from ...defs import EXPORT_TYPES, IMPORT_TYPES, SCENE_TYPES, MESH_TYPES
+from ...utils.resources import get_blender_resources_path
 
 
 def securepath(path):
@@ -186,13 +139,16 @@ def getOutputMeshtype():
     """Returns the mesh type to be used in exported files as specified in the GUI"""
     return str(getExpSettings().outputMeshtype)
 
+
 def getOutputPathtype():
     """Returns the path type to be used in exported files as specified in the GUI"""
     return str(getExpSettings().outputPathtype)
 
+
 def getRosPackageName():
     """Returns the ros package name used for ros path definitions"""
     return str(getExpSettings().rosPackageName)
+
 
 def getOutputMeshpath(path, meshtype=None, pathType="relative"):
     """Returns the folder path for mesh file export as specified in the GUI.
@@ -212,39 +168,22 @@ def getOutputMeshpath(path, meshtype=None, pathType="relative"):
     # pathType relative is default
     rpath = os.path.join(path, 'meshes', meshtype if meshtype else getOutputMeshtype()) + "/"
 
-    if not pathType:
-        pathType = getOutputPathtype()
-    if pathType == "ros_package":
-        rpath = "package://"+getRosPackageName()+"/"+os.path.join('meshes', meshtype if meshtype else getOutputMeshtype()) + "/"
-
     return rpath
 
 
 def getEntityTypesForExport():
     """Returns list of entity types available for export"""
-    return [
-        typename
-        for typename in sorted(entity_types)
-        if 'export' in entity_types[typename] and 'extensions' in entity_types[typename]
-    ]
+    return EXPORT_TYPES
 
 
 def getEntityTypesForImport():
     """Returns list of entity types available for import"""
-    return [
-        typename
-        for typename in sorted(entity_types)
-        if 'import' in entity_types[typename] and 'extensions' in entity_types[typename]
-    ]
+    return IMPORT_TYPES
 
 
 def getSceneTypesForExport():
     """Returns list of scene types available for export"""
-    return [
-        typename
-        for typename in sorted(scene_types)
-        if 'export' in scene_types[typename] and 'extensions' in scene_types[typename]
-    ]
+    return SCENE_TYPES
 
 
 def getSceneTypesForImport():
@@ -258,20 +197,12 @@ def getSceneTypesForImport():
 
 def getMeshTypesForExport():
     """Returns list of mesh types available for export"""
-    return [
-        typename
-        for typename in sorted(mesh_types)
-        if 'export' in mesh_types[typename] and 'extensions' in mesh_types[typename]
-    ]
+    return MESH_TYPES
 
 
 def getMeshTypesForImport():
     """Returns list of mesh types available for import"""
-    return [
-        typename
-        for typename in sorted(mesh_types)
-        if 'import' in mesh_types[typename] and 'extensions' in mesh_types[typename]
-    ]
+    return MESH_TYPES
 
 
 def getExportPath():
@@ -285,10 +216,15 @@ def getExportPath():
     Returns:
 
     """
-    if os.path.isabs(getExpSettings().path):
-        return getExpSettings().path
-    else:
-        return os.path.normpath(os.path.join(bpy.path.abspath('//'), getExpSettings().path))
+    out = bpy.path.abspath(bpy.context.scene.phobosexportsettings.path)
+    if not os.path.isabs(out):
+        out = os.path.join(
+            os.path.dirname(bpy.data.filepath),
+            bpy.context.scene.phobosexportsettings.path)
+    out = os.path.normpath(out)
+    if not out.endswith('/'):
+        out += '/'
+    return out
 
 
 def getAbsolutePath(path):
@@ -320,7 +256,7 @@ def importBlenderModel(filepath, namespace='', prefix=False):
     if os.path.exists(filepath) and os.path.isfile(filepath) and filepath.endswith('.blend'):
         log("Importing Blender model" + filepath, "INFO")
         objects = []
-        with bpy.data.libraries.load(filepath) as (data_from, data_to):
+        with bpy.data.mechanisms.load(filepath) as (data_from, data_to):
             for objname in data_from.objects:
                 objects.append({'name': objname})
         bpy.ops.wm.append(directory=filepath + "/Object/", files=objects)
@@ -393,7 +329,7 @@ def importResources(restuple, filepath=None):
 
     # if no filepath is provided, use the path from the preferences
     if not filepath:
-        filepath = os.path.join(bUtils.getPhobosConfigPath(), 'resources', 'resources.blend')
+        filepath = get_blender_resources_path('resources.blend')
         print(filepath)
 
     # import new objects from resources.blend
@@ -473,119 +409,32 @@ def copy_model(model):
         "Deep copy failed. Unsuspected element in the dictionary: {}".format(type(model))
     )
 
-
-def exportModel(model, exportpath='.', entitytypes=None):
-    """Exports model to a given path in the provided formats.
-
-    Args:
-      model(dict): dictionary of model to export
-      exportpath(str, optional): path to export root (Default value = '.')
-      entitytypes(list of str, optional): export types - model will be exported to all (Default value = None)
-
-    Returns:
-
-    """
-    if not exportpath:
-        exportpath = getExportPath()
-    if not entitytypes:
-        entitytypes = getEntityTypesForExport()
-
-    # TODO: Move texture export to individual formats? This is practically SMURF
-    # TODO: Also, this does not properly take care of textures embedded in a .blend file
-    # export textures
-    if getExpSettings().exportTextures:
-        path = os.path
-        for materialname in model['materials']:
-            mat = model['materials'][materialname]
-            for texturetype in ['diffuseTexture', 'normalTexture', 'displacementTexture']:
-                # skip materials without texture
-                if texturetype not in mat:
-                    continue
-
-                sourcepath = path.join(path.expanduser(bpy.path.abspath('//')), mat[texturetype])
-                if path.isfile(sourcepath):
-                    texture_path = securepath(path.join(exportpath, 'textures'))
-                    log(
-                        "Exporting texture {} of material {} to {}.".format(
-                            texturetype, mat[texturetype], texture_path
-                        ),
-                        'INFO',
-                    )
-                    try:
-                        shutil.copy(
-                            sourcepath, path.join(texture_path, path.basename(mat[texturetype]))
-                        )
-                    except shutil.SameFileError:
-                        log(
-                            "{} of material {} already in place.".format(texturetype, materialname),
-                            'WARNING',
-                        )
-
-                    # update the texture path in the model
-                    mat[texturetype] = 'textures/' + path.basename(mat[texturetype])
-
-    # export model in selected formats
-    for entitytype in entitytypes:
-        typename = "export_entity_" + entitytype
-        # check if format exists and should be exported
-        if not getattr(bpy.context.scene, typename, False):
-            continue
-        # format exists and is exported:
-        model_path = os.path.join(exportpath, entitytype)
-        securepath(model_path)
-
-        # export model using entity export function
-        log("Export model '" + model['name'] + "' as " + entitytype + " to " + model_path, "DEBUG")
-
-        # pass a model copy to the entity export, as these might alter the dictionary
-        newmodel = copy_model(model)
-        entity_types[entitytype]['export'](newmodel, model_path)
-
-    # export meshes in selected formats
-    i = 1
-    mt = len([m for m in mesh_types if getattr(bpy.context.scene, "export_mesh_" + m, False)])
-    mc = len(model['meshes'])
-    n = mt * mc
-    for meshtype in mesh_types:
-        mesh_path = getOutputMeshpath(exportpath, meshtype, "relative")
-        try:
-            if getattr(bpy.context.scene, "export_mesh_" + meshtype, False):
-                securepath(mesh_path)
-                for meshname in model['meshes']:
-                    mesh_types[meshtype]['export'](model['meshes'][meshname], mesh_path)
-                    display.setProgress(i / n, 'Exporting ' + meshname + '.' + meshtype + '...')
-                    i += 1
-        except KeyError as e:
-            log("Error exporting mesh {0} as {1}: {2}".format(meshname, meshtype, str(e)), "ERROR")
-    display.endProgress()
-
-
-def exportScene(
-    scenedict, exportpath='.', scenetypes=None, export_entity_models=False, entitytypes=None
-):
-    """Exports provided scene to provided path
-
-    Args:
-      scenedict(dict): dictionary of scene
-      exportpath(str, optional): path to scene export folder (Default value = '.')
-      scenetypes(list of str, optional): export types for scene - scene will be exported to all (Default value = None)
-      export_entity_models(bool, optional): whether to export entities additionally (Default value = False)
-      entitytypes(list of str, optional): types to export entities in in case they are exported (Default value = None)
-
-    Returns:
-
-    """
-    if not exportpath:
-        exportpath = getExportPath()
-    if not scenetypes:
-        scenetypes = getSceneTypesForExport()
-    if export_entity_models:
-        for entity in scenedict['entities']:
-            exportModel(entity, exportpath, entitytypes)
-    for scenetype in scenetypes:
-        gui_typename = "export_scene_" + scenetype
-        # check if format exists and should be exported
-        if getattr(bpy.context.scene, gui_typename):
-            scene_types[scenetype]['export'](
-                scenedict['entities'], os.path.join(exportpath, scenedict['name'])
-            )
+# def exportScene(
+#     scenedict, exportpath='.', scenetypes=None, export_entity_models=False, entitytypes=None
+# ):
+#     """Exports provided scene to provided path
+#
+#     Args:
+#       scenedict(dict): dictionary of scene
+#       exportpath(str, optional): path to scene export folder (Default value = '.')
+#       scenetypes(list of str, optional): export types for scene - scene will be exported to all (Default value = None)
+#       export_entity_models(bool, optional): whether to export entities additionally (Default value = False)
+#       entitytypes(list of str, optional): types to export entities in in case they are exported (Default value = None)
+#
+#     Returns:
+#
+#     """
+#     if not exportpath:
+#         exportpath = getExportPath()
+#     if not scenetypes:
+#         scenetypes = getSceneTypesForExport()
+#     if export_entity_models:
+#         for entity in scenedict['entities']:
+#             exportModel(entity, exportpath, entitytypes)
+#     for scenetype in scenetypes:
+#         gui_typename = "export_scene_" + scenetype
+#         # check if format exists and should be exported
+#         if getattr(bpy.context.scene, gui_typename):
+#             export_scene(
+#                 scenedict['entities'], os.path.join(exportpath, scenedict['name'])
+#             )

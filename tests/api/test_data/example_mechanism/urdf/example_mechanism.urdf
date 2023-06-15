@@ -1,0 +1,125 @@
+<robot name="example_mechanism" version="1.0">
+  <sensor name="camera_in_z">
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.5"/>
+    <parent link="end_effector"/>
+    <camera>
+      <image>
+        <width>640</width>
+        <height>480</height>
+        <hfov>90</hfov>
+      </image>
+    </camera>
+  </sensor>
+  <joint name="end_effector_joint" type="revolute">
+    <limit lower="-0.25" upper="0.25" effort="400.0" velocity="3.141"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.5 0.5"/>
+    <parent link="passive_a"/>
+    <child link="end_effector"/>
+    <axis xyz="1.0 0.0 0.0"/>
+  </joint>
+  <joint name="passive_a_joint" type="revolute">
+    <limit lower="-3.141" upper="3.141" effort="400.0" velocity="3.141"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+    <parent link="root"/>
+    <child link="passive_a"/>
+    <axis xyz="1.0 0.0 0.0"/>
+  </joint>
+  <joint name="passive_b_joint" type="revolute">
+    <limit lower="3.141" upper="3.141" effort="400.0" velocity="3.141"/>
+    <origin rpy="0.0 0.0 0.0" xyz="0.0 1.0 0.0"/>
+    <parent link="root"/>
+    <child link="passive_b"/>
+    <axis xyz="1.0 0.0 0.0"/>
+  </joint>
+  <joint name="prismatic_joint" type="prismatic">
+    <limit lower="-0.1" upper="0.3" effort="400.0" velocity="3.141"/>
+    <origin rpy="0.785398156308485 0.0 0.0" xyz="0.0 -0.5 0.5"/>
+    <parent link="passive_b"/>
+    <child link="prismatic"/>
+    <axis xyz="0.0 0.0 1.0"/>
+  </joint>
+  <link name="end_effector">
+    <collision name="end_effector_collision">
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <geometry>
+        <mesh filename="../meshes/stl/Cone.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </collision>
+    <visual name="end_effector_visual">
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 0.0"/>
+      <material name="green"/>
+      <geometry>
+        <mesh filename="../meshes/stl/Cone.stl" scale="1.0 1.0 1.0"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="passive_a">
+    <collision name="passive_a_collision">
+      <origin rpy="-0.785398156308485 0.0 0.0" xyz="0.0 0.25 0.25"/>
+      <geometry>
+        <box size="0.03535 0.05 0.707"/>
+      </geometry>
+    </collision>
+    <visual name="passive_a_visual">
+      <origin rpy="-0.785398156308485 0.0 0.0" xyz="0.0 0.25 0.25"/>
+      <material name="green"/>
+      <geometry>
+        <box size="0.03535 0.05 0.707"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="passive_b">
+    <collision name="passive_b_collision">
+      <origin rpy="0.785398156308485 0.0 0.0" xyz="0.0 -0.15 0.15"/>
+      <geometry>
+        <cylinder radius="0.05" length="0.4"/>
+      </geometry>
+    </collision>
+    <visual name="passive_b_visual">
+      <origin rpy="0.785398156308485 0.0 0.0" xyz="0.0 -0.15 0.15"/>
+      <material name="red"/>
+      <geometry>
+        <cylinder radius="0.05" length="0.4"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="prismatic">
+    <collision name="prismatic_collision">
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.307"/>
+      <geometry>
+        <cylinder radius="0.04" length="0.614"/>
+      </geometry>
+    </collision>
+    <visual name="prismatic_visual">
+      <origin rpy="0.0 0.0 0.0" xyz="0.0 0.0 -0.307"/>
+      <material name="blue"/>
+      <geometry>
+        <cylinder radius="0.04" length="0.614"/>
+      </geometry>
+    </visual>
+  </link>
+  <link name="root">
+    <collision name="root_collision">
+      <origin rpy="-1.5707961320877317 0.0 0.0" xyz="0.0 0.5 0.0"/>
+      <geometry>
+        <box size="0.05 0.05 1.0"/>
+      </geometry>
+    </collision>
+    <visual name="root_visual">
+      <origin rpy="-1.5707961320877317 0.0 0.0" xyz="0.0 0.5 0.0"/>
+      <material name="blue"/>
+      <geometry>
+        <box size="0.05 0.05 1.0"/>
+      </geometry>
+    </visual>
+  </link>
+  <material name="blue">
+    <color rgba="0.0 0.0 1.0 1.0"/>
+  </material>
+  <material name="green">
+    <color rgba="0.0 1.0 0.0 1.0"/>
+  </material>
+  <material name="red">
+    <color rgba="1.0 0.0 0.0 1.0"/>
+  </material>
+</robot>

@@ -1,29 +1,13 @@
-phobos.utils package
-====================
+phobos utils module
+-------------------
 
 Submodules
 ----------
 
-phobos.utils.blender module
-```````````````````````````
+phobos.utils.commandline_logging module
+```````````````````````````````````````
 
-.. automodule:: phobos.utils.blender
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-phobos.utils.editing module
-```````````````````````````
-
-.. automodule:: phobos.utils.editing
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-phobos.utils.general module
-```````````````````````````
-
-.. automodule:: phobos.utils.general
+.. automodule:: phobos.utils.commandline_logging
     :members:
     :undoc-members:
     :show-inheritance:
@@ -36,43 +20,51 @@ phobos.utils.git module
     :undoc-members:
     :show-inheritance:
 
-phobos.utils.io module
-``````````````````````
+phobos.utils.hyrodyn module
+```````````````````````````
 
-.. automodule:: phobos.utils.io
+.. automodule:: phobos.utils.hyrodyn
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.utils.naming module
-``````````````````````````
 
-.. automodule:: phobos.utils.naming
+phobos.utils.inertia module
+```````````````````````````
+
+.. automodule:: phobos.utils.inertia
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.utils.selection module
+phobos.utils.misc module
+````````````````````````
+
+.. automodule:: phobos.utils.misc
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+phobos.utils.xml module
+```````````````````````
+
+.. automodule:: phobos.utils.xml
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+phobos.utils.transform module
 `````````````````````````````
 
-.. automodule:: phobos.utils.selection
+.. automodule:: phobos.utils.transform
     :members:
     :undoc-members:
     :show-inheritance:
 
-phobos.utils.validation module
-``````````````````````````````
+phobos.utils.tree module
+````````````````````````
 
-.. automodule:: phobos.utils.validation
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-
-Module contents
----------------
-
-.. automodule:: phobos.utils
+.. automodule:: phobos.utils.tree
     :members:
     :undoc-members:
     :show-inheritance:

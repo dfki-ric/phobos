@@ -12,14 +12,27 @@
 """
 Handles different import attempts to cope with Blender's *Reload script* functionality.
 """
+import sys
+import subprocess
+
+BPY_AVAILABLE = False
+try:
+    import bpy
+    BPY_AVAILABLE = True
+except ImportError:
+    pass
+
+# Phobos information
+version = '2.0.0 "Perilled Pangolin"'
+repository = 'https://github.com/dfki-ric/phobos'
 
 bl_info = {
     "name": "Phobos",
     "description": "A toolbox to enable editing of robot models in Blender.",
-    "author": "Kai von Szadkowski, Ole Schwiegert, Stefan Rahms, Malte Langosz, Simon Reichel",
-    "version": (1, 0, 3),
-    "blender": (2, 90, 0),
-    "location": "Phobos adds a number of custom tool panels.",
+    "author": "Kai von Szadkowski, Henning Wiedemann, Malte Langosz, Simon Reichel, Julius Martensen, et. al.",
+    "version": (2, 0, 0),
+    "blender": (3, 3),
+    "location": "Phobos adds a custom tool panel.",
     "warning": "",
     "wiki_url": "https://github.com/dfki-ric/phobos/wiki",
     "support": "COMMUNITY",
@@ -27,39 +40,98 @@ bl_info = {
     "category": "Development",
 }
 
-try:
-    import bpy
-    from . import blender
+requirements = {
+    "yaml": "pyyaml",
+    "numpy": "numpy",
+    "scipy": "scipy",
+    "pkg_resources": "setuptools",
+    "collada": "pycollada",
+    "pydot": "pydot"
+}
+
+optional_requirements = {
+    "lxml": "lxml",
+    "networkx": "networkx",  # optional for blender
+    "trimesh": "trimesh",  # optional for blender
+}
+
+extra_requirements = {
+    "pybullet": "pybullet",  # optional for blender
+    "open3d": "open3d",  # optional for blender
+    "python-fcl": "python-fcl",  # optional for blender,
+    "PIL": "Pillow"  # optional for blender,
+}
 
 
-    def install_requirement(package_name):
-        import sys
-        import os
-
-        py_exec = str(sys.executable)
-        # Get lib directory
-        lib = None
-        for path in sys.path:
-            if "modules" in path and ("Roaming" in path or ".config" in path or "Users" in path):
-                lib = path
-                break
+def install_requirement(package_name, upgrade_pip=False, lib=None, ensure_pip=True):
+    if lib is None and BPY_AVAILABLE:
+        lib = bpy.utils.user_resource("SCRIPTS", path="modules")
+    if ensure_pip:
         # Ensure pip is installed
-        os.system(" ".join([py_exec, "-m", "ensurepip", "--user"]))
-        # Update pip (not mandatory)
-        os.system(" ".join([py_exec, "-m", "pip", "install", "--upgrade", "pip"]))
-        # Install package
-        os.system(" ".join([py_exec, "-m", "pip", "install", f"--target={str(lib)}", package_name]))
-        print("Installing required package", package_name, "to", lib, flush=True)
+        subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
+    # Update pip (not mandatory)
+    if upgrade_pip:
+        print("  Upgrading pip...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
+    # Install package
+    print("  Installing package", package_name)
+    if lib is None:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", package_name])
+    else:
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", f"--target={str(lib)}", package_name])
 
 
-    def check_requirements():
-        import importlib
-        for import_name, req_name in requirements.items():
-            print("Checking", import_name, flush=True)
-            if importlib.util.find_spec(import_name) is None:
-                install_requirement(req_name)
-        importlib.invalidate_caches()
+def check_requirements(optional=False, extra=False, force=False, upgrade_pip=False, lib=None):
+    import importlib
+    print("Checking requirements:")
+    # Ensure pip is installed
+    subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
+    reqs = [requirements]
+    if optional:
+        reqs += [optional_requirements]
+    if extra:
+        reqs += [extra_requirements]
+    if upgrade_pip:
+        print("  Upgrading pip...")
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pip"])
+    for r in reqs:
+        for import_name, req_name in r.items():
+            print("  Checking", import_name)
+            try:
+                if importlib.util.find_spec(import_name) is None:
+                    install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
+            except AttributeError:  # when using importlib before v3.4
+                loader = importlib.find_loader(import_name)
+                if not issubclass(type(loader), importlib.machinery.SourceFileLoader):
+                    install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
+            except subprocess.CalledProcessError as e:
+                if import_name in list(optional_requirements.keys()) + list(extra_requirements.keys()):
+                    print(f"Couldn't install optional requirement {import_name} ({req_name})")
+                else:
+                    raise e
+    importlib.invalidate_caches()
 
+
+def register():
+    """This function registers all modules to blender.
+
+    :return: Nothing
+
+    Args:
+
+    Returns:
+
+    """
+    from . import defs
+    from . import io
+    from . import core
+    from . import geometry
+    from . import utils
+    from . import ci
+    # from . import scripts
+
+    # Recursively import all submodules
+    from . import blender
 
     def import_submodules(package, recursive=True, verbose=False):
         """Import all submodules of a module, recursively, including subpackages.
@@ -106,46 +178,29 @@ try:
                 results.update(import_submodules(full_name))
         return results
 
-    print("Checking requirements")
-    requirements = {
-    }
-    check_requirements()
-
-
-    # Recursively import all submodules
     print("Importing phobos")
     import_submodules(blender, verbose=True)
 
-
-    def register():
-        """This function registers all modules to blender.
-
-        :return: Nothing
-
-        Args:
-
-        Returns:
-
-        """
-        #bpy.utils.register_module(__name__)
-        blender.operators.selection.register()
-        blender.operators.io.register()
-        blender.operators.editing.register()
-        blender.operators.generic.register()
-        blender.operators.naming.register()
-        blender.operators.poses.register()
-        blender.phobosgui.register()
+    # bpy.utils.register_module(__name__)
+    blender.operators.selection.register()
+    blender.operators.io.register()
+    blender.operators.editing.register()
+    blender.operators.generic.register()
+    blender.operators.naming.register()
+    blender.operators.poses.register()
+    blender.phobosgui.register()
 
 
-    def unregister():
-        """This function unregisters all modules in Blender."""
-        print("\n" + "-" * 100)
-        print("Unregistering Phobos...")
-        # TODO delete all imported modules to resolve reregistration conflicts
-        blender.phobosgui.unregister()
-        bpy.utils.unregister_module(__name__)
+def unregister():
+    """This function unregisters all modules in Blender."""
+    print("\n" + "-" * 100)
+    print("Unregistering Phobos...")
+    # [TODO v2.1.0] delete all imported modules to resolve reregistration conflicts
+    from . import blender
+    blender.phobosgui.unregister()
 
-except ImportError:
+
+if not "blender" in sys.executable.lower() and not BPY_AVAILABLE:
     from pkg_resources import get_distribution, DistributionNotFound
 
     try:
@@ -153,10 +208,36 @@ except ImportError:
         dist_name = __name__
         __version__ = get_distribution(dist_name).version
     except DistributionNotFound:
-        __version__ = '1.0.0'
+        __version__ = ".".join([str(x) for x in bl_info["version"]])
     finally:
         del get_distribution, DistributionNotFound
 
-    print("Future import in pure python scripts.")
+if BPY_AVAILABLE:
+    try:
+        from . import defs
+        from . import io
+        from . import core
+        from . import geometry
+        from . import utils
+        from . import ci
+        from . import scripts
+    except ImportError as e:
+        # this is the first installation in blender so we check the requirements
+        check_requirements(optional=True, upgrade_pip=True, extra=False)
+        message = "All Phobos requirements have been installed.\nPlease restart Blender to activate the Phobos add-on!"
 
+        def draw(self, context):
+            self.layout.label(text=message)
 
+        bpy.context.window_manager.popup_menu(draw, title="Phobos: Please restart Blender")  # , icon=icon)
+        print('\033[92m'+'\033[1m'+"Phobos:"+ message+'\033[0m')
+else:
+        from . import defs
+        from . import io
+        from . import core
+        from . import geometry
+        from . import utils
+        from . import ci
+        from . import scripts
+
+del sys
