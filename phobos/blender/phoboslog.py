@@ -174,7 +174,7 @@ def find_calling_operator(frame):
         return None
 
 recentMessageBoxes = {}
-def ErrorMessageWithBox(message = "", title = "Error", icon = 'ERROR', reporter=None, silentFor=0):
+def ErrorMessageWithBox(message = "", title = "Error", icon = 'ERROR', reporter=None, silentFor=15):
     if silentFor > 0:
         if message in recentMessageBoxes:
             timePassed = time.time()-recentMessageBoxes[message]
