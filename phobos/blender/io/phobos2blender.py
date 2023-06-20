@@ -435,13 +435,15 @@ def createSubmechanism(submechanism, linkobj=None):
         attr = getattr(submechanism, prop)
         if type(attr) == str:
             value = attr
-        else: # Can be a list or dict of joints
-            if type(attr) == dict:
-                value = {}
-                for key, joint in attr.items():
-                    value[key] = sUtils.getObjectByName(str(joint))
-            elif attr is not None: # Is a list
-                value = [sUtils.getObjectByName(str(j)) for j in attr]
+        elif type(attr) == dict:
+            value = {}
+            for key, joint in attr.items():
+                value[key] = sUtils.getObjectByName(str(joint))
+        elif attr is not None: # Is a list
+            value = [sUtils.getObjectByName(str(j)) for j in attr]
+        else:
+            log(f"Unknown property type {type(attr)}", "WARNING")
+            continue
         newsubm[f"{prop}"] = value
 
     # write generic custom properties
