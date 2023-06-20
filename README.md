@@ -1,9 +1,10 @@
-# NOTE: This is the alpha version of phobos2.0.0. Please test and report all issues [here](https://github.com/dfki-ric/phobos/issues). Thanks for your contribution!
+># **NOTE: This is the beta version of phobos2.0.0. Please test and report all issues [here](https://github.com/dfki-ric/phobos/issues). Thanks for your contribution!**
 
 [![latest-release](https://img.shields.io/github/tag/dfki-ric/phobos.svg?label=version&style=flat)](https://github.com/dfki-ric/phobos/releases)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.01326/status.svg)](https://doi.org/10.21105/joss.01326)
 [![license](https://img.shields.io/github/license/dfki-ric/phobos.svg?style=flat)](https://github.com/dfki-ric/phobos/blob/master/COPYING)
 [![made-with-sphinx-doc](https://img.shields.io/badge/Made%20with-Sphinx-1f425f.svg)](https://www.sphinx-doc.org/)
+[![API-Docs](https://github.com/dfki-ric/phobos/actions/workflows/gh-pages.yml/badge.svg)](http://dfki-ric.github.io/phobos)
 
 ![Phobos](https://github.com/dfki-ric/phobos/wiki/img/phobos_logo_small.png)
 
@@ -25,8 +26,7 @@ Bremen, together with the [Robotics
 Group](http://www.informatik.uni-bremen.de/robotik/index_en.php) of the
 [University of Bremen](http://www.uni-bremen.de/en.html).
 
-Please contact [Kai von Szadkowski](https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/kavo01.html) or
-[Henning Wiedemann](https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/hewi04.html)
+Please contact [Henning Wiedemann](https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/hewi04.html)
 for any inquiries, or any questions and feedback not suited for the issues
 page.
 
