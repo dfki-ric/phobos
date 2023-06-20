@@ -74,7 +74,8 @@ If you are on the hunt for a BiBTeX entry, check out the [FAQ section](https://g
 To install Phobos in blender download the phobos.zip of the release or zip the phobos subdirectory (e.g. `zip -r phobos.zip phobos`)
 Phobos has several python dependencies, those have to be installed in blender before you can use phobos.
 There are two ways of installing Phobos:
-1.
+
+1. Recommended:
   a. Directly install the phobos.zip in blender: `Blender->Edit->Preferences->Addons->Install` and activate it.
   b. Restart Blender.
   c. Activate Phobos Add-on again.

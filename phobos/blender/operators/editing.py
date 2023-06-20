@@ -42,7 +42,7 @@ from ..model import inertia as inertialib
 from ..model import joints as jUtils
 from ..model import links as modellinks
 from ..phobosgui import prev_collections
-from ..phoboslog import log, ErrorMessageWithBox
+from ..phoboslog import log, ErrorMessageWithBox, WarnMessageWithBox
 from ..operators.generic import addObjectFromYaml, DynamicProperty
 from ..utils import blender as bUtils
 from ..utils import editing as eUtils
@@ -1450,6 +1450,10 @@ class DefineJointConstraintsOperator(Operator):
     bl_label = "Define Joint(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
+    name : StringProperty(
+        name='Joint Name (leave empty for same name as link)', default="", description='Defines the name of the joint'
+    )
+
     active : BoolProperty(
         name='Active', default=False, description='Add an motor to the joint'
     )
@@ -1501,6 +1505,8 @@ class DefineJointConstraintsOperator(Operator):
 
         """
         layout = self.layout
+        if len(context.selected_objects) == 1:
+            layout.prop(self, "name")
         layout.prop(self, "joint_type", text="joint_type")
 
         # enable/disable optional parameters
@@ -1591,6 +1597,8 @@ class DefineJointConstraintsOperator(Operator):
             context.view_layer.objects.active = joint
             assert joint.parent is not None and joint.parent.phobostype == "link", \
                 f"You need to have a link parented to {joint.name} before you can create a joint"
+            if len(self.name) > 0:
+                joint["joint/name"] = self.name
             jUtils.setJointConstraints(
                 joint=joint,
                 jointtype=self.joint_type,
@@ -1973,10 +1981,12 @@ class CreateLinksOperator(Operator):
         """
         if self.location == '3D cursor':
             phobos2blender.createLink(representation.Link(name=self.linkname))
-        else:
+        elif len(context.selected_objects) > 0:
             objs_to_create_links = context.selected_objects
             for obj in objs_to_create_links:
                 modellinks.deriveLinkfromObject(obj)
+        else:
+            WarnMessageWithBox("No objects selected to create links from!")
         return {'FINISHED'}
 
     @classmethod

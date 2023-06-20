@@ -30,13 +30,13 @@ def deriveObjectPose(obj, effectiveparent=None, logging=True):
         effectiveparent = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True)
 
     if effectiveparent is not None:
-        w2p = representation.Pose.from_matrix(effectiveparent.matrix_world.normalized(), relative_to=effectiveparent.name)
+        w2p = representation.Pose.from_matrix(effectiveparent.matrix_world.normalized(), relative_to=effectiveparent.get("link/name", effectiveparent.name))
     else:
-        w2p = representation.Pose(relative_to=effectiveparent.name)
+        w2p = representation.Pose(relative_to=obj.get("link/name", obj.name))
 
-    w2o = representation.Pose.from_matrix(obj.matrix_world.normalized(), relative_to=effectiveparent.name)
-    p2o = w2p.inv(relative_to=effectiveparent.name).dot(w2o)
-    p2o.relative_to = effectiveparent.name
+    w2o = representation.Pose.from_matrix(obj.matrix_world.normalized(), relative_to=effectiveparent.get("link/name", effectiveparent.name))
+    p2o = w2p.inv(relative_to=effectiveparent.get("link/name", effectiveparent.name)).dot(w2o)
+    p2o.relative_to = effectiveparent.get("link/name", effectiveparent.name)
 
     if logging:
         log(
@@ -62,9 +62,9 @@ def deriveMaterial(mat, logging=False, errors=None):
     shininess = None
     if mat.use_nodes:
         for tex in [node for node in mat.node_tree.nodes if "Image Texture" in node.name]:
-            if tex.outputs["Color"].links[0].to_socket.name == "Base Color":
+            if tex.outputs["Color"].links[0].to_socket.name == "Base Color" and tex.image is not None:
                 diffuseTexture = representation.Texture(image=tex.image)
-            elif tex.outputs["Color"].links[0].to_socket.node.name == "Normal Map":
+            elif tex.outputs["Color"].links[0].to_socket.node.name == "Normal Map" and tex.image is not None:
                 normalTexture = representation.Texture(image=tex.image)
         if "Specular BSDF" in mat.node_tree.nodes.keys():
             diffuse_color = mat.node_tree.nodes["Specular BSDF"].inputs["Base Color"].default_value
@@ -153,14 +153,14 @@ def deriveCollision(obj, linkobj=None, duplicate_mesh=False, fast_init=True, **k
     annotations = {}
     for k, v in obj.items():
         k = k.replace("collision/", "").replace("$collision/", "")  # Backwards compatibility
-        if k not in reserved_keys.VISCOL_KEYS+reserved_keys.INTERNAL_KEYS:
+        if k not in reserved_keys.VISCOL_KEYS+reserved_keys.INTERNAL_KEYS+["primitives"]:
             if hasattr(v, "to_list"):
                 v = v.to_list()
             elif "PropertyGroup" in repr(type(v)):
                 v = {_k: _v for _k, _v in v.items()}
             if "/" not in k:
                 annotations[k] = v
-            else:
+            elif not any([k.startswith(x) for x in reserved_keys.VISCOL_KEYS + reserved_keys.INTERNAL_KEYS]):
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
@@ -212,7 +212,7 @@ def deriveVisual(obj, logging=True, duplicate_mesh=False, fast_init=True, **kwar
                 v = {_k: _v for _k, _v in v.items()}
             if "/" not in k:
                 annotations[k] = v
-            else:
+            elif not any([k.startswith(x) for x in reserved_keys.VISCOL_KEYS+reserved_keys.INTERNAL_KEYS]):
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
@@ -245,7 +245,7 @@ def deriveInertial(obj, logging=True, **kwargs):
                 v = {_k: _v for _k, _v in v.items()}
             if "/" not in k:
                 annotations[k] = v
-            else:
+            elif not any([k.startswith(x) for x in reserved_keys.VISCOL_KEYS + reserved_keys.INTERNAL_KEYS]):
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
@@ -406,7 +406,7 @@ def deriveLink(obj, objectlist=None, logging=True, errors=None):
         inertial = representation.Inertial(
             mass=mass,
             inertia=representation.Inertia(*inertiamodel.inertiaMatrixToList(inertia)),
-            origin=representation.Pose(xyz=list(com), relative_to=obj.name)
+            origin=representation.Pose(xyz=list(com), relative_to=obj.get("link/name", obj.name))
         )
 
     # further annotations
@@ -420,14 +420,14 @@ def deriveLink(obj, objectlist=None, logging=True, errors=None):
                 v = {_k: _v for _k, _v in v.items()}
             if "/" not in k:
                 annotations[k] = v
-            else:
+            elif not any([k.startswith(x) for x in reserved_keys.VISCOL_KEYS + reserved_keys.INTERNAL_KEYS]):
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
                 annotations[k1][k2] = v
 
     return representation.Link(
-        name=obj.name,
+        name=obj.get("link/name", obj.name),  # this is for backwards compatibility normally the linkname should be the object name
         visuals=visuals,
         collisions=collisions,
         inertial=inertial,
@@ -458,42 +458,44 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
                 v = {_k: _v for _k, _v in v.items()}
             if "/" not in k:
                 annotations[k] = v
-            else:
+            elif not any([k.startswith(x) for x in reserved_keys.VISCOL_KEYS + reserved_keys.INTERNAL_KEYS]):
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
                 annotations[k1][k2] = v
-    try:
-        return representation.Joint(
-            name=values.get("joint/name", obj.name),
-            parent=parent.name,
-            child=obj.name,
-            joint_type=values["joint/type"],
-            axis=list(values["joint/axis"]) if values["joint/type"] in ["revolute", "prismatic", "continuous"] else None,
-            origin=deriveObjectPose(obj),
-            limit=representation.JointLimit(
-                effort=values.get("joint/limits/effort", None),
-                velocity=values.get("joint/limits/velocity", None),
-                lower=values.get("joint/limits/lower", None),
-                upper=values.get("joint/limits/upper", None)
-            ) if any([k.startswith("joint/limits/") for k in values.keys()]) else None,
-            dynamics=representation.JointDynamics(
-                damping=values.get("joint/dynamics/damping", None),
-                friction=values.get("joint/dynamics/friction", None),
-                spring_stiffness=values.get("joint/dynamics/spring_stiffness", None),
-                spring_reference=values.get("joint/dynamics/spring_reference", None)
-            ) if any([k.startswith("joint/dynamics/") for k in values.keys()]) else None,
-            # [TODO v2.1.0] Add possibility to depend on multiple joints
-            mimic=representation.JointMimic(
-                joint=values["joint/mimic/joint"],
-                multiplier=values["joint/mimic/multiplier"],
-                offset=values["joint/mimic/offset"]
-            ) if "joint/mimic/joint" in values.keys() else None,
-            motor=values.get("motor/name", None)
-        )
-    except:
-        ErrorMessageWithBox(message="Cannot derive joint {}. Try operator [Define Joint(s)] on link {}".
-                            format(values.get("joint/name", obj.name), obj.name), silentFor=120)
+
+    if "joint/type" not in values:
+        msg = f"The joint type of {values.get('joint/name', obj.name)} has not been properly defined."
+        ErrorMessageWithBox(msg)
+        raise KeyError("joint/type: "+msg)
+
+    return representation.Joint(
+        name=values.get("joint/name", obj.name),
+        parent=parent.get("link/name", parent.name),  # backwards compatibility
+        child=obj.get("link/name", obj.name),  # backwards compatibility
+        joint_type=values["joint/type"],
+        axis=list(values.get("joint/axis", [0, 0, 1])) if values["joint/type"] in ["revolute", "prismatic", "continuous"] else None,
+        origin=deriveObjectPose(obj),
+        limit=representation.JointLimit(
+            effort=values.get("joint/limits/effort", None),
+            velocity=values.get("joint/limits/velocity", None),
+            lower=values.get("joint/limits/lower", None),
+            upper=values.get("joint/limits/upper", None)
+        ) if any([k.startswith("joint/limits/") for k in values.keys()]) else None,
+        dynamics=representation.JointDynamics(
+            damping=values.get("joint/dynamics/damping", None),
+            friction=values.get("joint/dynamics/friction", None),
+            spring_stiffness=values.get("joint/dynamics/spring_stiffness", None),
+            spring_reference=values.get("joint/dynamics/spring_reference", None)
+        ) if any([k.startswith("joint/dynamics/") for k in values.keys()]) else None,
+        # [TODO v2.1.0] Add possibility to depend on multiple joints
+        mimic=representation.JointMimic(
+            joint=values["joint/mimic/joint"],
+            multiplier=values["joint/mimic/multiplier"],
+            offset=values["joint/mimic/offset"]
+        ) if "joint/mimic/joint" in values.keys() else None,
+        motor=values.get("motor/name", None)
+    )
 
 
 def deriveInterface(obj):
@@ -507,7 +509,7 @@ def deriveInterface(obj):
                 v = {_k: _v for _k, _v in v.items()}
             if "/" not in k:
                 annotations[k] = v
-            else:
+            elif not any([k.startswith(x) for x in reserved_keys.VISCOL_KEYS + reserved_keys.INTERNAL_KEYS]):
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
@@ -516,7 +518,7 @@ def deriveInterface(obj):
     return representation.Interface(
         name=obj.name,
         origin=deriveObjectPose(obj),
-        parent=sUtils.getEffectiveParent(obj).name,
+        parent=sUtils.getEffectiveParent(obj).get("link/name", sUtils.getEffectiveParent(obj).name),
         type=obj["type"],
         direction=obj["direction"],
         **annotations
@@ -543,7 +545,7 @@ def deriveAnnotation(obj):
     return representation.GenericAnnotation(
         GA_category=obj.split(":")[0],
         GA_name=name if not name.startswith("unnamed") else None,
-        GA_parent=obj.parent.name,
+        GA_parent=obj.parent.get("link/name", obj.parent.name),
         GA_parent_type=obj.parent.phobostype,
         GA_transform=deriveObjectPose(obj),
         **props
@@ -587,11 +589,11 @@ def deriveSensor(obj, logging=False):
         )
     else:
         if "link" in getattr(sensor_representations, sensor_type)._class_variables:
-            values["link"] = values.get("link", parent.name)
+            values["link"] = values.get("link", parent.get("link/name", parent.name))
         if "joint" in getattr(sensor_representations, sensor_type)._class_variables:
             values["link"] = values.get("joint", parent.get("joint/name", parent.name))
         if "frame" in getattr(sensor_representations, sensor_type)._class_variables:
-            values["frame"] = values.get("frame", parent.name)
+            values["frame"] = values.get("frame", parent.get("link/name", parent.name))
         return getattr(sensor_representations, sensor_type)(**values)
 
 
@@ -636,8 +638,6 @@ def derivePoses(root, robot):
     for posename, configuration in poses.items():
         pose_objects.append(JointPoseSet(robot=robot, name=posename, configuration=configuration))
     return pose_objects
-
-
 
 
 def deriveSubmechanism(obj, logging=False):

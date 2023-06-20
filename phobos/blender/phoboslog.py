@@ -173,8 +173,9 @@ def find_calling_operator(frame):
     else:
         return None
 
+
 recentMessageBoxes = {}
-def ErrorMessageWithBox(message = "", title = "Error", icon = 'ERROR', reporter=None, silentFor=15):
+def ErrorMessageWithBox(message = "", title = "Phobos Error", icon = 'ERROR', reporter=None, silentFor=15):
     if silentFor > 0:
         if message in recentMessageBoxes:
             timePassed = time.time()-recentMessageBoxes[message]
@@ -189,10 +190,10 @@ def ErrorMessageWithBox(message = "", title = "Error", icon = 'ERROR', reporter=
         reporter.report({"ERROR"}, "Phobos: "+message)
 
 
-def WarnMessageWithBox(message = "", title = "Warning", icon = 'WARN', reporter=None):
+def WarnMessageWithBox(message = "", title = "Phobos Warning", icon = 'ERROR', reporter=None):
     def draw(self, context):
         self.layout.label(text=message)
     bpy.context.window_manager.popup_menu(draw, title=title, icon=icon)
-    log(message, "WARN")
+    log(message, "WARNING")
     if reporter:
-        reporter.report({"WARN"}, "Phobos: "+message)
+        reporter.report({"WARNING"}, "Phobos: "+message)

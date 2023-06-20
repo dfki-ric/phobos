@@ -46,7 +46,7 @@ class Linkable(object):
         """
         return True
 
-    def _converter(self, varname, new_value, allow_not_found=False):
+    def _converter(self, varname, new_value, allow_not_found=False, value_type=None):
         """
         Converts the string reference to a python-reference
         Args:
@@ -66,7 +66,7 @@ class Linkable(object):
             # else:
             #     assert new_value._related_robot_instance == self._related_robot_instance
             return new_value, None
-        vtypes = self.type_dict[varname]
+        vtypes = self.type_dict[varname] if value_type is None else value_type
         if type(vtypes) == str:
             vtypes = [vtypes]
         converted = None
@@ -102,7 +102,7 @@ class Linkable(object):
             setattr(self, "_" + attribute, self._converter(attribute, new_value)[0])
         elif isinstance(new_value, Linkable):
             if self._related_robot_instance is not None:
-                existing, vtype = self._converter(attribute, str(new_value), allow_not_found=True)
+                existing, vtype = self._converter(attribute, str(new_value), allow_not_found=True, value_type=new_value.__class__.__name__.lower())
                 if existing is None:
                     self._related_robot_instance.add_aggregate(vtype, new_value)
                     new_value.link_with_robot(self._related_robot_instance, check_linkage_later=True)

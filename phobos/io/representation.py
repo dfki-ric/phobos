@@ -252,10 +252,10 @@ class Texture(Representation):
         super(Texture, self).__init__()
         self.unique_name = name
         filepath = filepath if posix_path is None else posix_path
+        self.input_file = None
         if image is not None:
             self.unique_name = None
             self.image = image
-            self.input_file = None
             self.input_type = "img"
             if BPY_AVAILABLE and isinstance(image, bpy.types.Image):
                 self.input_file = os.path.normpath(bpy.path.abspath(misc.sys_path(image.filepath)))
@@ -270,15 +270,18 @@ class Texture(Representation):
             self.input_type = "file"
             self.image = None
 
-        if not os.path.isabs(self.input_file) and "_xmlfile" in kwargs and kwargs["_xmlfile"] is not None:
-            self.input_file = os.path.join(os.path.dirname(kwargs["_xmlfile"]), self.input_file)
-        elif not os.path.isabs(self.input_file) and "_smurffile" in kwargs and kwargs["_smurffile"] is not None:
-            self.input_file = os.path.join(os.path.dirname(kwargs["_smurffile"]), self.input_file)
-        if not os.path.isabs(self.input_file) or not os.path.isfile(self.input_file):
-            raise IOError(f"Texture file {self.input_file} couldn't be found!")
+        if self.input_file is not None:
+            if not os.path.isabs(self.input_file) and "_xmlfile" in kwargs and kwargs["_xmlfile"] is not None:
+                self.input_file = os.path.normpath(os.path.join(os.path.dirname(kwargs["_xmlfile"]), self.input_file))
+            elif not os.path.isabs(self.input_file) and "_smurffile" in kwargs and kwargs["_smurffile"] is not None:
+                self.input_file = os.path.normpath(os.path.join(os.path.dirname(kwargs["_smurffile"]), self.input_file))
+            if not os.path.isabs(self.input_file) or not os.path.isfile(self.input_file):
+                raise IOError(f"Texture file {self.input_file} couldn't be found!")
 
-        if self.unique_name is None:
-            self.unique_name, ext = os.path.splitext(os.path.basename(self.input_file))
+            if self.unique_name is None:
+                self.unique_name, ext = os.path.splitext(os.path.basename(self.input_file))
+        else:
+            log.warn("Instantiated an empty texture")
 
         self.exported = None
 
@@ -318,6 +321,7 @@ class Texture(Representation):
         else:
             from PIL import Image
             self.image = Image.open(self.input_file)
+        return self.image
 
     def provide_image_file(self, targetpath, format=None):
         if format is None:
@@ -799,7 +803,7 @@ class Mesh(Representation, SmurfBase):
                         self._mesh_information = mesh_io.parse_obj(self.input_file)
                     except Exception as e:
                         traceback.print_exc()
-                        log.warning(f"{self.input_file} can't parse obj for bobj conversion:")
+                        log.warning(f"{self.input_file} can't parse obj for bobj conversion.")
                 else:
                     log.debug(f"{self.input_file} can't be converted to bobj")
                 bpy.ops.object.delete()
@@ -843,7 +847,7 @@ class Mesh(Representation, SmurfBase):
                         self._mesh_information = mesh_io.parse_obj(self.input_file)
                     except Exception as e:
                         traceback.print_exc()
-                        log.warning(f"{self.input_file} can't parse obj for bobj conversion:")
+                        log.warning(f"{self.input_file} can't parse obj for bobj conversion.")
                 else:
                     log.debug(f"{self.input_file} can't be converted to bobj")
             elif self.input_type == "file_dae":
@@ -855,7 +859,7 @@ class Mesh(Representation, SmurfBase):
         self.history.append(f"loaded {'bpy-Mesh' if BPY_AVAILABLE else 'trimesh'} from {self.input_type} {self.input_file}")
         return self.mesh_object
 
-    def provide_mesh_file(self, targetpath, format=None, throw_on_invalid_bobj=False, use_existing=False):
+    def provide_mesh_file(self, targetpath, format=None, throw_on_invalid_bobj=False, use_existing=False, apply_scale=False):
         if format is None and self._related_robot_instance is not None:
             format = self._related_robot_instance.mesh_format
         if format in [None, "input_type"] and self.input_type.startswith("file"):
@@ -875,6 +879,8 @@ class Mesh(Representation, SmurfBase):
             if not os.path.isfile(targetpath):
                 log.warn(f"The file assumed as existing ({targetpath}), not there. Exporting anyways but you might encounter issues.")
             return
+        if apply_scale:
+            self.apply_scale()
         self.history.append(f"->trying export of {str(self.mesh_object)} to {targetpath}")
         # log.debug(f"Providing mesh {targetpath}...")
         # if there are no changes we can simply copy
@@ -1059,15 +1065,29 @@ class Mesh(Representation, SmurfBase):
         self.load_mesh()
         if isinstance(self.mesh_object, trimesh.Trimesh) or isinstance(self.mesh_object, trimesh.Scene):
             self.mesh_object.apply_transform(np.diag(list(self.scale) + [1]))
-            self._operations.append("apply_scale")
-            self.history.append(f"apply_scale {self.scale}")
-            self._changed = True
-            self.scale = 1
-            if self._mesh_information is not None:
-                self._mesh_information["vertices"] = self._mesh_information["vertices"] * np.array(self.scale)
-                self._mesh_information["vertex_normals"] = self._mesh_information["vertex_normals"] / np.array(self.scale)
         elif BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
-            raise NotImplementedError
+            from ..blender.utils import blender as bUtils
+            objname = "tmp_export_" + self.unique_name
+            tmpobject = bUtils.createPrimitive(objname, 'box', self.scale)
+            # copy the mesh here
+            tmpobject.data = self.mesh_object
+            bpy.ops.object.select_all(action='DESELECT')
+            tmpobject.select_set(True)
+            bpy.ops.object.transform_apply(scale=True)
+            bpy.ops.object.select_all(action='DESELECT')
+            tmpobject.select_set(True)
+            bpy.ops.object.delete()
+        else:
+            raise NotImplentedError()
+
+        self._operations.append("apply_scale")
+        self.history.append(f"apply_scale {self.scale}")
+        self._changed = True
+        self.scale = 1
+        if self._mesh_information is not None:
+            self._mesh_information["vertices"] = self._mesh_information["vertices"] * np.array(self.scale)
+            self._mesh_information["vertex_normals"] = self._mesh_information["vertex_normals"] / np.array(self.scale)
+
 
     def improve_mesh(self):
         self.load_mesh()
@@ -1555,11 +1575,11 @@ class Link(Representation, SmurfBase):
     def joint_relative_origin(self):
         assert self._related_robot_instance is not None
         assert self.origin is not None
-        assert self.origin.relative_to is not None
         out = self.origin
         if self.origin.relative_to == self._related_robot_instance.get_parent(self):
             return out
         else:
+            assert self.origin.relative_to is not None
             r2x = self._related_robot_instance.get_transformation
             return Pose.from_matrix(
                 inv(r2x(self)).dot(r2x(self.origin.relative_to).dot(self.origin.to_matrix())),

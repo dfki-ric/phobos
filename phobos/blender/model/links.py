@@ -66,7 +66,13 @@ def deriveLinkfromObject(obj, scale=None, parent_link=True, parent_objects=True,
     newlink.name = obj.name + "_link"
     newlink.matrix_world = obj.matrix_world
     newlink.phobostype = 'link'
-    newlink.scale = obj.scale if scale is None else scale
+    bound_box = (
+        max([c[0] for c in obj.bound_box]),
+        max([c[1] for c in obj.bound_box]),
+        max([c[2] for c in obj.bound_box]),
+    )
+    print(bound_box, type(bound_box), type(bound_box[0]))
+    newlink.scale = [max(bound_box)]*3 if scale is None else scale
     if obj.parent is not None and parent_link:
         eUtils.parentObjectsTo(newlink, obj.parent)
     if parent_objects:

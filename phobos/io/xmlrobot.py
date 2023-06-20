@@ -72,6 +72,7 @@ class XMLRobot(Representation):
         if is_human:
             self.annotate_as_human()
 
+        self.regenerate_tree_maps()
         if self.links:
             self.link_entities()
 
@@ -464,7 +465,11 @@ class XMLRobot(Representation):
         root = None
         for link in self.links:
             if link.name not in self.parent_map:
-                assert root is None, f"Multiple roots detected, invalid URDF. Already found: {root.name, link.name}"
+                if root is not None:
+                    print("Joints:", [(str(j), j.parent, j.child) for j in self.joints])
+                    print("Links:", [str(l) for l in self.links])
+                    print(self.parent_map)
+                    raise AssertionError(f"Multiple roots detected, invalid URDF. Already found: {root.name, link.name}")
                 root = link
         assert root is not None, "No roots detected, invalid URDF."
         return root
@@ -773,7 +778,7 @@ class XMLRobot(Representation):
             leaves = [l for l in leaves if not any([s in chains_to_leave[l] for s in stop])] + stop
         return leaves
 
-    def get_transformation(self, end, start=None):
+    def get_transformation(self, end, start=None, end_type=None):
         """
         Returns the transformation from start to end
         :param end: the end link of the transformation
@@ -787,12 +792,15 @@ class XMLRobot(Representation):
         else:
             root2start = self.get_transformation(start)
 
-        if str(start) == str(end):
+        if start == end:
             return np.identity(4)
-
-        frame = self.get_link(end)
+        frame = None
+        l_frame = self.get_link(end)
+        j_frame = self.get_joint(end)
+        if j_frame is not None:
+            frame = j_frame
         if frame is None:
-            frame = self.get_joint(end)
+            frame = l_frame
         if frame is None:
             raise AssertionError(f"There is neither a joint nor a link with name {end}")
 

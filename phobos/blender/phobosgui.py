@@ -221,6 +221,11 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
     selectedOnly : BoolProperty(
         name="Selected only", default=False, description="Export only selected objects"
     )
+
+    applyMeshScale: BoolProperty(
+        name="Apply mesh scale", default=False, description="Before Exporting Mesh scales are applied."
+    )
+
     # smurfDecimalPlaces : IntProperty(
     #     name="decimals", description="Number of " + "decimal places to export in smurf", default=5, min=3
     # )
@@ -310,7 +315,6 @@ class PhobosExportSettings(bpy.types.PropertyGroup):
         name='Floating base',
         description='Export a submodel that has a floating base joint structrure before the root.',
     )
-
 
 
 
@@ -1325,6 +1329,7 @@ class PhobosExportPanel(bpy.types.Panel):
         g1 = ginlayout.column(align=True)
         g1.prop(expsets, "exportTextures")
         g1.prop(expsets, "selectedOnly")
+        g1.prop(expsets, "applyMeshScale")
         g2 = ginlayout.column(align=True)
         g2.prop(expsets, "ensurePositiveSemiDefinite")
         g2.prop(expsets, "enforceZero")
@@ -1337,7 +1342,7 @@ class PhobosExportPanel(bpy.types.Panel):
         cmodel = inlayout.column(align=True)
         cmodel.label(text="Models")
         for entitytype in phobos_defs.EXPORT_TYPES:
-            cmodel.prop(bpy.context.scene, "export_entity_"+entitytype, toggle=0 if entitytype == "smurf" else -1)
+            cmodel.prop(bpy.context.scene, "export_entity_"+entitytype)
 
         cmesh = inlayout.column(align=True)
         cmesh.label(text="Meshes")
@@ -1690,10 +1695,7 @@ def register():
 
     for entitytype in phobos_defs.EXPORT_TYPES:
         typename = "export_entity_" + entitytype
-        if entitytype == "smurf":
-            setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, get=lambda self: True))
-        else:
-            setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, default=False))
+        setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, default=entitytype == "smurf"))
 
     # [TODO v2.1.0] Re-add scene export
     # for scenetype in scenes.scene_types:

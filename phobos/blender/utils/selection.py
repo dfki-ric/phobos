@@ -328,6 +328,7 @@ def selectObjects(objects, clear=True, active=-1):
 storedSelection = []
 storedActive = -1
 
+
 def storeSelectedObjects():
     global storedSelection, storedActive
     storedSelection = list(bpy.context.selected_objects)
@@ -368,7 +369,8 @@ def getObjectByName(name, phobostypes=()):
         obj for obj in bpy.context.scene.objects if obj.phobostype in phobostypes or not phobostypes
     ]
     for obj in searchobjs:
-        if name == obj.name or "joint/name" in obj and obj["joint/name"] == name:
+        # the link/name handling is only for backwards compatibility
+        if name == obj.name or obj.get("joint/name", None) == name or obj.get("link/name", None) == name:
             found = obj
             break
     return found

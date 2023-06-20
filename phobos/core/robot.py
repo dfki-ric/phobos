@@ -45,7 +45,7 @@ class Robot(SMURFRobot):
             self.assert_validity()
 
     # export methods
-    def export_meshes(self, mesh_output_dir, format=None, use_existing=False):
+    def export_meshes(self, mesh_output_dir, format=None, use_existing=False, apply_scale=False):
         """
         Will go through all visuals and collisions and export the meshes of all mesh geometries to in the given format to the outputdir
         Args:
@@ -58,7 +58,7 @@ class Robot(SMURFRobot):
         for vc in self.visuals + self.collisions:
             if isinstance(vc.geometry, representation.Mesh):
                 vc.geometry.provide_mesh_file(targetpath=os.path.abspath(mesh_output_dir), format=format,
-                                              use_existing=use_existing)
+                                              use_existing=use_existing, apply_scale=apply_scale)
 
     def to_x3d_string(self, float_fmt_dict=None, reduce_meshes=0):
         export_instance = self.duplicate()
@@ -655,7 +655,7 @@ class Robot(SMURFRobot):
         graph[0].write_pdf(outputfile)
 
     def export(self, outputdir, export_config, rel_mesh_pathes=None, ros_pkg_name=None, no_smurf=False,
-               ros_pkg_later=False, check_submechs=True, with_meshes=True, use_existing_meshes=False):
+               ros_pkg_later=False, check_submechs=True, with_meshes=True, use_existing_meshes=False, apply_scale=False):
         assert self.check_linkage()
         outputdir = os.path.abspath(outputdir)
         if rel_mesh_pathes is None:
@@ -675,7 +675,7 @@ class Robot(SMURFRobot):
                 if "mesh_format" in ex:
                     mesh_formats.add(ex["mesh_format"].lower())
             for mf in mesh_formats:
-                self.export_meshes(mesh_output_dir=os.path.join(outputdir, rel_mesh_pathes[mf]), format=mf)
+                self.export_meshes(mesh_output_dir=os.path.join(outputdir, rel_mesh_pathes[mf]), format=mf, apply_scale=apply_scale)
         # export everything else
         for export in export_config:
             if export["type"] in KINEMATIC_TYPES:

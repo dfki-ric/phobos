@@ -222,13 +222,15 @@ if BPY_AVAILABLE:
         from . import ci
         from . import scripts
     except ImportError as e:
-        # this might be the first installation in blender so check the requirements
+        # this is the first installation in blender so we check the requirements
         check_requirements(optional=True, upgrade_pip=True, extra=False)
-        message = "Phobos requirements have been installed.\nPlease restart Blender to activate the Phobos add-on!"
+        message = "All Phobos requirements have been installed.\nPlease restart Blender to activate the Phobos add-on!"
+
         def draw(self, context):
             self.layout.label(text=message)
-        bpy.context.window_manager.popup_menu(draw, title="Please restart Blender") # , icon=icon)
-        raise ImportWarning(message)
+
+        bpy.context.window_manager.popup_menu(draw, title="Phobos: Please restart Blender")  # , icon=icon)
+        print('\033[92m'+'\033[1m'+"Phobos:"+ message+'\033[0m')
 else:
         from . import defs
         from . import io
