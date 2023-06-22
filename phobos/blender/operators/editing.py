@@ -1950,6 +1950,8 @@ class CreateLinksOperator(Operator):
         description='Where to create new link(s)?',
     )
 
+    sizeCheck : BoolProperty(name="Scale according to object size", default=True)
+
     size : FloatProperty(name="Visual Size", default=1.0, description="Size of the created link")
 
     parent_link : BoolProperty(
@@ -1980,11 +1982,11 @@ class CreateLinksOperator(Operator):
 
         """
         if self.location == '3D cursor':
-            phobos2blender.createLink(representation.Link(name=self.linkname))
+            phobos2blender.createLink(representation.Link(name=self.linkname, scale=self.size))
         elif len(context.selected_objects) > 0:
             objs_to_create_links = context.selected_objects
             for obj in objs_to_create_links:
-                modellinks.deriveLinkfromObject(obj)
+                modellinks.deriveLinkfromObject(obj, scale=self.size, scaleByBoundingBox=self.sizeCheck)
         else:
             WarnMessageWithBox("No objects selected to create links from!")
         return {'FINISHED'}
@@ -2016,6 +2018,7 @@ class CreateLinksOperator(Operator):
         if self.location == '3D cursor':
             layout.prop(self, 'linkname')
         else:
+            layout.prop(self, "sizeCheck")
             layout.prop(self, "nameformat")
             layout.prop(self, "parent_link")
             layout.prop(self, "parent_objects")
