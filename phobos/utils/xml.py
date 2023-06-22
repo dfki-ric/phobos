@@ -90,7 +90,10 @@ def read_relative_filename(filename, start_file_path):
         if os.path.basename(start_file_path) in IMPORT_TYPES+["xacro"]:
             package_dir = os.path.dirname(start_file_path)  # /bla/blub/xyz -> /bla/blub
         else:
-            raise IOError("Can't derive package_dir from " + start_file_path)
+            raise IOError("Can't derive package_dir from " + start_file_path + ". "
+                          "This usually happens when your URDF/SDF specifies the filepathes in the style "
+                          "'package://${PACKAGE_NAME}/...' but your SDF/URDF is not correctly placed in the "
+                          "urdf/sdf sub-directory of ${PACKAGE_NAME}.")
         out = os.path.join(package_dir, filename[len("package://"):].split("/", 1)[-1])
         assert os.path.exists(out), f"Couldn't identify file from {filename}. Tried {out} but it doesn't exist!"
     elif os.path.isabs(filename):
