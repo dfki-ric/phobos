@@ -1954,19 +1954,19 @@ class CreateLinksOperator(Operator):
 
     size : FloatProperty(name="Visual Size", default=1.0, description="Size of the created link")
 
-    parent_link : BoolProperty(
-        name="Parent Link", default=False, description="Parent link to object's parents"
-    )
-
-    parent_objects : BoolProperty(
-        name='Parent Objects', default=False, description='Parent children of object to new link'
-    )
-
-    nameformat : StringProperty(
-        name="Name Format",
-        description="Provide a string containing {0} {1} etc. to reuse parts of objects' names.",
-        default='',
-    )
+    # parent_link : BoolProperty(
+    #     name="Parent Link", default=False, description="Parent link to object's parents"
+    # )
+    #
+    # parent_objects : BoolProperty(
+    #     name='Parent Objects', default=False, description='Parent children of object to new link'
+    # )
+    #
+    # nameformat : StringProperty(
+    #     name="Name Format",
+    #     description="Provide a string containing {0} {1} etc. to reuse parts of objects' names.",
+    #     default='',
+    # )
 
     linkname : StringProperty(
         name="Link Name", description="A name for a single newly created link.", default='new_link'
@@ -2019,9 +2019,9 @@ class CreateLinksOperator(Operator):
             layout.prop(self, 'linkname')
         else:
             layout.prop(self, "sizeCheck")
-            layout.prop(self, "nameformat")
-            layout.prop(self, "parent_link")
-            layout.prop(self, "parent_objects")
+            # layout.prop(self, "nameformat")
+            # layout.prop(self, "parent_link")
+            # layout.prop(self, "parent_objects")
 
 
 class AddSensorOperator(Operator):
