@@ -3461,10 +3461,10 @@ class MeasureDistanceOperator(Operator):
         return len(context.selected_objects) == 2
 
 class ParentOperator(Operator):
-    """Parent selected objects to active object"""
+    """Parent selected objects to active object (last selected)"""
 
     bl_idname = "phobos.parent"
-    bl_label = "Parent Selection"
+    bl_label = "Parent Objects"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
