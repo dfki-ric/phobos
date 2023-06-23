@@ -1451,7 +1451,7 @@ class DefineJointConstraintsOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     name : StringProperty(
-        name='Joint Name (leave empty for same name as link)', default="", description='Defines the name of the joint'
+        name='Joint Name', default="", description='Defines the name of the joint (leave empty for same name as link)'
     )
 
     active : BoolProperty(
@@ -1507,7 +1507,7 @@ class DefineJointConstraintsOperator(Operator):
         layout = self.layout
         if len(context.selected_objects) == 1:
             layout.prop(self, "name")
-        layout.prop(self, "joint_type", text="joint_type")
+        layout.prop(self, "joint_type", text="joint Type")
 
         # enable/disable optional parameters
         if not self.joint_type == 'fixed':
