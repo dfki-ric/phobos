@@ -1954,13 +1954,13 @@ class CreateLinksOperator(Operator):
 
     size : FloatProperty(name="Visual Size", default=1.0, description="Size of the created link")
 
-    # parent_link : BoolProperty(
-    #     name="Parent Link", default=False, description="Parent link to object's parents"
-    # )
-    #
-    # parent_objects : BoolProperty(
-    #     name='Parent Objects', default=False, description='Parent children of object to new link'
-    # )
+    parent_link : BoolProperty(
+        name="Parent Link", default=False, description="Parent link to object's parents"
+    )
+
+    parent_objects : BoolProperty(
+        name='Parent Objects', default=False, description='Parent children of object to new link'
+    )
     #
     # nameformat : StringProperty(
     #     name="Name Format",
@@ -1986,7 +1986,8 @@ class CreateLinksOperator(Operator):
         elif len(context.selected_objects) > 0:
             objs_to_create_links = context.selected_objects
             for obj in objs_to_create_links:
-                modellinks.deriveLinkfromObject(obj, scale=self.size, scaleByBoundingBox=self.sizeCheck)
+                modellinks.deriveLinkfromObject(obj, scale=self.size, scaleByBoundingBox=self.sizeCheck,
+                                                parent_objects=self.parent_objects, parent_link=self.parent_link)
         else:
             WarnMessageWithBox("No objects selected to create links from!")
         return {'FINISHED'}
@@ -2020,8 +2021,8 @@ class CreateLinksOperator(Operator):
         else:
             layout.prop(self, "sizeCheck")
             # layout.prop(self, "nameformat")
-            # layout.prop(self, "parent_link")
-            # layout.prop(self, "parent_objects")
+            layout.prop(self, "parent_link")
+            layout.prop(self, "parent_objects")
 
 
 class AddSensorOperator(Operator):
