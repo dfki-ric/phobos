@@ -1346,7 +1346,7 @@ class CreateCollisionObjects(Operator):
                     (1., 1., 1.),
                     defs.layerTypes['collision'],
                     materialname,
-                    center,
+                    vis.location,
                     rotation_euler,
                     'collision'
                 )
