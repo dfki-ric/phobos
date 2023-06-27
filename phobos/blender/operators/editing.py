@@ -1726,11 +1726,6 @@ class DissolveLink(Operator):
 class AddMotorOperator(Operator):
     """Add a motor to the selected joint.
     It is possible to add motors to multiple joints at the same time.
-
-    Args:
-
-    Returns:
-
     """
 
     bl_idname = "phobos.add_motor"
