@@ -1173,6 +1173,7 @@ class GenerateInertialObjectsOperator(Operator):
 
         linkcount = len(objectlist)
         new_inertial_objects = []
+        foundMassInObject = 0
         for obj in objectlist:
             i = 1
             mass = self.mass
@@ -1180,6 +1181,7 @@ class GenerateInertialObjectsOperator(Operator):
             if self.derive_inertia_from_geometry:
                 if "mass" in obj:
                     mass = obj["mass"]
+                    foundMassInObject += 1
                 geometry = blender2phobos.deriveGeometry(obj)
                 inertia = inertialib.calculateInertia(obj, mass, geometry, adjust=True, logging=True)
                 if isinstance(geometry, representation.Mesh):
@@ -1212,6 +1214,13 @@ class GenerateInertialObjectsOperator(Operator):
         # select the new inertialobjects
         if new_inertial_objects:
             sUtils.selectObjects(new_inertial_objects, clear=True)
+        if foundMassInObject:
+            if foundMassInObject == 1:
+                WarnMessageWithBox(message="The selected visual/collision " \
+                                           "has its own mass defined, using this")
+            else:
+                WarnMessageWithBox(message= "{} of the selected visuals/collisions "\
+                                        "have their own mass defined, using these".format(foundMassInObject))
 
         return {'FINISHED'}
 
