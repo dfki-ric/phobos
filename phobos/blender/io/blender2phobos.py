@@ -33,6 +33,7 @@ def deriveObjectPose(obj, effectiveparent=None, logging=True):
         w2p = representation.Pose.from_matrix(effectiveparent.matrix_world.normalized(), relative_to=effectiveparent.get("link/name", effectiveparent.name))
     else:
         w2p = representation.Pose(relative_to=obj.get("link/name", obj.name))
+        return w2p #If effectiveparent is None, we assume effectiveparent is root
 
     w2o = representation.Pose.from_matrix(obj.matrix_world.normalized(), relative_to=effectiveparent.get("link/name", effectiveparent.name))
     p2o = w2p.inv(relative_to=effectiveparent.get("link/name", effectiveparent.name)).dot(w2o)
