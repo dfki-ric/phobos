@@ -2991,9 +2991,10 @@ class AssignSubmechanism(Operator):
         layout.label(text='Selection contains {0} joint{1}.'.format(
             nSelectedJoints, "s" if nSelectedJoints is not 1 else ""))
         layout.prop(self, 'linear_chain')
-        layout.label(text='(Joints that have not been assigned')
+        layout.label(text='Joints that have not been assigned')
         layout.label(text='to a submechanism will be considered')
-        layout.label(text='serial chains automatically)')
+        layout.label(text='serial chains automatically. The submechanism')
+        layout.label(text='object will be created at your 3D cursor')
         layout.prop(self, 'mechanism_name')
         layout.prop(self, 'contextual_name')
         if not self.linear_chain:
