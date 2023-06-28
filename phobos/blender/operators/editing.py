@@ -1733,9 +1733,9 @@ class AddMotorOperator(Operator):
     bl_options = {'UNDO'}
     lastMotorDefault = None
 
-    template : EnumProperty(items=resources.get_motor_defaults(), description="The template to use for this motor")
-    motorType : EnumProperty(items=representation.Motor.BUILD_TYPES, description='The motor type')
-    controllerType: EnumProperty(items=representation.Motor.TYPES, description='The controller type')
+    template : EnumProperty(items=[(n,n,n) for n in resources.get_motor_defaults()], description="The template to use for this motor")
+    motorType : EnumProperty(items=[(n,n,n) for n in representation.Motor.BUILD_TYPES], description='The motor type')
+    controllerType: EnumProperty(items=[(n,n,n) for n in representation.Motor.TYPES], description='The controller type')
     maxeffort : FloatProperty(
         name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
     )
