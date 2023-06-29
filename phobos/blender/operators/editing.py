@@ -1735,8 +1735,7 @@ class DissolveLink(Operator):
 
 class AddMotorOperator(Operator):
     """Add a motor to the selected joint.
-    It is possible to add motors to multiple joints at the same time.
-    """
+    It is possible to add motors to multiple joints at the same time"""
 
     bl_idname = "phobos.add_motor"
     bl_label = "Add Motor"
@@ -1771,7 +1770,7 @@ class AddMotorOperator(Operator):
                        "d": "controld"}
 
     def updateValues(self, key, defDict, lastDict, prop):
-        # only update value if the user hasn't change the default value
+        # only update value if the user hasn't changed the default value
         if key in defDict:
             if lastDict and key in lastDict and prop != lastDict[key]:
                 return prop
