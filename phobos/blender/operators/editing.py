@@ -1941,6 +1941,43 @@ class AddMotorOperator(Operator):
 #     return newmotors, annotation_objs, controller_objs
 
 
+class RemoveMotorOperator(Operator):
+    """Remove motors from selected joints"""
+    bl_idname = "phobos.remove_motor"
+    bl_label = "Remove Motor"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        removedMotors = 0
+        refl_vars = ["d", "i", "p", "name", "type"]
+        for obj in context.selected_objects:
+            if obj.phobostype == "link":
+                motorRemoved = False
+                for prop in refl_vars:
+                    mProp = f"motor/{prop}"
+                    if mProp in obj:
+                        del obj[mProp]
+                        if not motorRemoved:
+                            motorRemoved = True
+                            removedMotors+=1
+        if len(context.selected_objects) > 1 and removedMotors > 0:
+            pluralS = "s" if removedMotors > 1 else ""
+            WarnMessageWithBox(message=f"{removedMotors} motor{pluralS} removed from selected objects",
+                               title="Phobos Message", icon="INFO")
+        print("Motor removed")
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        refl_vars = ["d", "i", "p", "name", "type"]
+        for obj in context.selected_objects:
+            if obj.phobostype == "link":
+                for prop in refl_vars:
+                    mProp = f"motor/{prop}"
+                    if mProp in obj:
+                        return True
+        return False
+
 class CreateLinksOperator(Operator):
     """Create link(s), optionally based on existing objects"""
 
@@ -3524,6 +3561,7 @@ classes = (
     DefineJointConstraintsOperator,
     DissolveLink,
     AddMotorOperator,
+    RemoveMotorOperator,
     CreateLinksOperator,
     AddSensorOperator,
     # [TODO v2.1.0] AddControllerOperator,
