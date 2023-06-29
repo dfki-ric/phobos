@@ -15,6 +15,7 @@ Contains all Blender operators for editing of Phobos models.
 
 import math
 import os
+import re
 from datetime import datetime
 
 import bpy
@@ -3493,6 +3494,217 @@ class ParentOperator(Operator):
         return len(context.selected_objects) >= 2
 
 
+class CuttingPlane:
+    """Stores all information of a Cutting-Plane"""
+    cutting_plane = None
+    intersecting_obj = None
+    intersecting_edges = None
+
+class DefineCuttingPlaneOperator(bpy.types.Operator):
+    """Tooltip"""
+    bl_idname = "phobos.define_cutting_plane_operator"
+    bl_label = "Define Cutting Plane"
+
+    cutting_plane = CuttingPlane()
+
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def __calculate_normal_vector(self, points):
+        """Returns Normal-Vector for a Plane defined by 3 Points"""
+        v1 = [points[1][r] - points[0][r] for r in [0, 1, 2]]
+        v2 = [points[2][r] - points[0][r] for r in [0, 1, 2]]
+
+        n = [v1[1] * v2[2] - v1[2] * v2[1],
+             v1[2] * v2[0] - v1[0] * v2[2],
+             v1[0] * v2[1] - v1[1] * v2[0]]
+
+        return n
+
+
+    def __normalize_vector(self, vector):
+        """Scales a Vector to the length of 1"""
+        length = math.sqrt(math.pow(vector[0], 2) + math.pow(vector[1], 2) + math.pow(vector[2], 2))
+        return [i * (1 / length) for i in vector]
+
+
+    def __calculate_normal_vectors_of_plane(self, plane):
+        """Calculates 4 Normal-Vectors for a plane defined by 4 Points"""
+        vertices = plane.data.vertices
+        vertices_coordinates = []
+        for v in vertices:
+            co_final = plane.matrix_world @ v.co
+            vertices_coordinates.append(co_final)
+
+        normal_vectors = []
+        for i in range(0, 4):
+            cp = vertices_coordinates.copy()
+            cp.remove(cp[i])
+            normal_vectors.append(self.__normalize_vector(self.__calculate_normal_vector(cp)))
+
+        return normal_vectors
+
+
+    def __is_equal(self, a, b):
+        """Checks if two floats are equal"""
+        result = True
+        for i in range(0, 3):
+            if not math.isclose(abs(a[i]), abs(b[i])):
+                result = False
+        return result
+
+
+    def __is_valid(self, plane):
+        """Checks if a plane defined by 4 points is even"""
+        normal_vectors = self.__calculate_normal_vectors_of_plane(plane)
+        if len(plane.data.vertices) != 4:
+            print("Object is no Plane")
+            return False
+        for i in range(0, 4):
+            for j in range(0, 4):
+                if not self.__is_equal(normal_vectors[i], normal_vectors[j]):
+                    return False
+
+        return True
+
+
+    def __get_edges_of_object(self, context, object_name):
+        """Returns the edges of an object in world coordinates"""
+        obj = context.scene.objects[object_name]
+        edges_of_obj = []
+        try:
+            for e in obj.data.edges:
+                edge = []
+                for i in e.vertices:
+                    edge.append(obj.matrix_world @ obj.data.vertices[i].co)
+                edges_of_obj.append(edge)
+            return edges_of_obj
+        except:
+            print("Object does not have edges")
+            return []
+
+
+    def __is_on_edge(self, point, edge):
+        """Checks if point is on edge"""
+        for i in range(0, 3):
+            v_max = max(edge[0][i], edge[1][i])
+            v_min = min(edge[0][i], edge[1][i])
+            if not v_max >= point[i] >= v_min:
+                return False
+        return True
+
+
+    def __intersects_edge_plane(self, plane, edge, epsilon=1e-6):
+        """Checks if edge of Object intersects Cutting-Plane"""
+        plane_normal = np.array(self.__calculate_normal_vector(plane[0:3]))
+        plane_point = np.array(plane[0])
+        ray_direction = np.array(edge[1] - edge[0])
+        ray_point = np.array(edge[0])
+
+        ndotu = plane_normal.dot(ray_direction)
+        if abs(ndotu) < epsilon:
+            print("The edge is parallel to the plane or in the plane")
+            return None
+
+        w = ray_point - plane_point
+        si = -plane_normal.dot(w) / ndotu
+        psi = w + si * ray_direction + plane_point
+
+        if self.__is_on_edge(psi, edge):
+            return True
+
+
+    def __check_intersection(self, context, object_name):
+        """Check Intersection of Object with Cutting-Plane"""
+        plane_obj = context.active_object
+        plane = [plane_obj.matrix_world @ v.co for v in plane_obj.data.vertices]
+        intersecting_edges = []
+        for edge in self.__get_edges_of_object(context, object_name):
+            if self.__intersects_edge_plane(plane, edge):
+                intersecting_edges.append(edge)
+        if len(intersecting_edges) > 0:
+            self.cutting_plane.intersecting_edges = intersecting_edges
+            return True
+
+
+
+    def __get_intersecting_link(self, context):
+        """Gets Link which intersects Cutting-Plane"""
+        intersecting_links = []
+        for obj in context.scene.objects:
+            if obj.name != context.active_object.name:
+                print("Checking if {obj} is intersecting Cutting-Plane".format(obj=obj.name))
+                if self.__check_intersection(context, obj.name):
+                    intersecting_links.append(obj.name)
+                    print("{obj} is intersecting Cutting Plane".format(obj=obj.name))
+        if len(intersecting_links) > 1:
+            s = "The Plane intersects more than one Link. It intersects: "
+            for l in intersecting_links:
+                s += "{link} ".format(link=l)
+            s += ". But only one intersecting link is allowed!"
+            print(s)
+            return None
+        if len(intersecting_links) == 0:
+            print("The Plane does not intersect a Link. But is has to intersect one")
+            return None
+
+        self.cutting_plane.intersecting_obj = intersecting_links[0]
+        return intersecting_links[0]
+
+
+    def __save_plane_to_file(self, plane):
+        if self.__is_valid(plane):
+            normal_vector = self.__calculate_normal_vectors_of_plane(plane)[0]
+            point = plane.matrix_world @ plane.data.vertices[0].co
+            point = [i for i in point]
+            f = open("cutting_planes.txt", "a")
+            if [point, normal_vector] not in self.__load_planes_from_file("cutting_planes.txt"):
+                plane_string = "Point:'{point}', Normal-Vector:'{normal_vector}'\n" \
+                    .format(id=2, point=point, normal_vector=normal_vector)
+                f.write(plane_string)
+            else:
+                print("Plane already exists")
+            f.close()
+
+
+    def __convert_string_to_list_of_floats(self, string):
+        x = re.split(",", string)
+        list_of_floats = []
+        for value in x:
+            list_of_floats.append(float(value.strip()))
+        return list_of_floats
+
+
+    def __load_planes_from_file(self, filename):
+        f = open(filename, "r")
+        search_string = "\\[(.*?)\\]"
+        planes = []
+        for line in f:
+            x = re.findall(search_string, line)
+            point = self.__convert_string_to_list_of_floats(x[0])
+            normal_vector = self.__convert_string_to_list_of_floats(x[1])
+            planes.append([point, normal_vector])
+        return planes
+    def execute(self, context):
+        cutting_plane = context.active_object
+        try:
+            if len(cutting_plane.data.vertices) == 4:
+                if self.__is_valid(cutting_plane):
+                    intersecting_link = self.__get_intersecting_link(context)
+                    if intersecting_link:
+                        self.cutting_plane.cutting_plane = [cutting_plane.matrix_world @ v.co
+                                                            for v in cutting_plane.data.vertices]
+            else:
+                print("No valid Cutting-Plane is selected. Select a valid one")
+
+        except:
+            print("No valid Cutting-Plane is selected. Select a valid one")
+
+        return {'FINISHED'}
+
+
 classes = (
     DynamicProperty,
     SafelyRemoveObjectsFromSceneOperator,
@@ -3530,6 +3742,7 @@ classes = (
     CalculateMassOperator,
     MeasureDistanceOperator,
     ParentOperator,
+    DefineCuttingPlaneOperator,
 )
 
 

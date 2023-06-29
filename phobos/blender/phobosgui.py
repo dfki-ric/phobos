@@ -1223,6 +1223,16 @@ class PhobosModelPanel(bpy.types.Panel):
         mc1.operator('phobos.generate_inertial_objects')
         mc1.operator('phobos.edit_inertial_data')
 
+        # Parameterizable Link
+        layout.separator()
+        parlayout = layout.split()
+        pl1 = parlayout.column(align=True)
+        pl1.label(text="Parameterizable Link", icon='MOD_SCREW')
+        pl1.operator('phobos.define_cutting_plane_operator')
+
+        xy1 = parlayout.column(align=True)
+        xy1.label(text="FOO", icon='MOD_SCREW')
+
 
 # TODO bring this back or just delete it
 # class PhobosScenePanel(bpy.types.Panel):
