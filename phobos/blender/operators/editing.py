@@ -1219,8 +1219,8 @@ class GenerateInertialObjectsOperator(Operator):
                 WarnMessageWithBox(message="The selected visual/collision " \
                                            "has its own mass defined, using this")
             else:
-                WarnMessageWithBox(message= "{} of the selected visuals/collisions "\
-                                        "have their own mass defined, using these".format(foundMassInObject))
+                WarnMessageWithBox(message= f"{foundMassInObject} of the selected visuals/collisions "\
+                                        "have their own mass defined, using these")
 
         return {'FINISHED'}
 
@@ -1464,7 +1464,7 @@ class DefineJointConstraintsOperator(Operator):
     )
 
     active : BoolProperty(
-        name='Active', default=False, description='Add an motor to the joint'
+        name='Active', default=False, description='Add a motor to the joint'
     )
 
     useRadian : BoolProperty(
@@ -1622,16 +1622,17 @@ class DefineJointConstraintsOperator(Operator):
 
             if "joint/name" not in joint:
                 joint["joint/name"] = joint.name + "_joint"
-
-            motor_name = joint.get("joint/name", joint.name) + "_motor"
-            phobos2blender.createMotor(
-                motor=representation.Motor(
-                    name=motor_name,
-                    joint=joint.get("joint/name", joint.name),
-                    **resources.get_default_motor()
-                ),
-                linkobj=joint
-            )
+                
+            if self.active:
+                motor_name = joint.get("joint/name", joint.name) + "_motor"
+                phobos2blender.createMotor(
+                    motor=representation.Motor(
+                        name=motor_name,
+                        joint=joint.get("joint/name", joint.name),
+                        **resources.get_default_motor()
+                    ),
+                    linkobj=joint
+                )
 
         return {'FINISHED'}
 
