@@ -1601,38 +1601,44 @@ class DefineJointConstraintsOperator(Operator):
         axis = None
         if self.joint_type in ["revolute", "prismatic", "continuous"]:
             axis = self.axis
-        # set properties for each joint
-        for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
-            context.view_layer.objects.active = joint
-            assert joint.parent is not None and joint.parent.phobostype == "link", \
-                f"You need to have a link parented to {joint.name} before you can create a joint"
-            if len(self.name) > 0:
-                joint["joint/name"] = self.name
-            jUtils.setJointConstraints(
-                joint=joint,
-                jointtype=self.joint_type,
-                lower=lower,
-                upper=upper,
-                velocity=velocity,
-                effort=effort,
-                spring=self.spring,
-                damping=self.damping,
-                axis=(np.array(axis) / np.linalg.norm(axis)).tolist() if axis is not None else None
-            )
 
-            if "joint/name" not in joint:
-                joint["joint/name"] = joint.name + "_joint"
-                
-            if self.active:
-                motor_name = joint.get("joint/name", joint.name) + "_motor"
-                phobos2blender.createMotor(
-                    motor=representation.Motor(
-                        name=motor_name,
-                        joint=joint.get("joint/name", joint.name),
-                        **resources.get_default_motor()
-                    ),
-                    linkobj=joint
+        # Check if joints can be created
+        validInput = True
+        if max(axis) == 0 and min(axis) == 0:
+            validInput = False
+        # set properties for each joint
+        if validInput:
+            for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
+                context.view_layer.objects.active = joint
+                assert joint.parent is not None and joint.parent.phobostype == "link", \
+                    f"You need to have a link parented to {joint.name} before you can create a joint"
+                if len(self.name) > 0:
+                    joint["joint/name"] = self.name
+                jUtils.setJointConstraints(
+                    joint=joint,
+                    jointtype=self.joint_type,
+                    lower=lower,
+                    upper=upper,
+                    velocity=velocity,
+                    effort=effort,
+                    spring=self.spring,
+                    damping=self.damping,
+                    axis=(np.array(axis) / np.linalg.norm(axis)).tolist() if axis is not None else None
                 )
+
+                if "joint/name" not in joint:
+                    joint["joint/name"] = joint.name + "_joint"
+
+                if self.active:
+                    motor_name = joint.get("joint/name", joint.name) + "_motor"
+                    phobos2blender.createMotor(
+                        motor=representation.Motor(
+                            name=motor_name,
+                            joint=joint.get("joint/name", joint.name),
+                            **resources.get_default_motor()
+                        ),
+                        linkobj=joint
+                    )
 
         return {'FINISHED'}
 
