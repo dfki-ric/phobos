@@ -176,6 +176,17 @@ def find_calling_operator(frame):
 
 recentMessageBoxes = {}
 def ErrorMessageWithBox(message = "", title = "Phobos Error", icon = 'ERROR', reporter=None, silentFor=15):
+    """Display an error message
+
+    Args:
+      message (str)
+      title (str, optional)
+      icon (str, optional): Name of blender icon
+      reporter (optional)
+      silentFor (float, optional): Ignores calls with the same message for x seconds
+      to prevent spamming the user with error boxes, default 15
+
+    """
     if silentFor > 0:
         if message in recentMessageBoxes:
             timePassed = time.time()-recentMessageBoxes[message]
