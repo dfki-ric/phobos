@@ -1173,6 +1173,7 @@ class GenerateInertialObjectsOperator(Operator):
 
         linkcount = len(objectlist)
         new_inertial_objects = []
+        foundMassInObject = 0
         for obj in objectlist:
             i = 1
             mass = self.mass
@@ -1180,6 +1181,7 @@ class GenerateInertialObjectsOperator(Operator):
             if self.derive_inertia_from_geometry:
                 if "mass" in obj:
                     mass = obj["mass"]
+                    foundMassInObject += 1
                 geometry = blender2phobos.deriveGeometry(obj)
                 inertia = inertialib.calculateInertia(obj, mass, geometry, adjust=True, logging=True)
                 if isinstance(geometry, representation.Mesh):
@@ -1212,6 +1214,13 @@ class GenerateInertialObjectsOperator(Operator):
         # select the new inertialobjects
         if new_inertial_objects:
             sUtils.selectObjects(new_inertial_objects, clear=True)
+        if foundMassInObject:
+            if foundMassInObject == 1:
+                WarnMessageWithBox(message="The selected visual/collision " \
+                                           "has its own mass defined, using this")
+            else:
+                WarnMessageWithBox(message= f"{foundMassInObject} of the selected visuals/collisions "\
+                                        "have their own mass defined, using these")
 
         return {'FINISHED'}
 
@@ -1451,11 +1460,11 @@ class DefineJointConstraintsOperator(Operator):
     bl_options = {'REGISTER', 'UNDO'}
 
     name : StringProperty(
-        name='Joint Name (leave empty for same name as link)', default="", description='Defines the name of the joint'
+        name='Joint Name', default="", description='Defines the name of the joint (leave empty for same name as link)'
     )
 
     active : BoolProperty(
-        name='Active', default=False, description='Add an motor to the joint'
+        name='Active', default=False, description='Add a motor to the joint'
     )
 
     useRadian : BoolProperty(
@@ -1507,7 +1516,7 @@ class DefineJointConstraintsOperator(Operator):
         layout = self.layout
         if len(context.selected_objects) == 1:
             layout.prop(self, "name")
-        layout.prop(self, "joint_type", text="joint_type")
+        layout.prop(self, "joint_type", text="joint Type")
 
         # enable/disable optional parameters
         if not self.joint_type == 'fixed':
@@ -1592,37 +1601,44 @@ class DefineJointConstraintsOperator(Operator):
         axis = None
         if self.joint_type in ["revolute", "prismatic", "continuous"]:
             axis = self.axis
+
+        # Check if joints can be created
+        validInput = True
+        if max(axis) == 0 and min(axis) == 0:
+            validInput = False
         # set properties for each joint
-        for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
-            context.view_layer.objects.active = joint
-            assert joint.parent is not None and joint.parent.phobostype == "link", \
-                f"You need to have a link parented to {joint.name} before you can create a joint"
-            if len(self.name) > 0:
-                joint["joint/name"] = self.name
-            jUtils.setJointConstraints(
-                joint=joint,
-                jointtype=self.joint_type,
-                lower=lower,
-                upper=upper,
-                velocity=velocity,
-                effort=effort,
-                spring=self.spring,
-                damping=self.damping,
-                axis=(np.array(axis) / np.linalg.norm(axis)).tolist() if axis is not None else None
-            )
+        if validInput:
+            for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
+                context.view_layer.objects.active = joint
+                assert joint.parent is not None and joint.parent.phobostype == "link", \
+                    f"You need to have a link parented to {joint.name} before you can create a joint"
+                if len(self.name) > 0:
+                    joint["joint/name"] = self.name
+                jUtils.setJointConstraints(
+                    joint=joint,
+                    jointtype=self.joint_type,
+                    lower=lower,
+                    upper=upper,
+                    velocity=velocity,
+                    effort=effort,
+                    spring=self.spring,
+                    damping=self.damping,
+                    axis=(np.array(axis) / np.linalg.norm(axis)).tolist() if axis is not None else None
+                )
 
-            if "joint/name" not in joint:
-                joint["joint/name"] = joint.name + "_joint"
+                if "joint/name" not in joint:
+                    joint["joint/name"] = joint.name + "_joint"
 
-            motor_name = joint.get("joint/name", joint.name) + "_motor"
-            phobos2blender.createMotor(
-                motor=representation.Motor(
-                    name=motor_name,
-                    joint=joint.get("joint/name", joint.name),
-                    **resources.get_default_motor()
-                ),
-                linkobj=joint
-            )
+                if self.active:
+                    motor_name = joint.get("joint/name", joint.name) + "_motor"
+                    phobos2blender.createMotor(
+                        motor=representation.Motor(
+                            name=motor_name,
+                            joint=joint.get("joint/name", joint.name),
+                            **resources.get_default_motor()
+                        ),
+                        linkobj=joint
+                    )
 
         return {'FINISHED'}
 
@@ -1725,22 +1741,16 @@ class DissolveLink(Operator):
 
 class AddMotorOperator(Operator):
     """Add a motor to the selected joint.
-    It is possible to add motors to multiple joints at the same time.
-
-    Args:
-
-    Returns:
-
-    """
+    It is possible to add motors to multiple joints at the same time"""
 
     bl_idname = "phobos.add_motor"
     bl_label = "Add Motor"
     bl_options = {'UNDO'}
     lastMotorDefault = None
 
-    template : EnumProperty(items=resources.get_motor_defaults(), description="The template to use for this motor")
-    motorType : EnumProperty(items=representation.Motor.BUILD_TYPES, description='The motor type')
-    controllerType: EnumProperty(items=representation.Motor.TYPES, description='The controller type')
+    template : EnumProperty(items=[(n,n,n) for n in resources.get_motor_defaults()], description="The template to use for this motor")
+    motorType : EnumProperty(items=[(n,n,n) for n in representation.Motor.BUILD_TYPES], description='The motor type')
+    controllerType: EnumProperty(items=[(n,n,n) for n in representation.Motor.TYPES], description='The controller type')
     maxeffort : FloatProperty(
         name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
     )
@@ -1766,7 +1776,7 @@ class AddMotorOperator(Operator):
                        "d": "controld"}
 
     def updateValues(self, key, defDict, lastDict, prop):
-        # only update value if the user hasn't change the default value
+        # only update value if the user hasn't changed the default value
         if key in defDict:
             if lastDict and key in lastDict and prop != lastDict[key]:
                 return prop
@@ -1936,6 +1946,43 @@ class AddMotorOperator(Operator):
 #     return newmotors, annotation_objs, controller_objs
 
 
+class RemoveMotorOperator(Operator):
+    """Remove motors from selected joints"""
+    bl_idname = "phobos.remove_motor"
+    bl_label = "Remove Motor"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        removedMotors = 0
+        refl_vars = ["d", "i", "p", "name", "type"]
+        for obj in context.selected_objects:
+            if obj.phobostype == "link":
+                motorRemoved = False
+                for prop in refl_vars:
+                    mProp = f"motor/{prop}"
+                    if mProp in obj:
+                        del obj[mProp]
+                        if not motorRemoved:
+                            motorRemoved = True
+                            removedMotors+=1
+        if len(context.selected_objects) > 1 and removedMotors > 0:
+            pluralS = "s" if removedMotors > 1 else ""
+            WarnMessageWithBox(message=f"{removedMotors} motor{pluralS} removed from selected objects",
+                               title="Phobos Message", icon="INFO")
+        print("Motor removed")
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        refl_vars = ["d", "i", "p", "name", "type"]
+        for obj in context.selected_objects:
+            if obj.phobostype == "link":
+                for prop in refl_vars:
+                    mProp = f"motor/{prop}"
+                    if mProp in obj:
+                        return True
+        return False
+
 class CreateLinksOperator(Operator):
     """Create link(s), optionally based on existing objects"""
 
@@ -1950,6 +1997,8 @@ class CreateLinksOperator(Operator):
         description='Where to create new link(s)?',
     )
 
+    sizeCheck : BoolProperty(name="Scale according to object size", default=True)
+
     size : FloatProperty(name="Visual Size", default=1.0, description="Size of the created link")
 
     parent_link : BoolProperty(
@@ -1959,12 +2008,12 @@ class CreateLinksOperator(Operator):
     parent_objects : BoolProperty(
         name='Parent Objects', default=False, description='Parent children of object to new link'
     )
-
-    nameformat : StringProperty(
-        name="Name Format",
-        description="Provide a string containing {0} {1} etc. to reuse parts of objects' names.",
-        default='',
-    )
+    #
+    # nameformat : StringProperty(
+    #     name="Name Format",
+    #     description="Provide a string containing {0} {1} etc. to reuse parts of objects' names.",
+    #     default='',
+    # )
 
     linkname : StringProperty(
         name="Link Name", description="A name for a single newly created link.", default='new_link'
@@ -1980,11 +2029,12 @@ class CreateLinksOperator(Operator):
 
         """
         if self.location == '3D cursor':
-            phobos2blender.createLink(representation.Link(name=self.linkname))
+            phobos2blender.createLink(representation.Link(name=self.linkname, scale=self.size))
         elif len(context.selected_objects) > 0:
             objs_to_create_links = context.selected_objects
             for obj in objs_to_create_links:
-                modellinks.deriveLinkfromObject(obj)
+                modellinks.deriveLinkfromObject(obj, scale=self.size, scaleByBoundingBox=self.sizeCheck,
+                                                parent_objects=self.parent_objects, parent_link=self.parent_link)
         else:
             WarnMessageWithBox("No objects selected to create links from!")
         return {'FINISHED'}
@@ -2016,7 +2066,8 @@ class CreateLinksOperator(Operator):
         if self.location == '3D cursor':
             layout.prop(self, 'linkname')
         else:
-            layout.prop(self, "nameformat")
+            layout.prop(self, "sizeCheck")
+            # layout.prop(self, "nameformat")
             layout.prop(self, "parent_link")
             layout.prop(self, "parent_objects")
 
@@ -2983,9 +3034,10 @@ class AssignSubmechanism(Operator):
         layout.label(text='Selection contains {0} joint{1}.'.format(
             nSelectedJoints, "s" if nSelectedJoints is not 1 else ""))
         layout.prop(self, 'linear_chain')
-        layout.label(text='(Joints that have not been assigned')
+        layout.label(text='Joints that have not been assigned')
         layout.label(text='to a submechanism will be considered')
-        layout.label(text='serial chains automatically)')
+        layout.label(text='serial chains automatically. The submechanism')
+        layout.label(text='object will be created at your 3D cursor')
         layout.prop(self, 'mechanism_name')
         layout.prop(self, 'contextual_name')
         if not self.linear_chain:
@@ -3457,10 +3509,10 @@ class MeasureDistanceOperator(Operator):
         return len(context.selected_objects) == 2
 
 class ParentOperator(Operator):
-    """Parent selected objects to active object"""
+    """Parent selected objects to active object (last selected)"""
 
     bl_idname = "phobos.parent"
-    bl_label = "Parent Selection"
+    bl_label = "Parent Objects"
     bl_options = {"REGISTER", "UNDO"}
 
     def execute(self, context):
@@ -3514,6 +3566,7 @@ classes = (
     DefineJointConstraintsOperator,
     DissolveLink,
     AddMotorOperator,
+    RemoveMotorOperator,
     CreateLinksOperator,
     AddSensorOperator,
     # [TODO v2.1.0] AddControllerOperator,

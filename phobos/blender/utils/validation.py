@@ -645,6 +645,8 @@ def validateInertiaData(obj, *args, adjust=False):
                 )
             )
             missing.append('inertia')
+        else:
+            inertia = obj['inertia']
 
         if 'mass' not in obj:
             errors.append(
@@ -657,6 +659,8 @@ def validateInertiaData(obj, *args, adjust=False):
                 )
             )
             missing.append('mass')
+        else:
+            mass = obj['mass']
 
     else:
         raise AssertionError(type(obj))

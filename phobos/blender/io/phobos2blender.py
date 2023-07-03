@@ -431,7 +431,7 @@ def createSubmechanism(submechanism, linkobj=None):
     # assign the parent if available
     if linkobj is not None:
         eUtils.parentObjectsTo(newsubm, nUtils.getObjectName(linkobj) if type(linkobj) == str else linkobj)
-        # newsensor.matrix_local = sensor.origin.to_matrix() #TODO
+        newsubm.location = bpy.context.scene.cursor.location
 
     # set sensor properties
     newsubm.phobostype = 'submechanism'
