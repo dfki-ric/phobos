@@ -1226,12 +1226,21 @@ class PhobosModelPanel(bpy.types.Panel):
         # Parameterizable Link
         layout.separator()
         parlayout = layout.split()
-        pl1 = parlayout.column(align=True)
-        pl1.label(text="Parameterizable Link", icon='MOD_SCREW')
-        pl1.operator('phobos.define_cutting_plane_operator')
+        ll = parlayout.column(align=True)
+        ll.label(text="Parameterizable Link", icon='MOD_SCREW')
+        row1 = ll.row(align=True)
+        plane = context.active_object
+        row1.enabled = False
+        if plane.type == "MESH":
+            if len(plane.data.vertices) == 4:
+                row1.enabled = True
+        row1.operator('phobos.define_cutting_plane_operator')
 
-        xy1 = parlayout.column(align=True)
-        xy1.label(text="FOO", icon='MOD_SCREW')
+        row2 = ll.row(align=True)
+        row2.enabled = True
+        row2.operator('phobos.align_cutting_plane_operator')
+
+
 
 
 # TODO bring this back or just delete it

@@ -188,6 +188,7 @@ def register():
     blender.operators.generic.register()
     blender.operators.naming.register()
     blender.operators.poses.register()
+    blender.operators.cuttingplane.register()
     blender.phobosgui.register()
 
 
