@@ -1402,13 +1402,13 @@ class SetCollisionGroupOperator(Operator):
 
         """
         try:
-            self.groups = context.active_object.rigid_body.collision_groups
+            self.groups = context.active_object.rigid_body.collision_collections
         # create rigid body settings if not existent in active object
         except AttributeError:
             obj = context.active_object
             bpy.ops.rigidbody.object_add(type='ACTIVE')
             obj.rigid_body.kinematic = True
-            obj.rigid_body.collision_groups = self.groups
+            obj.rigid_body.collision_collections = self.groups
         return context.window_manager.invoke_props_dialog(self, width=300)
 
     def execute(self, context):
@@ -1428,13 +1428,13 @@ class SetCollisionGroupOperator(Operator):
         # try assigning the collision groups to each selected collision object
         for obj in objs:
             try:
-                obj.rigid_body.collision_groups = self.groups
+                obj.rigid_body.collision_collections = self.groups
             # initialize rigid body settings if necessary
             except AttributeError:
                 context.view_layer.objects.active = obj
                 bpy.ops.rigidbody.object_add(type='ACTIVE')
                 obj.rigid_body.kinematic = True
-                obj.rigid_body.collision_groups = self.groups
+                obj.rigid_body.collision_collections = self.groups
         context.view_layer.objects.active = active_object
         return {'FINISHED'}
 
