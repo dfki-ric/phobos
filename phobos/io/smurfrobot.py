@@ -255,10 +255,11 @@ class SMURFRobot(XMLRobot):
             for visual in self.annotations['visuals']:
                 vis_instance = self.get_visual_by_name(visual['name'])
                 if vis_instance is not None:
-                    # [TODO v2.1.0] We should prefer this over the URDF Mesh
-                    if isinstance(vis_instance.geometry, representation.Mesh) and type(visual["geometry"]) == dict:
-                        vis_instance.geometry.add_annotations(overwrite=True, **visual["geometry"])
-                    visual.pop("geometry")
+                    if "geometry" in visual:
+                        # [TODO v2.1.0] We should prefer this over the URDF Mesh
+                        if isinstance(vis_instance.geometry, representation.Mesh) and type(visual["geometry"]) == dict:
+                            vis_instance.geometry.add_annotations(overwrite=True, **visual["geometry"])
+                        visual.pop("geometry")
                     vis_instance.add_annotations(overwrite=False, **visual)
                 else:
                     log.error(f"There is no visual with name {visual['name']} in this robot.")
