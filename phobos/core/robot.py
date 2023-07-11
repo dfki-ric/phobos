@@ -713,6 +713,7 @@ class Robot(SMURFRobot):
                         include_unstopped_branches=export.get("include_unstopped_branches", None),
                         no_submechanisms=export.get("no_submechanisms", False),
                         abstract_model=export.get("abstract_model", False),
+                        remove_fixed=export.get("remove_fixed", False),
                         include_human_in_abstract=export.get("include_human_in_abstract", False),
                         only_urdf=export.get("only_urdf", False),
                         remove_joints=export.get("remove_joints", None),
@@ -1006,7 +1007,7 @@ class Robot(SMURFRobot):
         joint.parent = new_parent_name
 
     def define_submodel(self, name, start=None, stop=None, robotname=None, only_urdf=False, abstract_model=False,
-                        remove_joints=None, no_submechanisms=False, include_unstopped_branches=False,
+                        remove_joints=None, remove_fixed=False, no_submechanisms=False, include_unstopped_branches=False,
                         move_joint_axis_to_intersection=None, include_human_in_abstract=False,
                         overwrite=False):
         """Defines a submodel from a given starting link.
@@ -1023,6 +1024,7 @@ class Robot(SMURFRobot):
             "only_urdf": only_urdf,
             "abstract_model": abstract_model,
             "remove_joints": remove_joints,
+            "remove_fixed": remove_fixed,
             "move_joint_axis_to_intersection": move_joint_axis_to_intersection,
             "include_unstopped_branches": include_unstopped_branches,
             "no_submechanisms": no_submechanisms,
@@ -1051,7 +1053,7 @@ class Robot(SMURFRobot):
         return linknames, jointnames
 
     def instantiate_submodel(self, name=None, start=None, stop=None, robotname=None, include_unstopped_branches=None,
-                             no_submechanisms=False, abstract_model=False, remove_joints=None,
+                             no_submechanisms=False, abstract_model=False, remove_joints=None, remove_fixed=False,
                              move_joint_axis_to_intersection=None, include_human_in_abstract=False,
                              **ignored_kwargs):
         """
@@ -1161,8 +1163,7 @@ class Robot(SMURFRobot):
         submodel.link_entities()
 
         if abstract_model and len(self.submechanisms) > 0:
-            abstract_joints = [str(j) for j in self.joints
-                               if j.joint_type == "fixed"]
+            abstract_joints = []
             for sm in self.submechanisms:
                 abstract_joints += [str(j) for j in sm.jointnames_independent]
             if not include_human_in_abstract:
@@ -1174,6 +1175,11 @@ class Robot(SMURFRobot):
             submodel.autogenerate_submechanisms = True
             submodel.submechanisms = []
             submodel.exoskeletons = []
+
+        if remove_fixed:
+            fixed_joints = [str(j) for j in self.joints
+                            if j.joint_type == "fixed"]
+            remove_joints = list(set(remove_joints + fixed_joints))
 
         submodel.remove_joint(remove_joints)
 
