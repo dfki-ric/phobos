@@ -1163,7 +1163,8 @@ class Robot(SMURFRobot):
         submodel.link_entities()
 
         if abstract_model and len(self.submechanisms) > 0:
-            abstract_joints = []
+            abstract_joints = [str(j) for j in self.joints
+                               if j.joint_type == "fixed"]
             for sm in self.submechanisms:
                 abstract_joints += [str(j) for j in sm.jointnames_independent]
             if not include_human_in_abstract:
