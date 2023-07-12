@@ -3508,14 +3508,29 @@ class DefineCuttingPlaneOperator(bpy.types.Operator):
         return context.active_object is not None
 
     def execute(self, context):
-        cutting_plane = CuttingPlane(context)
-        if cutting_plane.is_valid:
-            cutting_plane.save_cutting_plane(context)
-            return {'FINISHED'}
+        collection_name = "cuttingplane"
+        plane = context.active_object
+        if collection_name in bpy.context.scene.collection.children.keys():
+            if plane.name in bpy.data.collections[collection_name].objects.keys():
+                log("Plane is already defined as Cutting-Plane")
+                return {'CANCELLED'}
+
+        if is_valid_plane(plane):
+            intersecting_link = get_intersecting_link(context)
+            if intersecting_link:
+                bUtils.sortObjectToCollection(plane, collection_name)
+                plane.parent = bpy.data.objects[intersecting_link]
+                return {'FINISHED'}
+
+            else:
+                log("Plane does intersect no or multiple links. Plane has to intersect exactly one link")
+                return {'CANCELLED'}
         else:
             log("Selected Object is invalid for the Creation of a Cutting Plane."
                 " Please choose a Plane with 4 Vertices.", 'ERROR')
             return {'CANCELLED'}
+
+
 
 
 class AlignCuttingPlaneOperator(bpy.types.Operator):
@@ -3529,9 +3544,6 @@ class AlignCuttingPlaneOperator(bpy.types.Operator):
         return context.active_object is not None
 
     def execute(self, context):
-        cutting_plane = CuttingPlane(context)
-        if cutting_plane.is_valid:
-            cutting_plane.align_orthogonal_to_link()
         print("Alignment complete!")
         return {'FINISHED'}
 
