@@ -52,7 +52,7 @@ def _joint_relative_origin_getter(instance):
         r2x = instance._related_robot_instance.get_transformation
         out = Pose.from_matrix(
             inv(r2x(instance.link)).dot(r2x(instance.origin.relative_to).dot(instance.origin.to_matrix())),
-            relative_to=self.link
+            relative_to=instance.link
         )
         out.link_with_robot(instance._related_robot_instance)
     if instance._link.origin is not None:
