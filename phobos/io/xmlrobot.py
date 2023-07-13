@@ -286,14 +286,14 @@ class XMLRobot(Representation):
     def remove_aggregate(self, typeName, elem):
         """
         Removes the given aggregate
-        ATTENTION: This simply removes the aggregate, removing links and joints using only this may corrupt
-        the robot structure
+        ATTENTION: For joints/links this means complete removal of the corresponding links contents as well. If you want
+        to keep them you have tor reparent them first. See (robot.py:remove_joint)
         """
         if type(elem) == str:
             elem = self.get_aggregate(typeName, elem)
         if elem is None:
             return
-        if type(elem) == list:
+        if type(elem) in [list, tuple]:
             return [self.remove_aggregate(typeName, e) for e in elem]
         if typeName in "motors":
             elem.joint.motor = None
@@ -311,6 +311,7 @@ class XMLRobot(Representation):
                 else:  # in case we want to delete the root link
                     raise NotImplementedError("Deleting the root link, when is not yet possible!")
 
+            assert child is not None, "This means the corresponding link has already been deleted"
             parent = self.get_link(joint.parent)
             if child.name in self.child_map.keys():
                 next_joints = [names[0] for names in self.child_map[child.name]]
@@ -319,45 +320,6 @@ class XMLRobot(Representation):
 
             # Get the transformation
             C_T_P = self.get_transformation(start=parent.name, end=child.name)
-            # merging the link when removing the joint
-            if typeName in "joints":
-                # Correct inertial if child inertial is found
-                if child.inertial:
-                    IC_T_P = C_T_P.dot(child.inertial.origin.to_matrix())
-                    M_c = child.inertial.to_mass_matrix()
-                    if parent.inertial:
-                        COM_C = np.identity(4)
-                        COM_C[0:3, 3] = np.array(child.inertial.origin.xyz)
-                        COM_Cp = C_T_P.dot(COM_C)
-                        new_origin = (
-                                             np.array(parent.inertial.origin.xyz) * parent.inertial.mass +
-                                             COM_Cp[0:3, 3] * child.inertial.mass) / (
-                                                 parent.inertial.mass + child.inertial.mass)
-                        new_origin = representation.Pose(xyz=new_origin, rpy=[0, 0, 0], relative_to=parent)
-                        IC_T_IP = inv(parent.inertial.origin.to_matrix()).dot(IC_T_P)
-                        M_p = parent.inertial.to_mass_matrix()
-                        A = get_adjoint(new_origin.to_matrix())
-                        M_p = np.dot(np.transpose(A), np.dot(M_p, A))
-                    else:
-                        IC_T_IP = IC_T_P
-                        M_p = np.zeros((6, 6))
-                        new_origin = representation.Pose.from_matrix(inv(IC_T_P), relative_to=parent)
-
-                    A = get_adjoint(IC_T_IP.dot(new_origin.to_matrix()))
-                    M = np.dot(np.transpose(A), np.dot(M_c, A)) + M_p
-                    parent.inertial = representation.Inertial.from_mass_matrix(M, new_origin)
-
-                for vis in child.visuals:
-                    VC_T_P = C_T_P.dot(vis.origin.to_matrix())
-                    vis.origin = representation.Pose.from_matrix(VC_T_P, relative_to=parent)
-                    vis.link = parent.name
-                    parent.add_aggregate('visual', vis)
-
-                for col in child.collisions:
-                    CC_T_P = C_T_P.dot(col.origin.to_matrix())
-                    col.origin = representation.Pose.from_matrix(CC_T_P, relative_to=parent)
-                    col.link = parent.name
-                    parent.add_aggregate('collision', col)
             # reparent the following joints
             new_joints = []
             for j in self.joints:
