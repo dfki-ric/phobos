@@ -1180,9 +1180,9 @@ class Robot(SMURFRobot):
         if remove_fixed:
             fixed_joints = [str(j) for j in self.joints
                             if j.joint_type == "fixed"]
-            remove_joints = list(set(remove_joints + fixed_joints))
+            remove_joints += fixed_joints
 
-        submodel.remove_joint(remove_joints)
+        submodel.remove_joint(list(set(remove_joints)))
 
         if move_joint_axis_to_intersection is not None:
             for jointname, intersecting in move_joint_axis_to_intersection.items():
@@ -2436,66 +2436,66 @@ class Robot(SMURFRobot):
         """Remove the joint(s) from the mechanism and transforms all inertia, visuals and collisions
         to the corresponding parent of the joint.
         """
+        if type(jointname) in [list, tuple, set]:
+            [self.remove_joint(j) for j in jointname]
+            return
         joint = self.get_joint(jointname)
         if joint is None:
             log.warning(f"remove_joint(): Skipping removal of {jointname} as robot contains no joint with that name!")
         else:
-            joints = self.get_joint(jointname)
-            if type(joints) != list:
-                joints = [joints]
+            parent = self.get_link(joint.parent, verbose=True)
+            child = self.get_link(joint.child, verbose=True)
+            assert parent is not None
+            assert child is not None
+            #   merging the link when removing the joint
+            if only_frame:
+                # Get the transformation
+                C_T_P = self.get_transformation(start=parent.name, end=child.name)
+                # Correct inertial if child inertial is found
+                if child.inertial:
+                    IC_T_P = C_T_P.dot(child.inertial.origin.to_matrix())
+                    M_c = child.inertial.to_mass_matrix()
+                    if parent.inertial:
+                        COM_C = np.identity(4)
+                        COM_C[0:3, 3] = np.array(child.inertial.origin.xyz)
+                        COM_Cp = C_T_P.dot(COM_C)
+                        new_origin = (
+                                            np.array(parent.inertial.origin.xyz) * parent.inertial.mass +
+                                            COM_Cp[0:3, 3] * child.inertial.mass) / (
+                                                parent.inertial.mass + child.inertial.mass)
+                        new_origin = representation.Pose(xyz=new_origin, rpy=[0, 0, 0], relative_to=parent)
+                        IC_T_IP = inv(parent.inertial.origin.to_matrix()).dot(IC_T_P)
+                        M_p = parent.inertial.to_mass_matrix()
+                        A = get_adjoint(new_origin.to_matrix())
+                        M_p = np.dot(np.transpose(A), np.dot(M_p, A))
+                    else:
+                        IC_T_IP = IC_T_P
+                        M_p = np.zeros((6, 6))
+                        new_origin = representation.Pose.from_matrix(inv(IC_T_P), relative_to=parent)
 
-            for joint in joints:
-                parent = self.get_link(joint.parent)
-                child = self.get_link(joint.child)
-                assert parent is not None
-                assert child is not None
-                #   merging the link when removing the joint
-                if only_frame:
-                    # Get the transformation
-                    C_T_P = self.get_transformation(start=parent.name, end=child.name)
-                    # Correct inertial if child inertial is found
-                    if child.inertial:
-                        IC_T_P = C_T_P.dot(child.inertial.origin.to_matrix())
-                        M_c = child.inertial.to_mass_matrix()
-                        if parent.inertial:
-                            COM_C = np.identity(4)
-                            COM_C[0:3, 3] = np.array(child.inertial.origin.xyz)
-                            COM_Cp = C_T_P.dot(COM_C)
-                            new_origin = (
-                                                np.array(parent.inertial.origin.xyz) * parent.inertial.mass +
-                                                COM_Cp[0:3, 3] * child.inertial.mass) / (
-                                                    parent.inertial.mass + child.inertial.mass)
-                            new_origin = representation.Pose(xyz=new_origin, rpy=[0, 0, 0], relative_to=parent)
-                            IC_T_IP = inv(parent.inertial.origin.to_matrix()).dot(IC_T_P)
-                            M_p = parent.inertial.to_mass_matrix()
-                            A = get_adjoint(new_origin.to_matrix())
-                            M_p = np.dot(np.transpose(A), np.dot(M_p, A))
-                        else:
-                            IC_T_IP = IC_T_P
-                            M_p = np.zeros((6, 6))
-                            new_origin = representation.Pose.from_matrix(inv(IC_T_P), relative_to=parent)
+                    A = get_adjoint(IC_T_IP.dot(new_origin.to_matrix()))
+                    M = np.dot(np.transpose(A), np.dot(M_c, A)) + M_p
+                    parent.inertial = representation.Inertial.from_mass_matrix(M, new_origin)
 
-                        A = get_adjoint(IC_T_IP.dot(new_origin.to_matrix()))
-                        M = np.dot(np.transpose(A), np.dot(M_c, A)) + M_p
-                        parent.inertial = representation.Inertial.from_mass_matrix(M, new_origin)
+                for vis in child.visuals:
+                    VC_T_P = C_T_P.dot(vis.origin.to_matrix())
+                    vis.origin = representation.Pose.from_matrix(VC_T_P, relative_to=parent)
+                    vis.link = parent.name
+                    parent.add_aggregate('visual', vis)
 
-                    for vis in child.visuals:
-                        VC_T_P = C_T_P.dot(vis.origin.to_matrix())
-                        vis.origin = representation.Pose.from_matrix(VC_T_P, relative_to=parent)
-                        vis.link = parent.name
-                        parent.add_aggregate('visual', vis)
+                for col in child.collisions:
+                    CC_T_P = C_T_P.dot(col.origin.to_matrix())
+                    col.origin = representation.Pose.from_matrix(CC_T_P, relative_to=parent)
+                    col.link = parent.name
+                    parent.add_aggregate('collision', col)
 
-                    for col in child.collisions:
-                        CC_T_P = C_T_P.dot(col.origin.to_matrix())
-                        col.origin = representation.Pose.from_matrix(CC_T_P, relative_to=parent)
-                        col.link = parent.name
-                        parent.add_aggregate('collision', col)
-
-                    for interface in [m for m in self.interfaces if str(m.parent) == str(child)]:
-                        IfC_T_P = C_T_P.dot(interface.origin.to_matrix())
-                        interface.origin = representation.Pose.from_matrix(IfC_T_P, relative_to=parent)
-                # remove the frame
-                self.remove_aggregate("joints", joint)
+                for interface in [m for m in self.interfaces if str(m.parent) == str(child)]:
+                    IfC_T_P = C_T_P.dot(interface.origin.to_matrix())
+                    interface.origin = representation.Pose.from_matrix(IfC_T_P, relative_to=parent)
+            # remove the frame
+            self.remove_aggregate("joints", joint)
+            assert self.get_joint(str(joint)) is None
+            assert self.get_link(str(child)) is None
 
     def add_floating_base(self):
         """

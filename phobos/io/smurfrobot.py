@@ -345,7 +345,6 @@ class SMURFRobot(XMLRobot):
             else:
                 joint = self.get_joint(elem)
                 link = self.get_link(elem.child)
-            super(SMURFRobot, self).remove_aggregate(typeName, elem)
             # interfaces
             if typeName in "links":
                 # interfaces
@@ -370,6 +369,7 @@ class SMURFRobot(XMLRobot):
                     sub.jointnames = [j for j in sub.jointnames if j != str(joint)]
             self.submechanisms = [sm for sm in self.submechanisms if not sm.is_empty() and not sm.is_joint_important(joint)]
             self.exoskeletons = [sm for sm in self.exoskeletons if not sm.is_empty() and not sm.is_joint_important(joint)]
+            super(SMURFRobot, self).remove_aggregate(typeName, elem)
         else:
             super(SMURFRobot, self).remove_aggregate(typeName, elem)
 

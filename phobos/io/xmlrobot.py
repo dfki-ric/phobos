@@ -294,7 +294,8 @@ class XMLRobot(Representation):
         if elem is None:
             return
         if type(elem) in [list, tuple]:
-            return [self.remove_aggregate(typeName, e) for e in elem]
+            [self.remove_aggregate(typeName, e) for e in elem]
+            return
         if typeName in "motors":
             elem.joint.motor = None
             self.remove_aggregate(typeName, elem)
@@ -334,8 +335,9 @@ class XMLRobot(Representation):
             # remove the joint and links
             self.joints = new_joints
             self.links = [l for l in self.links if str(l) != str(child)]
+            assert str(joint) not in [str(nj) for nj in self.joints]
             self.regenerate_tree_maps()
-            # check the consequences
+            # check the consequences # Todo Has this to be moved to robot remove_joint?
             new_sensors = []
             for sensor in self.sensors:
                 if isinstance(sensor, sensor_representations.MultiSensor):
@@ -358,7 +360,7 @@ class XMLRobot(Representation):
                 if len(tm.joints) > 0:
                     new_transmissions.append(tm)
             self.transmissions = new_transmissions
-            return joint, child
+            return  #  joint, child
         else:  # basically handle any other aggregates
             if not typeName.endswith("s"):
                 typeName += "s"
