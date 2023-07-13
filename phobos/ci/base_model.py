@@ -3,7 +3,6 @@ import re
 from copy import deepcopy, copy
 
 import numpy as np
-import pkg_resources
 import yaml
 
 from ..commandline_logging import get_logger
@@ -751,7 +750,7 @@ class BaseModel(yaml.YAMLObject):
         # add manifest.xml if necessary
         manifest_path = os.path.join(repo, "manifest.xml")
         if not os.path.isfile(manifest_path):
-            misc.copy(self.pipeline, pkg_resources.resource_filename("phobos", "data/manifest.xml.in"), manifest_path)
+            misc.copy(self.pipeline, resources.get_resources_path("manifest.xml.in"), manifest_path)
             with open(manifest_path, "r") as manifest:
                 content = manifest.read()
                 url = self.pipeline.remote_base + "/" + self.modelname
@@ -766,7 +765,7 @@ class BaseModel(yaml.YAMLObject):
                 manifest.write(content)
         readme_path = os.path.join(repo, "README.md")
         if not os.path.isfile(readme_path):
-            misc.copy(self.pipeline, pkg_resources.resource_filename("phobos", "data/README.md.in"), readme_path)
+            misc.copy(self.pipeline, resources.get_resources_path("README.md.in"), readme_path)
             with open(readme_path, "r") as readme:
                 content = readme.read()
                 content = misc.regex_replace(content, {
@@ -783,7 +782,7 @@ class BaseModel(yaml.YAMLObject):
             readme_content = open(readme_path, "r").read()
             if "# Git LFS for mesh repositories" not in readme_content:
                 with open(readme_path, "a") as readme:
-                    readme.write(open(pkg_resources.resource_filename("phobos", "data/GitLFS_README.md.in")).read())
+                    readme.write(open(resources.get_resources_path("GitLFS_README.md.in")).read())
 
         # update additional submodules
         if "submodules" in self.deployment:

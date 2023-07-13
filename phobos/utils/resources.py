@@ -7,9 +7,21 @@ from ..defs import BPY_AVAILABLE
 def get_resources_path(*filepath):
     path = None
     try:
-        import pkg_resources
-        path = pkg_resources.resource_filename("phobos", os.path.join("data", *filepath))
-    except ImportError:
+        try:
+            # Try importing from importlib.resources (Python 3.7+)
+            from importlib.resources import files
+        except:
+            # Try importing from importlib_resources backport
+            from importlib_resources import files
+        path = files("phobos").joinpath(os.path.join("data", *filepath))
+    except:
+        try:
+            # For versions older than Python 3.8, fallback to pkg_resources
+            import pkg_resources
+            path = pkg_resources.resource_filename("phobos", os.path.join("data", *filepath))
+        except:
+            pass
+    if path is None:
         path = os.path.join(os.path.dirname(__file__), "..", "data")
         if len(filepath) > 0:
             path = os.path.join(path, *filepath)
