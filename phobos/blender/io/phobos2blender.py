@@ -242,7 +242,7 @@ def createLink(link):
         _scale = deepcopy(newgeom.scale)
         newgeom.matrix_local = mathutils.Matrix(
             viscol.joint_relative_origin.to_matrix()
-            if viscol._related_robot_instance is not None and viscol.relative_to != linkobj.name else viscol.origin.to_matrix()
+            if viscol._related_robot_instance is not None and viscol.origin.relative_to != newlink.name else viscol.origin.to_matrix()
         )
         newgeom.scale = _scale
 
