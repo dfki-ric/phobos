@@ -323,7 +323,7 @@ class XMLRobot(Representation):
             # reparent the following joints
             new_joints = []
             for j in self.joints:
-                if j is not joint:
+                if str(j) != str(joint):
                     if j.name in next_joints:
                         _parent = self.get_parent(parent)
                         if _parent is None:
@@ -333,7 +333,7 @@ class XMLRobot(Representation):
                     new_joints += [j]
             # remove the joint and links
             self.joints = new_joints
-            self.links = [l for l in self.links if l is not child]
+            self.links = [l for l in self.links if str(l) != str(child)]
             self.regenerate_tree_maps()
             # check the consequences
             new_sensors = []
