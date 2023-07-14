@@ -255,10 +255,11 @@ class SMURFRobot(XMLRobot):
             for visual in self.annotations['visuals']:
                 vis_instance = self.get_visual_by_name(visual['name'])
                 if vis_instance is not None:
-                    # [TODO v2.1.0] We should prefer this over the URDF Mesh
-                    if isinstance(vis_instance.geometry, representation.Mesh) and type(visual["geometry"]) == dict:
-                        vis_instance.geometry.add_annotations(overwrite=True, **visual["geometry"])
-                    visual.pop("geometry")
+                    if "geometry" in visual:
+                        # [TODO v2.1.0] We should prefer this over the URDF Mesh
+                        if isinstance(vis_instance.geometry, representation.Mesh) and type(visual["geometry"]) == dict:
+                            vis_instance.geometry.add_annotations(overwrite=True, **visual["geometry"])
+                        visual.pop("geometry")
                     vis_instance.add_annotations(overwrite=False, **visual)
                 else:
                     log.error(f"There is no visual with name {visual['name']} in this robot.")
@@ -337,33 +338,38 @@ class SMURFRobot(XMLRobot):
             elem = self.get_aggregate(typeName, elem)
         if elem is None:
             return
-        if typeName in "joints":
-            super(SMURFRobot, self).remove_aggregate(typeName, elem)
+        if typeName in "joints" or typeName in "links":
+            if typeName in "links":
+                link = self.get_link(elem)
+                joint = self.get_joint(self.get_parent(link))
+            else:
+                joint = self.get_joint(elem)
+                link = self.get_link(elem.child)
             # interfaces
-            for interf in self.interfaces:
-                if interf.parent == elem.child:
-                    interf.parent = elem.parent
-                    interf.origin = representation.Pose.from_matrix(elem.origin.to_matrix().dot(interf.origin.to_matrix()), relative_to=interf.parent)
-                    interf.origin.link_with_robot(self)
+            if typeName in "links":
+                # interfaces
+                self.interfaces = [m for m in self.interfaces if str(m.parent) != str(link)]
+            else:
+                for interf in self.interfaces:
+                    if interf.parent == joint.child:
+                        interf.parent = joint.parent
+                        interf.origin = representation.Pose.from_matrix(joint.origin.to_matrix().dot(interf.origin.to_matrix()), relative_to=interf.parent)
+                        interf.origin.link_with_robot(self)
             # poses
             poses_to_remove = []
             for p in self.poses:
-                p.remove_joint(str(elem))
+                p.remove_joint(str(joint))
                 if len(p.configuration) == 0:
                     poses_to_remove.append(p)
             for p in poses_to_remove:
                 self.poses.remove(p)
             # hyrodyn
             for sub in self.submechanisms + self.exoskeletons:
-                for key in ["jointnames", "jointnames_spanningtree", "jointnames_independent", "jointnames_active", "jointnames_dependent"]:
-                    if hasattr(sub, key) and getattr(sub, key) is not None and str(elem) in getattr(sub, key):
-                        setattr(sub, key, [j for j in getattr(sub, key) if j != str(elem)])
-            self.submechanisms = [sm for sm in self.submechanisms if not sm.is_empty()]
-            self.exoskeletons = [sm for sm in self.exoskeletons if not sm.is_empty()]
-        elif typeName in "links":
+                if sub.jointnames is not None and str(joint) in sub.jointnames and not sub.is_joint_important(joint):
+                    sub.jointnames = [j for j in sub.jointnames if j != str(joint)]
+            self.submechanisms = [sm for sm in self.submechanisms if not sm.is_empty() and not sm.is_joint_important(joint)]
+            self.exoskeletons = [sm for sm in self.exoskeletons if not sm.is_empty() and not sm.is_joint_important(joint)]
             super(SMURFRobot, self).remove_aggregate(typeName, elem)
-            # interfaces
-            self.interfaces = [m for m in self.interfaces if str(m.parent) != str(elem)]
         else:
             super(SMURFRobot, self).remove_aggregate(typeName, elem)
 
@@ -562,7 +568,13 @@ class SMURFRobot(XMLRobot):
                         "a preliminary version has been created. Make sure to check it before usage.")
         self.submechanisms = [sm for sm in self.submechanisms if not sm.auto_gen]
         self.exoskeletons = [ex for ex in self.exoskeletons if not ex.auto_gen]
+        if not len(self._get_joints_included_twice_in_submechanisms()) == 0:
+            raise RuntimeError("The manual submechanisms defintion is faulty. The following joints are defined multiple times: " + self._get_joints_included_twice_in_submechanisms())
         # All fixed joints inside the submechanisms are handled by now, next we handle remaining joints
+        for sm in self.submechanisms + self.exoskeletons:
+            sm.regenerate(self)
+        for sm in self.submechanisms + self.exoskeletons:
+            sm.regenerate(self)
         missing_joints = self._get_joints_not_included_in_submechanisms()
         sorted_joints = [jn.name for jn in self.get_joints_ordered_df()]
         if len(missing_joints) == 0:

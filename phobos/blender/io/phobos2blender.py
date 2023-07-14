@@ -131,7 +131,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
         eUtils.parentObjectsTo(newgeom, linkobj)
         newgeom.matrix_local = mathutils.Matrix(
             viscol.joint_relative_origin.to_matrix()
-            if viscol._related_robot_instance is not None and viscol.relative_to != linkobj.name else viscol.origin.to_matrix()
+            if viscol._related_robot_instance is not None and viscol.origin.relative_to != linkobj.name else viscol.origin.to_matrix()
         )
 
     bUtils.sortObjectToCollection(newgeom, cname=geomsrc)
@@ -164,7 +164,7 @@ def createInertial(inertial: representation.Inertial, newlink: bpy.types.Object,
     eUtils.parentObjectsTo(inertialobject, newlink)
     inertialobject.matrix_local = mathutils.Matrix(
         inertial.joint_relative_origin.to_matrix()
-        if inertial._related_robot_instance is not None and inertial.relative_to != linkobj.name else inertial.origin.to_matrix()
+        if inertial._related_robot_instance is not None and inertial.origin.relative_to != newlink.name else inertial.origin.to_matrix()
     )
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
 
@@ -242,7 +242,7 @@ def createLink(link):
         _scale = deepcopy(newgeom.scale)
         newgeom.matrix_local = mathutils.Matrix(
             viscol.joint_relative_origin.to_matrix()
-            if viscol._related_robot_instance is not None and viscol.relative_to != linkobj.name else viscol.origin.to_matrix()
+            if viscol._related_robot_instance is not None and viscol.origin.relative_to != newlink.name else viscol.origin.to_matrix()
         )
         newgeom.scale = _scale
 

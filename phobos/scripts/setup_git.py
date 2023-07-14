@@ -14,8 +14,7 @@ INFO = 'Sets-up a git repository for a simulation/control model.'
 def main(args):
     import argparse
     import os
-    import pkg_resources
-    from ..utils import git, misc
+    from ..utils import git, misc, resources
     from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + os.path.basename(__file__)[:-3])
@@ -66,7 +65,7 @@ def main(args):
     manifest_path = os.path.join(args.directory, "manifest.xml")
     author, maintainer, url = git.get_repo_data(args.directory)
     if not os.path.isfile(manifest_path):
-        misc.copy(None, pkg_resources.resource_filename("phobos", "data/manifest.xml.in"), manifest_path)
+        misc.copy(None, resources.get_resources_path("manifest.xml.in"), manifest_path)
         with open(manifest_path, "r") as manifest:
             content = manifest.read()
             content = misc.regex_replace(content, {

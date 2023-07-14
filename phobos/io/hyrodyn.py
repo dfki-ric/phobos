@@ -117,6 +117,9 @@ class HyrodynAnnotation(SmurfBase):
     def is_empty(self):
         return len(self.get_joints()) == 0
 
+    def is_joint_important(self, joint):
+        return str(joint) in [str(j) for j in self.jointnames_spanningtree]
+
     def is_only_fixed(self):
         return self.jointnames is not None and len(self.jointnames) > 0 and len(self.get_joints()) == len(self.jointnames)
 

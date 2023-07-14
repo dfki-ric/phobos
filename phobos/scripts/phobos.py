@@ -1,13 +1,19 @@
 #!python
-from pkg_resources import get_distribution, DistributionNotFound
-
 try:
-    # Change here if project is renamed and does not equal the package name
-    __version__ = get_distribution("phobos").version
-except DistributionNotFound:
-    __version__ = 'v2.0.0'
-finally:
-    del get_distribution, DistributionNotFound
+    # in newer version this deprecates in favor of importlib.resources
+    from importlib.metadata import version, PackageNotFoundError
+except ImportError:
+    try:
+        from importlib_metadata import version, PackageNotFoundError
+    except ImportError:
+        from pkg_resources import get_distribution, DistributionNotFound as PackageNotFoundError
+        def version(package_name):
+            return get_distribution("phobos").version
+try:
+    __version__ = version("phobos")
+except PackageNotFoundError:
+    __version__ = '2.0.0'
+del version, PackageNotFoundError
 
 
 def main():

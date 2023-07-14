@@ -44,7 +44,6 @@ requirements = {
     "yaml": "pyyaml",
     "numpy": "numpy",
     "scipy": "scipy",
-    "pkg_resources": "setuptools",
     "collada": "pycollada",
     "pydot": "pydot"
 }
@@ -201,16 +200,21 @@ def unregister():
 
 
 if not "blender" in sys.executable.lower() and not BPY_AVAILABLE:
-    from pkg_resources import get_distribution, DistributionNotFound
-
     try:
-        # Change here if project is renamed and does not equal the package name
-        dist_name = __name__
-        __version__ = get_distribution(dist_name).version
-    except DistributionNotFound:
+        # in newer version this deprecates in favor of importlib.resources
+        from importlib.metadata import version, PackageNotFoundError
+    except ImportError:
+        try:
+            from importlib_metadata import version, PackageNotFoundError
+        except ImportError:
+            from pkg_resources import get_distribution, DistributionNotFound as PackageNotFoundError
+            def version(package_name):
+                return get_distribution("phobos").version
+    try:
+        __version__ = version("phobos")
+    except PackageNotFoundError:
         __version__ = ".".join([str(x) for x in bl_info["version"]])
-    finally:
-        del get_distribution, DistributionNotFound
+    del version, PackageNotFoundError
 
 if BPY_AVAILABLE:
     try:
