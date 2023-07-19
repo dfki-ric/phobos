@@ -26,13 +26,13 @@ log = get_logger(__name__)
 class Robot(SMURFRobot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
                  inputfile=None, description=None, is_human=False, autogenerate_submechanisms=None,
-                 assert_validity=True):
+                 assert_validity=True, shallow=False):
         """ The basic robot class to represent a urdf.
         """
         try:
             super().__init__(xmlfile=xmlfile, submechanisms_file=submechanisms_file, smurffile=smurffile,
                              verify_meshes_on_import=verify_meshes_on_import, inputfile=inputfile, description=description,
-                             autogenerate_submechanisms=autogenerate_submechanisms, is_human=is_human)
+                             autogenerate_submechanisms=autogenerate_submechanisms, is_human=is_human, shallow=shallow)
         except Exception as e:
             log.error(f"Failed loading:\n  input: {inputfile}\n  xml: {xmlfile}\n  submechanims: {submechanisms_file}\n  smurf: {smurffile}\n"
                       f"because of:\n"+''.join(traceback.format_exception(None, e, e.__traceback__)))
@@ -40,7 +40,8 @@ class Robot(SMURFRobot):
 
         if name is not None:
             self.name = name
-        if assert_validity and self.links:
+        self.additional_files = {}
+        if not shallow and assert_validity and self.links:
             self.assert_validity()
 
     # export methods
