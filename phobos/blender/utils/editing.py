@@ -25,6 +25,8 @@ from ..utils import io as ioUtils
 from ..utils import naming as nUtils
 from ..utils import selection as sUtils
 
+from phobos.utils import math as mUtils
+
 
 def dissolveLink(obj, delete_other=False):
     """Remove the selected link and reparent all links, inertia, visual and collisions to its effective Parent.
@@ -837,3 +839,122 @@ def smoothen_surface(obj):
             break
     else:
         bpy.ops.object.modifier_add(type='EDGE_SPLIT')
+
+
+def is_valid_plane(plane):
+    """Checks if a plane defined by 4 points is even"""
+    normal_vectors = mUtils._calculate_normal_vectors_of_plane(plane)
+    if len(plane.data.vertices) != 4:
+        log("Object is no Plane", 'DEBUG')
+        return False
+    for i in range(0, 4):
+        for j in range(0, 4):
+            if not mUtils._is_equal(normal_vectors[i], normal_vectors[j]):
+                return False
+
+    return True
+
+
+def _get_edges_of_object(obj):
+    """Returns the edges of an object in world coordinates"""
+    edges_of_obj = []
+    if obj.type == "MESH":
+        for e in obj.data.edges:
+            edge = []
+            for i in e.vertices:
+                edge.append(obj.matrix_world @ obj.data.vertices[i].co)
+            edges_of_obj.append(edge)
+        return edges_of_obj
+    else:
+        log("Object does not have edges. Choose a valid Object with type: MESH", 'DEBUG')
+        return []
+
+
+def _check_intersection(context, obj):
+    """Check Intersection of Object with Cutting-Plane"""
+    plane_obj = context.active_object
+    plane = [plane_obj.matrix_world @ v.co for v in plane_obj.data.vertices]
+    intersecting_edges = []
+    for edge in _get_edges_of_object(obj):
+        if mUtils._intersects_edge_plane(plane, edge):
+            intersecting_edges.append(edge)
+    if len(intersecting_edges) > 0:
+        return True
+
+
+
+def get_intersecting_link(context):
+    """Gets Link which intersects Cutting-Plane"""
+    intersecting_links = []
+    for obj in context.scene.objects:
+        if obj.name != context.active_object.name:
+            log("Checking if {obj} is intersecting Cutting-Plane".format(obj=obj.name), 'DEBUG')
+            if _check_intersection(context, obj):
+                intersecting_links.append(obj)
+                log("{obj} is intersecting Cutting Plane".format(obj=obj.name), 'DEBUG')
+    if len(intersecting_links) > 1:
+        s = "The Plane intersects more than one Link. It intersects: "
+        for l in intersecting_links:
+            s += "{link}, ".format(link=l)
+        s = s[:-2]
+        s += ". But only one intersecting link is allowed!"
+        log(s, 'DEBUG')
+        return None
+    if len(intersecting_links) == 0:
+        log("The Plane does not intersect a Link. But is has to intersect one", 'DEBUG')
+        return None
+
+    return intersecting_links[0]
+
+
+def align_plane_to_vector(plane, vector):
+    vector = mUtils._normalize_vector(mUtils.convert_to_np_array(vector))
+    plane_coors = [plane.matrix_world @ v.co for v in plane.data.vertices]
+    normal_of_plane = normal_of_plane = mUtils._normalize_vector(mUtils._calculate_normal_vector(plane_coors[:3]))
+
+    rotation_matrix = mUtils.get_rotation_matrix_from_two_vectors(vector, normal_of_plane)
+    for v in range(0, len(plane_coors)):
+        v_4d = mUtils.convert_to_4dim_vector(plane_coors[v])
+        transformed_4d_vector = mUtils.inverse_matrix(plane.matrix_world)\
+                                @ mUtils.inverse_matrix(rotation_matrix) @ v_4d
+        plane.data.vertices[v].co = transformed_4d_vector[0:3]
+
+def align_plane_to_link(plane, link):
+    """Aligns Plane to its intersecting Link."""
+    plane_coors = [plane.matrix_world @ v.co for v in plane.data.vertices]
+    normal_of_plane = mUtils._normalize_vector(mUtils._calculate_normal_vector(plane_coors[:3]))
+
+    edges = _get_edges_of_object(link)
+    intersecting_edges = [e for e in edges if mUtils._intersects_edge_plane(plane_coors, e)]
+    edge_vectors = [v[1] - v[0] for v in intersecting_edges]
+    edge_vectors = mUtils.change_direction_of_vectors_according_to_reference_vector(edge_vectors, normal_of_plane)
+    mean_direction_of_edges = mUtils._normalize_vector(mUtils._calculate_mean_of_vectors(edge_vectors))
+
+    rotation_matrix = mUtils.get_rotation_matrix_from_two_vectors(mean_direction_of_edges, normal_of_plane)
+    log("Mean of Edges: {v1}, Normal of Plane: {v2}"
+        .format(v1= mean_direction_of_edges, v2=normal_of_plane), 'DEBUG')
+    log("Rotation-Matrix: {r}". format(r=rotation_matrix), 'DEBUG')
+
+    for v in range(0, len(plane_coors)):
+        v_4d = mUtils.convert_to_4dim_vector(plane_coors[v])
+        transformed_4d_vector = mUtils.inverse_matrix(plane.matrix_world)\
+                                @ mUtils.inverse_matrix(rotation_matrix) @ v_4d
+        plane.data.vertices[v].co = transformed_4d_vector[0:3]
+
+
+
+def check_validity(context):
+    """Checks Validity of selected Plane-Object"""
+    plane = context.active_object
+    if is_valid_plane(plane):
+        intersecting_link = get_intersecting_link(context)
+        if intersecting_link:
+            return True
+
+        else:
+            log("Plane does intersect no or multiple links. Plane has to intersect exactly one link", 'ERROR')
+            return False
+    else:
+        log("Selected Object is invalid for the Creation of a Cutting Plane."
+            " Please choose a Plane with 4 Vertices.", 'ERROR')
+        return False

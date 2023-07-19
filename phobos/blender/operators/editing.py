@@ -59,7 +59,6 @@ from ...utils import resources
 from ...io.sensor_representations import Sensor
 from ...utils.transform import create_transformation
 from ...io import sensor_representations
-from .cuttingplane import *
 
 
 class SafelyRemoveObjectsFromSceneOperator(Operator):
@@ -3515,21 +3514,15 @@ class DefineCuttingPlaneOperator(bpy.types.Operator):
                 log("Plane is already defined as Cutting-Plane")
                 return {'CANCELLED'}
 
-        if is_valid_plane(plane):
-            intersecting_link = get_intersecting_link(context)
-            if intersecting_link:
-                bUtils.sortObjectToCollection(plane, collection_name)
-                plane.parent = bpy.data.objects[intersecting_link]
-                return {'FINISHED'}
-
-            else:
-                log("Plane does intersect no or multiple links. Plane has to intersect exactly one link")
-                return {'CANCELLED'}
+        if eUtils.check_validity(context):
+            intersecting_link = eUtils.get_intersecting_link(context)
+            bUtils.sortObjectToCollection(plane, collection_name)
+            plane.parent = intersecting_link
+            plane.phobostype = "cuttingplane"
+            print("Cutting-Plane defined")
+            return {'FINISHED'}
         else:
-            log("Selected Object is invalid for the Creation of a Cutting Plane."
-                " Please choose a Plane with 4 Vertices.", 'ERROR')
             return {'CANCELLED'}
-
 
 
 
@@ -3544,8 +3537,43 @@ class AlignCuttingPlaneOperator(bpy.types.Operator):
         return context.active_object is not None
 
     def execute(self, context):
-        print("Alignment complete!")
-        return {'FINISHED'}
+        if eUtils.check_validity(context):
+            plane = context.active_object
+            intersecting_link = eUtils.get_intersecting_link(context)
+            eUtils.align_plane_to_link(plane, intersecting_link)
+            print("Alignment complete!")
+            return {'FINISHED'}
+        return {'CANCELLED'}
+
+
+class AlignCuttingPlaneToNormalVector(bpy.types.Operator):
+    """Aligns the Cutting-Plane to a user defined Normal-Vector"""
+    bl_idname = "phobos.align_to_normal"
+    bl_label = "Align Cutting-Plane to Normal Vector"
+    bl_description = "Aligns Cutting-Plane to a user defined Normal Vector"
+    message = "Wanted Normal Vector of Plane"
+
+
+    def execute(self, context):
+        plane = context.active_object
+        if eUtils.check_validity(context):
+            vector = [plane.cuttingplaneprops.coo_x, plane.cuttingplaneprops.coo_y, plane.cuttingplaneprops.coo_z]
+            eUtils.align_plane_to_vector(plane, vector)
+            print("Box used")
+            return {'FINISHED'}
+
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self, width=400)
+
+    def draw(self, context):
+        plane = context.active_object
+        self.layout.label(text=self.message)
+        row1 = self.layout.row()
+        row1.prop(plane.cuttingplaneprops, "coo_x")
+        row2 = self.layout.row()
+        row2.prop(plane.cuttingplaneprops, "coo_y")
+        row3 = self.layout.row()
+        row3.prop(plane.cuttingplaneprops, "coo_z")
 
 
 classes = (
@@ -3587,6 +3615,7 @@ classes = (
     ParentOperator,
     DefineCuttingPlaneOperator,
     AlignCuttingPlaneOperator,
+    AlignCuttingPlaneToNormalVector,
 )
 
 
