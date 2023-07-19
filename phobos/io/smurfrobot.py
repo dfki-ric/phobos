@@ -29,6 +29,7 @@ class SMURFRobot(XMLRobot):
         self.inputfiles = []
         self.annotations = {}
         self.categorized_annotations = []
+        self.submodel_defs = {}
         # Smurf Informations
         self.poses = []
         self.description = None
@@ -178,6 +179,8 @@ class SMURFRobot(XMLRobot):
                 annotation = load_json(stream.read())
                 if "submechanisms" in annotation.keys():
                     self.submechanisms_file = os.path.abspath(annotationfile)
+                if "submodels" in self.annotations:
+                    self.submodel_defs = self.annotations["submodels"]
                 self.annotations.update(annotation)
             except Exception as exc:
                 log.error(exc)

@@ -40,7 +40,6 @@ class Robot(SMURFRobot):
 
         if name is not None:
             self.name = name
-        self.submodel_defs = {}
         if assert_validity and self.links:
             self.assert_validity()
 
