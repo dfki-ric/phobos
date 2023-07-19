@@ -395,7 +395,8 @@ class Robot(SMURFRobot):
             'modelname': self.name,
             # 'date': datetime.datetime.now().strftime("%Y%m%d_%H:%M"),
             'files': sorted(export_files),
-            'description': self.description
+            'description': self.description,
+            'additional_files': self.additional_files
         }
         if self.version is not None:
             annotation_dict['version'] = self.version
@@ -699,6 +700,11 @@ class Robot(SMURFRobot):
                     correct_inertials=export.get("correct_inertials", False),
                     use_existing_meshes=use_existing_meshes
                 )
+                if not export.get("link_in_smurf", False):
+                    if "filename" not in export:
+                        self.additional_files[export["type"]] = xml_file
+                    else:
+                        self.additional_files[export["filename"]] = xml_file
                 ros_pkg |= export["ros_pathes"] if "ros_pathes" in export else None
                 if export.get("link_in_smurf", False):
                     assert xml_file_in_smurf is None, "Only one xml file can be linked in the SMURF"
