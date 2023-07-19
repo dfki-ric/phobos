@@ -1156,7 +1156,7 @@ class Robot(SMURFRobot):
 
         # copy all annotations we do not have yet
         for k, v in self.__dict__.items():
-            if k not in submodel.__dict__.keys() or submodel.__dict__[k] is None:
+            if k not in ["submodel_defs"] and (k not in submodel.__dict__.keys() or submodel.__dict__[k] is None):
                 submodel.__dict__[k] = v
 
         submodel.get_root().origin = None
