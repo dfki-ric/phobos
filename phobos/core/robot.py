@@ -2518,7 +2518,6 @@ class Robot(SMURFRobot):
         )
         fb_robot = self.duplicate()
         floatingbase.attach(fb_robot, connector)
-        floatingbase.name = fb_robot.name + "_floatingbase"
         freeflyer = {
             "auto_gen": False,
             "type": "3T+3R",
