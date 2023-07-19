@@ -57,13 +57,21 @@ def dump_json(obj, **kwargs):
 
 YAML_AVAILABLE = False
 try:
-    from yaml import safe_load as load_json, safe_dump as dump_yaml
+    from yaml import safe_load, safe_dump as dump_yaml
+    from json import loads
+
+    def load_json(string):
+        try:
+            return loads(string)
+        except:
+            return safe_load(string)
+
     YAML_AVAILABLE = True
-    log.info("YAML available (backwards compatibility).")
+    log.info("YAML available (backwards compatibile).")
 except ImportError:
     from json import loads as load_json, dumps
     dump_yaml = dump_json
-    log.info("YAML not available (backwards compatibility).")
+    log.info("YAML not available (not backwards compatibile).")
 
 del get_logger
 del log
