@@ -33,13 +33,21 @@ try:
 except ImportError:
     log.info("Blender-Python (bpy) not available.")
 
-PYBULLET_AVAILABLE = False
-try:
-    import pybullet as pb
-    PYBULLET_AVAILABLE = True
-    log.info("Pybullet tests available.")
-except ImportError:
-    log.info("Pybullet tests not available.")
+
+PYBULLET_AVAILBABLE = False
+
+
+def check_pybullet_available():
+    if not PYBULLET_AVAILBABLE:
+        from .commandline_logging import get_logger
+        log = get_logger(__name__)
+        try:
+            import pybullet as pb
+            PYBULLET_AVAILABLE = True
+            log.info("Pybullet tests available.")
+        except ImportError:
+            log.info("Pybullet tests not available.")
+    return PYBULLET_AVAILABLE
 
 
 def dump_json(obj, **kwargs):
