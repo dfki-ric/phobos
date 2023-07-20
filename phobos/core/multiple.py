@@ -165,8 +165,9 @@ class Arrangement(Representation, SmurfBase):
     _related_world_instance = None
     _related_entity_instance = None
 
-    def __init__(self, inputfile=None, entities=None, frames=None):
-        super(Arrangement, self).__init__()
+    def __init__(self, inputfile=None, entities=None, frames=None, **kwargs):
+        Representation.__init__(self)
+        SmurfBase.__init__(self, returns=["entities"], **kwargs)
         self.entities = _plural(entities)
         self.inputfile = os.path.abspath(inputfile)
         self._frames = _plural(frames)
@@ -343,7 +344,6 @@ class Arrangement(Representation, SmurfBase):
         assert outputfile.endswith("smurfa")
         self.inputfile = os.path.abspath(outputfile)
         out = self.to_yaml()
-        out["entities"] = [e.to_yaml() for e in self.entities]
         if not os.path.exists(os.path.dirname(os.path.abspath(outputfile))):
             os.makedirs(os.path.dirname(os.path.abspath(outputfile)), exist_ok=True)
         with open(outputfile, "w") as f:
@@ -351,8 +351,8 @@ class Arrangement(Representation, SmurfBase):
 
 
 class World(Arrangement):
-    def __init__(self, inputfile=None, entities=None, frames=None, physics=None, environment=None):
-        super(World, self).__init__(inputfile=inputfile, entities=entities, frames=frames)
+    def __init__(self, inputfile=None, entities=None, frames=None, physics=None, environment=None, **kwargs):
+        super(World, self).__init__(inputfile=inputfile, entities=entities, frames=frames, **kwargs)
         self.physics = _singular(physics)
         self.environment = _singular(environment)
 
