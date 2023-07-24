@@ -113,7 +113,6 @@ class WireFrameOperator(Operator):
             else:
                 ob.display_type = "WIRE"
 
-        print("Wired:", currentlyWireFrame)
         return {'FINISHED'}
 
 
