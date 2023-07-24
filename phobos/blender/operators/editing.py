@@ -2078,11 +2078,6 @@ class AddSensorOperator(Operator):
     """Add a sensor at the position of the selected object.
     It is possible to create a new link for the sensor on the fly. Otherwise,
     the next link in the hierarchy will be used to parent the sensor to.
-
-    Args:
-
-    Returns:
-
     """
 
     bl_idname = "phobos.add_sensor"
@@ -2189,7 +2184,7 @@ class AddSensorOperator(Operator):
             # use the dynamic props name in the GUI, but without the type id
             self.sensorProperties[i].draw(layout, name)
         layout.label(text="You can add custom properties under")
-        layout.label(text="Object Properties > Custom Properties")
+        layout.label(text="Object Properties > Custom Properties", icon="OBJECT_DATA")
 
     def invoke(self, context, event):
         """
