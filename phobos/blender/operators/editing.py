@@ -626,7 +626,8 @@ class CreateInterfaceOperator(Operator):
                         name=self.interface_name,
                         parent=link.name,
                         type=self.interface_type,
-                        direction=self.interface_direction
+                        direction=self.interface_direction,
+                        origin=representation.Pose(relative_to=link.name)
                     ),
                     None,
                     self.scale
@@ -640,7 +641,8 @@ class CreateInterfaceOperator(Operator):
                         name=self.interface_name,
                         parent=link.name,
                         type=self.interface_type,
-                        direction=self.interface_direction
+                        direction=self.interface_direction,
+                        origin=representation.Pose(relative_to=link.name)
                     ),
                 None,
                 self.scale
@@ -1560,10 +1562,21 @@ class DefineJointConstraintsOperator(Operator):
         Returns:
 
         """
-        aObject = context.active_object
-        #if 'joint/type' not in aObject and 'motor/type' in aObject:
-        #    self.maxvelocity = aObject['motor/maxSpeed']
-        #    self.maxeffort = aObject['motor/maxEffort']
+        obj = context.active_object
+        if any([k.startswith("joint") for k in obj.keys()]):
+            if "joint/limits/lower" in obj:
+                self.lower = obj["joint/limits/lower"]
+            if "joint/limits/upper" in obj:
+                self.upper = obj["joint/limits/upper"]
+            if "joint/limits/effort" in obj:
+                self.maxeffort = obj["joint/limits/effort"]
+            if "joint/limits/velocity" in obj:
+                self.maxspeed = obj["joint/limits/velocity"]
+            if "joint/type" in obj:
+                self.joint_type = obj["joint/type"]
+            if "joint/axis" in obj:
+                self.axis = obj["joint/axis"]
+            self.name = obj.get("joint/name", obj.name)
         return self.execute(context)
 
     def execute(self, context):
