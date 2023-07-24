@@ -219,9 +219,11 @@ class SMURFRobot(XMLRobot):
         if 'sensors' in self.annotations:
             for sensor_def in self.annotations['sensors']:
                 # Search for the joint or link
-                input_args = {}
                 existing = self.get_sensor(sensor_def["name"])
-                sensor = getattr(sensor_representations, sensor_def["type"])(**sensor_def)
+                sensor_type = sensor_def["type"]
+                if sensor_type == "NodePosition" and "gps" in sensor_def["name"].lower():
+                    sensor_type = "GPS"
+                sensor = getattr(sensor_representations, sensor_type)(**sensor_def)
                 if existing is not None and not existing.equivalent(sensor):
                     log.debug(f"Replacing existing sensor with name {sensor_def['name']}\n"
                               f"existing: {existing.to_yaml()}\n"

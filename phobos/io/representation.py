@@ -142,10 +142,11 @@ class Pose(Representation, SmurfBase):
             self._matrix[0:3, 0:3] = transform.rpy_to_matrix(value)
         elif BPY_AVAILABLE and hasattr(value, "__len__") and type(value) != str and len(value) == 3:
             self._matrix[0:3, 0:3] = transform.rpy_to_matrix(np.array(value))
-        elif type(value) in [list, tuple, np.ndarray] and len(value) == 4:
+        elif type(value) in [list, tuple, np.ndarray, dict] and len(value) == 4:
             self._matrix[0:3, 0:3] = transform.quaternion_to_matrix(value)
         elif BPY_AVAILABLE and hasattr(value, "__len__") and type(value) != str and len(value) == 4:
-            self._matrix[0:3, 0:3] = transform.rpy_to_matrix(np.array(value))
+            # blender saves quaternions as w,x,y,z
+            self._matrix[0:3, 0:3] = transform.quaternion_to_matrix([value[1], value[2], value[3], value[0]])
         elif type(value) == dict and len(value) == 3:
             if all([k in "rpy" for k in value.keys()]):
                 self._matrix[0:3, 0:3] = transform.rpy_to_matrix([value["r"], value["p"], value["y"]])
@@ -153,8 +154,6 @@ class Pose(Representation, SmurfBase):
                 self._matrix[0:3, 0:3] = transform.rpy_to_matrix([value["x"], value["y"], value["z"]])
             else:
                 raise ValueError("Can't parse rotation" + str(value))
-        elif type(value) == dict and len(value) == 4:
-            self._matrix[0:3, 0:3] = transform.quaternion_to_matrix([value["x"], value["y"], value["z"], value["w"]])
         elif type(value) in [list, np.ndarray]:
             self._matrix[0:3, 0:3] = transform.matrix_to_rpy(value)
         elif value is None:
@@ -162,7 +161,7 @@ class Pose(Representation, SmurfBase):
         else:
             raise ValueError("Can't parse rotation " + str(value))
         # if we have an pi or pi/2, pi/4 approximation let's make pi or pi/2, pi/4 out of it
-        # [TODO v2.1.0] re-establich this
+        # [TODO v2.1.0] re-establish this
         # for i in range(3):
         #     if type(self.rpy[i]) in [float, np.float64, np.float32] and "e" not in str(self.rpy[i]).lower():
         #         in_decimals = len(str(self.rpy[i]).split(".")[1])
@@ -179,7 +178,7 @@ class Pose(Representation, SmurfBase):
 
     @property
     def quaternion_dict(self):
-        return {k: v for k,v in zip("xyzw", transform.matrix_to_quaternion(self._matrix[0:3, 0:3]))}
+        return {k: v for k, v in zip("xyzw", transform.matrix_to_quaternion(self._matrix[0:3, 0:3]))}
 
     @property
     def angle_axis(self):
