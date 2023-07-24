@@ -23,7 +23,8 @@ from bpy.props import (
 )
 from bpy.types import AddonPreferences
 
-from . import display, defs, reserved_keys
+from . import defs, reserved_keys
+from .operators import display
 from .io import blender2phobos
 from .model import mechanisms
 from .phoboslog import log, LOGLEVELS
@@ -1622,6 +1623,13 @@ class PhobosDisplayPanel(bpy.types.Panel):
             dc2.prop(wm, "draw_messages")
             dc2.prop(wm, 'phobos_msg_count')
             dc2.prop(wm, 'phobos_msg_offset')
+
+        layout.separator()
+        kinlayout = layout.split()
+        kc1 = kinlayout.column(align=True)
+        kc2 = kinlayout.column(align=True)
+
+        kc1.operator('phobos.display_wire', icon='MOD_WIREFRAME')
 
 
 REGISTER_CLASSES = [
