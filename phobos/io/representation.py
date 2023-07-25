@@ -830,6 +830,7 @@ class Mesh(Representation, SmurfBase):
                 bpy.context.view_layer.objects.active = delete_objects[0]
                 bpy.ops.object.delete()
             elif self.input_type == "file_bobj":
+                raise NotImplementedError("Loading of bobj meshes needs to be debugged!")
                 self.mesh_information = mesh_io.parse_bobj(self.input_file)
                 self._mesh_object = mesh_io.mesh_info_dict_2_blender(self.unique_name, **self.mesh_information)
                 bpy.context.view_layer.objects.active = bpy.data.objects.new(self.unique_name, self.mesh_object)
@@ -937,15 +938,19 @@ class Mesh(Representation, SmurfBase):
         if self.input_type.startswith("file") and self.mesh_object is None:
             self.load_mesh()
         # only export bobj, if it makes sense for the mesh
-        if ext == "bobj" and self._mesh_information is None:
+        if not BPY_AVAILABLE and ext == "bobj" and self._mesh_information is None:
             if throw_on_invalid_bobj:
                 raise IOError(
                     f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh can't be exported as bobj")
+            else:
+                log.warn(f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh can't be exported as bobj")
             return
         elif ext == "bobj" and (not self._info_in_sync and "texture_coords" in self._mesh_information):
             if throw_on_invalid_bobj:
                 raise IOError(
                     f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh has been edited and thus the textures might have get mixed up.")
+            else:
+                log.warn(f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh has been edited and thus the textures might have get mixed up.")
             return
         # export
         log.debug(f"Writing {type(self.mesh_object)} to {targetpath}...")
