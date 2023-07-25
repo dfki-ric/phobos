@@ -16,7 +16,7 @@ log = get_logger(__name__)
 
 class SMURFRobot(XMLRobot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
-                 inputfile=None, description=None, autogenerate_submechanisms=None, is_human=False):
+                 inputfile=None, description=None, autogenerate_submechanisms=None, is_human=False, shallow=False):
         self.smurf_annotation_keys = [
             'motors', 'sensors', 'materials', "joints", "links", 'collisions', 'visuals', 'poses',
             "submechanisms", "exoskeletons", "interfaces"
@@ -29,6 +29,7 @@ class SMURFRobot(XMLRobot):
         self.inputfiles = []
         self.annotations = {}
         self.categorized_annotations = []
+        self.submodel_defs = {}
         # Smurf Informations
         self.poses = []
         self.description = None
@@ -103,18 +104,22 @@ class SMURFRobot(XMLRobot):
 
         if self.submechanisms_file is not None:
             self.inputfiles.append(self.submechanisms_file)
+
         for f in self.inputfiles:
             self._parse_annotations(f)
-        self._init_annotations()
-        if is_human:
-            self.annotate_as_human()
 
-        if len(self.links) > 0 and len(self.joints) > 0:
-            self.link_entities()
-            self.joints = self.get_joints_ordered_df()
+        if not shallow:
+            self._init_annotations()
 
-        if verify_meshes_on_import:
-            self.verify_meshes()
+            if is_human:
+                self.annotate_as_human()
+
+            if len(self.links) > 0 and len(self.joints) > 0:
+                self.link_entities()
+                self.joints = self.get_joints_ordered_df()
+
+            if verify_meshes_on_import:
+                self.verify_meshes()
 
         if self.name is None and self.xmlfile is not None:
             self.name, _ = os.path.splitext(self.xmlfile)
@@ -178,6 +183,8 @@ class SMURFRobot(XMLRobot):
                 annotation = load_json(stream.read())
                 if "submechanisms" in annotation.keys():
                     self.submechanisms_file = os.path.abspath(annotationfile)
+                if "submodels" in self.annotations:
+                    self.submodel_defs = self.annotations["submodels"]
                 self.annotations.update(annotation)
             except Exception as exc:
                 log.error(exc)
@@ -212,9 +219,11 @@ class SMURFRobot(XMLRobot):
         if 'sensors' in self.annotations:
             for sensor_def in self.annotations['sensors']:
                 # Search for the joint or link
-                input_args = {}
                 existing = self.get_sensor(sensor_def["name"])
-                sensor = getattr(sensor_representations, sensor_def["type"])(**sensor_def)
+                sensor_type = sensor_def["type"]
+                if sensor_type == "NodePosition" and "gps" in sensor_def["name"].lower():
+                    sensor_type = "GPS"
+                sensor = getattr(sensor_representations, sensor_type)(**sensor_def)
                 if existing is not None and not existing.equivalent(sensor):
                     log.debug(f"Replacing existing sensor with name {sensor_def['name']}\n"
                               f"existing: {existing.to_yaml()}\n"

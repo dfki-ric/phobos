@@ -33,13 +33,21 @@ try:
 except ImportError:
     log.info("Blender-Python (bpy) not available.")
 
-PYBULLET_AVAILABLE = False
-try:
-    import pybullet as pb
-    PYBULLET_AVAILABLE = True
-    log.info("Pybullet tests available.")
-except ImportError:
-    log.info("Pybullet tests not available.")
+
+PYBULLET_AVAILBABLE = False
+
+
+def check_pybullet_available():
+    if not PYBULLET_AVAILBABLE:
+        from .commandline_logging import get_logger
+        log = get_logger(__name__)
+        try:
+            import pybullet as pb
+            PYBULLET_AVAILABLE = True
+            log.info("Pybullet tests available.")
+        except ImportError:
+            log.info("Pybullet tests not available.")
+    return PYBULLET_AVAILABLE
 
 
 def dump_json(obj, **kwargs):
@@ -57,13 +65,21 @@ def dump_json(obj, **kwargs):
 
 YAML_AVAILABLE = False
 try:
-    from yaml import safe_load as load_json, safe_dump as dump_yaml
+    from yaml import safe_load, safe_dump as dump_yaml
+    from json import loads
+
+    def load_json(string):
+        try:
+            return loads(string)
+        except:
+            return safe_load(string)
+
     YAML_AVAILABLE = True
-    log.info("YAML available (backwards compatibility).")
+    log.info("YAML available (backwards compatibile).")
 except ImportError:
     from json import loads as load_json, dumps
     dump_yaml = dump_json
-    log.info("YAML not available (backwards compatibility).")
+    log.info("YAML not available (not backwards compatibile).")
 
 del get_logger
 del log

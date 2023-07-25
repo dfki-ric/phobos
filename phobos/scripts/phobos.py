@@ -20,15 +20,10 @@ def main():
     import sys
     from .. import scripts
 
-    print(f"\n*** This is phobos {__version__} ***")
+    # print(f"\n*** This is phobos {__version__} ***")
     script_files = [f for f in dir(scripts) if not f.startswith("__") and f != "phobos"]
-    available_scripts = [(f, getattr(scripts, f).INFO, None) for f in script_files if getattr(scripts, f).can_be_used()]
-    unavailable_scripts = [(f, getattr(scripts, f).INFO, getattr(scripts, f).cant_be_used_msg()) for f in script_files
-                           if not getattr(scripts, f).can_be_used()]
 
-    if len(sys.argv) > 1 and sys.argv[1] in [ascr[0] for ascr in available_scripts + unavailable_scripts]:
-        if sys.argv[1] in unavailable_scripts:
-            print(f"Attention: Script might not work properly:" + getattr(scripts, sys.argv[1]).cant_be_used_msg())
+    if len(sys.argv) > 1 and sys.argv[1] in script_files:
         if "--cProfile" in sys.argv:
             print("Running with profiler")
             sys.argv.remove("--cProfile")
@@ -55,6 +50,11 @@ def main():
         else:
             sys.exit(getattr(scripts, sys.argv[1]).main(sys.argv[2:]))
     else:
+        available_scripts = [(f, getattr(scripts, f).INFO, None) for f in script_files if
+                             getattr(scripts, f).can_be_used()]
+        unavailable_scripts = [(f, getattr(scripts, f).INFO, getattr(scripts, f).cant_be_used_msg()) for f in
+                               script_files
+                               if not getattr(scripts, f).can_be_used()]
         print("Phobos is a tool to process simulation models \n")
         print("Usage:")
         print("phobos COMMAND ARGUMENTS")

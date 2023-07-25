@@ -26,13 +26,13 @@ log = get_logger(__name__)
 class Robot(SMURFRobot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
                  inputfile=None, description=None, is_human=False, autogenerate_submechanisms=None,
-                 assert_validity=True):
+                 assert_validity=True, shallow=False):
         """ The basic robot class to represent a urdf.
         """
         try:
             super().__init__(xmlfile=xmlfile, submechanisms_file=submechanisms_file, smurffile=smurffile,
                              verify_meshes_on_import=verify_meshes_on_import, inputfile=inputfile, description=description,
-                             autogenerate_submechanisms=autogenerate_submechanisms, is_human=is_human)
+                             autogenerate_submechanisms=autogenerate_submechanisms, is_human=is_human, shallow=shallow)
         except Exception as e:
             log.error(f"Failed loading:\n  input: {inputfile}\n  xml: {xmlfile}\n  submechanims: {submechanisms_file}\n  smurf: {smurffile}\n"
                       f"because of:\n"+''.join(traceback.format_exception(None, e, e.__traceback__)))
@@ -40,8 +40,8 @@ class Robot(SMURFRobot):
 
         if name is not None:
             self.name = name
-        self.submodel_defs = {}
-        if assert_validity and self.links:
+        self.additional_files = {}
+        if not shallow and assert_validity and self.links:
             self.assert_validity()
 
     # export methods
@@ -206,9 +206,9 @@ class Robot(SMURFRobot):
 
         # Main model
         if no_format_dir:
-            model_file = os.path.join(outputdir, f"{self.name if filename is None else filename}")
+            model_file = os.path.join(outputdir, f"{self.name.replace('/','_') if filename is None else filename}")
         else:
-            model_file = os.path.join(outputdir, f"{format}/{self.name if filename is None else filename}")
+            model_file = os.path.join(outputdir, f"{format}/{self.name.replace('/','_') if filename is None else filename}")
         if not model_file.lower().endswith(format):
             model_file += "." + format
         if not os.path.exists(os.path.dirname(os.path.abspath(model_file))):
@@ -291,7 +291,7 @@ class Robot(SMURFRobot):
                 self.export_meshes(mesh_output_dir=os.path.join(outputdir, rel_mesh_pathes[mf]), format=mf)
         # Export the smurf files
         smurf_dir = os.path.join(outputdir, "smurf")
-        self.smurffile = os.path.join(smurf_dir, "{}.smurf".format(self.name))
+        self.smurffile = os.path.join(smurf_dir, "{}.smurf".format(self.name.replace('/','_')))
         if not os.path.exists(smurf_dir):
             os.mkdir(smurf_dir)
         # Export attr
@@ -335,11 +335,11 @@ class Robot(SMURFRobot):
                 if annotation == "submechanisms" or annotation == "exoskeletons":
                     submechanisms[annotation] = annotation_dict[annotation]
                 else:
-                    with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, annotation_name)), "w+") as stream:
+                    with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), annotation_name)), "w+") as stream:
                         stream.write(dump_json(annotation_dict, default_style=False))
                         export_files.append(os.path.split(stream.name)[-1])
         if submechanisms != {}:
-            self.submechanisms_file = os.path.join(smurf_dir, "{}_submechanisms.yml".format(self.name))
+            self.submechanisms_file = os.path.join(smurf_dir, "{}_submechanisms.yml".format(self.name.replace('/','_')))
             with open(self.submechanisms_file, "w+") as stream:
                 stream.write(dump_json(submechanisms, default_style=False))
                 export_files.append(os.path.split(stream.name)[-1])
@@ -347,7 +347,7 @@ class Robot(SMURFRobot):
         # further annotations
         for k, v in self.annotations.items():
             if k not in self.smurf_annotation_keys:
-                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w+") as stream:
+                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), k)), "w+") as stream:
                     stream.write(dump_json({k: v}, default_style=False))
                     export_files.append(os.path.split(stream.name)[-1])
 
@@ -357,7 +357,7 @@ class Robot(SMURFRobot):
             for name, definition in self.submodel_defs.items():
                 out_submodel_defs[name] = deepcopy(definition)
                 out_submodel_defs[name]["export_dir"] = os.path.relpath(out_submodel_defs[name]["export_dir"], smurf_dir)
-            with open(os.path.join(smurf_dir, "{}_submodels.yml".format(self.name)), "w+") as stream:
+            with open(os.path.join(smurf_dir, "{}_submodels.yml".format(self.name.replace('/','_'))), "w+") as stream:
                 stream.write(dump_json({"submodels": out_submodel_defs}, default_style=False))
                 export_files.append(os.path.split(stream.name)[-1])
 
@@ -376,17 +376,17 @@ class Robot(SMURFRobot):
                     temp_generic_annotations[k].update(sub_dict)
         for k, v in temp_generic_annotations.items():
             # deal with existing names
-            if os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k))):
+            if os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), k))):
                 k = "generic_annotation_"+k
             new_k = k
             i = 0
-            while os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, new_k))):
+            while os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), new_k))):
                 i += 1
                 new_k = f"{k}_{i}"
             k = new_k
             # write
             if len(v) > 0 and k not in self.smurf_annotation_keys:
-                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name, k)), "w") as stream:
+                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), k)), "w") as stream:
                     stream.write(dump_json({k: v}, default_style=False))
                     export_files.append(os.path.split(stream.name)[-1])
 
@@ -395,7 +395,8 @@ class Robot(SMURFRobot):
             'modelname': self.name,
             # 'date': datetime.datetime.now().strftime("%Y%m%d_%H:%M"),
             'files': sorted(export_files),
-            'description': self.description
+            'description': self.description,
+            'additional_files': {k: os.path.relpath(v, smurf_dir) for k, v in self.additional_files.items()}
         }
         if self.version is not None:
             annotation_dict['version'] = self.version
@@ -420,7 +421,7 @@ class Robot(SMURFRobot):
             edit_collisions = {}
         kccd_meshes = os.path.join(outputdir, rel_iv_meshes_path)
         kccd_path = os.path.join(outputdir, dirname)
-        kccd_urdf = os.path.join(kccd_path, self.name + ".urdf")
+        kccd_urdf = os.path.join(kccd_path, self.name.replace('/','_') + ".urdf")
         create_dir(None, kccd_path)
         kccd_robot = self.duplicate()
         kccd_robot.xmlfile = kccd_urdf
@@ -453,7 +454,7 @@ class Robot(SMURFRobot):
                 geometry=link.collisions[0].geometry,
             ))
         kccd_robot.export_urdf(outputfile=kccd_urdf)
-        execute_shell_command("urdf2kccd -b " + self.name + ".urdf", cwd=kccd_path)
+        execute_shell_command("urdf2kccd -b " + self.name.replace('/','_') + ".urdf", cwd=kccd_path)
         kccd_kinematics_file = open(kccd_urdf[:-5] + "Kinematics.cfg", "r").read().split("\n\n")
         kccd_kinematics = {}
         for block in kccd_kinematics_file:
@@ -699,6 +700,11 @@ class Robot(SMURFRobot):
                     correct_inertials=export.get("correct_inertials", False),
                     use_existing_meshes=use_existing_meshes
                 )
+                if not export.get("link_in_smurf", False):
+                    if "filename" not in export:
+                        self.additional_files[export["type"]] = xml_file
+                    else:
+                        self.additional_files[export["filename"]] = xml_file
                 ros_pkg |= export["ros_pathes"] if "ros_pathes" in export else None
                 if export.get("link_in_smurf", False):
                     assert xml_file_in_smurf is None, "Only one xml file can be linked in the SMURF"
@@ -742,7 +748,7 @@ class Robot(SMURFRobot):
                     no_smurf=no_smurf
                 )
             elif export["type"] == "pdf":
-                self.export_pdf(outputfile=os.path.join(outputdir, self.name + ".pdf"))
+                self.export_pdf(outputfile=os.path.join(outputdir, self.name.replace('/','_') + ".pdf"))
             elif export["type"] == "kccd":
                 export_robot_instance = self.duplicate()
                 export_robot_instance.export_kccd(
@@ -1156,7 +1162,7 @@ class Robot(SMURFRobot):
 
         # copy all annotations we do not have yet
         for k, v in self.__dict__.items():
-            if k not in submodel.__dict__.keys() or submodel.__dict__[k] is None:
+            if k not in ["submodel_defs"] and (k not in submodel.__dict__.keys() or submodel.__dict__[k] is None):
                 submodel.__dict__[k] = v
 
         submodel.get_root().origin = None
@@ -2518,7 +2524,6 @@ class Robot(SMURFRobot):
         )
         fb_robot = self.duplicate()
         floatingbase.attach(fb_robot, connector)
-        floatingbase.name = fb_robot.name + "_floatingbase"
         freeflyer = {
             "auto_gen": False,
             "type": "3T+3R",

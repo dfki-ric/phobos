@@ -1,11 +1,11 @@
 #!python3
 
 
-from ..defs import PYBULLET_AVAILABLE
+from ..defs import check_pybullet_available
 
 
 def can_be_used():
-    return PYBULLET_AVAILABLE
+    return check_pybullet_available()
 
 
 def cant_be_used_msg():
@@ -16,6 +16,9 @@ INFO = 'Loads a "smurfs" file in pyBullet.'
 
 
 def main(args):
+    if not can_be_used():
+        print(f"Attention: Script might not work properly:" + cant_be_used_msg())
+
     import argparse
     import os
     from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL

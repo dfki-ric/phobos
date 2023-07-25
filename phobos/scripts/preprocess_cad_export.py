@@ -6,7 +6,7 @@ def can_be_used():
 
 
 def cant_be_used_msg():
-    return "Unknown error!"
+    return ""
 
 
 INFO = 'Preprocess CAD->URDF exports to use with pipeline.'
