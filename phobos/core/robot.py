@@ -396,7 +396,7 @@ class Robot(SMURFRobot):
             # 'date': datetime.datetime.now().strftime("%Y%m%d_%H:%M"),
             'files': sorted(export_files),
             'description': self.description,
-            'additional_files': self.additional_files
+            'additional_files': {k: os.path.relpath(v, smurf_dir) for k, v in self.additional_files.items()}
         }
         if self.version is not None:
             annotation_dict['version'] = self.version
