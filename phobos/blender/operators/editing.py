@@ -626,7 +626,8 @@ class CreateInterfaceOperator(Operator):
                         name=self.interface_name,
                         parent=link.name,
                         type=self.interface_type,
-                        direction=self.interface_direction
+                        direction=self.interface_direction,
+                        origin=representation.Pose(relative_to=link.name)
                     ),
                     None,
                     self.scale
@@ -640,7 +641,8 @@ class CreateInterfaceOperator(Operator):
                         name=self.interface_name,
                         parent=link.name,
                         type=self.interface_type,
-                        direction=self.interface_direction
+                        direction=self.interface_direction,
+                        origin=representation.Pose(relative_to=link.name)
                     ),
                 None,
                 self.scale
@@ -1302,21 +1304,21 @@ class CreateCollisionObjects(Operator):
                     #     scale=getattr(phobos_vis, "scale", 1), oriented=self.property_optimized
                     # )
                     # geometry, transform = geo.create_box(vis, scale=getattr(phobos_vis, "scale", 1), oriented=self.property_optimized)
-                    geometry, transform = geo.create_box(vis, scale=getattr(phobos_vis, "scale", 1), oriented=False)
+                    geometry, transform = geo.create_box(vis, scale=getattr(phobos_vis.geometry, "scale", 1), oriented=False)
                 elif self.property_colltype == "cylinder":
                     # [TODO v2.1.0] Fix optimized creation see: Fix creation for Trimesh in geometry/geometry.py
                     # geometry, transform = geo.create_cylinder(
                     #     vis if not self.property_optimized else mesh_io.as_trimesh(vis.data),
                     #     scale=getattr(phobos_vis, "scale", 1),
                     # )
-                    geometry, transform = geo.create_cylinder(vis, scale=getattr(phobos_vis, "scale", 1),)
+                    geometry, transform = geo.create_cylinder(vis, scale=getattr(phobos_vis.geometry, "scale", 1),)
                 elif self.property_colltype == "sphere":
                     # [TODO v2.1.0] Fix optimized creation see: Fix creation for Trimesh in geometry/geometry.py
                     # geometry, transform = geo.create_sphere(
                     #     vis if not self.property_optimized else mesh_io.as_trimesh(vis.data),
                     #     scale=getattr(phobos_vis, "scale", 1),
                     # )
-                    geometry, transform = geo.create_sphere(vis, scale=getattr(phobos_vis, "scale", 1),)
+                    geometry, transform = geo.create_sphere(vis, scale=getattr(phobos_vis.geometry, "scale", 1),)
                 elif self.property_colltype == "convex":
                     geometry = blender2phobos.deriveGeometry(vis, duplicate_mesh=True)
                     geometry.to_convex_hull()
@@ -1560,10 +1562,21 @@ class DefineJointConstraintsOperator(Operator):
         Returns:
 
         """
-        aObject = context.active_object
-        #if 'joint/type' not in aObject and 'motor/type' in aObject:
-        #    self.maxvelocity = aObject['motor/maxSpeed']
-        #    self.maxeffort = aObject['motor/maxEffort']
+        obj = context.active_object
+        if any([k.startswith("joint") for k in obj.keys()]):
+            if "joint/limits/lower" in obj:
+                self.lower = obj["joint/limits/lower"]
+            if "joint/limits/upper" in obj:
+                self.upper = obj["joint/limits/upper"]
+            if "joint/limits/effort" in obj:
+                self.maxeffort = obj["joint/limits/effort"]
+            if "joint/limits/velocity" in obj:
+                self.maxspeed = obj["joint/limits/velocity"]
+            if "joint/type" in obj:
+                self.joint_type = obj["joint/type"]
+            if "joint/axis" in obj:
+                self.axis = obj["joint/axis"]
+            self.name = obj.get("joint/name", obj.name)
         return self.execute(context)
 
     def execute(self, context):
@@ -2104,7 +2117,7 @@ class AddSensorOperator(Operator):
             for sen in sorted(resources.get_sensor_types(self.category))
         ]
         # Alternative: sensor_representations w/o factory, sensor, multisensor
-        return items
+        return sorted(items, key=lambda x: x[0])
 
     def categorylist(self, context):
         """Create an enum for the sensor categories. For phobos preset categories,
@@ -2130,7 +2143,7 @@ class AddSensorOperator(Operator):
             items.append((categ, categ, categ, icon, i))
             i += 1
 
-        return items
+        return sorted(items, key=lambda x: x[0])
 
     category: EnumProperty(items=categorylist, description='The sensor category')
     sensorType: EnumProperty(items=sensorlist, description='The sensor type')
@@ -2161,7 +2174,6 @@ class AddSensorOperator(Operator):
             for prop in self.sensorProperties:
                 prop.allowDisabling()
             self.currentSensor = (self.category, self.sensorType)
-
 
     def draw(self, context):
         """
@@ -2278,19 +2290,20 @@ class AddSensorOperator(Operator):
         parameters = self.getSensorParameters()
         # Get sensor category specific class
         sensorClass = getattr(sensor_representations, self.category)
-        if "link" in sensorClass._class_variables:
+        if "link" in sensorClass._class_variables or sensorClass == sensor_representations.GPS:
             parameters["link"] = parameters.get("link", link.name)
         if "joint" in sensorClass._class_variables:
             parameters["link"] = parameters.get("joint", link.get("joint/name", link.name))
         if "frame" in sensorClass._class_variables:
             parameters["frame"] = parameters.get("frame", link.name)
         sensor = sensorClass(
-            name = sensorName,
-            **parameters # Pass sensor specific parameters
+            name=sensorName,
+            origin=representation.Pose(relative_to=link.name),
+            **parameters  # Pass sensor specific parameters
         )
+        if hasattr(sensor, "targets"):
+            sensor.targets = [o for o in context.selected_objects if o.phobostype == "link"]
         sensor_obj = phobos2blender.createSensor(sensor, linkobj=link)
-
-
 
         # match the operator to avoid dangers of eval
         # import re
@@ -3031,8 +3044,7 @@ class AssignSubmechanism(Operator):
         wm = context.window_manager
         layout = self.layout
         nSelectedJoints = len(self.joints)
-        layout.label(text='Selection contains {0} joint{1}.'.format(
-            nSelectedJoints, "s" if nSelectedJoints is not 1 else ""))
+        layout.label(text='Selection contains {0} joint{1}.'.format(nSelectedJoints, "s" if nSelectedJoints != 1 else ""))
         layout.prop(self, 'linear_chain')
         layout.label(text='Joints that have not been assigned')
         layout.label(text='to a submechanism will be considered')

@@ -53,7 +53,9 @@ def deepen_dict(input_dict):
     out = {}
     for k, v in input_dict.items():
         if "/" in k:
-            out[k.split("/", 1)[0]] = deepen_dict({k.split("/", 1)[1]: v})
+            if k.split("/", 1)[0] not in out:
+                out[k.split("/", 1)[0]] = {}
+            out[k.split("/", 1)[0]].update(deepen_dict({k.split("/", 1)[1]: v}))
         else:
             out[k] = v
     return out

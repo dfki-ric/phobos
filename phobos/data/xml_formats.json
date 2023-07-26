@@ -375,7 +375,8 @@
           "value_children": {
             "collision": "targets"
           }
-        }
+        },
+        "gps": {}
       }
     },
     "Joint6DOF": {
@@ -494,6 +495,24 @@
           "value_children": {
             "collision": "targets"
           }
+        }
+      }
+    },
+    "GPS": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "rate": "rate"
+      },
+      "attribute_children": {
+        "parent": {
+          "link": "link"
+        }
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
         }
       }
     }
@@ -918,7 +937,8 @@
           "value_children": {
             "collision": "targets"
           }
-        }
+        },
+        "gps": {}
       }
     },
     "Joint6DOF": {
@@ -1056,6 +1076,26 @@
           "value_children": {
             "collision": "collisions"
           }
+        }
+      }
+    },
+    "GPS": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "type": "type"
+      },
+      "value_children": {
+        "always_on": "always_on",
+        "rate": "rate",
+        "visualize": "visualize",
+        "topic": "topic",
+        "enable_metrics": "enable_metrics"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
         }
       }
     },

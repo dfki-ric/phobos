@@ -3,7 +3,7 @@
     "Ray_sensor": {
       "general": {
         "type": "ray_sensor",
-        "shape": "resource://ray",
+        "shape": "ray",
         "size": 0.2,
         "categories": [
           "scanning",
@@ -40,11 +40,8 @@
     "Rotating_ray_sensor": {
       "general": {
         "type": "rotating_ray_sensor",
-        "shape": "disc",
-        "size": [
-          0.2,
-          36
-        ],
+        "shape": "ray",
+        "size": 0.2,
         "categories": [
           "scanning"
         ]
@@ -64,11 +61,8 @@
     "Scanning_sonar": {
       "general": {
         "type": "scanning_sensor",
-        "shape": "disc",
-        "size": [
-          0.2,
-          36
-        ],
+        "shape": "ray",
+        "size": 0.2,
         "categories": [
           "scanning",
           "SDF"
@@ -103,11 +97,8 @@
     "Multi_level_laser_range_finder": {
       "general": {
         "type": "multi_level_laser_range_finder",
-        "shape": "disc",
-        "size": [
-          0.2,
-          36
-        ],
+        "shape": "ray",
+        "size": 0.2,
         "categories": [
           "scanning"
         ]
@@ -126,7 +117,7 @@
     "Camera": {
       "general": {
         "type": "camera",
-        "shape": "resource://camera",
+        "shape": "camera",
         "size": 0.2,
         "categories": [
           "camera",
@@ -161,7 +152,7 @@
     "Logical_camera": {
       "general": {
         "type": "logical_camera",
-        "shape": "resource://camera",
+        "shape": "camera",
         "size": 0.2,
         "categories": [
           "camera",
@@ -384,7 +375,7 @@
     "Inertial_measurement_unit": {
       "general": {
         "type": "inertial_measurement_unit",
-        "shape": "resource://imu",
+        "shape": "imu",
         "size": 0.2,
         "categories": [
           "internal",
@@ -402,7 +393,7 @@
     "Altimeter": {
       "general": {
         "type": "altimeter",
-        "shape": "resource://altimeter",
+        "shape": "altimeter",
         "size": 0.2,
         "categories": [
           "environmental",
@@ -425,7 +416,7 @@
     "Magnetometer": {
       "general": {
         "type": "magnetometer",
-        "shape": "resource://magnetometer",
+        "shape": "magnetometer",
         "size": 0.2,
         "categories": [
           "environmental",
@@ -436,7 +427,7 @@
     "GPS": {
       "general": {
         "type": "gps",
-        "shape": "resource://gps",
+        "shape": "gps",
         "size": 0.2,
         "categories": [
           "environmental",
@@ -447,7 +438,7 @@
     "Wireless_transceiver": {
       "general": {
         "type": "wireless_transceiver",
-        "shape": "resource://wireless",
+        "shape": "wireless",
         "size": 0.2,
         "categories": [
           "communication",
@@ -463,7 +454,7 @@
     "RFID_sensor": {
       "general": {
         "type": "rfid_sensor",
-        "shape": "resource://rfid_sensor",
+        "shape": "rfid_sensor",
         "size": 0.2,
         "categories": [
           "communication",
@@ -477,7 +468,7 @@
     "RFID_tag": {
       "general": {
         "type": "rfid_tag",
-        "shape": "resource://rfid_tag",
+        "shape": "rfid_tag",
         "size": 0.2,
         "categories": [
           "communication",
