@@ -93,11 +93,11 @@ class DisplayInformationOperator(Operator):
         wm.modal_handler_add(self)
         return {'RUNNING_MODAL'}
 
-class WireFrameOperator(Operator):
+class WireFrameSelectionOperator(Operator):
     """Toggle selected objects between wire frame and textured"""
 
     bl_idname = "phobos.display_wire"
-    bl_label = "Toggle wire frame"
+    bl_label = "Toggle selection"
 
     def invoke(self, context, event):
         currentlyWireFrame = False
@@ -107,18 +107,36 @@ class WireFrameOperator(Operator):
                 currentlyWireFrame = True
                 break
 
+        newType = "TEXTURED" if currentlyWireFrame else "WIRE"
+
         for ob in context.selected_objects:
-            if currentlyWireFrame:
-                ob.display_type = "TEXTURED"
-            else:
-                ob.display_type = "WIRE"
+            ob.display_type = newType
+
+        return {'FINISHED'}
+
+class WireFrameLinksOperator(Operator):
+    """Toggle all links between wire frame and textured"""
+
+    bl_idname = "phobos.display_wire_links"
+    bl_label = "Toggle all links"
+
+    def invoke(self, context, event):
+
+        bpy.context.scene.phoboswireframesettings.links = not bpy.context.scene.phoboswireframesettings.links
+
+        newType = "WIRE" if bpy.context.scene.phoboswireframesettings.links else "TEXTURED"
+
+        for ob in context.view_layer.objects:
+            if ob.phobostype == "link":
+                ob.display_type = newType
 
         return {'FINISHED'}
 
 
 classes = [
     DisplayInformationOperator,
-    WireFrameOperator
+    WireFrameSelectionOperator,
+    WireFrameLinksOperator
 ]
 
 def register():

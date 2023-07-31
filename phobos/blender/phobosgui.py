@@ -168,6 +168,15 @@ prev_collections = {}
 phobosIcon = 0
 
 
+class PhobosWireFrameSettings(bpy.types.PropertyGroup):
+    """Stores global wire frame setting"""
+
+    # If this is True, all links are displayed as wire frame
+    links : BoolProperty(
+        name='links',
+        default=False,
+    )
+
 class PhobosExportSettings(bpy.types.PropertyGroup):
     """TODO Missing documentation"""
 
@@ -1625,16 +1634,22 @@ class PhobosDisplayPanel(bpy.types.Panel):
             dc2.prop(wm, 'phobos_msg_offset')
 
         layout.separator()
+
+        layout.label(text="Toggle wireframe", icon='MOD_WIREFRAME')
+
         kinlayout = layout.split()
         kc1 = kinlayout.column(align=True)
         kc2 = kinlayout.column(align=True)
 
-        kc1.operator('phobos.display_wire', icon='MOD_WIREFRAME')
+        kc1.operator('phobos.display_wire')
+        icon = "SPHERE" if bpy.context.scene.phoboswireframesettings.links else "MATERIAL"
+        kc2.operator('phobos.display_wire_links', icon=icon)
 
 
 REGISTER_CLASSES = [
     ModelPoseProp,
     PhobosPrefs,
+    PhobosWireFrameSettings,
     PhobosExportSettings,
     # CHECK is this needed and right?
     MatrixPropGroup,
@@ -1765,6 +1780,7 @@ def register():
     # bpy.utils.register_class(PhobosScenePanel)
 
     # add phobos settings to scene
+    bpy.types.Scene.phoboswireframesettings = PointerProperty(type=PhobosWireFrameSettings)
     bpy.types.Scene.phobosexportsettings = PointerProperty(type=PhobosExportSettings)
     bpy.types.Scene.active_ModelPose = bpy.props.IntProperty(
         name="Index of current pose", default=0, update=showPreview

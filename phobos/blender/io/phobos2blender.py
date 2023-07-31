@@ -260,6 +260,10 @@ def createLink(link):
                 newlink[f"link/{prop}"] = value
 
     bUtils.sortObjectToCollection(newlink, 'link')
+
+    if bpy.context.scene.phoboswireframesettings.links:
+        newlink.display_type = "WIRE"
+
     return newlink
 
 
