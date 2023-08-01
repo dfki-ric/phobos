@@ -1444,7 +1444,7 @@ class PhobosExportPanel(bpy.types.Panel):
 
         for wa in exportWarnings:
             localColumn = c2.column()
-            localColumn.alert = True
+            #localColumn.alert = True
             dynamicLabel(text=wa, uiLayout=localColumn, context=context, icon="INFO")
 
         c2.operator("phobos.export_model", icon="EXPORT")
