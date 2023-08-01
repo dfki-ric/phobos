@@ -1623,6 +1623,31 @@ class PhobosDisplayPanel(bpy.types.Panel):
             dc2.prop(wm, 'phobos_msg_count')
             dc2.prop(wm, 'phobos_msg_offset')
 
+def dynamicLabel(text, uiLayout, context, icon=None):
+    panelWidth = context.region.width
+    print(panelWidth)
+    uiScale = bpy.context.preferences.view.ui_scale
+    #margin left, margin right, difference panelWidth -> actual panel width
+    margin = uiScale*20+uiScale*30+uiScale*72
+    letterWidth = uiScale*10.9
+    lettersPerLine = (panelWidth - margin) / letterWidth
+    iconWidth = uiScale*50
+    lettersPerIconLine = (panelWidth - margin - iconWidth) / letterWidth
+    firstLine = True
+    nextLine = ""
+    for word in text.split():
+        nextLineUpdated = word if nextLine == "" else nextLine + " " + word
+        if firstLine and icon and len(nextLineUpdated) > lettersPerIconLine:
+            uiLayout.label(text=nextLine, icon=icon)
+            nextLine = word
+            firstLine = False
+        elif len(nextLineUpdated) > lettersPerLine:
+            uiLayout.label(text=nextLine)
+            nextLine = word
+        else:
+            nextLine = nextLineUpdated
+    if nextLine != "":
+        uiLayout.label(text=nextLine)
 
 REGISTER_CLASSES = [
     ModelPoseProp,
