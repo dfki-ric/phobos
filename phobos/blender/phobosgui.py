@@ -1367,7 +1367,11 @@ class PhobosExportPanel(bpy.types.Panel):
         #     typename = "export_scene_" + scenetype
         #     cscene.prop(bpy.context.scene, typename)
 
-        if getattr(bpy.context.scene, 'export_entity_smurf', False):
+        requiredMeshes = []
+
+        smurfExport = getattr(bpy.context.scene, 'export_entity_smurf', False)
+
+        if smurfExport:
             layout.separator()
             box = layout.box()
             box.label(text='SMURF export')
@@ -1380,10 +1384,12 @@ class PhobosExportPanel(bpy.types.Panel):
             box.prop(ioUtils.getExpSettings(), 'urdfDecimalPlaces')
             box.prop(ioUtils.getExpSettings(), 'export_urdf_mesh_type')
             box.prop(bpy.context.scene.phobosexportsettings, 'urdfOutputPathtype')
-        elif ioUtils.getExpSettings().export_smurf_xml_type == "urdf":
-            exportWarnings.append("You selected urdf as kinematic representation for smurf. "
-                                  "Are you sure you don't want to export the urdf file? "
-                                  "it will be required to import the smurf model.")
+            requiredMeshes.append(("urdf",ioUtils.getExpSettings().export_urdf_mesh_type))
+        elif smurfExport and ioUtils.getExpSettings().export_smurf_xml_type == "urdf":
+            name = "urdf"
+            exportWarnings.append(f"You selected {name} as kinematic representation for smurf. "
+                                  f"Are you sure you don't want to export the {name} file? "
+                                  f"it will be required to import the smurf model.")
         if getattr(bpy.context.scene, 'export_entity_sdf', False):
             layout.separator()
             box = layout.box()
@@ -1394,10 +1400,12 @@ class PhobosExportPanel(bpy.types.Panel):
             # doesn't work properly therefore excluded
             # box.prop(ioUtils.getExpSettings(), 'export_sdf_model_config', icon='RENDERLAYERS')
             # box.prop(ioUtils.getExpSettings(), 'export_sdf_to_gazebo_models', icon='EXPORT')
-        elif ioUtils.getExpSettings().export_smurf_xml_type == "sdf":
-            exportWarnings.append("You selected sdf as kinematic representation for smurf. "
-                                  "Are you sure you don't want to export the sdf file? "
-                                  "it will be required to import the smurf model.")
+            requiredMeshes.append(("sdf",ioUtils.getExpSettings().export_sdf_mesh_type))
+        elif smurfExport and ioUtils.getExpSettings().export_smurf_xml_type == "sdf":
+            name = "sdf"
+            exportWarnings.append(f"You selected {name} as kinematic representation for smurf. "
+                                  f"Are you sure you don't want to export the {name} file? "
+                                  f"it will be required to import the smurf model.")
 
         if getattr(bpy.context.scene.phobosexportsettings, 'urdfOutputPathtype', "relative").startswith("ros_package") or \
                 getattr(bpy.context.scene.phobosexportsettings, 'sdfOutputPathtype', "relative").startswith("ros_package"):
@@ -1427,10 +1435,17 @@ class PhobosExportPanel(bpy.types.Panel):
         #)
         c2.label(text="Export")
 
+        for exportformat, meshtype in requiredMeshes:
+            typename = "export_mesh_" + meshtype
+            if not getattr(bpy.context.scene,typename):
+                exportWarnings.append(f"You selected {meshtype} as mesh type for {exportformat} but its "
+                                      f"export is disabled. {meshtype.capitalize()} files will be required to "
+                                      f"import the model")
+
         for wa in exportWarnings:
             localColumn = c2.column()
             localColumn.alert = True
-            dynamicLabel(text=wa, uiLayout=localColumn, context=context)
+            dynamicLabel(text=wa, uiLayout=localColumn, context=context, icon="INFO")
 
         c2.operator("phobos.export_model", icon="EXPORT")
         # [TODO v2.1.0] make this work again in an extra Phobos Scenes tab
