@@ -1640,7 +1640,7 @@ def dynamicLabel(text, uiLayout, context, icon=None):
     uiScale = bpy.context.preferences.view.ui_scale
     #margin left, margin right, difference panelWidth -> actual panel width
     margin = uiScale*(20+30+72)
-    letterWidth = uiScale*10.9
+    letterWidth = uiScale*10.7
     lettersPerLine = (panelWidth - margin) / letterWidth
     iconWidth = uiScale*50
     lettersPerIconLine = (panelWidth - margin - iconWidth) / letterWidth
@@ -1658,7 +1658,7 @@ def dynamicLabel(text, uiLayout, context, icon=None):
         else:
             nextLine = nextLineUpdated
     if nextLine != "":
-        uiLayout.label(text=nextLine)
+        uiLayout.label(text=nextLine, icon=icon if icon and firstLine else "NONE")
 
 REGISTER_CLASSES = [
     ModelPoseProp,
