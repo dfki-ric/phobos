@@ -1639,11 +1639,22 @@ class PhobosDisplayPanel(bpy.types.Panel):
             dc2.prop(wm, 'phobos_msg_offset')
 
 def dynamicLabel(text, uiLayout, context, icon=None):
+    """
+    Prints multiline text to uiLayout.label()
+    
+    Args:
+        text:
+        uiLayout: bpy.types.UILayout
+        context:
+        icon: optional, blender icon name
+
+    Returns:
+
+    """
     panelWidth = context.region.width
-    print(panelWidth)
     uiScale = bpy.context.preferences.view.ui_scale
     #margin left, margin right, difference panelWidth -> actual panel width
-    margin = uiScale*20+uiScale*30+uiScale*72
+    margin = uiScale*(20+30+72)
     letterWidth = uiScale*10.9
     lettersPerLine = (panelWidth - margin) / letterWidth
     iconWidth = uiScale*50
