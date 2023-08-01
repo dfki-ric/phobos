@@ -1321,6 +1321,7 @@ class PhobosExportPanel(bpy.types.Panel):
         Returns:
 
         """
+        exportWarnings = []
         expsets = bpy.context.scene.phobosexportsettings
         layout = self.layout
 
@@ -1379,6 +1380,10 @@ class PhobosExportPanel(bpy.types.Panel):
             box.prop(ioUtils.getExpSettings(), 'urdfDecimalPlaces')
             box.prop(ioUtils.getExpSettings(), 'export_urdf_mesh_type')
             box.prop(bpy.context.scene.phobosexportsettings, 'urdfOutputPathtype')
+        elif ioUtils.getExpSettings().export_smurf_xml_type == "urdf":
+            exportWarnings.append("You selected urdf as kinematic representation for smurf. "
+                                  "Are you sure you don't want to export the urdf file? "
+                                  "it will be required to import the smurf model.")
         if getattr(bpy.context.scene, 'export_entity_sdf', False):
             layout.separator()
             box = layout.box()
@@ -1389,6 +1394,10 @@ class PhobosExportPanel(bpy.types.Panel):
             # doesn't work properly therefore excluded
             # box.prop(ioUtils.getExpSettings(), 'export_sdf_model_config', icon='RENDERLAYERS')
             # box.prop(ioUtils.getExpSettings(), 'export_sdf_to_gazebo_models', icon='EXPORT')
+        elif ioUtils.getExpSettings().export_smurf_xml_type == "sdf":
+            exportWarnings.append("You selected sdf as kinematic representation for smurf. "
+                                  "Are you sure you don't want to export the sdf file? "
+                                  "it will be required to import the smurf model.")
 
         if getattr(bpy.context.scene.phobosexportsettings, 'urdfOutputPathtype', "relative").startswith("ros_package") or \
                 getattr(bpy.context.scene.phobosexportsettings, 'sdfOutputPathtype', "relative").startswith("ros_package"):
@@ -1417,6 +1426,12 @@ class PhobosExportPanel(bpy.types.Panel):
         #    'phobos.safely_remove_objects_from_scene', text='Remove from configuration', icon='X'
         #)
         c2.label(text="Export")
+
+        for wa in exportWarnings:
+            localColumn = c2.column()
+            localColumn.alert = True
+            dynamicLabel(text=wa, uiLayout=localColumn, context=context)
+
         c2.operator("phobos.export_model", icon="EXPORT")
         # [TODO v2.1.0] make this work again in an extra Phobos Scenes tab
         # c2.operator("phobos.export_scene", icon="WORLD_DATA") # doesn't work properly therefore excluded
