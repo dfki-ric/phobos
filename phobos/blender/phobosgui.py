@@ -1623,42 +1623,52 @@ class PhobosDisplayPanel(bpy.types.Panel):
             dc2.prop(wm, 'phobos_msg_count')
             dc2.prop(wm, 'phobos_msg_offset')
 
-def dynamicLabel(text, uiLayout, context, icon=None):
+
+def dynamicLabel(text, uiLayout, context=None, width=300, icon=None):
     """
-    Prints multiline text to uiLayout.label()
-    
+    Prints multiline text to uiLayout.label().
+    Pass context for labels in the phobos side panel and width for operator windows
+
     Args:
         text:
         uiLayout: bpy.types.UILayout
         context:
+        width: Width passed to context.window_manager.invoke_props_dialog(), default 300
         icon: optional, blender icon name
 
     Returns:
 
     """
-    panelWidth = context.region.width
+    assert context is not None or width > 0
     uiScale = bpy.context.preferences.view.ui_scale
-    #margin left, margin right, difference panelWidth -> actual panel width
-    margin = uiScale*(20+30+72)
-    letterWidth = uiScale*10.7
+
+    panelWidth = 2 * width * uiScale
+    margin = 2 * uiScale
+    if context is not None:
+        panelWidth = context.region.width-uiScale*72
+        # margin left, margin right
+        margin = uiScale * (20 + 30)
+    letterWidth = uiScale * 10.9
     lettersPerLine = (panelWidth - margin) / letterWidth
-    iconWidth = uiScale*50
+    iconWidth = uiScale * 50
     lettersPerIconLine = (panelWidth - margin - iconWidth) / letterWidth
     firstLine = True
-    nextLine = ""
-    for word in text.split():
-        nextLineUpdated = word if nextLine == "" else nextLine + " " + word
-        if firstLine and icon and len(nextLineUpdated) > lettersPerIconLine:
-            uiLayout.label(text=nextLine, icon=icon)
-            nextLine = word
-            firstLine = False
-        elif len(nextLineUpdated) > lettersPerLine:
-            uiLayout.label(text=nextLine)
-            nextLine = word
-        else:
-            nextLine = nextLineUpdated
-    if nextLine != "":
-        uiLayout.label(text=nextLine, icon=icon if icon and firstLine else "NONE")
+    for line in text.split("\n"):
+        nextLine = ""
+        for word in line.split():
+            nextLineUpdated = word if nextLine == "" else nextLine + " " + word
+            if firstLine and icon and len(nextLineUpdated) > lettersPerIconLine:
+                uiLayout.label(text=nextLine, icon=icon)
+                nextLine = word
+                firstLine = False
+            elif len(nextLineUpdated) > lettersPerLine:
+                uiLayout.label(text=nextLine)
+                nextLine = word
+            else:
+                nextLine = nextLineUpdated
+        if nextLine != "":
+            uiLayout.label(text=nextLine, icon=icon if icon and firstLine else "NONE")
+
 
 REGISTER_CLASSES = [
     ModelPoseProp,
