@@ -1389,7 +1389,7 @@ class PhobosExportPanel(bpy.types.Panel):
             name = "urdf"
             exportWarnings.append(f"You selected {name} as kinematic representation for smurf. "
                                   f"Are you sure you don't want to export the {name} file? "
-                                  f"it will be required to import the smurf model.")
+                                  f"It will be required to import the smurf model.")
         if getattr(bpy.context.scene, 'export_entity_sdf', False):
             layout.separator()
             box = layout.box()
@@ -1405,7 +1405,7 @@ class PhobosExportPanel(bpy.types.Panel):
             name = "sdf"
             exportWarnings.append(f"You selected {name} as kinematic representation for smurf. "
                                   f"Are you sure you don't want to export the {name} file? "
-                                  f"it will be required to import the smurf model.")
+                                  f"It will be required to import the smurf model.")
 
         if getattr(bpy.context.scene.phobosexportsettings, 'urdfOutputPathtype', "relative").startswith("ros_package") or \
                 getattr(bpy.context.scene.phobosexportsettings, 'sdfOutputPathtype', "relative").startswith("ros_package"):
