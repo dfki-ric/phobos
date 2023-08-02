@@ -1652,12 +1652,6 @@ class PhobosDisplayPanel(bpy.types.Panel):
             dc2.prop(wm, 'phobos_msg_offset')
 
 
-class CuttingPlanePropGroup(bpy.types.PropertyGroup):
-    coo_x: bpy.props.FloatProperty(name="x-coordinate")
-    coo_y: bpy.props.FloatProperty(name="y-coordinate")
-    coo_z: bpy.props.FloatProperty(name="z-coordinate")
-
-
 REGISTER_CLASSES = [
     ModelPoseProp,
     PhobosPrefs,
@@ -1674,7 +1668,6 @@ REGISTER_CLASSES = [
 #    PhobosSubmodelsPanel,
     PhobosExportPanel,
     PhobosImportPanel,
-    CuttingPlanePropGroup,
 ]
 
 
@@ -1787,7 +1780,6 @@ def register():
 
     bpy.types.Object.phobosmatrixinfo = PointerProperty(type=MatrixPropGroup)
     bpy.types.Scene.phobospropcategories = EnumProperty(items=[])
-    bpy.types.Object.cuttingplaneprops = PointerProperty(type=CuttingPlanePropGroup)
 
     # TODO delete me?
     # bpy.utils.register_class(PhobosScenePanel)

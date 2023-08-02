@@ -3494,19 +3494,42 @@ class ParentOperator(Operator):
         return len(context.selected_objects) >= 2
 
 
+def update_stretch_direction(self, context):
+    stretch_direction_vector = self.stretch_direction
+    plane = context.active_object
+    eUtils.set_stretch_direction_of_cutting_plane(plane, stretch_direction_vector)
 
-class DefineCuttingPlaneOperator(bpy.types.Operator):
+
+class DefineCuttingPlaneOperator(Operator):
     """Defines the selected Plane as Cutting-Plane for the intersecting Link"""
     bl_idname = "phobos.define_cutting_plane_operator"
     bl_label = "Define Cutting Plane"
     bl_description = "Defines the selected Plane as Cutting-Plane for the intersecting Link"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    stretch_direction: FloatVectorProperty(
+        name="Stretch Direction", default=[0.0, 0.0, 1],
+        description="Stretch Direction of Cutting-Plane", size=3,
+        update=update_stretch_direction
+    )
+
+    def draw(self, context):
+        print("Draw")
+        row1 = self.layout.row()
+        row1.label(text="Sets the Stretch Direction of the Cutting-Plane")
+        row1.prop(self, "stretch_direction")
 
 
-    @classmethod
-    def poll(cls, context):
-        return context.active_object is not None
+    def invoke(self, context, event):
+        print("Invoke")
+        plane = context.active_object
+        plane.show_axis = True
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
 
     def execute(self, context):
+        print("Execute")
         collection_name = "cuttingplane"
         plane = context.active_object
         if collection_name in bpy.context.scene.collection.children.keys():
@@ -3519,11 +3542,16 @@ class DefineCuttingPlaneOperator(bpy.types.Operator):
             bUtils.sortObjectToCollection(plane, collection_name)
             plane.parent = intersecting_link
             plane.phobostype = "cuttingplane"
+            plane.show_axis = False
             print("Cutting-Plane defined")
             return {'FINISHED'}
         else:
             return {'CANCELLED'}
 
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
 
 
 class AlignCuttingPlaneOperator(bpy.types.Operator):
@@ -3551,7 +3579,10 @@ class AlignCuttingPlaneToNormalVector(bpy.types.Operator):
     bl_idname = "phobos.align_to_normal"
     bl_label = "Align Cutting-Plane to Normal Vector"
     bl_description = "Aligns Cutting-Plane to a user defined Normal Vector"
-    message = "Wanted Normal Vector of Plane"
+
+    stretch_direction: FloatVectorProperty(
+        name="Stretch Direction", default=[0.0, 0.0, 1], description="Stretch Direction of Cutting-Plane", size=3
+    )
 
 
     def execute(self, context):
@@ -3562,18 +3593,13 @@ class AlignCuttingPlaneToNormalVector(bpy.types.Operator):
             print("Box used")
             return {'FINISHED'}
 
+
     def invoke(self, context, event):
         return context.window_manager.invoke_props_dialog(self, width=400)
 
     def draw(self, context):
-        plane = context.active_object
-        self.layout.label(text=self.message)
         row1 = self.layout.row()
-        row1.prop(plane.cuttingplaneprops, "coo_x")
-        row2 = self.layout.row()
-        row2.prop(plane.cuttingplaneprops, "coo_y")
-        row3 = self.layout.row()
-        row3.prop(plane.cuttingplaneprops, "coo_z")
+        row1.prop(self, "stretch_direction", text="Sets the Stretch Direction of the Cutting-Plane")
 
 
 classes = (

@@ -1,6 +1,6 @@
 import math
 import numpy as np
-
+import random as rd
 
 def _calculate_normal_vector(points):
     """Returns Normal-Vector for a Plane defined by 3 Points"""
@@ -17,7 +17,7 @@ def _calculate_normal_vector(points):
 def _normalize_vector(vector):
     """Scales a Vector to the length of 1"""
     length = math.sqrt(math.pow(vector[0], 2) + math.pow(vector[1], 2) + math.pow(vector[2], 2))
-    return [i * (1 / length) for i in vector]
+    return np.array([i * (1 / length) for i in vector])
 
 
 def _calculate_normal_vectors_of_plane(plane):
@@ -38,9 +38,12 @@ def _calculate_normal_vectors_of_plane(plane):
 
 
 def _is_equal(a, b):
-    """Checks if two floats are equal"""
+    """Checks if two float-vectors are equal"""
+    if not len(a) == len(b):
+        print("Unequal lengths of vectors")
+        return None
     result = True
-    for i in range(0, 3):
+    for i in range(0, len(a)):
         if not math.isclose(abs(a[i]), abs(b[i])):
             result = False
     return result
@@ -119,3 +122,11 @@ def inverse_matrix(matrix):
 
 def convert_to_np_array(array):
     return np.array(array)
+
+
+def calculate_intermediate_stretch_direction_vector(stretch_direction_vector):
+    intermediate_stretch_vector = _normalize_vector([1, 1, 1])
+    while _is_equal(np.cross(stretch_direction_vector, intermediate_stretch_vector), [0.0, 0.0, 0.0]):
+        intermediate_stretch_vector = _normalize_vector([rd.randint, rd.randint, rd.randint])
+    return intermediate_stretch_vector
+

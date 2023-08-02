@@ -14,6 +14,7 @@ Contains the utility functions for editing objects and Phobos models.
 """
 
 import math
+import random
 
 import bpy
 import mathutils
@@ -882,7 +883,6 @@ def _check_intersection(context, obj):
         return True
 
 
-
 def get_intersecting_link(context):
     """Gets Link which intersects Cutting-Plane"""
     intersecting_links = []
@@ -905,6 +905,49 @@ def get_intersecting_link(context):
         return None
 
     return intersecting_links[0]
+
+
+def set_stretch_direction_of_cutting_plane(plane, stretch_direction_vector):
+    """Sets the Stretch-Direction of a Cutting-Plane according to a vector. Stretch-Direction of
+        Cutting-Plane equals its Z-Axis. Calculation is done 5 times to reduce the sum of Float-Errors"""
+    log("Set Stretch-Direction:", 'INFO')
+    stretch_direction_vector = mUtils.convert_to_np_array(stretch_direction_vector)
+    if mUtils._is_equal(stretch_direction_vector, [0.0, 0.0, 0.0]):
+        log("Stretch-Direction-Vector is not valid. Choose something different from [0, 0, 0]", 'ERROR')
+        return
+    if is_rotation_180_degree(plane, stretch_direction_vector):
+        log("180-Degree-Rotation is split in two 90-Degree Rotation to avoid Zero Division", 'INFO')
+        intermediate_stretch_direction_vector = mUtils.calculate_intermediate_stretch_direction_vector(stretch_direction_vector)
+        change_stretch_direction_of_cutting_plane(plane, intermediate_stretch_direction_vector)
+    for i in range(0,5):
+        change_stretch_direction_of_cutting_plane(plane, stretch_direction_vector)
+        log("Stretch-Direction is successfully changed", 'INFO')
+
+
+def is_rotation_180_degree(plane, stretch_direction_vector):
+    coo_system_of_plane = mUtils.convert_to_np_array(plane.matrix_basis)
+    z_of_plane = mUtils._normalize_vector(coo_system_of_plane[0:3, 2])
+    stretch_direction_vector = mUtils._normalize_vector(stretch_direction_vector)
+    if mUtils._is_equal(z_of_plane, stretch_direction_vector * -1):
+        return True
+    return False
+
+
+def change_stretch_direction_of_cutting_plane(plane, stretch_direction_vector):
+    coo_system_of_plane = mUtils.convert_to_np_array(plane.matrix_basis)
+    z_of_plane = mUtils._normalize_vector(coo_system_of_plane[0:3, 2])
+    stretch_direction_vector = mUtils._normalize_vector(stretch_direction_vector)
+    rotation_matrix = mUtils.get_rotation_matrix_from_two_vectors(z_of_plane, stretch_direction_vector)
+
+    log("Old-Stretch-Direction: {sd}".format(sd=z_of_plane), 'DEBUG')
+    log("Wanted Stretch-Direction: {sd}".format(sd=stretch_direction_vector), 'DEBUG')
+    log("Calculated Rotation-Matrix: {m}".format(m=rotation_matrix), 'DEBUG')
+
+    plane.matrix_basis = (rotation_matrix @ mUtils.convert_to_np_array(plane.matrix_basis)).T
+
+    coo_system_of_plane = mUtils.convert_to_np_array(plane.matrix_basis)
+    z_of_plane = mUtils._normalize_vector(coo_system_of_plane[0:3, 2])
+    log("Stretch-Direction is set to: {sd}".format(sd=z_of_plane), 'INFO')
 
 
 def align_plane_to_vector(plane, vector):
@@ -942,7 +985,6 @@ def align_plane_to_link(plane, link):
         plane.data.vertices[v].co = transformed_4d_vector[0:3]
 
 
-
 def check_validity(context):
     """Checks Validity of selected Plane-Object"""
     plane = context.active_object
@@ -950,7 +992,6 @@ def check_validity(context):
         intersecting_link = get_intersecting_link(context)
         if intersecting_link:
             return True
-
         else:
             log("Plane does intersect no or multiple links. Plane has to intersect exactly one link", 'ERROR')
             return False
