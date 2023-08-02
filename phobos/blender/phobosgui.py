@@ -1642,15 +1642,17 @@ def dynamicLabel(text, uiLayout, context=None, width=300, icon=None):
     assert context is not None or width > 0
     uiScale = bpy.context.preferences.view.ui_scale
 
-    panelWidth = 2 * width * uiScale
-    margin = 2 * uiScale
     if context is not None:
-        panelWidth = context.region.width-uiScale*72
+        panelWidth = context.region.width/uiScale-72
         # margin left, margin right
-        margin = uiScale * (20 + 30)
-    letterWidth = uiScale * 10.9
+        margin = 60
+    else:
+        panelWidth = 2 * width
+        margin = 12
+
+    letterWidth = 10.7
     lettersPerLine = (panelWidth - margin) / letterWidth
-    iconWidth = uiScale * 50
+    iconWidth = 50
     lettersPerIconLine = (panelWidth - margin - iconWidth) / letterWidth
     firstLine = True
     for line in text.split("\n"):
