@@ -1331,6 +1331,7 @@ class PhobosExportPanel(bpy.types.Panel):
         Returns:
 
         """
+        exportWarnings = []
         expsets = bpy.context.scene.phobosexportsettings
         layout = self.layout
 
@@ -1376,7 +1377,11 @@ class PhobosExportPanel(bpy.types.Panel):
         #     typename = "export_scene_" + scenetype
         #     cscene.prop(bpy.context.scene, typename)
 
-        if getattr(bpy.context.scene, 'export_entity_smurf', False):
+        requiredMeshes = []
+
+        smurfExport = getattr(bpy.context.scene, 'export_entity_smurf', False)
+
+        if smurfExport:
             layout.separator()
             box = layout.box()
             box.label(text='SMURF export')
@@ -1389,6 +1394,12 @@ class PhobosExportPanel(bpy.types.Panel):
             box.prop(ioUtils.getExpSettings(), 'urdfDecimalPlaces')
             box.prop(ioUtils.getExpSettings(), 'export_urdf_mesh_type')
             box.prop(bpy.context.scene.phobosexportsettings, 'urdfOutputPathtype')
+            requiredMeshes.append(("urdf",ioUtils.getExpSettings().export_urdf_mesh_type))
+        elif smurfExport and ioUtils.getExpSettings().export_smurf_xml_type == "urdf":
+            name = "urdf"
+            exportWarnings.append(f"You selected {name} as kinematic representation for smurf. "
+                                  f"Are you sure you don't want to export the {name} file? "
+                                  f"It will be required to import the smurf model.")
         if getattr(bpy.context.scene, 'export_entity_sdf', False):
             layout.separator()
             box = layout.box()
@@ -1399,6 +1410,12 @@ class PhobosExportPanel(bpy.types.Panel):
             # doesn't work properly therefore excluded
             # box.prop(ioUtils.getExpSettings(), 'export_sdf_model_config', icon='RENDERLAYERS')
             # box.prop(ioUtils.getExpSettings(), 'export_sdf_to_gazebo_models', icon='EXPORT')
+            requiredMeshes.append(("sdf",ioUtils.getExpSettings().export_sdf_mesh_type))
+        elif smurfExport and ioUtils.getExpSettings().export_smurf_xml_type == "sdf":
+            name = "sdf"
+            exportWarnings.append(f"You selected {name} as kinematic representation for smurf. "
+                                  f"Are you sure you don't want to export the {name} file? "
+                                  f"It will be required to import the smurf model.")
 
         if getattr(bpy.context.scene.phobosexportsettings, 'urdfOutputPathtype', "relative").startswith("ros_package") or \
                 getattr(bpy.context.scene.phobosexportsettings, 'sdfOutputPathtype', "relative").startswith("ros_package"):
@@ -1427,6 +1444,19 @@ class PhobosExportPanel(bpy.types.Panel):
         #    'phobos.safely_remove_objects_from_scene', text='Remove from configuration', icon='X'
         #)
         c2.label(text="Export")
+
+        for exportformat, meshtype in requiredMeshes:
+            typename = "export_mesh_" + meshtype
+            if not getattr(bpy.context.scene,typename):
+                exportWarnings.append(f"You selected {meshtype} as mesh type for {exportformat} but its "
+                                      f"export is disabled. {meshtype.capitalize()} files will be required to "
+                                      f"import the model")
+
+        for wa in exportWarnings:
+            localColumn = c2.column()
+            #localColumn.alert = True
+            dynamicLabel(text=wa, uiLayout=localColumn, context=context, icon="INFO")
+
         c2.operator("phobos.export_model", icon="EXPORT")
         # [TODO v2.1.0] make this work again in an extra Phobos Scenes tab
         # c2.operator("phobos.export_scene", icon="WORLD_DATA") # doesn't work properly therefore excluded
@@ -1632,7 +1662,7 @@ class PhobosDisplayPanel(bpy.types.Panel):
             dc2.prop(wm, "draw_messages")
             dc2.prop(wm, 'phobos_msg_count')
             dc2.prop(wm, 'phobos_msg_offset')
-
+            
         layout.separator()
 
         layout.label(text="Toggle wireframe", icon='MOD_WIREFRAME')
@@ -1645,6 +1675,42 @@ class PhobosDisplayPanel(bpy.types.Panel):
         icon = "SPHERE" if bpy.context.scene.phoboswireframesettings.links else "MATERIAL"
         kc2.operator('phobos.display_wire_links', icon=icon)
 
+def dynamicLabel(text, uiLayout, context, icon=None):
+    """
+    Prints multiline text to uiLayout.label()
+    
+    Args:
+        text:
+        uiLayout: bpy.types.UILayout
+        context:
+        icon: optional, blender icon name
+
+    Returns:
+
+    """
+    panelWidth = context.region.width
+    uiScale = bpy.context.preferences.view.ui_scale
+    #margin left, margin right, difference panelWidth -> actual panel width
+    margin = uiScale*(20+30+72)
+    letterWidth = uiScale*10.7
+    lettersPerLine = (panelWidth - margin) / letterWidth
+    iconWidth = uiScale*50
+    lettersPerIconLine = (panelWidth - margin - iconWidth) / letterWidth
+    firstLine = True
+    nextLine = ""
+    for word in text.split():
+        nextLineUpdated = word if nextLine == "" else nextLine + " " + word
+        if firstLine and icon and len(nextLineUpdated) > lettersPerIconLine:
+            uiLayout.label(text=nextLine, icon=icon)
+            nextLine = word
+            firstLine = False
+        elif len(nextLineUpdated) > lettersPerLine:
+            uiLayout.label(text=nextLine)
+            nextLine = word
+        else:
+            nextLine = nextLineUpdated
+    if nextLine != "":
+        uiLayout.label(text=nextLine, icon=icon if icon and firstLine else "NONE")
 
 REGISTER_CLASSES = [
     ModelPoseProp,
