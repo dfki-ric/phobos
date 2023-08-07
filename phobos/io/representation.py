@@ -1346,7 +1346,7 @@ class Visual(Representation, SmurfBase):
         link = [ln for ln in self._related_robot_instance.links if self in ln.visuals]
         assert len(link) == 1
         transformation = self._related_robot_instance.get_transformation(link[0]).dot(self.origin.to_matrix())
-        return Pose.from_matrix(transformation)
+        return Pose.from_matrix(transformation, relative_to=self._related_robot_instance.get_root())
 
     @property
     def position_from_root(self):

@@ -453,6 +453,7 @@ class GPS(NodePosition):
                 kwargs.pop("targets")
         super(GPS, self).__init__(name, **kwargs)
         self._blender_type = "GPS"
+        self._sdf_type = "GPS"
         if link is not None:
             self.link = link
 
@@ -519,7 +520,7 @@ class SensorFactory(Representation):
             )
         # elif sdf_type == "imu":
         #     raise NotImplemented
-        elif sdf_type == "lidar":
+        elif sdf_type in ["ray", "lidar"]:
             return RotatingRaySensor(
                 name=name,
                 horizontal_offset=kwargs["min_horizontal_angle"],
@@ -534,4 +535,9 @@ class SensorFactory(Representation):
                 name=name,
                 **kwargs
             )
-        raise RuntimeError(f"Couldn't instantiate sensor from {repr(kwargs)}")
+        elif sdf_type == "gps":
+            return GPS(
+                name=name,
+                **kwargs
+            )
+        raise RuntimeError(f"Couldn't instantiate sensor {name} from {sdf_type}:{repr(kwargs)}. link={link}, xml was "+str(ET.dump(_xml)))

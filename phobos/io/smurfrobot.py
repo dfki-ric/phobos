@@ -321,16 +321,14 @@ class SMURFRobot(XMLRobot):
                     for a in v:
                         self.add_aggregate("generic_annotations", representation.GenericAnnotation(
                             GA_category=k,
-                            GA_name=k,
+                            GA_name=a.get("name", None),
                             **a
                         ))
                 elif type(v) == dict:
-                    for an, av in v.items():
-                        self.add_aggregate("generic_annotations", representation.GenericAnnotation(
-                            GA_category=k,
-                            GA_name=an,
-                            **av
-                        ))
+                    self.add_aggregate("generic_annotations", representation.GenericAnnotation(
+                        GA_category=k,
+                        **v
+                    ))
         for k in pop_annotations:
             self.annotations.pop(k)
 
