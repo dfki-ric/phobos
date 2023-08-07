@@ -19,6 +19,7 @@ from bpy.props import (
     EnumProperty,
     CollectionProperty,
     StringProperty,
+    FloatProperty
 )
 from bpy.types import Operator, PropertyGroup
 from numpy import isin
@@ -31,6 +32,7 @@ from ..utils import editing as eUtils
 from ..utils import io as ioUtils
 from ..utils import selection as sUtils
 from ...io import representation
+from ..phobosgui import dynamicLabel
 
 
 def linkObjectLists(annotation, objectlist):
@@ -448,6 +450,12 @@ class AddAnnotationsOperator(bpy.types.Operator):
     bl_region_type = 'FILE'
     bl_options = {'REGISTER', 'UNDO'}
 
+    ADD_PROPERTY_TEXT = "Select to add"
+
+    TYPES = [(ADD_PROPERTY_TEXT, -1), ("Text", DynamicProperty.STRING),
+             ("Number", DynamicProperty.FLOAT),
+             ("Boolean", DynamicProperty.BOOL)]
+
     category : StringProperty(
         name="Annotation Type", description="Annotation Types"
     )
@@ -472,6 +480,33 @@ class AddAnnotationsOperator(bpy.types.Operator):
     name : StringProperty(
         name="Annotation name", description="This name will be used for the annotation, if there are multiple annotations in this category."
     )
+
+    visual_size : FloatProperty(
+        name="Visual size", default=1.0
+    )
+
+    def propertyTypes(self, context):
+        items = []
+        for name, id in AddAnnotationsOperator.TYPES:
+            items.append((name, name, name))
+        return items
+
+    add_property_name : StringProperty(name="Name", description="Property name")
+
+    add_property : EnumProperty(name="Type", items=propertyTypes, description='Add property')
+
+    custom_properties: CollectionProperty(type=DynamicProperty)
+
+    def getPropertyTypeID(self, name):
+        for n, id in AddAnnotationsOperator.TYPES:
+            if name == n:
+                return id
+
+    def getPropertyByName(self, name):
+        for i in range(len(self.custom_properties)):
+            n = self.custom_properties[i].name
+            if n == name:
+                return self.custom_properties[i]
 
     def invoke(self, context, event):
         """
@@ -500,14 +535,44 @@ class AddAnnotationsOperator(bpy.types.Operator):
         layout.prop(self, 'multiple')
         layout.prop(self, 'name')
 
+        layout.prop(self, 'visual_size')
+
         layout.prop(self, 'include_parent')
         layout.prop(self, 'include_transform')
 
-        layout.label(text="After you have created the annotation object, you can:\n"
-                          "- Position it in the 3d view\n"
-                          "- Parent it to other objects (as Bone Relative)\n"
-                          "- Define its properties in the custom property panel\n"
-                          "  To create nested entries use the prop/nest/key syntax for the property name")
+        dynamicLabel(text="After you have created the annotation object, you can: \n"
+                          "- Position it in the 3d view \n"
+                          "- Parent it to other objects \n"
+                          "- Define its properties in the custom property panel \n"
+                          "  To create nested entries use the prop/nest/key syntax for the property name",
+                     uiLayout=layout)
+
+        layout.separator()
+        layout.label(text="Custom properties")
+
+        c = layout.split()
+        c1, c2 = c.column(), c.column()
+
+        if self.add_property != self.ADD_PROPERTY_TEXT:
+            id = self.getPropertyTypeID(self.add_property)
+            newName = self.add_property_name
+            #Check if a property with this name already exists
+            if newName and self.getPropertyByName(newName) is None:
+                new_prop = self.custom_properties.add()
+                new_prop.valueType = id
+                new_prop.name = newName
+            else:
+                c1.alert = True
+            self.add_property = self.ADD_PROPERTY_TEXT
+
+        c1.prop(self, 'add_property_name')
+        c2.prop(self, 'add_property')
+
+        for i in range(len(self.custom_properties)):
+            name = self.custom_properties[i].name
+            self.custom_properties[i].draw(layout, name)
+
+
 
     def execute(self, context):
         """
@@ -532,7 +597,8 @@ class AddAnnotationsOperator(bpy.types.Operator):
                 GA_parent_type=parent.phobostype if parent else None,
                 GA_transform=blender2phobos.deriveObjectPose(context.active_object)
                 if context.active_object is not None and self.include_transform else None
-            )
+            ),
+            size=self.visual_size
         )
         bUtils.toggleLayer('annotation', value=True)
         return {'FINISHED'}
@@ -540,9 +606,7 @@ class AddAnnotationsOperator(bpy.types.Operator):
 
 def register():
     """TODO Missing documentation"""
-    bpy.utils.register_class(AddAnnotationsOperator)
 
 
 def unregister():
     """TODO Missing documentation"""
-    bpy.utils.unregister_class(AddAnnotationsOperator)

@@ -43,7 +43,7 @@ from ..model import joints as jUtils
 from ..model import links as modellinks
 from ..phobosgui import prev_collections
 from ..phoboslog import log, ErrorMessageWithBox, WarnMessageWithBox
-from ..operators.generic import addObjectFromYaml, DynamicProperty
+from ..operators.generic import addObjectFromYaml, DynamicProperty, AddAnnotationsOperator
 from ..utils import blender as bUtils
 from ..utils import editing as eUtils
 from ..utils import general as gUtils
@@ -3559,6 +3559,7 @@ class ParentOperator(Operator):
 
 classes = (
     DynamicProperty,
+    AddAnnotationsOperator,
     SafelyRemoveObjectsFromSceneOperator,
     MoveToSceneOperator,
     SortObjectsToLayersOperator,
