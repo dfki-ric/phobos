@@ -497,9 +497,9 @@ def createAnnotation(ga: representation.GenericAnnotation, parent=None, size=0.1
     annot_obj = bUtils.createPrimitive(
         f"{ga.GA_category}:{ga.GA_name if ga.GA_name is not None else 'unnamed'}",
         'box',
-        [1, 1, 1],
+        (1, 1, 1),
         player=defs.layerTypes['annotation'],
-        plocation=None if parent is None else parent.matrix_world.to_translation(),
+        #plocation=None if parent is None else parent.matrix_world.to_translation(), #TODO
         phobostype='annotation'
     )
     annot_obj.scale = (size,) * 3
@@ -525,7 +525,7 @@ def createAnnotation(ga: representation.GenericAnnotation, parent=None, size=0.1
     else:
         annot_obj["$include_parent"] = False
 
-    annot_obj["$include_transform"] = ga.GA_transform is None
+    annot_obj["$include_transform"] = ga._GA_transform is None
 
     props = ga.to_yaml()
 
