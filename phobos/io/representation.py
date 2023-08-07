@@ -572,18 +572,20 @@ class Mesh(Representation, SmurfBase):
         } if mesh_orientation is None else mesh_orientation
         self._exported = {}
         if self.input_file is not None:
+            self.imported = {
+                "filepath": self.input_file
+            }
             git_root = git.get_root(os.path.dirname(self.input_file))
             if git_root is not None:
-                _, _, url = git.get_repo_data(git_root)
-                self.imported = {
-                    "remote": url,
-                    "commit": git.revision(git_root),
-                    "filepath": os.path.relpath(self.input_file, git_root)
-                }
-            else:
-                self.imported = {
-                    "filepath": self.input_file
-                }
+                try:
+                    _, _, url = git.get_repo_data(git_root)
+                    self.imported = {
+                        "remote": url,
+                        "commit": git.revision(git_root),
+                        "filepath": os.path.relpath(self.input_file, git_root)
+                    }
+                except:
+                    pass
         else:
             self.imported = "input file not known"
         self.history = [f"Instantiated with filepath={filepath}->{self.input_file}, scale={scale}, mesh={mesh}, meshname={meshname}, "
