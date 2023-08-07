@@ -506,7 +506,7 @@ class AnnotationsOperator(bpy.types.Operator):
     )
 
     def getPropertyTypeID(self, name):
-        for n, id in AddAnnotationsOperator.TYPES:
+        for n, id in AnnotationsOperator.TYPES:
             if name == n:
                 return id
 
@@ -599,23 +599,71 @@ class AnnotationsOperator(bpy.types.Operator):
 
         """
 
-        parent = None
-        if not hasattr(context.active_object, "phobostype"):
-            log("Annotation will not be parented to the active object, as it is no phobos object", "WARN")
-        elif self.include_parent:
-            parent = context.active_object
-        phobos2blender.createAnnotation(
-            representation.GenericAnnotation(
-                GA_category=self.category,
-                GA_name=self.name,
-                GA_parent=parent if parent else None,
-                GA_parent_type=parent.phobostype if parent else None,
-                GA_transform=blender2phobos.deriveObjectPose(context.active_object)
-                if context.active_object is not None and self.include_transform else None
-            ),
-            size=self.visual_size
-        )
-        bUtils.toggleLayer('annotation', value=True)
+        if not self.modify:
+            parent = None
+            if not hasattr(context.active_object, "phobostype"):
+                log("Annotation will not be parented to the active object, as it is no phobos object", "WARN")
+            elif self.include_parent:
+                parent = context.active_object
+            ob = phobos2blender.createAnnotation(
+                representation.GenericAnnotation(
+                    GA_category=self.category,
+                    GA_name=self.name,
+                    GA_parent=parent if parent else None,
+                    GA_parent_type=parent.phobostype if parent else None,
+                    GA_transform=blender2phobos.deriveObjectPose(context.active_object)
+                    if context.active_object is not None and self.include_transform else None
+                ),
+                size=self.visual_size
+            )
+            bUtils.toggleLayer('annotation', value=True)
+
+        else:
+            ob = context.active_object
+
+        for i in range(len(self.custom_properties)):
+            prop = self.custom_properties[i]
+            name = prop.name
+            value = prop.getValue()
+            ob[name] = value
+
+
+        self.objectReady = True
+        return {'FINISHED'}
+
+class EditAnnotationsOperator(bpy.types.Operator):
+    """Modify annotations"""
+
+    bl_idname = "phobos.edit_annotations"
+    bl_label = "Edit Annotations"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'FILE'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def invoke(self, context, event):
+        global annotationEditOnly
+        annotationEditOnly = True
+        bpy.ops.phobos.annotations('INVOKE_DEFAULT')
+        return {'FINISHED'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object and context.active_object.phobostype == "annotation"
+
+
+class AddAnnotationsOperator(bpy.types.Operator):
+    """Modify annotations"""
+
+    bl_idname = "phobos.add_annotations"
+    bl_label = "Add Annotations"
+    bl_space_type = 'VIEW_3D'
+    bl_region_type = 'FILE'
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def invoke(self, context, event):
+        global annotationEditOnly
+        annotationEditOnly = False
+        bpy.ops.phobos.annotations('INVOKE_DEFAULT')
         return {'FINISHED'}
 
 
