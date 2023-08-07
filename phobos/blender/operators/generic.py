@@ -34,6 +34,7 @@ from ..utils import selection as sUtils
 from ...io import representation
 from ..phobosgui import dynamicLabel
 
+annotationEditOnly = False
 
 def linkObjectLists(annotation, objectlist):
     """Recursively adds the objects of the specified list to an annotation dictionary.
@@ -441,11 +442,11 @@ def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops
     return operatorBlenderId
 
 
-class AddAnnotationsOperator(bpy.types.Operator):
+class AnnotationsOperator(bpy.types.Operator):
     """Add annotations defined by the Phobos definitions"""
 
-    bl_idname = "phobos.add_annotations"
-    bl_label = "Add Annotations"
+    bl_idname = "phobos.annotations"
+    bl_label = "Annotations"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'FILE'
     bl_options = {'REGISTER', 'UNDO'}
@@ -485,9 +486,11 @@ class AddAnnotationsOperator(bpy.types.Operator):
         name="Visual size", default=1.0
     )
 
+    objectReady = False
+
     def propertyTypes(self, context):
         items = []
-        for name, id in AddAnnotationsOperator.TYPES:
+        for name, id in AnnotationsOperator.TYPES:
             items.append((name, name, name))
         return items
 
@@ -496,6 +499,11 @@ class AddAnnotationsOperator(bpy.types.Operator):
     add_property : EnumProperty(name="Type", items=propertyTypes, description='Add property')
 
     custom_properties: CollectionProperty(type=DynamicProperty)
+
+    modify : BoolProperty(
+        name="modify",
+        default=False
+    )
 
     def getPropertyTypeID(self, name):
         for n, id in AddAnnotationsOperator.TYPES:
@@ -518,6 +526,11 @@ class AddAnnotationsOperator(bpy.types.Operator):
         Returns:
 
         """
+        global annotationEditOnly
+        self.modify = annotationEditOnly
+        if self.modify:
+            # TODO collect data
+            self.objectReady = True
         return context.window_manager.invoke_props_dialog(self, width=500)
 
     def draw(self, context):
@@ -540,12 +553,14 @@ class AddAnnotationsOperator(bpy.types.Operator):
         layout.prop(self, 'include_parent')
         layout.prop(self, 'include_transform')
 
-        dynamicLabel(text="After you have created the annotation object, you can: \n"
-                          "- Position it in the 3d view \n"
-                          "- Parent it to other objects \n"
-                          "- Define its properties in the custom property panel \n"
-                          "  To create nested entries use the prop/nest/key syntax for the property name",
-                     uiLayout=layout)
+        if not self.objectReady:
+
+            dynamicLabel(text="After you have created the annotation object, you can: \n"
+                              "- Position it in the 3d view \n"
+                              "- Parent it to other objects \n"
+                              "- Define its properties in the custom property panel\n"
+                              "  To create nested entries use the prop/nest/key syntax for the property name",
+                         uiLayout=layout, width=500)
 
         layout.separator()
         layout.label(text="Custom properties")
