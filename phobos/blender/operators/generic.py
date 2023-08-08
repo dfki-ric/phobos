@@ -453,6 +453,8 @@ class AnnotationsOperator(bpy.types.Operator):
 
     ADD_PROPERTY_TEXT = "Select to add"
 
+    ANNOTATION_PREFIX = "anno/"
+
     TYPES = [(ADD_PROPERTY_TEXT, -1), ("Text", DynamicProperty.STRING),
              ("Number", DynamicProperty.FLOAT),
              ("Boolean", DynamicProperty.BOOL)]
@@ -529,7 +531,31 @@ class AnnotationsOperator(bpy.types.Operator):
         global annotationEditOnly
         self.modify = annotationEditOnly
         if self.modify:
-            # TODO collect data
+            ob = context.active_object
+
+            # Read name and category
+
+            self.name = ob["GA_name"]
+            self.category = ob["GA_category"]
+
+            # Read visual size
+            scale = ob.scale
+            if len(set(scale)): # All values are equal
+                self.visual_size = scale[0]
+            else:
+                self.visual_size = 0
+
+            # Read custom properties
+            for key, value in ob.items():
+                if key.startswith(self.ANNOTATION_PREFIX):
+                    valueType, name = key[len(self.ANNOTATION_PREFIX):].split("/", 1)
+                    valueType = int(valueType)
+                    new_prop = self.custom_properties.add()
+                    if valueType == DynamicProperty.FLOAT:
+                        value = float(value)
+                    elif valueType == DynamicProperty.BOOL:
+                        value = bool(value)
+                    new_prop.assignValue(name, value)
             self.objectReady = True
         return context.window_manager.invoke_props_dialog(self, width=500)
 
@@ -543,7 +569,7 @@ class AnnotationsOperator(bpy.types.Operator):
 
         """
         layout = self.layout
-        layout.label(text="The category for your annotation")
+        layout.label(text="Type (category) and name of your annotation")
         layout.prop(self, 'category')
         layout.prop(self, 'multiple')
         layout.prop(self, 'name')
@@ -620,10 +646,14 @@ class AnnotationsOperator(bpy.types.Operator):
 
         else:
             ob = context.active_object
+            # Rescale
+            if self.visual_size > 0:
+                ob.scale = (self.visual_size, ) * 3
 
+        # Write custom properties to object
         for i in range(len(self.custom_properties)):
             prop = self.custom_properties[i]
-            name = prop.name
+            name = self.ANNOTATION_PREFIX+str(prop.valueType)+"/"+prop.name
             value = prop.getValue()
             ob[name] = value
 

@@ -1168,6 +1168,7 @@ class PhobosModelPanel(bpy.types.Panel):
         c2.operator('phobos.batch_property', text="Edit", icon='GREASEPENCIL')
         #todo: c2.operator('phobos.copy_props', text="Copy", icon='GHOST')
         c2.operator("phobos.add_annotations")
+        c2.operator("phobos.edit_annotations")
 
         # Kinematics
         layout.separator()
