@@ -2197,8 +2197,7 @@ class AddSensorOperator(Operator):
         for i in range(len(self.sensorProperties)):
             name = self.sensorProperties[i].name.replace('_', ' ')
 
-            # use the dynamic props name in the GUI, but without the type id
-            self.sensorProperties[i].draw(layout, name)
+            self.sensorProperties[i].draw(layout, self.sensorProperties)
         layout.label(text="You can add custom properties under")
         layout.label(text="Object Properties > Custom Properties")
 

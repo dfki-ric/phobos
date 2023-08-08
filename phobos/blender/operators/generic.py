@@ -237,12 +237,29 @@ class DynamicProperty(PropertyGroup):
 
         return unsupported
 
-    def draw(self, layout, name):
+    @classmethod
+    def drawAll(cls, properties, layout):
         """
 
         Args:
-          layout: 
-          name: 
+            properties: List of DynamicProperties
+            layout:
+
+        Returns:
+
+        """
+
+        for i in range(len(properties)):
+            prop = properties[i]
+            if not prop.isDictElement():
+                prop.draw(layout, properties)
+
+    def draw(self, layout, properties=[]):
+        """
+
+        Args:
+          layout: UILayout to draw to
+          properties: List of DynamicProperties, to draw children of this property
 
         Returns:
 
@@ -255,19 +272,27 @@ class DynamicProperty(PropertyGroup):
         else:
             row = layout
 
-        if len(self.dictName) > 0:
-            row.separator(factor=0.03)
+        # if len(self.dictName) > 0:
+        #     row = row.split(factor=0.03)
+        #     row.separator()
 
         if self.valueType == self.INT:
-            row.prop(self, 'intProp', text=name)
+            row.prop(self, 'intProp', text=self.name)
         elif self.valueType == self.BOOL:
-            row.prop(self, 'boolProp', text=name)
+            row.prop(self, 'boolProp', text=self.name)
         elif self.valueType == self.STRING:
-            row.prop(self, 'stringProp', text=name)
+            row.prop(self, 'stringProp', text=self.name)
         elif self.valueType == self.FLOAT:
-            row.prop(self, 'floatProp', text=name)
+            row.prop(self, 'floatProp', text=self.name)
         elif self.valueType == self.DICT:
-            row.label(text=name+":")
+            row = row.box()
+            row.label(text=self.name+":")
+            numElem = 0
+            for prop in properties:
+                if prop.dictName == self.name:
+                    prop.draw(row, properties)
+                    numElem += 1
+            row.label(text=f"{numElem} elements")
 
     @staticmethod
     def collectDict(properties):
@@ -287,6 +312,7 @@ class DynamicProperty(PropertyGroup):
         return result
 
 
+# TODO: Delete?
 def addObjectFromYaml(name, phobtype, presetname, execute_func, *args, hideprops=[]):
     """This registers a temporary Operator.
     The data for the properties is provided by the parsed yaml files of the
@@ -455,9 +481,12 @@ class AnnotationsOperator(bpy.types.Operator):
 
     ANNOTATION_PREFIX = "anno/"
 
+    ANNOTATION_ROOT = "Annotation root"
+
     TYPES = [(ADD_PROPERTY_TEXT, -1), ("Text", DynamicProperty.STRING),
-             ("Number", DynamicProperty.FLOAT),
-             ("Boolean", DynamicProperty.BOOL)]
+             ("Number", DynamicProperty.FLOAT), ("Boolean", DynamicProperty.BOOL)]
+
+    TYPES_ROOT = TYPES + [("Dictionary", DynamicProperty.DICT)]
 
     category : StringProperty(
         name="Annotation Type", description="Annotation Types"
@@ -492,9 +521,24 @@ class AnnotationsOperator(bpy.types.Operator):
 
     def propertyTypes(self, context):
         items = []
-        for name, id in AnnotationsOperator.TYPES:
+        for name, id in (AnnotationsOperator.TYPES_ROOT if self.add_property_root ==
+                         AnnotationsOperator.ANNOTATION_ROOT else AnnotationsOperator.TYPES):
             items.append((name, name, name))
         return items
+
+    def propertyRoots(self, context):
+        roots = [(AnnotationsOperator.ANNOTATION_ROOT, AnnotationsOperator.ANNOTATION_ROOT,
+                  AnnotationsOperator.ANNOTATION_ROOT)]
+        for i in range(len(self.custom_properties)):
+            prop = self.custom_properties[i]
+            if prop.valueType == DynamicProperty.DICT:
+                roots.append((prop.name, prop.name, "Dictionary "+prop.name))
+        return roots
+
+
+    add_property_root : EnumProperty(name="Property root", items=propertyRoots,
+                                     description='The new property will be added to this dictionary, '
+                                                 'list or the annotation root')
 
     add_property_name : StringProperty(name="Name", description="Property name")
 
@@ -508,14 +552,18 @@ class AnnotationsOperator(bpy.types.Operator):
     )
 
     def getPropertyTypeID(self, name):
-        for n, id in AnnotationsOperator.TYPES:
+        for n, id in AnnotationsOperator.TYPES_ROOT:
             if name == n:
                 return id
 
-    def getPropertyByName(self, name):
+    def getPropertyByName(self, name, root):
+        if root == self.ANNOTATION_ROOT:
+            root = ""
         for i in range(len(self.custom_properties)):
-            n = self.custom_properties[i].name
-            if n == name:
+            prop = self.custom_properties[i]
+            n = prop.name
+            r = prop.dictName
+            if n == name and r == root:
                 return self.custom_properties[i]
 
     def invoke(self, context, event):
@@ -591,6 +639,9 @@ class AnnotationsOperator(bpy.types.Operator):
         layout.separator()
         layout.label(text="Custom properties")
 
+        #if len(self.propertyRoots(context)) > 1:
+        layout.prop(self, 'add_property_root')
+
         c = layout.split()
         c1, c2 = c.column(), c.column()
 
@@ -598,10 +649,14 @@ class AnnotationsOperator(bpy.types.Operator):
             id = self.getPropertyTypeID(self.add_property)
             newName = self.add_property_name
             #Check if a property with this name already exists
-            if newName and self.getPropertyByName(newName) is None:
+            if newName and self.getPropertyByName(newName, self.add_property_root) is None:
                 new_prop = self.custom_properties.add()
                 new_prop.valueType = id
                 new_prop.name = newName
+                # Assign dict
+                if self.add_property_root != self.ANNOTATION_ROOT:
+                    new_prop.assignParent(self.add_property_root)
+
             else:
                 c1.alert = True
             self.add_property = self.ADD_PROPERTY_TEXT
@@ -609,9 +664,8 @@ class AnnotationsOperator(bpy.types.Operator):
         c1.prop(self, 'add_property_name')
         c2.prop(self, 'add_property')
 
-        for i in range(len(self.custom_properties)):
-            name = self.custom_properties[i].name
-            self.custom_properties[i].draw(layout, name)
+        DynamicProperty.drawAll(self.custom_properties, layout)
+
 
 
 
