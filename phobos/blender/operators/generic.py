@@ -122,11 +122,12 @@ class DynamicProperty(PropertyGroup):
         """
         self.dictName = name
 
-    def getValue(self, properties=[]):
+    def getValue(self, properties=[], boolAsString=False):
         """
         Args:
             properties: List of all DynamicProperties. Pass this to a dict property.
             Allows it to collect the data
+            boolAsString:
 
         Returns: This property's value
 
@@ -134,7 +135,10 @@ class DynamicProperty(PropertyGroup):
         if self.valueType == self.INT:
             return self.intProp
         elif self.valueType == self.BOOL:
-            return self.boolProp
+            if boolAsString:
+                return "True" if self.boolProp else "False"
+            else:
+                return self.boolProp
         elif self.valueType == self.STRING:
             return self.stringProp
         elif self.valueType == self.FLOAT:
@@ -143,7 +147,7 @@ class DynamicProperty(PropertyGroup):
             result = {}
             for prop in properties:
                 if prop.dictName == self.name:
-                    result[prop.name] = prop.getValue()
+                    result[prop.name] = prop.getValue(boolAsString=boolAsString)
             return result
 
     def isDictElement(self):
@@ -167,7 +171,7 @@ class DynamicProperty(PropertyGroup):
         """
         self.isEnabledOption = True
 
-    def assignValue(self, name, value):
+    def assignValue(self, name, value, boolAsString=False):
         """
 
         Args:
@@ -184,8 +188,12 @@ class DynamicProperty(PropertyGroup):
             self.boolProp = value
             self.valueType = self.BOOL
         elif isinstance(value, str):
-            self.stringProp = value
-            self.valueType = self.STRING
+            if boolAsString and value in ["True", "False"]:
+                self.boolProp = True if value == "True" else False
+                self.valueType = self.BOOL
+            else:
+                self.stringProp = value
+                self.valueType = self.STRING
         elif isinstance(value, int):
             self.intProp = value
             self.valueType = self.INT
@@ -208,7 +216,7 @@ class DynamicProperty(PropertyGroup):
         self.name = name
 
     @staticmethod
-    def assignDict(addfunc, dictionary, ignore=[]):
+    def assignDict(addfunc, dictionary, ignore=[], boolAsString=False):
         """
 
         Args:
@@ -225,14 +233,14 @@ class DynamicProperty(PropertyGroup):
                 continue
 
             subprop = addfunc()
-            subprop.assignValue(propname, dictionary[propname])
+            subprop.assignValue(propname, dictionary[propname], boolAsString=boolAsString)
 
             # add subcategories
             if isinstance(dictionary[propname], dict):
                 unsupported[propname] = dictionary[propname]
                 for name, value in dictionary[propname].items():
                     dictprop = addfunc()
-                    dictprop.assignValue(name, value)
+                    dictprop.assignValue(name, value, boolAsString=boolAsString)
                     dictprop.assignParent(propname)
 
         return unsupported
@@ -479,9 +487,10 @@ class AnnotationsOperator(bpy.types.Operator):
 
     ADD_PROPERTY_TEXT = "Select to add"
 
-    ANNOTATION_PREFIX = "anno/"
-
     ANNOTATION_ROOT = "Annotation root"
+
+    PARAMS = ["$include_parent", "$include_transform", "GA_category", "GA_name", "phobosmatrixinfo",
+              "phobostype"]
 
     TYPES = [(ADD_PROPERTY_TEXT, -1), ("Text", DynamicProperty.STRING),
              ("Number", DynamicProperty.FLOAT), ("Boolean", DynamicProperty.BOOL)]
@@ -594,16 +603,20 @@ class AnnotationsOperator(bpy.types.Operator):
                 self.visual_size = 0
 
             # Read custom properties
+            data = {}
             for key, value in ob.items():
-                if key.startswith(self.ANNOTATION_PREFIX):
-                    valueType, name = key[len(self.ANNOTATION_PREFIX):].split("/", 1)
-                    valueType = int(valueType)
-                    new_prop = self.custom_properties.add()
-                    if valueType == DynamicProperty.FLOAT:
+                if key not in self.PARAMS:
+                    if isinstance(value, (int, float)):
                         value = float(value)
-                    elif valueType == DynamicProperty.BOOL:
-                        value = bool(value)
-                    new_prop.assignValue(name, value)
+                    elif isinstance(value, str):
+                        pass
+                    elif isinstance(value, list):
+                        pass
+                    else:
+                        value = value.to_dict()
+
+                    data[key] = value
+            DynamicProperty.assignDict(self.custom_properties.add, data, boolAsString=True)
             self.objectReady = True
         return context.window_manager.invoke_props_dialog(self, width=500)
 
@@ -619,7 +632,7 @@ class AnnotationsOperator(bpy.types.Operator):
         layout = self.layout
         layout.label(text="Type (category) and name of your annotation")
         layout.prop(self, 'category')
-        layout.prop(self, 'multiple')
+        #layout.prop(self, 'multiple_entries')
         layout.prop(self, 'name')
 
         layout.prop(self, 'visual_size')
@@ -646,12 +659,12 @@ class AnnotationsOperator(bpy.types.Operator):
         c1, c2 = c.column(), c.column()
 
         if self.add_property != self.ADD_PROPERTY_TEXT:
-            id = self.getPropertyTypeID(self.add_property)
+            ID = self.getPropertyTypeID(self.add_property)
             newName = self.add_property_name
-            #Check if a property with this name already exists
+            # Check if a property with this name already exists
             if newName and self.getPropertyByName(newName, self.add_property_root) is None:
                 new_prop = self.custom_properties.add()
-                new_prop.valueType = id
+                new_prop.valueType = ID
                 new_prop.name = newName
                 # Assign dict
                 if self.add_property_root != self.ANNOTATION_ROOT:
@@ -707,10 +720,10 @@ class AnnotationsOperator(bpy.types.Operator):
         # Write custom properties to object
         for i in range(len(self.custom_properties)):
             prop = self.custom_properties[i]
-            name = self.ANNOTATION_PREFIX+str(prop.valueType)+"/"+prop.name
-            value = prop.getValue()
-            ob[name] = value
-
+            if not prop.isDictElement():
+                name = prop.name
+                value = prop.getValue(self.custom_properties, boolAsString=True)
+                ob[name] = value
 
         self.objectReady = True
         return {'FINISHED'}
