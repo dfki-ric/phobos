@@ -577,6 +577,13 @@ class AnnotationsOperator(bpy.types.Operator):
             if n == name and r == root:
                 return self.custom_properties[i]
 
+    @staticmethod
+    def isObjectNameInUse(name):
+        for ob in bpy.context.scene.objects:
+            if ob.name == name:
+                return True
+        return False
+
     def invoke(self, context, event):
         """
 
@@ -635,9 +642,14 @@ class AnnotationsOperator(bpy.types.Operator):
         """
         layout = self.layout
         layout.label(text="Type (category) and name of your annotation")
-        layout.prop(self, 'category')
+        # Check if an annotation with this name already exists
+        localColumn = layout.column()
+        if self.isObjectNameInUse(f"{self.category}:{self.name}"):
+            localColumn.alert = True
+            localColumn.label(text="An annotation with the same type and name already exists")
+        localColumn.prop(self, 'category')
+        localColumn.prop(self, 'name')
         #layout.prop(self, 'multiple_entries')
-        layout.prop(self, 'name')
 
         layout.prop(self, 'visual_size')
 
@@ -656,13 +668,21 @@ class AnnotationsOperator(bpy.types.Operator):
                              uiLayout=layout, width=500)
 
             layout.separator()
-            layout.label(text="Custom properties")
+            layout.label(text="Add custom properties")
 
-            #if len(self.propertyRoots(context)) > 1:
-            layout.prop(self, 'add_property_root')
+            addBox = layout.box()
 
-            c = layout.split()
+            addBox.prop(self, 'add_property_root')
+
+            c = addBox.split()
             c1, c2 = c.column(), c.column()
+
+            c1.prop(self, 'add_property_name')
+            c2.prop(self, 'add_property')
+
+            layout.separator()
+
+            layout.label(text="Custom properties")
 
             if self.add_property != self.ADD_PROPERTY_TEXT:
                 ID = self.getPropertyTypeID(self.add_property)
@@ -679,9 +699,6 @@ class AnnotationsOperator(bpy.types.Operator):
                 else:
                     c1.alert = True
                 self.add_property = self.ADD_PROPERTY_TEXT
-
-            c1.prop(self, 'add_property_name')
-            c2.prop(self, 'add_property')
 
             DynamicProperty.drawAll(self.custom_properties, layout)
 
@@ -704,6 +721,9 @@ class AnnotationsOperator(bpy.types.Operator):
                 log("Annotation will not be parented to the active object, as it is no phobos object", "WARN")
             elif self.include_parent:
                 parent = context.active_object
+            if self.isObjectNameInUse(f"{self.category}:{self.name}"):
+                log("Cannot create annotation, name in use", "WARN")
+                return {'CANCELLED'}
             ob = phobos2blender.createAnnotation(
                 representation.GenericAnnotation(
                     GA_category=self.category,
