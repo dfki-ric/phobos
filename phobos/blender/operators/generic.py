@@ -590,10 +590,12 @@ class AnnotationsOperator(bpy.types.Operator):
         if self.modify:
             ob = context.active_object
 
-            # Read name and category
+            # Read parameters
 
             self.name = ob["GA_name"]
             self.category = ob["GA_category"]
+            self.include_parent = ob["$include_parent"]
+            self.include_transform = ob["$include_transform"]
 
             # Read visual size
             scale = ob.scale
@@ -716,6 +718,12 @@ class AnnotationsOperator(bpy.types.Operator):
             # Rescale
             if self.visual_size > 0:
                 ob.scale = (self.visual_size, ) * 3
+
+            # Update parameters
+            ob["GA_category"] = self.category
+            ob["GA_name"] = self.name
+            ob["$include_parent"] = self.include_parent
+            ob["$include_transform"] = self.include_transform
 
         # Write custom properties to object
         for i in range(len(self.custom_properties)):
