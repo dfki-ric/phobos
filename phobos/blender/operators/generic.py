@@ -508,7 +508,7 @@ class AnnotationsOperator(bpy.types.Operator):
     )
 
     include_transform : BoolProperty(
-        name="Includes transformation", default=False,
+        name="Include transformation", default=False,
         description="By using the string key $transform you can include the name of the parent link in your annotations.\n"
                     "Using &transform.matrix/position/rotation_euler/quaternion let's you choose in which way it is stored."
     )
@@ -527,6 +527,8 @@ class AnnotationsOperator(bpy.types.Operator):
     )
 
     objectReady = False
+
+    isPopUp = True
 
     def propertyTypes(self, context):
         items = []
@@ -639,47 +641,49 @@ class AnnotationsOperator(bpy.types.Operator):
 
         layout.prop(self, 'visual_size')
 
-        layout.prop(self, 'include_parent')
-        layout.prop(self, 'include_transform')
+        if self.isPopUp:
 
-        if not self.objectReady:
+            layout.prop(self, 'include_parent')
+            layout.prop(self, 'include_transform')
 
-            dynamicLabel(text="After you have created the annotation object, you can: \n"
-                              "- Position it in the 3d view \n"
-                              "- Parent it to other objects \n"
-                              "- Define its properties in the custom property panel\n"
-                              "  To create nested entries use the prop/nest/key syntax for the property name",
-                         uiLayout=layout, width=500)
+            if not self.objectReady:
 
-        layout.separator()
-        layout.label(text="Custom properties")
+                dynamicLabel(text="After you have created the annotation object, you can: \n"
+                                  "- Position it in the 3d view \n"
+                                  "- Parent it to other objects \n"
+                                  "- Define its properties in the custom property panel\n"
+                                  "  To create nested entries use the prop/nest/key syntax for the property name",
+                             uiLayout=layout, width=500)
 
-        #if len(self.propertyRoots(context)) > 1:
-        layout.prop(self, 'add_property_root')
+            layout.separator()
+            layout.label(text="Custom properties")
 
-        c = layout.split()
-        c1, c2 = c.column(), c.column()
+            #if len(self.propertyRoots(context)) > 1:
+            layout.prop(self, 'add_property_root')
 
-        if self.add_property != self.ADD_PROPERTY_TEXT:
-            ID = self.getPropertyTypeID(self.add_property)
-            newName = self.add_property_name
-            # Check if a property with this name already exists
-            if newName and self.getPropertyByName(newName, self.add_property_root) is None:
-                new_prop = self.custom_properties.add()
-                new_prop.valueType = ID
-                new_prop.name = newName
-                # Assign dict
-                if self.add_property_root != self.ANNOTATION_ROOT:
-                    new_prop.assignParent(self.add_property_root)
+            c = layout.split()
+            c1, c2 = c.column(), c.column()
 
-            else:
-                c1.alert = True
-            self.add_property = self.ADD_PROPERTY_TEXT
+            if self.add_property != self.ADD_PROPERTY_TEXT:
+                ID = self.getPropertyTypeID(self.add_property)
+                newName = self.add_property_name
+                # Check if a property with this name already exists
+                if newName and self.getPropertyByName(newName, self.add_property_root) is None:
+                    new_prop = self.custom_properties.add()
+                    new_prop.valueType = ID
+                    new_prop.name = newName
+                    # Assign dict
+                    if self.add_property_root != self.ANNOTATION_ROOT:
+                        new_prop.assignParent(self.add_property_root)
 
-        c1.prop(self, 'add_property_name')
-        c2.prop(self, 'add_property')
+                else:
+                    c1.alert = True
+                self.add_property = self.ADD_PROPERTY_TEXT
 
-        DynamicProperty.drawAll(self.custom_properties, layout)
+            c1.prop(self, 'add_property_name')
+            c2.prop(self, 'add_property')
+
+            DynamicProperty.drawAll(self.custom_properties, layout)
 
 
 
@@ -734,6 +738,7 @@ class AnnotationsOperator(bpy.types.Operator):
                 ob[name] = value
 
         self.objectReady = True
+        self.isPopUp = False
         return {'FINISHED'}
 
 class EditAnnotationsOperator(bpy.types.Operator):
