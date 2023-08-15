@@ -566,6 +566,18 @@ class AnnotationsOperator(bpy.types.Operator):
         default=False
     )
 
+    yes : BoolProperty(
+        name="Yes",
+        default=False
+    )
+
+    no : BoolProperty(
+        name="No",
+        default=False
+    )
+
+    copyPropertiesAsked = False
+
     def getPropertyTypeID(self, name):
         for n, id in AnnotationsOperator.TYPES_ROOT:
             if name == n:
@@ -588,6 +600,40 @@ class AnnotationsOperator(bpy.types.Operator):
                     return True
         return False
 
+    def getAnnotationWithType(self, category):
+        for ob in bpy.context.scene.objects:
+            if ob.phobostype == "annotation":
+                if "GA_category" in ob:
+                    if ob["GA_category"] == category:
+                        return ob
+
+    def readCustomProperties(self, ob):
+        data = {}
+        for key, value in ob.items():
+            if key not in self.PARAMS:
+                if isinstance(value, (int, float)):
+                    value = float(value)
+                elif isinstance(value, str):
+                    pass
+                elif isinstance(value, list):
+                    pass
+                else:
+                    value = value.to_dict()
+
+                data[key] = value
+        DynamicProperty.assignDict(self.custom_properties.add, data, boolAsString=True)
+
+        # Read makros
+        self.makros = ob["GA_makros"]
+        if isinstance(self.makros, str):
+            self.makros = json.loads(self.makros)
+        for makro in self.makros:
+            parent, name = makro
+            # Find custom property
+            for prop in self.custom_properties:
+                if prop.dictName == parent and prop.name == name:
+                    prop.displayName = name+" (Makro)"
+
     def invoke(self, context, event):
         """
 
@@ -602,6 +648,7 @@ class AnnotationsOperator(bpy.types.Operator):
         self.modify = annotationEditOnly
         self.objectReady = False
         self.makros = []
+        self.copyPropertiesAsked = False
         if self.modify:
             ob = context.active_object
 
@@ -620,31 +667,7 @@ class AnnotationsOperator(bpy.types.Operator):
                 self.visual_size = 0
 
             # Read custom properties
-            data = {}
-            for key, value in ob.items():
-                if key not in self.PARAMS:
-                    if isinstance(value, (int, float)):
-                        value = float(value)
-                    elif isinstance(value, str):
-                        pass
-                    elif isinstance(value, list):
-                        pass
-                    else:
-                        value = value.to_dict()
-
-                    data[key] = value
-            DynamicProperty.assignDict(self.custom_properties.add, data, boolAsString=True)
-
-            # Read makros
-            self.makros = ob["GA_makros"]
-            if isinstance(self.makros, str):
-                self.makros = json.loads(self.makros)
-            for makro in self.makros:
-                parent, name = makro
-                # Find custom property
-                for prop in self.custom_properties:
-                    if prop.dictName == parent and prop.name == name:
-                        prop.displayName = name+" (Makro)"
+            self.readCustomProperties(ob)
 
             self.objectReady = True
         return context.window_manager.invoke_props_dialog(self, width=500)
@@ -668,6 +691,22 @@ class AnnotationsOperator(bpy.types.Operator):
         localColumn.prop(self, 'category')
         localColumn.prop(self, 'name')
         #layout.prop(self, 'multiple_entries')
+
+        if self.isPopUp:
+
+            if not self.copyPropertiesAsked:
+                ancestor = self.getAnnotationWithType(self.category)
+                if self.yes:
+                    # Copy stuff
+                    self.readCustomProperties(ancestor)
+                    self.copyPropertiesAsked = True
+                elif self.no:
+                    self.copyPropertiesAsked = True
+                if ancestor is not None:
+                    layout.label(text="An annotation with this type already exists. Copy parameters?")
+                    split = layout.split()
+                    split.prop(self, 'yes')
+                    split.prop(self, 'no')
 
         layout.prop(self, 'visual_size')
 
