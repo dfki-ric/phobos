@@ -577,11 +577,11 @@ class AnnotationsOperator(bpy.types.Operator):
             if n == name and r == root:
                 return self.custom_properties[i]
 
-    @staticmethod
-    def isObjectNameInUse(name):
+    def isObjectNameInUse(self, name):
         for ob in bpy.context.scene.objects:
             if ob.name == name:
-                return True
+                if ob is not bpy.context.active_object or not self.modify:
+                    return True
         return False
 
     def invoke(self, context, event):
