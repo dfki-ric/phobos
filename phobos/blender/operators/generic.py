@@ -722,7 +722,7 @@ class AnnotationsOperator(bpy.types.Operator):
                                   "- Parent it to other objects \n"
                                   "- Define its properties in the custom property panel\n"
                                   "  To create nested entries use the prop/nest/key syntax for the property name",
-                             uiLayout=layout, width=500)
+                             uiLayout=layout, width=1000)
 
             layout.separator()
             layout.label(text="Add custom properties")

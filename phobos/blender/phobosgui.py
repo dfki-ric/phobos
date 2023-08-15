@@ -1634,13 +1634,12 @@ def dynamicLabel(text, uiLayout, context=None, width=300, icon=None):
         text:
         uiLayout: bpy.types.UILayout
         context:
-        width: Width passed to context.window_manager.invoke_props_dialog(), default 300
+        width: Window width, default 300
         icon: optional, blender icon name
 
     Returns:
 
     """
-    assert context is not None or width > 0
     uiScale = bpy.context.preferences.view.ui_scale
 
     if context is not None:
@@ -1648,7 +1647,7 @@ def dynamicLabel(text, uiLayout, context=None, width=300, icon=None):
         # margin left, margin right
         margin = 60
     else:
-        panelWidth = 2 * width
+        panelWidth = width
         margin = 12
 
     letterWidth = 10.7
