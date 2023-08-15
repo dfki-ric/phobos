@@ -584,7 +584,7 @@ class AnnotationsOperator(bpy.types.Operator):
     def isObjectNameInUse(self, name):
         for ob in bpy.context.scene.objects:
             if ob.name == name:
-                if ob is not bpy.context.active_object or not self.modify:
+                if ob is not bpy.context.active_object or not self.objectReady:
                     return True
         return False
 
@@ -739,11 +739,11 @@ class AnnotationsOperator(bpy.types.Operator):
         if not self.modify:
             parent = None
             if not hasattr(context.active_object, "phobostype"):
-                log("Annotation will not be parented to the active object, as it is no phobos object", "WARN")
+                log("Annotation will not be parented to the active object, as it is no phobos object", "WARNING")
             elif self.include_parent:
                 parent = context.active_object
             if self.isObjectNameInUse(f"{self.category}:{self.name}"):
-                log("Cannot create annotation, name in use", "WARN")
+                log("Cannot create annotation, name in use", "WARNING")
                 return {'CANCELLED'}
             ob = phobos2blender.createAnnotation(
                 representation.GenericAnnotation(
