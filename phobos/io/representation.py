@@ -2186,7 +2186,7 @@ class GenericAnnotation(Representation, SmurfBase):
     }
 
     def __init__(self, GA_category, GA_name=None, GA_parent=None, GA_parent_type=None, GA_transform: Pose=None,
-                 **annotations):
+                 GA_makros="", **annotations):
         assert (GA_parent is None and GA_parent_type is None) \
                or GA_parent_type in ["GA_related_"+str(v) for v in self._class_variables],\
             "Unknown GA_parent_type="+str(GA_parent_type)
@@ -2196,6 +2196,7 @@ class GenericAnnotation(Representation, SmurfBase):
         self._GA_transform = GA_transform
         self.GA_category = GA_category
         self.GA_name = GA_name
+        self.GA_makros = GA_makros
 
         for k, v in annotations.items():
             setattr(self, "_"+k, v)

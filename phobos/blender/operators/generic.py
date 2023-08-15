@@ -22,7 +22,7 @@ from bpy.props import (
     FloatProperty
 )
 from bpy.types import Operator, PropertyGroup
-from numpy import isin
+import json
 
 from .. import defs as defs
 from ..io import phobos2blender, blender2phobos
@@ -93,6 +93,7 @@ class DynamicProperty(PropertyGroup):
     """A support class to handle dynamic properties in a temporary operator."""
 
     name : bpy.props.StringProperty()
+    displayName : bpy.props.StringProperty()
     intProp : bpy.props.IntProperty()
     boolProp : bpy.props.BoolProperty()
     stringProp : bpy.props.StringProperty()
@@ -214,6 +215,7 @@ class DynamicProperty(PropertyGroup):
         # TODO what about lists?
 
         self.name = name
+        self.displayName = name
 
     @staticmethod
     def assignDict(addfunc, dictionary, ignore=[], boolAsString=False):
@@ -280,21 +282,20 @@ class DynamicProperty(PropertyGroup):
         else:
             row = layout
 
-        # if len(self.dictName) > 0:
-        #     row = row.split(factor=0.03)
-        #     row.separator()
+        if not self.displayName:
+            self.displayName = self.name
 
         if self.valueType == self.INT:
-            row.prop(self, 'intProp', text=self.name)
+            row.prop(self, 'intProp', text=self.displayName)
         elif self.valueType == self.BOOL:
-            row.prop(self, 'boolProp', text=self.name)
+            row.prop(self, 'boolProp', text=self.displayName)
         elif self.valueType == self.STRING:
-            row.prop(self, 'stringProp', text=self.name)
+            row.prop(self, 'stringProp', text=self.displayName)
         elif self.valueType == self.FLOAT:
-            row.prop(self, 'floatProp', text=self.name)
+            row.prop(self, 'floatProp', text=self.displayName)
         elif self.valueType == self.DICT:
             row = row.box()
-            row.label(text=self.name+":")
+            row.label(text=self.displayName+":")
             numElem = 0
             for prop in properties:
                 if prop.dictName == self.name:
@@ -490,10 +491,11 @@ class AnnotationsOperator(bpy.types.Operator):
     ANNOTATION_ROOT = "Annotation root"
 
     PARAMS = ["$include_parent", "$include_transform", "GA_category", "GA_name", "phobosmatrixinfo",
-              "phobostype"]
+              "phobostype", "GA_makros"]
 
     TYPES = [(ADD_PROPERTY_TEXT, -1), ("Text", DynamicProperty.STRING),
-             ("Number", DynamicProperty.FLOAT), ("Boolean", DynamicProperty.BOOL)]
+             ("Makro", DynamicProperty.STRING), ("Number", DynamicProperty.FLOAT),
+             ("Boolean", DynamicProperty.BOOL)]
 
     TYPES_ROOT = TYPES + [("Dictionary", DynamicProperty.DICT)]
 
@@ -529,6 +531,8 @@ class AnnotationsOperator(bpy.types.Operator):
     objectReady = False
 
     isPopUp = True
+
+    makros = []
 
     def propertyTypes(self, context):
         items = []
@@ -596,6 +600,8 @@ class AnnotationsOperator(bpy.types.Operator):
         """
         global annotationEditOnly
         self.modify = annotationEditOnly
+        self.objectReady = False
+        self.makros = []
         if self.modify:
             ob = context.active_object
 
@@ -628,6 +634,18 @@ class AnnotationsOperator(bpy.types.Operator):
 
                     data[key] = value
             DynamicProperty.assignDict(self.custom_properties.add, data, boolAsString=True)
+
+            # Read makros
+            self.makros = ob["GA_makros"]
+            if isinstance(self.makros, str):
+                self.makros = json.loads(self.makros)
+            for makro in self.makros:
+                parent, name = makro
+                # Find custom property
+                for prop in self.custom_properties:
+                    if prop.dictName == parent and prop.name == name:
+                        prop.displayName = name+" (Makro)"
+
             self.objectReady = True
         return context.window_manager.invoke_props_dialog(self, width=500)
 
@@ -684,6 +702,7 @@ class AnnotationsOperator(bpy.types.Operator):
 
             layout.label(text="Custom properties")
 
+            # The user selected a property type
             if self.add_property != self.ADD_PROPERTY_TEXT:
                 ID = self.getPropertyTypeID(self.add_property)
                 newName = self.add_property_name
@@ -696,14 +715,16 @@ class AnnotationsOperator(bpy.types.Operator):
                     if self.add_property_root != self.ANNOTATION_ROOT:
                         new_prop.assignParent(self.add_property_root)
 
+                    # Set as makro
+                    if self.add_property == "Makro":
+                        root = self.add_property_root if self.add_property_root != self.ANNOTATION_ROOT else ""
+                        self.makros.append((root, self.add_property_name))
+                        new_prop.displayName = new_prop.name+" (Makro)"
                 else:
                     c1.alert = True
                 self.add_property = self.ADD_PROPERTY_TEXT
 
             DynamicProperty.drawAll(self.custom_properties, layout)
-
-
-
 
     def execute(self, context):
         """
@@ -731,7 +752,8 @@ class AnnotationsOperator(bpy.types.Operator):
                     GA_parent=parent if parent else None,
                     GA_parent_type=parent.phobostype if parent else None,
                     GA_transform=blender2phobos.deriveObjectPose(context.active_object)
-                    if context.active_object is not None and self.include_transform else None
+                    if context.active_object is not None and self.include_transform else None,
+                    GA_makros=self.makros
                 ),
                 size=self.visual_size
             )
@@ -748,6 +770,7 @@ class AnnotationsOperator(bpy.types.Operator):
             ob["GA_name"] = self.name
             ob["$include_parent"] = self.include_parent
             ob["$include_transform"] = self.include_transform
+            ob["GA_makros"] = self.makros
 
         # Write custom properties to object
         for i in range(len(self.custom_properties)):
