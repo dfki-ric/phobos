@@ -301,6 +301,52 @@
       {
         "type": "pdf"
       }
+    ],
+    "compatibility": [
+      {
+        "type": "urdf",
+        "mesh_format": "obj",
+        "additional_meshes": [
+          "bobj"
+        ],
+        "link_in_smurf": true,
+        "include_cut_joints": false,
+        "filename_suffix": "",
+        "ros_pathes": false,
+        "enforce_zero": false
+      },
+      {
+        "type": "urdf",
+        "mesh_format": "stl",
+        "include_cut_joints": false,
+        "filename_suffix": "_stl",
+        "ros_pathes": false,
+        "enforce_zero": false
+      },
+      {
+        "type": "sdf",
+        "mesh_format": "obj",
+        "additional_meshes": [
+          "bobj"
+        ],
+        "link_in_smurf": false,
+        "include_cut_joints": false,
+        "ros_pathes": false,
+        "enforce_zero": false
+      },
+      {
+        "type": "joint_limits",
+        "joints": "ALL",
+        "file_name": "joint_limits.yml"
+      },
+      {
+        "type": "submodel",
+        "name": "abstract_model",
+        "abstract_model": true
+      },
+      {
+        "type": "pdf"
+      }
     ]
   },
   "rel_mesh_pathes": {
