@@ -50,7 +50,7 @@ class JointPoseSet(SmurfBase):
         assert all(type(x) == JointPose for x in self.configuration)
 
         self.excludes += ['configuration']
-        self.returns += ['joints']
+        self.returns += ['joints', 'name']
 
     def remove_joint(self, jointname):
         for joint_pose in self.configuration:

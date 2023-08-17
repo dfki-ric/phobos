@@ -303,7 +303,7 @@ class MultiSensor(Sensor):
         if kwargs.get("id", None) and targets is None:
             self.targets = kwargs["id"]
         self.targets = [str(t) for t in self.targets if t is not None] if type(self.targets) in [list, tuple, set] else []
-        self.returns += ['id']
+        self.returns += ['name', 'id']
         self.excludes += ['_id']
 
     def add_target(self, target):
@@ -506,21 +506,21 @@ class SensorFactory(Representation):
             origin = Pose(relative_to=link)
         elif origin.relative_to is None and link is not None:
             origin.relative_to = link
-        if sdf_type == "camera":
+        if sdf_type.lower() == "camera":
             return CameraSensor(
                 name=name,
                 link=link,
                 origin=origin,
                 **kwargs
             )
-        elif sdf_type == "contact":
+        elif sdf_type.lower() == "contact":
             return NodeContact(
                 name=name,
                 **kwargs
             )
         # elif sdf_type == "imu":
         #     raise NotImplemented
-        elif sdf_type in ["ray", "lidar"]:
+        elif sdf_type.lower() in ["ray", "lidar"]:
             return RotatingRaySensor(
                 name=name,
                 horizontal_offset=kwargs["min_horizontal_angle"],
@@ -530,12 +530,12 @@ class SensorFactory(Representation):
                 draw_rays="visualize" in kwargs,
                 **kwargs
             )
-        elif sdf_type == "force_torque":
+        elif sdf_type.lower() == "force_torque":
             return Joint6DOF(
                 name=name,
                 **kwargs
             )
-        elif sdf_type == "gps":
+        elif sdf_type.lower() == "gps":
             return GPS(
                 name=name,
                 **kwargs
