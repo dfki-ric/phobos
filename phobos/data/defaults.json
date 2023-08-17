@@ -74,6 +74,8 @@
   },
   "motors": {
     "default": {
+      "velocity": 3.141,
+      "effort": 50.0,
       "p": 20.0,
       "i": 0.0,
       "d": 0.0,
@@ -87,19 +89,25 @@
       "i": 0.0,
       "d": 0.0,
       "build_type": "STEP",
-      "type": "PID"
+      "type": "position"
     },
     "velocity": {
       "velocity": 3.141,
       "effort": 50.0,
+      "p": 20.0,
+      "i": 0.0,
+      "d": 0.0,
       "build_type": "BLDC",
-      "type": "PID"
+      "type": "velocity"
     },
     "force": {
       "velocity": 3.141,
       "effort": 150.0,
+      "p": 20.0,
+      "i": 0.0,
+      "d": 0.0,
       "build_type": "AC",
-      "type": "PID"
+      "type": "force"
     }
   },
   "joints": {

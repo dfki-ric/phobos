@@ -1983,7 +1983,7 @@ class Transmission(Representation):
 
 
 class Motor(Representation, SmurfBase):
-    BUILD_TYPES = ["DC", "AC", "STEP"]
+    BUILD_TYPES = ["BLDC", "DC", "AC", "STEP"]
     TYPES = ["position", "velocity", "force"]
     _class_variables = ["name", "joint"]
 
@@ -1998,6 +1998,7 @@ class Motor(Representation, SmurfBase):
         self._maxValue = None
         self._minValue = None
         self.build_type = kwargs.get("type", None)
+        # TODO smurf/json output of build type is missing
         if self.build_type:
             self.build_type = self.build_type.upper()
         self.type = type
