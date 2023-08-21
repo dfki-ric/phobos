@@ -345,10 +345,10 @@ class Robot(SMURFRobot):
                 export_files.append(os.path.split(stream.name)[-1])
 
         # further annotations
-        for k, v in self.annotations.items():
-            if k not in self.smurf_annotation_keys:
-                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), k)), "w+") as stream:
-                    stream.write(dump_json({k: v}, default_style=False))
+        for category, annos in self.annotations.items():
+            if category not in self.smurf_annotation_keys:
+                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), category)), "w+") as stream:
+                    stream.write(dump_json({category: annos}, default_style=False))
                     export_files.append(os.path.split(stream.name)[-1])
 
         # submodel list
@@ -368,29 +368,31 @@ class Robot(SMURFRobot):
                 temp_generic_annotations[ga.GA_category] = []
             temp_generic_annotations[ga.GA_category].append({ga.GA_name: ga.to_yaml()} if ga.GA_name is not None else ga.to_yaml())
         # clean-up the temporary lists
-        for k, v in temp_generic_annotations.items():
-            if len(v) == 1:
-                temp_generic_annotations[k] = v[0]
-            elif len(v) > 1 and all(type(x) == dict and len(x.keys()) == 1 for x in v):
-                for sub_dict in v:
-                    temp_generic_annotations[k].update(sub_dict)
-        for k, v in temp_generic_annotations.items():
+        for category, annos in temp_generic_annotations.items():
+            # If there is only one annotation of this category
+            if len(annos) == 1:
+                temp_generic_annotations[category] = annos[0]
+            # Elif there are more than one and all annotations have a name
+            elif len(annos) > 1 and all(type(x) == dict and len(x.keys()) == 1 for x in annos):
+                for sub_dict in annos:
+                    temp_generic_annotations[category].update(sub_dict)
+        for category, annos in temp_generic_annotations.items():
             # deal with existing names
-            if os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), k))):
-                k = "generic_annotation_"+k
-            new_k = k
+            if os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), category))):
+                category = "generic_annotation_"+category
+            new_k = category
             i = 0
             while os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), new_k))):
                 i += 1
-                new_k = f"{k}_{i}"
-            k = new_k
+                new_k = f"{category}_{i}"
+            category = new_k
             # write
-            if len(v) > 0 and k not in self.smurf_annotation_keys:
-                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), k)), "w") as stream:
-                    stream.write(dump_json({k: v}, default_style=False))
+            if len(annos) > 0 and category not in self.smurf_annotation_keys:
+                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), category)), "w") as stream:
+                    stream.write(dump_json({category: annos}, default_style=False))
                     export_files.append(os.path.split(stream.name)[-1])
 
-        # Create the smurf file itsself
+        # Create the smurf file itself
         annotation_dict = {
             'modelname': self.name,
             # 'date': datetime.datetime.now().strftime("%Y%m%d_%H:%M"),

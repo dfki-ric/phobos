@@ -708,7 +708,8 @@ class AnnotationsOperator(bpy.types.Operator):
                     split.prop(self, 'yes')
                     split.prop(self, 'no')
 
-        layout.prop(self, 'visual_size')
+        else:
+            layout.prop(self, 'visual_size')
 
         if self.isPopUp:
 

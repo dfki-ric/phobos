@@ -541,12 +541,9 @@ def deriveAnnotation(obj):
 
     props = misc.deepen_dict(props)
 
-    name = obj.split(":")[1]
     return representation.GenericAnnotation(
-        GA_category=obj.split(":")[0],
-        GA_name=name if not name.startswith("unnamed") else None,
-        GA_parent=obj.parent.get("link/name", obj.parent.name),
-        GA_parent_type=obj.parent.phobostype,
+        GA_parent=obj.parent.get("link/name", obj.parent.name) if obj.parent else None,
+        GA_parent_type=obj.parent.phobostype if obj.parent else None,
         GA_transform=deriveObjectPose(obj),
         **props
     )
@@ -831,7 +828,7 @@ def deriveRobot(root, name='', objectlist=None):
     # [TODO v2.1.0] Re-add lights and SRDF support
 
     for named_annotation in [deriveAnnotation(obj) for obj in objectlist if obj.phobostype == 'annotation']:
-        robot.add_categorized_annotation(named_annotation["$name"], {k: v for k, v in named_annotation.items() if k.startswith("$")})
+        robot.categorized_annotations.append(named_annotation)
 
     robot.assert_validity()
     return robot
