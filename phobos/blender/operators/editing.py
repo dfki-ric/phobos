@@ -1405,13 +1405,13 @@ class SetCollisionGroupOperator(Operator):
 
         """
         try:
-            self.groups = context.active_object.rigid_body.collision_groups
+            self.groups = context.active_object.rigid_body.collision_collections
         # create rigid body settings if not existent in active object
         except AttributeError:
             obj = context.active_object
             bpy.ops.rigidbody.object_add(type='ACTIVE')
             obj.rigid_body.kinematic = True
-            obj.rigid_body.collision_groups = self.groups
+            obj.rigid_body.collision_collections = self.groups
         return context.window_manager.invoke_props_dialog(self, width=300)
 
     def execute(self, context):
@@ -1431,13 +1431,13 @@ class SetCollisionGroupOperator(Operator):
         # try assigning the collision groups to each selected collision object
         for obj in objs:
             try:
-                obj.rigid_body.collision_groups = self.groups
+                obj.rigid_body.collision_collections = self.groups
             # initialize rigid body settings if necessary
             except AttributeError:
                 context.view_layer.objects.active = obj
                 bpy.ops.rigidbody.object_add(type='ACTIVE')
                 obj.rigid_body.kinematic = True
-                obj.rigid_body.collision_groups = self.groups
+                obj.rigid_body.collision_collections = self.groups
         context.view_layer.objects.active = active_object
         return {'FINISHED'}
 
@@ -1762,9 +1762,9 @@ class AddMotorOperator(Operator):
     bl_options = {'UNDO'}
     lastMotorDefault = None
 
-    template : EnumProperty(items=[(n,n,n) for n in resources.get_motor_defaults()], description="The template to use for this motor")
-    motorType : EnumProperty(items=[(n,n,n) for n in representation.Motor.BUILD_TYPES], description='The motor type')
-    controllerType: EnumProperty(items=[(n,n,n) for n in representation.Motor.TYPES], description='The controller type')
+    template : EnumProperty(items=[(n,n,n) for n in resources.get_motor_defaults()], name='Template', description="The template to use for this motor")
+    motorType : EnumProperty(items=[(n,n,n) for n in representation.Motor.BUILD_TYPES], name="Motor type", description='The motor type')
+    controllerType: EnumProperty(items=[(n,n,n) for n in representation.Motor.TYPES], name="Controller type", description='The controller type')
     maxeffort : FloatProperty(
         name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
     )
@@ -1783,7 +1783,9 @@ class AddMotorOperator(Operator):
     controld : FloatProperty(
         name="D Factor", default=0.0, description="D factor of position controller"
     )
-    knownProperties = {"effort": "maxeffort",
+    knownProperties = {"type": "controllerType",
+                       "build_type": "motorType",
+                       "effort": "maxeffort",
                        "velocity": "maxvelocity",
                        "p": "controlp",
                        "i": "controli",
@@ -1813,8 +1815,7 @@ class AddMotorOperator(Operator):
         if self.lastMotorDefault != None:
             lastDict = resources.get_default_motor(self.lastMotorDefault)
         defDict = resources.get_default_motor(self.template)
-        layout.prop(self, 'template', text='Motor template')
-        layout.label(text="Parameters:")
+        layout.prop(self, 'template')
         for k, v in self.knownProperties.items():
             if setvalues:
                 setattr(self, v, self.updateValues(k, defDict, lastDict, getattr(self, v)))

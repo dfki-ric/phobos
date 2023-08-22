@@ -572,18 +572,20 @@ class Mesh(Representation, SmurfBase):
         } if mesh_orientation is None else mesh_orientation
         self._exported = {}
         if self.input_file is not None:
+            self.imported = {
+                "filepath": self.input_file
+            }
             git_root = git.get_root(os.path.dirname(self.input_file))
             if git_root is not None:
-                _, _, url = git.get_repo_data(git_root)
-                self.imported = {
-                    "remote": url,
-                    "commit": git.revision(git_root),
-                    "filepath": os.path.relpath(self.input_file, git_root)
-                }
-            else:
-                self.imported = {
-                    "filepath": self.input_file
-                }
+                try:
+                    _, _, url = git.get_repo_data(git_root)
+                    self.imported = {
+                        "remote": url,
+                        "commit": git.revision(git_root),
+                        "filepath": os.path.relpath(self.input_file, git_root)
+                    }
+                except:
+                    pass
         else:
             self.imported = "input file not known"
         self.history = [f"Instantiated with filepath={filepath}->{self.input_file}, scale={scale}, mesh={mesh}, meshname={meshname}, "
@@ -1346,7 +1348,7 @@ class Visual(Representation, SmurfBase):
         link = [ln for ln in self._related_robot_instance.links if self in ln.visuals]
         assert len(link) == 1
         transformation = self._related_robot_instance.get_transformation(link[0]).dot(self.origin.to_matrix())
-        return Pose.from_matrix(transformation)
+        return Pose.from_matrix(transformation, relative_to=self._related_robot_instance.get_root())
 
     @property
     def position_from_root(self):
@@ -1981,7 +1983,7 @@ class Transmission(Representation):
 
 
 class Motor(Representation, SmurfBase):
-    BUILD_TYPES = ["DC", "AC", "STEP"]
+    BUILD_TYPES = ["BLDC", "DC", "AC", "STEP"]
     TYPES = ["position", "velocity", "force"]
     _class_variables = ["name", "joint"]
 
@@ -1996,6 +1998,7 @@ class Motor(Representation, SmurfBase):
         self._maxValue = None
         self._minValue = None
         self.build_type = kwargs.get("type", None)
+        # TODO smurf/json output of build type is missing
         if self.build_type:
             self.build_type = self.build_type.upper()
         self.type = type
