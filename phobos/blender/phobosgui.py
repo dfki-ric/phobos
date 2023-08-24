@@ -1243,13 +1243,6 @@ class PhobosModelPanel(bpy.types.Panel):
                 row2.enabled = True
         row2.operator('phobos.align_cutting_plane_operator')
 
-        row3 = ll.row(align=True)
-        row3.enabled = False
-        if plane.type == "MESH":
-            if len(plane.data.vertices) == 4:
-                row3.enabled = True
-        row3.operator('phobos.align_to_normal')
-
 
 
 

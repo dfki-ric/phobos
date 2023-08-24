@@ -2,7 +2,8 @@ import math
 import numpy as np
 import random as rd
 
-def _calculate_normal_vector(points):
+
+def calculate_normal_vector(points):
     """Returns Normal-Vector for a Plane defined by 3 Points"""
     v1 = [points[1][r] - points[0][r] for r in [0, 1, 2]]
     v2 = [points[2][r] - points[0][r] for r in [0, 1, 2]]
@@ -14,13 +15,13 @@ def _calculate_normal_vector(points):
     return n
 
 
-def _normalize_vector(vector):
+def normalize_vector(vector):
     """Scales a Vector to the length of 1"""
     length = math.sqrt(math.pow(vector[0], 2) + math.pow(vector[1], 2) + math.pow(vector[2], 2))
     return np.array([i * (1 / length) for i in vector])
 
 
-def _calculate_normal_vectors_of_plane(plane):
+def calculate_normal_vectors_of_plane(plane):
     """Calculates 4 Normal-Vectors for a plane defined by 4 Points"""
     vertices = plane.data.vertices
     vertices_coordinates = []
@@ -32,21 +33,22 @@ def _calculate_normal_vectors_of_plane(plane):
     for i in range(0, 4):
         cp = vertices_coordinates.copy()
         cp.remove(cp[i])
-        normal_vectors.append(_normalize_vector(_calculate_normal_vector(cp)))
+        normal_vectors.append(normalize_vector(calculate_normal_vector(cp)))
 
     return normal_vectors
 
 
-def _is_equal(a, b):
+def is_equal(a, b):
     """Checks if two float-vectors are equal"""
     if not len(a) == len(b):
-        print("Unequal lengths of vectors")
+        print("Unequal Dimensions of vectors")
         return None
     result = True
     for i in range(0, len(a)):
         if not math.isclose(abs(a[i]), abs(b[i])):
             result = False
     return result
+
 
 def _is_on_edge(point, edge):
     """Checks if point is on edge"""
@@ -58,9 +60,9 @@ def _is_on_edge(point, edge):
     return True
 
 
-def _intersects_edge_plane(plane, edge, epsilon=1e-6):
+def intersects_edge_plane(plane, edge, epsilon=1e-6):
     """Checks if edge of Object intersects Cutting-Plane"""
-    plane_normal = np.array(_calculate_normal_vector(plane[0:3]))
+    plane_normal = np.array(calculate_normal_vector(plane[0:3]))
     plane_point = np.array(plane[0])
     ray_direction = np.array(edge[1] - edge[0])
     ray_point = np.array(edge[0])
@@ -77,10 +79,8 @@ def _intersects_edge_plane(plane, edge, epsilon=1e-6):
         return True
 
 
-
-def _calculate_mean_of_vectors(list_of_vectors):
+def calculate_mean_of_vectors(list_of_vectors):
     list_of_vectors = np.array(list_of_vectors)
-    print(list_of_vectors)
     mean_along_axis = np.mean(list_of_vectors, axis=0)
     return mean_along_axis
 
@@ -98,8 +98,8 @@ def get_rotation_matrix_from_two_vectors(v1, v2):
     c = np.dot(v1, v2)
     k = 1.0 / (1.0 + c)
 
-    rotation_matrix = np.zeros((4,4))
-    rotation_matrix[3,3] = 1
+    rotation_matrix = np.zeros((4, 4))
+    rotation_matrix[3, 3] = 1
     rotation_matrix[0:3, 0:3] = np.array(
         [
             [a[0] * a[0] * k + c, a[1] * a[0] * k - a[2], a[2] * a[0] * k + a[1]],
@@ -111,12 +111,14 @@ def get_rotation_matrix_from_two_vectors(v1, v2):
 
 
 def convert_to_4dim_vector(vector):
+    """Converts 3dim to 4dim Vector"""
     v = np.ones(4)
     v[0:3] = vector
     return v
 
 
 def inverse_matrix(matrix):
+    """Get the inverse of a Matrix"""
     return np.linalg.inv(matrix)
 
 
@@ -125,8 +127,9 @@ def convert_to_np_array(array):
 
 
 def calculate_intermediate_stretch_direction_vector(stretch_direction_vector):
-    intermediate_stretch_vector = _normalize_vector([1, 1, 1])
-    while _is_equal(np.cross(stretch_direction_vector, intermediate_stretch_vector), [0.0, 0.0, 0.0]):
-        intermediate_stretch_vector = _normalize_vector([rd.randint, rd.randint, rd.randint])
+    """Calculates an intermediate Stretch-Direction-Vector"""
+    intermediate_stretch_vector = normalize_vector([1, 1, 1])
+    while is_equal(np.cross(stretch_direction_vector, intermediate_stretch_vector), [0.0, 0.0, 0.0]):
+        intermediate_stretch_vector = normalize_vector([rd.randint, rd.randint, rd.randint])
     return intermediate_stretch_vector
 

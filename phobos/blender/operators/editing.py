@@ -3519,7 +3519,6 @@ class DefineCuttingPlaneOperator(Operator):
         row1.label(text="Sets the Stretch Direction of the Cutting-Plane")
         row1.prop(self, "stretch_direction")
 
-
     def invoke(self, context, event):
         print("Invoke")
         plane = context.active_object
@@ -3527,14 +3526,13 @@ class DefineCuttingPlaneOperator(Operator):
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
-
     def execute(self, context):
         print("Execute")
         collection_name = "cuttingplane"
         plane = context.active_object
         if collection_name in bpy.context.scene.collection.children.keys():
             if plane.name in bpy.data.collections[collection_name].objects.keys():
-                log("Plane is already defined as Cutting-Plane")
+                log("Plane is already defined as Cutting-Plane", level='WARNING')
                 return {'CANCELLED'}
 
         if eUtils.check_validity(context):
@@ -3572,34 +3570,6 @@ class AlignCuttingPlaneOperator(bpy.types.Operator):
             print("Alignment complete!")
             return {'FINISHED'}
         return {'CANCELLED'}
-
-
-class AlignCuttingPlaneToNormalVector(bpy.types.Operator):
-    """Aligns the Cutting-Plane to a user defined Normal-Vector"""
-    bl_idname = "phobos.align_to_normal"
-    bl_label = "Align Cutting-Plane to Normal Vector"
-    bl_description = "Aligns Cutting-Plane to a user defined Normal Vector"
-
-    stretch_direction: FloatVectorProperty(
-        name="Stretch Direction", default=[0.0, 0.0, 1], description="Stretch Direction of Cutting-Plane", size=3
-    )
-
-
-    def execute(self, context):
-        plane = context.active_object
-        if eUtils.check_validity(context):
-            vector = [plane.cuttingplaneprops.coo_x, plane.cuttingplaneprops.coo_y, plane.cuttingplaneprops.coo_z]
-            eUtils.align_plane_to_vector(plane, vector)
-            print("Box used")
-            return {'FINISHED'}
-
-
-    def invoke(self, context, event):
-        return context.window_manager.invoke_props_dialog(self, width=400)
-
-    def draw(self, context):
-        row1 = self.layout.row()
-        row1.prop(self, "stretch_direction", text="Sets the Stretch Direction of the Cutting-Plane")
 
 
 classes = (
@@ -3641,7 +3611,6 @@ classes = (
     ParentOperator,
     DefineCuttingPlaneOperator,
     AlignCuttingPlaneOperator,
-    AlignCuttingPlaneToNormalVector,
 )
 
 
