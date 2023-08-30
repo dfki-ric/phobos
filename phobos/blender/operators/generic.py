@@ -104,6 +104,7 @@ class DynamicProperty(PropertyGroup):
     BOOL = 3
     FLOAT = 4
     DICT = 5
+    LIST = 6
     valueType : bpy.props.IntProperty()
 
     isEnabled : bpy.props.BoolProperty()
@@ -128,7 +129,7 @@ class DynamicProperty(PropertyGroup):
         Args:
             properties: List of all DynamicProperties. Pass this to a dict property.
             Allows it to collect the data
-            boolAsString:
+            boolAsString: If True, boolean values are converted to strings, "True" or "False"
 
         Returns: This property's value
 
@@ -150,6 +151,13 @@ class DynamicProperty(PropertyGroup):
                 if prop.dictName == self.name:
                     result[prop.name] = prop.getValue(boolAsString=boolAsString)
             return result
+        elif self.valueType == self.LIST:
+            result = []
+            for prop in properties:
+                if prop.dictName == self.name:
+                    result.append(prop.getValue(boolAsString=boolAsString))
+            return result
+
 
     def isDictElement(self):
         """
@@ -176,8 +184,9 @@ class DynamicProperty(PropertyGroup):
         """
 
         Args:
-          name: 
-          value: 
+          name: Name of this property
+          value: Value of this property
+          boolAsString: If True, the strings "True" and "False" are converted to booleans
 
         Returns:
 
@@ -208,11 +217,12 @@ class DynamicProperty(PropertyGroup):
             self.allowDisabling()
         elif isinstance(value, dict):
             self.valueType = self.DICT
+        elif isinstance(value, list):
+            self.valueType = self.LIST
         else:
             print("DynamicProperty - Unknown type:")
             print(type(value))
             print(value)
-        # TODO what about lists?
 
         self.name = name
         self.displayName = name
@@ -239,11 +249,15 @@ class DynamicProperty(PropertyGroup):
 
             # add subcategories
             if isinstance(dictionary[propname], dict):
-                unsupported[propname] = dictionary[propname]
                 for name, value in dictionary[propname].items():
                     dictprop = addfunc()
                     dictprop.assignValue(name, value, boolAsString=boolAsString)
                     dictprop.assignParent(propname)
+            elif isinstance(dictionary[propname], list):
+                for value in dictionary[propname]:
+                    listprop = addfunc()
+                    listprop.assignValue("", value, boolAsString=boolAsString)
+                    listprop.assignParent(propname)
 
         return unsupported
 
@@ -301,7 +315,21 @@ class DynamicProperty(PropertyGroup):
                 if prop.dictName == self.name:
                     prop.draw(row, properties)
                     numElem += 1
-            row.label(text=f"{numElem} elements")
+            row.label(text=f"{numElem} element"+ ("" if numElem == 1 else "s"))
+        elif self.valueType == self.LIST:
+            row = row.box()
+            row.label(text=self.displayName+":")
+            numElem = 0
+            print("Drawing list", self.name)
+            for prop in properties:
+                print("Iterating",prop.dictName)
+                if prop.dictName == self.name:
+                    print("Elem",numElem)
+                    prop.name = str(numElem)
+                    prop.displayName = str(numElem)
+                    prop.draw(row, properties)
+                    numElem += 1
+            row.label(text=f"{numElem} element"+ ("" if numElem == 1 else "s"))
 
     @staticmethod
     def collectDict(properties):
@@ -497,7 +525,7 @@ class AnnotationsOperator(bpy.types.Operator):
              ("Makro", DynamicProperty.STRING), ("Number", DynamicProperty.FLOAT),
              ("Boolean", DynamicProperty.BOOL)]
 
-    TYPES_ROOT = TYPES + [("Dictionary", DynamicProperty.DICT)]
+    TYPES_ROOT = TYPES + [("Dictionary", DynamicProperty.DICT), ("List", DynamicProperty.LIST)]
 
     category : StringProperty(
         name="Annotation Type", description="Annotation Types"
@@ -548,6 +576,8 @@ class AnnotationsOperator(bpy.types.Operator):
             prop = self.custom_properties[i]
             if prop.valueType == DynamicProperty.DICT:
                 roots.append((prop.name, prop.name, "Dictionary "+prop.name))
+            elif prop.valueType == DynamicProperty.LIST:
+                roots.append((prop.name, prop.name, "List "+prop.name))
         return roots
 
 
@@ -674,6 +704,15 @@ class AnnotationsOperator(bpy.types.Operator):
             self.objectReady = True
         return context.window_manager.invoke_props_dialog(self, width=500)
 
+    def rootType(self):
+        for i in range(len(self.custom_properties)):
+            prop = self.custom_properties[i]
+            if prop.name == self.add_property_root and not prop.isDictElement():
+                if prop.valueType == DynamicProperty.DICT:
+                    return dict
+                if prop.valueType == DynamicProperty.LIST:
+                    return list
+
     def draw(self, context):
         """
 
@@ -737,6 +776,9 @@ class AnnotationsOperator(bpy.types.Operator):
             c = addBox.split()
             c1, c2 = c.column(), c.column()
 
+            if self.rootType() == list:
+                c1.enabled = False
+
             c1.prop(self, 'add_property_name')
             c2.prop(self, 'add_property')
 
@@ -752,7 +794,8 @@ class AnnotationsOperator(bpy.types.Operator):
                 if newName and self.getPropertyByName(newName, self.add_property_root) is None:
                     new_prop = self.custom_properties.add()
                     new_prop.valueType = ID
-                    new_prop.name = newName
+                    if not self.rootType() == list:
+                        new_prop.name = newName
                     # Assign dict
                     if self.add_property_root != self.ANNOTATION_ROOT:
                         new_prop.assignParent(self.add_property_root)
