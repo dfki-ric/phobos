@@ -56,6 +56,7 @@ phobostypes = (
     ('submodel',) * 3,
     ('annotation',) * 3,
     ('submechanism',) * 3,
+    ('cuttingplane',) * 3,
 )
 
 jointtypes = (

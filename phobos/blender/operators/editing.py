@@ -15,6 +15,7 @@ Contains all Blender operators for editing of Phobos models.
 
 import math
 import os
+import re
 from datetime import datetime
 
 import bpy
@@ -3558,6 +3559,81 @@ class ParentOperator(Operator):
         return len(context.selected_objects) >= 2
 
 
+def update_stretch_direction(self, context):
+    stretch_direction_vector = self.stretch_direction
+    plane = context.active_object
+    eUtils.set_stretch_direction_of_cutting_plane(plane, stretch_direction_vector)
+
+
+class DefineCuttingPlaneOperator(Operator):
+    """Defines the selected Plane as Cutting-Plane for the intersecting Link"""
+    bl_idname = "phobos.define_cutting_plane_operator"
+    bl_label = "Define Cutting Plane"
+    bl_description = "Defines the selected Plane as Cutting-Plane for the intersecting Link"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    stretch_direction: FloatVectorProperty(
+        name="Stretch Direction", default=[0.0, 0.0, 1],
+        description="Stretch Direction of Cutting-Plane", size=3,
+        update=update_stretch_direction
+    )
+
+    def draw(self, context):
+        row1 = self.layout.row()
+        row1.label(text="Sets the Stretch Direction of the Cutting-Plane")
+        row1.prop(self, "stretch_direction")
+
+    def invoke(self, context, event):
+        plane = context.active_object
+        plane.show_axis = True
+        wm = context.window_manager
+        return wm.invoke_props_dialog(self)
+
+    def execute(self, context):
+        collection_name = "cuttingplane"
+        plane = context.active_object
+        if collection_name in bpy.context.scene.collection.children.keys():
+            if plane.name in bpy.data.collections[collection_name].objects.keys():
+                log("Plane is already defined as Cutting-Plane", level='WARNING')
+                return {'CANCELLED'}
+
+        if eUtils.check_validity(context):
+            intersecting_link = eUtils.get_intersecting_link(context)
+            bUtils.sortObjectToCollection(plane, collection_name)
+            plane.parent = intersecting_link
+            plane.phobostype = "cuttingplane"
+            plane.show_axis = False
+            log("Cutting-Plane defined", 'INFO')
+            return {'FINISHED'}
+        else:
+            return {'CANCELLED'}
+
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+
+class AlignCuttingPlaneOperator(bpy.types.Operator):
+    """Aligns the Cutting-Plane orthogonal to the intersecting Link"""
+    bl_idname = "phobos.align_cutting_plane_operator"
+    bl_label = "Align Cutting Plane"
+    bl_description = "Aligns the Cutting_Plane orthogonal to the intersecting Link"
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+
+    def execute(self, context):
+        if eUtils.check_validity(context):
+            plane = context.active_object
+            intersecting_link = eUtils.get_intersecting_link(context)
+            eUtils.align_plane_to_link(plane, intersecting_link)
+            log("Alignment complete!", level='INFO')
+            return {'FINISHED'}
+        return {'CANCELLED'}
+
+
 classes = (
     DynamicProperty,
     SafelyRemoveObjectsFromSceneOperator,
@@ -3596,6 +3672,8 @@ classes = (
     CalculateMassOperator,
     MeasureDistanceOperator,
     ParentOperator,
+    DefineCuttingPlaneOperator,
+    AlignCuttingPlaneOperator,
 )
 
 
