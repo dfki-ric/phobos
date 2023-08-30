@@ -3579,20 +3579,17 @@ class DefineCuttingPlaneOperator(Operator):
     )
 
     def draw(self, context):
-        print("Draw")
         row1 = self.layout.row()
         row1.label(text="Sets the Stretch Direction of the Cutting-Plane")
         row1.prop(self, "stretch_direction")
 
     def invoke(self, context, event):
-        print("Invoke")
         plane = context.active_object
         plane.show_axis = True
         wm = context.window_manager
         return wm.invoke_props_dialog(self)
 
     def execute(self, context):
-        print("Execute")
         collection_name = "cuttingplane"
         plane = context.active_object
         if collection_name in bpy.context.scene.collection.children.keys():
@@ -3606,7 +3603,7 @@ class DefineCuttingPlaneOperator(Operator):
             plane.parent = intersecting_link
             plane.phobostype = "cuttingplane"
             plane.show_axis = False
-            print("Cutting-Plane defined")
+            log("Cutting-Plane defined", 'INFO')
             return {'FINISHED'}
         else:
             return {'CANCELLED'}
@@ -3632,7 +3629,7 @@ class AlignCuttingPlaneOperator(bpy.types.Operator):
             plane = context.active_object
             intersecting_link = eUtils.get_intersecting_link(context)
             eUtils.align_plane_to_link(plane, intersecting_link)
-            print("Alignment complete!")
+            log("Alignment complete!", level='INFO')
             return {'FINISHED'}
         return {'CANCELLED'}
 

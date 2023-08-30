@@ -841,7 +841,7 @@ def smoothen_surface(obj):
     else:
         bpy.ops.object.modifier_add(type='EDGE_SPLIT')
 
-
+"""The Following functions are used for the Implementation of the "Define Cutting-Plane"-Operator."""
 def is_valid_plane(plane):
     """Checks if a plane defined by 4 points is even"""
     normal_vectors = mUtils.calculate_normal_vectors_of_plane(plane)

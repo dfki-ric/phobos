@@ -41,7 +41,6 @@ def calculate_normal_vectors_of_plane(plane):
 def is_equal(a, b):
     """Checks if two float-vectors are equal"""
     if not len(a) == len(b):
-        print("Unequal Dimensions of vectors")
         return None
     result = True
     for i in range(0, len(a)):
