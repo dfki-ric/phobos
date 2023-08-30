@@ -533,7 +533,7 @@ def createAnnotation(ga: representation.GenericAnnotation, parent=None, size=0.1
 
     props = ga.to_yaml()
 
-    for k, v in misc.flatten_dict(props).items():
+    for k, v in props.items():
         annot_obj[k] = v
 
     return annot_obj
@@ -586,6 +586,10 @@ def createRobot(robot: core.Robot):
     log("Creating interfaces...", 'INFO')
     for interface in robot.interfaces:
         newobjects.append(createInterface(interface, newlinks[interface.parent]))
+
+    log("Creating annotations...", 'INFO')
+    for anno in robot.generic_annotations:
+        newobjects.append(createAnnotation(anno))
 
     # [TODO v2.1.0] Re-Add SRDF support
     # log("Creating groups...", 'INFO')

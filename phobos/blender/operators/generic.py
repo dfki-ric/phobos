@@ -624,9 +624,11 @@ class AnnotationsOperator(bpy.types.Operator):
         DynamicProperty.assignDict(self.custom_properties.add, data, boolAsString=True)
 
         # Read makros
-        self.makros = ob["GA_makros"]
-        if isinstance(self.makros, str):
-            self.makros = json.loads(self.makros)
+        self.makros = []
+        if "GA_makros" in ob:
+            self.makros = ob["GA_makros"]
+            if isinstance(self.makros, str):
+                self.makros = json.loads(self.makros)
         for makro in self.makros:
             parent, name = makro
             # Find custom property
@@ -694,7 +696,7 @@ class AnnotationsOperator(bpy.types.Operator):
 
         if self.isPopUp:
 
-            if not self.copyPropertiesAsked:
+            if not self.copyPropertiesAsked and not self.modify:
                 ancestor = self.getAnnotationWithType(self.category)
                 if self.yes:
                     # Copy stuff

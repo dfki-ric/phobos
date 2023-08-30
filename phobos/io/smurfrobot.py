@@ -318,6 +318,7 @@ class SMURFRobot(XMLRobot):
                 pop_annotations.append(k)
                 log.info(f"Adding generic annotation of category {k}")
                 if type(v) == list:
+                    raise NotImplementedError
                     for a in v:
                         self.add_aggregate("generic_annotations", representation.GenericAnnotation(
                             GA_category=k,
@@ -325,10 +326,48 @@ class SMURFRobot(XMLRobot):
                             **a
                         ))
                 elif type(v) == dict:
-                    self.add_aggregate("generic_annotations", representation.GenericAnnotation(
-                        GA_category=k,
-                        **v
-                    ))
+                    singleAnnotation = False
+                    # Is this a single annotation without a name?
+                    """
+                    {
+                      "category": {
+                        "keys": values, ...
+                      }
+                    }
+                    """
+                    # Or is it a set of named annotations?
+                    """
+                    {
+                      "category": {
+                        "name": {
+                          "keys": values, ...
+                        }, ...
+                      }
+                    }
+                    """
+                    for name, anno in v.items():
+                        # If any of these items is not a dict, this is a single unnamed annotation
+                        # Otherwise we assume it is a set of named annotations
+                        if type(anno) != dict:
+                            singleAnnotation = True
+                    if singleAnnotation:
+                        anno = v
+                        anno.pop("GA_category", None)
+                        anno.pop("GA_name", None)
+                        self.add_aggregate("generic_annotations", representation.GenericAnnotation(
+                            GA_category=k,
+                            GA_name="",
+                            **anno
+                        ))
+                    else:
+                        for name, anno in v.items():
+                            anno.pop("GA_category", None)
+                            anno.pop("GA_name", None)
+                            self.add_aggregate("generic_annotations", representation.GenericAnnotation(
+                                GA_category=k,
+                                GA_name=name,
+                                **anno
+                            ))
         for k in pop_annotations:
             self.annotations.pop(k)
 
