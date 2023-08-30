@@ -311,7 +311,8 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "rate": "rate"
+        "rate": "rate",
+        "type": "sdf_type"
       },
       "attribute_children": {
         "parent": {
@@ -375,14 +376,16 @@
           "value_children": {
             "collision": "targets"
           }
-        }
+        },
+        "gps": {}
       }
     },
     "Joint6DOF": {
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "rate": "rate"
+        "rate": "rate",
+        "type": "sdf_type"
       },
       "attribute_children": {
         "parent": {
@@ -401,7 +404,8 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "rate": "rate"
+        "rate": "rate",
+        "type": "sdf_type"
       },
       "attribute_children": {
         "parent": {
@@ -445,7 +449,8 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "rate": "rate"
+        "rate": "rate",
+        "type": "sdf_type"
       },
       "attribute_children": {
         "parent": {
@@ -476,7 +481,8 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "rate": "rate"
+        "rate": "rate",
+        "type": "sdf_type"
       },
       "attribute_children": {
         "parent": {
@@ -494,6 +500,25 @@
           "value_children": {
             "collision": "targets"
           }
+        }
+      }
+    },
+    "GPS": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "rate": "rate",
+        "type": "sdf_type"
+      },
+      "attribute_children": {
+        "parent": {
+          "link": "link"
+        }
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
         }
       }
     }
@@ -854,7 +879,8 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "rate": "rate"
+        "rate": "rate",
+        "type": "sdf_type"
       },
       "attribute_children": {
         "parent": {
@@ -918,7 +944,8 @@
           "value_children": {
             "collision": "targets"
           }
-        }
+        },
+        "gps": {}
       }
     },
     "Joint6DOF": {
@@ -946,7 +973,7 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "type": "type"
+        "type": "sdf_type"
       },
       "value_children": {
         "always_on": "always_on",
@@ -992,7 +1019,7 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "type": "type"
+        "type": "sdf_type"
       },
       "value_children": {
         "always_on": "always_on",
@@ -1036,7 +1063,7 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "type": "type"
+        "type": "sdf_type"
       },
       "value_children": {
         "always_on": "always_on",
@@ -1056,6 +1083,26 @@
           "value_children": {
             "collision": "collisions"
           }
+        }
+      }
+    },
+    "GPS": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "type": "sdf_type"
+      },
+      "value_children": {
+        "always_on": "always_on",
+        "rate": "rate",
+        "visualize": "visualize",
+        "topic": "topic",
+        "enable_metrics": "enable_metrics"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
         }
       }
     },
@@ -1134,13 +1181,13 @@
       }
     },
     "Box": {
-      "tag": "Cylinder",
+      "tag": "Box",
       "attributes": {
         "size": "size"
       }
     },
     "Sphere": {
-      "tag": "Cylinder",
+      "tag": "Sphere",
       "attributes": {
         "radius": "radius"
       }

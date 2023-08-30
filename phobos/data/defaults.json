@@ -65,12 +65,17 @@
     "NodePosition": {
       "default": {}
     },
+    "GPS": {
+      "default": {}
+    },
     "NodeRotation": {
       "default": {}
     }
   },
   "motors": {
     "default": {
+      "velocity": 3.141,
+      "effort": 50.0,
       "p": 20.0,
       "i": 0.0,
       "d": 0.0,
@@ -84,19 +89,25 @@
       "i": 0.0,
       "d": 0.0,
       "build_type": "STEP",
-      "type": "PID"
+      "type": "position"
     },
     "velocity": {
       "velocity": 3.141,
       "effort": 50.0,
+      "p": 20.0,
+      "i": 0.0,
+      "d": 0.0,
       "build_type": "BLDC",
-      "type": "PID"
+      "type": "velocity"
     },
     "force": {
       "velocity": 3.141,
       "effort": 150.0,
+      "p": 20.0,
+      "i": 0.0,
+      "d": 0.0,
       "build_type": "AC",
-      "type": "PID"
+      "type": "force"
     }
   },
   "joints": {
@@ -286,6 +297,52 @@
         "type": "joint_limits",
         "joints": "ALL",
         "file_name": "joint_limits.yml"
+      },
+      {
+        "type": "pdf"
+      }
+    ],
+    "compatibility": [
+      {
+        "type": "urdf",
+        "mesh_format": "obj",
+        "additional_meshes": [
+          "bobj"
+        ],
+        "link_in_smurf": true,
+        "include_cut_joints": false,
+        "filename_suffix": "",
+        "ros_pathes": false,
+        "enforce_zero": false
+      },
+      {
+        "type": "urdf",
+        "mesh_format": "stl",
+        "include_cut_joints": false,
+        "filename_suffix": "_stl",
+        "ros_pathes": false,
+        "enforce_zero": false
+      },
+      {
+        "type": "sdf",
+        "mesh_format": "obj",
+        "additional_meshes": [
+          "bobj"
+        ],
+        "link_in_smurf": false,
+        "include_cut_joints": false,
+        "ros_pathes": false,
+        "enforce_zero": false
+      },
+      {
+        "type": "joint_limits",
+        "joints": "ALL",
+        "file_name": "joint_limits.yml"
+      },
+      {
+        "type": "submodel",
+        "name": "abstract_model",
+        "abstract_model": true
       },
       {
         "type": "pdf"

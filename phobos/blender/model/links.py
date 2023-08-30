@@ -43,12 +43,13 @@ def getGeometricElements(link):
     return visuals, collisions
 
 
-def deriveLinkfromObject(obj, scale=None, parent_link=True, parent_objects=True, reparent_children=True, nameformat=''):
+def deriveLinkfromObject(obj, scale=1, parent_link=True, parent_objects=True,
+                         reparent_children=True, nameformat='', scaleByBoundingBox=False):
     """Derives a link from an object using its name, transformation and parenting.
 
     Args:
       obj(bpy_types.Object): object to derive a link from
-      scale(float, optional): scale factor for bone size (Default value = 0.2)
+      scale(float, optional): scale factor for bone size (Default value = 1)
       parent_link(bool, optional): whether to automate the parenting of the new link or not. (Default value = True)
       parent_objects(bool, optional): whether to parent all the objects to the new link or not (Default value = False)
       nameformat(str, optional): re-formatting template for obj names (Default value = '')
@@ -66,19 +67,23 @@ def deriveLinkfromObject(obj, scale=None, parent_link=True, parent_objects=True,
     newlink.name = obj.name + "_link"
     newlink.matrix_world = obj.matrix_world
     newlink.phobostype = 'link'
-    bound_box = (
-        max([c[0] for c in obj.bound_box]),
-        max([c[1] for c in obj.bound_box]),
-        max([c[2] for c in obj.bound_box]),
-    )
-    print(bound_box, type(bound_box), type(bound_box[0]))
-    newlink.scale = [max(bound_box)]*3 if scale is None else scale
+    if scaleByBoundingBox:
+        bound_box = (
+            max([c[0] for c in obj.bound_box]),
+            max([c[1] for c in obj.bound_box]),
+            max([c[2] for c in obj.bound_box]),
+        )
+        newlink.scale = [max(bound_box)*scale] * 3
+    else:
+        newlink.scale = [scale] * 3
     if obj.parent is not None and parent_link:
         eUtils.parentObjectsTo(newlink, obj.parent)
     if parent_objects:
         eUtils.parentObjectsTo(obj, newlink)
     if reparent_children:
         eUtils.parentObjectsTo(list(obj.children), newlink)
+    if bpy.context.scene.phoboswireframesettings.links:
+        newlink.display_type = "WIRE"
     return newlink
 
 

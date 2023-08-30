@@ -16,7 +16,7 @@ log = get_logger(__name__)
 
 class SMURFRobot(XMLRobot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
-                 inputfile=None, description=None, autogenerate_submechanisms=None, is_human=False):
+                 inputfile=None, description=None, autogenerate_submechanisms=None, is_human=False, shallow=False):
         self.smurf_annotation_keys = [
             'motors', 'sensors', 'materials', "joints", "links", 'collisions', 'visuals', 'poses',
             "submechanisms", "exoskeletons", "interfaces"
@@ -29,6 +29,7 @@ class SMURFRobot(XMLRobot):
         self.inputfiles = []
         self.annotations = {}
         self.categorized_annotations = []
+        self.submodel_defs = {}
         # Smurf Informations
         self.poses = []
         self.description = None
@@ -103,18 +104,22 @@ class SMURFRobot(XMLRobot):
 
         if self.submechanisms_file is not None:
             self.inputfiles.append(self.submechanisms_file)
+
         for f in self.inputfiles:
             self._parse_annotations(f)
-        self._init_annotations()
-        if is_human:
-            self.annotate_as_human()
 
-        if len(self.links) > 0 and len(self.joints) > 0:
-            self.link_entities()
-            self.joints = self.get_joints_ordered_df()
+        if not shallow:
+            self._init_annotations()
 
-        if verify_meshes_on_import:
-            self.verify_meshes()
+            if is_human:
+                self.annotate_as_human()
+
+            if len(self.links) > 0 and len(self.joints) > 0:
+                self.link_entities()
+                self.joints = self.get_joints_ordered_df()
+
+            if verify_meshes_on_import:
+                self.verify_meshes()
 
         if self.name is None and self.xmlfile is not None:
             self.name, _ = os.path.splitext(self.xmlfile)
@@ -178,6 +183,8 @@ class SMURFRobot(XMLRobot):
                 annotation = load_json(stream.read())
                 if "submechanisms" in annotation.keys():
                     self.submechanisms_file = os.path.abspath(annotationfile)
+                if "submodels" in self.annotations:
+                    self.submodel_defs = self.annotations["submodels"]
                 self.annotations.update(annotation)
             except Exception as exc:
                 log.error(exc)
@@ -212,9 +219,11 @@ class SMURFRobot(XMLRobot):
         if 'sensors' in self.annotations:
             for sensor_def in self.annotations['sensors']:
                 # Search for the joint or link
-                input_args = {}
                 existing = self.get_sensor(sensor_def["name"])
-                sensor = getattr(sensor_representations, sensor_def["type"])(**sensor_def)
+                sensor_type = sensor_def["type"]
+                if sensor_type == "NodePosition" and "gps" in sensor_def["name"].lower():
+                    sensor_type = "GPS"
+                sensor = getattr(sensor_representations, sensor_type)(**sensor_def)
                 if existing is not None and not existing.equivalent(sensor):
                     log.debug(f"Replacing existing sensor with name {sensor_def['name']}\n"
                               f"existing: {existing.to_yaml()}\n"
@@ -255,10 +264,11 @@ class SMURFRobot(XMLRobot):
             for visual in self.annotations['visuals']:
                 vis_instance = self.get_visual_by_name(visual['name'])
                 if vis_instance is not None:
-                    # [TODO v2.1.0] We should prefer this over the URDF Mesh
-                    if isinstance(vis_instance.geometry, representation.Mesh) and type(visual["geometry"]) == dict:
-                        vis_instance.geometry.add_annotations(overwrite=True, **visual["geometry"])
-                    visual.pop("geometry")
+                    if "geometry" in visual:
+                        # [TODO v2.1.0] We should prefer this over the URDF Mesh
+                        if isinstance(vis_instance.geometry, representation.Mesh) and type(visual["geometry"]) == dict:
+                            vis_instance.geometry.add_annotations(overwrite=True, **visual["geometry"])
+                        visual.pop("geometry")
                     vis_instance.add_annotations(overwrite=False, **visual)
                 else:
                     log.error(f"There is no visual with name {visual['name']} in this robot.")
@@ -311,16 +321,14 @@ class SMURFRobot(XMLRobot):
                     for a in v:
                         self.add_aggregate("generic_annotations", representation.GenericAnnotation(
                             GA_category=k,
-                            GA_name=k,
+                            GA_name=a.get("name", None),
                             **a
                         ))
                 elif type(v) == dict:
-                    for an, av in v.items():
-                        self.add_aggregate("generic_annotations", representation.GenericAnnotation(
-                            GA_category=k,
-                            GA_name=an,
-                            **av
-                        ))
+                    self.add_aggregate("generic_annotations", representation.GenericAnnotation(
+                        GA_category=k,
+                        **v
+                    ))
         for k in pop_annotations:
             self.annotations.pop(k)
 
@@ -337,33 +345,38 @@ class SMURFRobot(XMLRobot):
             elem = self.get_aggregate(typeName, elem)
         if elem is None:
             return
-        if typeName in "joints":
-            super(SMURFRobot, self).remove_aggregate(typeName, elem)
+        if typeName in "joints" or typeName in "links":
+            if typeName in "links":
+                link = self.get_link(elem)
+                joint = self.get_joint(self.get_parent(link))
+            else:
+                joint = self.get_joint(elem)
+                link = self.get_link(elem.child)
             # interfaces
-            for interf in self.interfaces:
-                if interf.parent == elem.child:
-                    interf.parent = elem.parent
-                    interf.origin = representation.Pose.from_matrix(elem.origin.to_matrix().dot(interf.origin.to_matrix()), relative_to=interf.parent)
-                    interf.origin.link_with_robot(self)
+            if typeName in "links":
+                # interfaces
+                self.interfaces = [m for m in self.interfaces if str(m.parent) != str(link)]
+            else:
+                for interf in self.interfaces:
+                    if interf.parent == joint.child:
+                        interf.parent = joint.parent
+                        interf.origin = representation.Pose.from_matrix(joint.origin.to_matrix().dot(interf.origin.to_matrix()), relative_to=interf.parent)
+                        interf.origin.link_with_robot(self)
             # poses
             poses_to_remove = []
             for p in self.poses:
-                p.remove_joint(str(elem))
+                p.remove_joint(str(joint))
                 if len(p.configuration) == 0:
                     poses_to_remove.append(p)
             for p in poses_to_remove:
                 self.poses.remove(p)
             # hyrodyn
             for sub in self.submechanisms + self.exoskeletons:
-                for key in ["jointnames", "jointnames_spanningtree", "jointnames_independent", "jointnames_active", "jointnames_dependent"]:
-                    if hasattr(sub, key) and getattr(sub, key) is not None and str(elem) in getattr(sub, key):
-                        setattr(sub, key, [j for j in getattr(sub, key) if j != str(elem)])
-            self.submechanisms = [sm for sm in self.submechanisms if not sm.is_empty()]
-            self.exoskeletons = [sm for sm in self.exoskeletons if not sm.is_empty()]
-        elif typeName in "links":
+                if sub.jointnames is not None and str(joint) in sub.jointnames and not sub.is_joint_important(joint):
+                    sub.jointnames = [j for j in sub.jointnames if j != str(joint)]
+            self.submechanisms = [sm for sm in self.submechanisms if not sm.is_empty() and not sm.is_joint_important(joint)]
+            self.exoskeletons = [sm for sm in self.exoskeletons if not sm.is_empty() and not sm.is_joint_important(joint)]
             super(SMURFRobot, self).remove_aggregate(typeName, elem)
-            # interfaces
-            self.interfaces = [m for m in self.interfaces if str(m.parent) != str(elem)]
         else:
             super(SMURFRobot, self).remove_aggregate(typeName, elem)
 
@@ -562,7 +575,13 @@ class SMURFRobot(XMLRobot):
                         "a preliminary version has been created. Make sure to check it before usage.")
         self.submechanisms = [sm for sm in self.submechanisms if not sm.auto_gen]
         self.exoskeletons = [ex for ex in self.exoskeletons if not ex.auto_gen]
+        if not len(self._get_joints_included_twice_in_submechanisms()) == 0:
+            raise RuntimeError("The manual submechanisms defintion is faulty. The following joints are defined multiple times: " + self._get_joints_included_twice_in_submechanisms())
         # All fixed joints inside the submechanisms are handled by now, next we handle remaining joints
+        for sm in self.submechanisms + self.exoskeletons:
+            sm.regenerate(self)
+        for sm in self.submechanisms + self.exoskeletons:
+            sm.regenerate(self)
         missing_joints = self._get_joints_not_included_in_submechanisms()
         sorted_joints = [jn.name for jn in self.get_joints_ordered_df()]
         if len(missing_joints) == 0:

@@ -16,12 +16,14 @@ INFO = 'Checks whether the model can be loaded in Hyrodyn.'
 
 
 def main(args):
+    if not can_be_used():
+        print(f"Attention: Script might not work properly:" + cant_be_used_msg())
+
     from phobos.utils import hyrodyn as hyrodyn_utils
     import argparse
     import os.path as path
     from ..core import Robot
     from ..commandline_logging import setup_logger_level
-
     parser = argparse.ArgumentParser(description=INFO, prog="phobos " + path.basename(__file__)[:-3])
     parser.add_argument('robot_file', type=str, help='Path to the urdf file')
     parser.add_argument('--submechanisms_file', type=str, help='Path to the urdf or smurf file', default=None)

@@ -6,7 +6,7 @@ def can_be_used():
 
 
 def cant_be_used_msg():
-    return "Unknown error!"
+    return ""
 
 
 INFO = 'Preprocess CAD->URDF exports to use with pipeline.'
@@ -15,12 +15,12 @@ INFO = 'Preprocess CAD->URDF exports to use with pipeline.'
 def main(args):
     import argparse
     import os
-    import pkg_resources
 
     from phobos.defs import EULER_CONVENTION, RPY_CONVENTION
     from phobos.utils.git import get_repo_data
     from phobos.utils.misc import create_dir, copy, regex_replace
     from phobos.utils.transform import order_angles
+    from phobos.utils import resources
     from phobos.defs import load_json
     from phobos.core import Robot
     from ..commandline_logging import setup_logger_level, BASE_LOG_LEVEL
@@ -106,7 +106,7 @@ def main(args):
                         file_out=out_mesh,
                         ml_version='2018.12', )
                     simplify_mesh.run_script(
-                        script_file=pkg_resources.resource_filename(__name__, "data/simplify_stl.mlx"))
+                        script_file=resources.get_resources_path("simplify_stl.mlx"))
                     # os.system("meshlabserver -i "+in_mesh+" -o "+out_mesh+" -s "+cfg_file)
             except Exception as e:
                 log.warning(f"Failed to reduce mesh as meshxml: {e}")
@@ -148,8 +148,8 @@ def main(args):
             invertJoint(urdf_path, args.invertJoint)
 
         if os.path.basename(os.path.dirname(__file__)) == "ci-run":
-            readme_path = pkg_resources.resource_filename(__name__, "data/README-for-input-repo.md.in")
-            manifest_path = pkg_resources.resource_filename(__name__, "data/manifest.xml.in")
+            readme_path = resources.get_resources_path("README-for-input-repo.md.in")
+            manifest_path = resources.get_resources_path("manifest.xml.in")
             if not os.path.exists(os.path.join(args.output_directory, "README.md")):
                 copy(None, readme_path, os.path.join(args.output_directory, "README.md"))
             if not os.path.exists(os.path.join(args.output_directory, "manifest.xml")):

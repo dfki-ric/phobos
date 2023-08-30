@@ -28,16 +28,23 @@ class Sensor(Representation, SmurfBase):
             if type(joint) != str:
                 joint = joint.name
             kwargs["joint"] = joint
+
+        origin = _singular(origin)
+        if origin is not None and not isinstance(origin, Pose):
+            if "relative_to" in origin:
+                relative_to = origin.get("relative_to", link)
+                origin.pop("relative_to")
+            origin = Pose(**origin, relative_to=relative_to)
+
+        self.origin = origin
+
         SmurfBase.__init__(self, name=name,
                            rate=rate, always_on=always_on, visualize=visualize, topic=topic,
                            enable_metrics=enable_metrics,
                            returns=["type", "rate"], **kwargs)
-        origin = _singular(origin)
-        if origin is not None and not isinstance(origin, Pose):
-            origin = Pose(**origin, relative_to=link)
-        elif origin is not None and origin.relative_to is None:
-            origin.relative_to = link
-        self.origin = origin
+
+        if self.origin is not None and self.origin.relative_to is None:
+            self.origin.relative_to = link
         assert self.origin is None or self.origin.relative_to is not None
         self.type = sensortype
         self._sdf_type = _sdf_type
@@ -71,12 +78,12 @@ class Sensor(Representation, SmurfBase):
     def orientation_offset(self):
         if self.origin is None:
             return None
-        quat = transform.matrix_to_quaternion(self.origin.to_matrix()[0:3, 0:3]) if hasattr(self, "origin") else [0.0, 0.0, 0.0, 1.0]
-        return {"x": quat[0], "y": quat[1], "z": quat[2], "w": quat[3]}
+        return self.origin.quaternion_dict
 
     @orientation_offset.setter
     def orientation_offset(self, val):
-        assert self.origin is not None
+        if self.origin is None:
+            self.origin = representation.Pose()
         self.origin.rotation = val
 
     def transform(self, transformation, relative_to):
@@ -108,6 +115,7 @@ class Sensor(Representation, SmurfBase):
             self.origin.relative_to = self.frame
             assert self.origin.relative_to is not None
         super(Sensor, self).link_with_robot(robot, check_linkage_later=check_linkage_later)
+
 
 class Joint6DOF(Sensor):
     _class_variables = ["name", "link"]
@@ -208,8 +216,10 @@ class RotatingRaySensor(Sensor):
         # Nothing to do here
         pass
 
+
 RaySensor = RotatingRaySensor
 __IMPORTS__ += ["RaySensor"]
+
 
 class CameraSensor(Sensor):
     _class_variables = ["name", "link", "height", "width", "hud_height", "hud_width", "opening_height", "opening_width",
@@ -235,6 +245,7 @@ class CameraSensor(Sensor):
         self.returns += ['link', 'height', 'width', 'hud_height', 'hud_width',
                          'opening_height', 'opening_width', 'depth_image', 'show_cam', 'frame_offset']
         self.excludes += ["origin"]
+
 
     @property
     def depths(self):
@@ -289,8 +300,10 @@ class MultiSensor(Sensor):
 
     def __init__(self, name=None, targets=None, sensortype='MultiSensor', _sdf_type=None, _blender_type=None, **kwargs):
         super().__init__(name=name, sensortype=sensortype, _sdf_type=_sdf_type, _blender_type=_blender_type, **kwargs)
-        self.targets = [str(t) for t in targets if t is not None] if isinstance(targets, list) else []
-        self.returns += ['id']
+        if kwargs.get("id", None) and targets is None:
+            self.targets = kwargs["id"]
+        self.targets = [str(t) for t in self.targets if t is not None] if type(self.targets) in [list, tuple, set] else []
+        self.returns += ['name', 'id']
         self.excludes += ['_id']
 
     def add_target(self, target):
@@ -431,6 +444,31 @@ class NodePosition(MultiSensor):
         super().__init__(name=name, targets=targets, sensortype='NodePosition', _blender_type="Node_position", **kwargs)
 
 
+class GPS(NodePosition):
+    def __init__(self, name=None, link=None, **kwargs):
+        if link is not None:
+            if "id" in kwargs:
+                kwargs.pop("id")
+            if "targets" in kwargs:
+                kwargs.pop("targets")
+        super(GPS, self).__init__(name, **kwargs)
+        self._blender_type = "GPS"
+        self._sdf_type = "GPS"
+        if link is not None:
+            self.link = link
+
+    @property
+    def link(self):
+        if self.targets:
+            return self.targets[0]
+        else:
+            return None
+
+    @link.setter
+    def link(self, value):
+        self.targets = [value]
+
+
 class NodeRotation(MultiSensor):
     type_dict = {"targets": "links"}
 
@@ -468,21 +506,21 @@ class SensorFactory(Representation):
             origin = Pose(relative_to=link)
         elif origin.relative_to is None and link is not None:
             origin.relative_to = link
-        if sdf_type == "camera":
+        if sdf_type.lower() == "camera":
             return CameraSensor(
                 name=name,
                 link=link,
                 origin=origin,
                 **kwargs
             )
-        elif sdf_type == "contact":
+        elif sdf_type.lower() == "contact":
             return NodeContact(
                 name=name,
                 **kwargs
             )
         # elif sdf_type == "imu":
         #     raise NotImplemented
-        elif sdf_type == "lidar":
+        elif sdf_type.lower() in ["ray", "lidar"]:
             return RotatingRaySensor(
                 name=name,
                 horizontal_offset=kwargs["min_horizontal_angle"],
@@ -492,9 +530,14 @@ class SensorFactory(Representation):
                 draw_rays="visualize" in kwargs,
                 **kwargs
             )
-        elif sdf_type == "force_torque":
+        elif sdf_type.lower() == "force_torque":
             return Joint6DOF(
                 name=name,
                 **kwargs
             )
-        raise RuntimeError(f"Couldn't instantiate sensor from {repr(kwargs)}")
+        elif sdf_type.lower() == "gps":
+            return GPS(
+                name=name,
+                **kwargs
+            )
+        raise RuntimeError(f"Couldn't instantiate sensor {name} from {sdf_type}:{repr(kwargs)}. link={link}, xml was "+str(ET.dump(_xml)))

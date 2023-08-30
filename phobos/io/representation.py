@@ -52,7 +52,7 @@ def _joint_relative_origin_getter(instance):
         r2x = instance._related_robot_instance.get_transformation
         out = Pose.from_matrix(
             inv(r2x(instance.link)).dot(r2x(instance.origin.relative_to).dot(instance.origin.to_matrix())),
-            relative_to=self.link
+            relative_to=instance.link
         )
         out.link_with_robot(instance._related_robot_instance)
     if instance._link.origin is not None:
@@ -142,10 +142,11 @@ class Pose(Representation, SmurfBase):
             self._matrix[0:3, 0:3] = transform.rpy_to_matrix(value)
         elif BPY_AVAILABLE and hasattr(value, "__len__") and type(value) != str and len(value) == 3:
             self._matrix[0:3, 0:3] = transform.rpy_to_matrix(np.array(value))
-        elif type(value) in [list, tuple, np.ndarray] and len(value) == 4:
+        elif type(value) in [list, tuple, np.ndarray, dict] and len(value) == 4:
             self._matrix[0:3, 0:3] = transform.quaternion_to_matrix(value)
         elif BPY_AVAILABLE and hasattr(value, "__len__") and type(value) != str and len(value) == 4:
-            self._matrix[0:3, 0:3] = transform.rpy_to_matrix(np.array(value))
+            # blender saves quaternions as w,x,y,z
+            self._matrix[0:3, 0:3] = transform.quaternion_to_matrix([value[1], value[2], value[3], value[0]])
         elif type(value) == dict and len(value) == 3:
             if all([k in "rpy" for k in value.keys()]):
                 self._matrix[0:3, 0:3] = transform.rpy_to_matrix([value["r"], value["p"], value["y"]])
@@ -153,8 +154,6 @@ class Pose(Representation, SmurfBase):
                 self._matrix[0:3, 0:3] = transform.rpy_to_matrix([value["x"], value["y"], value["z"]])
             else:
                 raise ValueError("Can't parse rotation" + str(value))
-        elif type(value) == dict and len(value) == 4:
-            self._matrix[0:3, 0:3] = transform.quaternion_to_matrix([value["x"], value["y"], value["z"], value["w"]])
         elif type(value) in [list, np.ndarray]:
             self._matrix[0:3, 0:3] = transform.matrix_to_rpy(value)
         elif value is None:
@@ -162,7 +161,7 @@ class Pose(Representation, SmurfBase):
         else:
             raise ValueError("Can't parse rotation " + str(value))
         # if we have an pi or pi/2, pi/4 approximation let's make pi or pi/2, pi/4 out of it
-        # [TODO v2.1.0] re-establich this
+        # [TODO v2.1.0] re-establish this
         # for i in range(3):
         #     if type(self.rpy[i]) in [float, np.float64, np.float32] and "e" not in str(self.rpy[i]).lower():
         #         in_decimals = len(str(self.rpy[i]).split(".")[1])
@@ -179,7 +178,7 @@ class Pose(Representation, SmurfBase):
 
     @property
     def quaternion_dict(self):
-        return {k: v for k,v in zip("xyzw", transform.matrix_to_quaternion(self._matrix[0:3, 0:3]))}
+        return {k: v for k, v in zip("xyzw", transform.matrix_to_quaternion(self._matrix[0:3, 0:3]))}
 
     @property
     def angle_axis(self):
@@ -573,18 +572,20 @@ class Mesh(Representation, SmurfBase):
         } if mesh_orientation is None else mesh_orientation
         self._exported = {}
         if self.input_file is not None:
+            self.imported = {
+                "filepath": self.input_file
+            }
             git_root = git.get_root(os.path.dirname(self.input_file))
             if git_root is not None:
-                _, _, url = git.get_repo_data(git_root)
-                self.imported = {
-                    "remote": url,
-                    "commit": git.revision(git_root),
-                    "filepath": os.path.relpath(self.input_file, git_root)
-                }
-            else:
-                self.imported = {
-                    "filepath": self.input_file
-                }
+                try:
+                    _, _, url = git.get_repo_data(git_root)
+                    self.imported = {
+                        "remote": url,
+                        "commit": git.revision(git_root),
+                        "filepath": os.path.relpath(self.input_file, git_root)
+                    }
+                except:
+                    pass
         else:
             self.imported = "input file not known"
         self.history = [f"Instantiated with filepath={filepath}->{self.input_file}, scale={scale}, mesh={mesh}, meshname={meshname}, "
@@ -831,6 +832,7 @@ class Mesh(Representation, SmurfBase):
                 bpy.context.view_layer.objects.active = delete_objects[0]
                 bpy.ops.object.delete()
             elif self.input_type == "file_bobj":
+                raise NotImplementedError("Loading of bobj meshes needs to be debugged!")
                 self.mesh_information = mesh_io.parse_bobj(self.input_file)
                 self._mesh_object = mesh_io.mesh_info_dict_2_blender(self.unique_name, **self.mesh_information)
                 bpy.context.view_layer.objects.active = bpy.data.objects.new(self.unique_name, self.mesh_object)
@@ -938,15 +940,19 @@ class Mesh(Representation, SmurfBase):
         if self.input_type.startswith("file") and self.mesh_object is None:
             self.load_mesh()
         # only export bobj, if it makes sense for the mesh
-        if ext == "bobj" and self._mesh_information is None:
+        if not BPY_AVAILABLE and ext == "bobj" and self._mesh_information is None:
             if throw_on_invalid_bobj:
                 raise IOError(
                     f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh can't be exported as bobj")
+            else:
+                log.warn(f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh can't be exported as bobj")
             return
         elif ext == "bobj" and (not self._info_in_sync and "texture_coords" in self._mesh_information):
             if throw_on_invalid_bobj:
                 raise IOError(
                     f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh has been edited and thus the textures might have get mixed up.")
+            else:
+                log.warn(f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh has been edited and thus the textures might have get mixed up.")
             return
         # export
         log.debug(f"Writing {type(self.mesh_object)} to {targetpath}...")
@@ -1342,7 +1348,7 @@ class Visual(Representation, SmurfBase):
         link = [ln for ln in self._related_robot_instance.links if self in ln.visuals]
         assert len(link) == 1
         transformation = self._related_robot_instance.get_transformation(link[0]).dot(self.origin.to_matrix())
-        return Pose.from_matrix(transformation)
+        return Pose.from_matrix(transformation, relative_to=self._related_robot_instance.get_root())
 
     @property
     def position_from_root(self):
@@ -1977,7 +1983,7 @@ class Transmission(Representation):
 
 
 class Motor(Representation, SmurfBase):
-    BUILD_TYPES = ["DC", "AC", "STEP"]
+    BUILD_TYPES = ["BLDC", "DC", "AC", "STEP"]
     TYPES = ["position", "velocity", "force"]
     _class_variables = ["name", "joint"]
 
@@ -1992,6 +1998,7 @@ class Motor(Representation, SmurfBase):
         self._maxValue = None
         self._minValue = None
         self.build_type = kwargs.get("type", None)
+        # TODO smurf/json output of build type is missing
         if self.build_type:
             self.build_type = self.build_type.upper()
         self.type = type

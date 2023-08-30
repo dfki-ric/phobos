@@ -32,10 +32,12 @@ def create_box(mesh, oriented=True, scale=1.0):
     """
     assert not oriented or isinstance(mesh, trimesh.Trimesh)
     # [TODO v2.1.0] Fix creation for Trimesh
+    if type(scale) in [int, float]:
+        scale = [scale] * 3
     if isinstance(mesh, trimesh.Trimesh) or isinstance(mesh, trimesh.Scene):
         # scale the mesh
         mesh = deepcopy(mesh)
-        mesh.apply_transform(np.diag((scale if type(scale) == list else [scale]*3) + [1]))
+        mesh.apply_transform(np.diag(scale + [1]))
         if oriented:
             extent = mesh.bounding_box_oriented.extents
             transform = mesh.bounding_box_oriented.primitive.transform
@@ -43,9 +45,10 @@ def create_box(mesh, oriented=True, scale=1.0):
             extent = mesh.bounding_box.extents
             transform = mesh.bounding_box.primitive.transform
     elif BPY_AVAILABLE and isinstance(mesh, bpy.types.Object):
-        extent = (np.max(mesh.bound_box, axis=0) - np.min(mesh.bound_box, axis=0))
+        bound_box = np.array(mesh.bound_box) * np.array(scale)
+        extent = (np.max(bound_box, axis=0) - np.min(bound_box, axis=0))
         transform = np.identity(4)
-        transform[0:3, 3] = np.average(mesh.bound_box, axis=0)
+        transform[0:3, 3] = np.average(bound_box, axis=0)
         # transform = np.array(mesh.matrix_local).dot(transform)
     else:
         raise ValueError(f"Received {type(mesh)}")
@@ -56,16 +59,19 @@ def create_box(mesh, oriented=True, scale=1.0):
 def create_sphere(mesh, scale=1.0):
     """ Create a sphere """
     # [TODO v2.1.0] Fix creation for Trimesh
+    if type(scale) in [int, float]:
+        scale = [scale] * 3
     if isinstance(mesh, trimesh.Trimesh) or isinstance(mesh, trimesh.Scene):
         # scale the mesh
         mesh = deepcopy(mesh)
-        mesh.apply_transform(np.diag((scale if type(scale) == list else [scale]*3) + [1]))
+        mesh.apply_transform(np.diag(scale + [1]))
         half_ext = mesh.bounding_box.extents
         transform = mesh.bounding_box.primitive.transform
     elif BPY_AVAILABLE and isinstance(mesh, bpy.types.Object):
-        half_ext = np.max(mesh.bound_box, axis=0) - np.min(mesh.bound_box, axis=0)
+        bound_box = np.array(mesh.bound_box) * np.array(scale)
+        half_ext = (np.max(bound_box, axis=0) - np.min(bound_box, axis=0))
         transform = np.identity(4)
-        transform[0:3, 3] = np.average(mesh.bound_box, axis=0)
+        transform[0:3, 3] = np.average(bound_box, axis=0)
         # transform = np.array(mesh.matrix_local).dot(transform)
     else:
         raise ValueError(f"Received {type(mesh)}")
@@ -79,10 +85,12 @@ def create_cylinder(mesh, scale=1.0):
     """Create a cylinder.
     """
     # [TODO v2.1.0] Fix creation for Trimesh
+    if type(scale) in [int, float]:
+        scale = [scale] * 3
     if isinstance(mesh, trimesh.Trimesh) or isinstance(mesh, trimesh.Scene):
         # scale the mesh
         mesh = deepcopy(mesh)
-        mesh.apply_transform(np.diag((scale if type(scale) == list else [scale]*3) + [1]))
+        mesh.apply_transform(np.diag(scale + [1]))
         c = mesh.bounding_cylinder
         transform = mesh.bounding_cylinder.primitive.transform
         # Find the length and the axis
@@ -97,7 +105,8 @@ def create_cylinder(mesh, scale=1.0):
         length = np.abs(c.direction).dot(c.extents)
         diameter = np.cross(axis, orthogonal).dot(c.extents)
     elif BPY_AVAILABLE:
-        extent = (np.max(mesh.bound_box, axis=0) - np.min(mesh.bound_box, axis=0))
+        bound_box = np.array(mesh.bound_box) * np.array(scale)
+        extent = (np.max(bound_box, axis=0) - np.min(bound_box, axis=0))
         deviation = np.abs(extent - np.average(extent))
         length = extent[np.argmax(deviation)]
         axis = np.argmax(deviation)
@@ -107,7 +116,7 @@ def create_cylinder(mesh, scale=1.0):
             rpy = [0, np.pi/2, 0]
         elif axis == 1:
             rpy = [np.pi/2, 0, 0]
-        transform = create_transformation(xyz=np.average(mesh.bound_box, axis=0), rpy=rpy)
+        transform = create_transformation(xyz=np.average(bound_box, axis=0), rpy=rpy)
     else:
         raise ValueError(f"Received {type(mesh)}")
 
