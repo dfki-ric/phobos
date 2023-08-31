@@ -935,6 +935,7 @@ def is_rotation_180_degree(plane, stretch_direction_vector):
 
 
 def change_stretch_direction_of_cutting_plane(plane, stretch_direction_vector):
+    plane_coors = [plane.matrix_world @ v.co for v in plane.data.vertices]
     coo_system_of_plane = mUtils.convert_to_np_array(plane.matrix_basis)
     z_of_plane = mUtils.normalize_vector(coo_system_of_plane[0:3, 2])
     stretch_direction_vector = mUtils.normalize_vector(stretch_direction_vector)
@@ -945,6 +946,11 @@ def change_stretch_direction_of_cutting_plane(plane, stretch_direction_vector):
     log("Calculated Rotation-Matrix: {m}".format(m=rotation_matrix), 'DEBUG')
 
     plane.matrix_basis = (rotation_matrix @ mUtils.convert_to_np_array(plane.matrix_basis)).T
+    for v in range(0, len(plane_coors)):
+        v_4d = mUtils.convert_to_4dim_vector(plane_coors[v])
+        transformed_4d_vector = mUtils.inverse_matrix(plane.matrix_world) \
+                                @ mUtils.inverse_matrix(rotation_matrix) @ v_4d
+        plane.data.vertices[v].co = transformed_4d_vector[0:3]
 
     coo_system_of_plane = mUtils.convert_to_np_array(plane.matrix_basis)
     z_of_plane = mUtils.normalize_vector(coo_system_of_plane[0:3, 2])
