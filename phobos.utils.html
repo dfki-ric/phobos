@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>phobos utils module &#8212; Phobos 2.0.0 (a74ba09) documentation</title>
+    <title>phobos utils module &#8212; Phobos 2.0.0 (543d220) documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css?v=514cf933" />
     
-    <script src="_static/documentation_options.js?v=55e188bf"></script>
+    <script src="_static/documentation_options.js?v=b05e21f9"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="phobos.geometry.html" title="phobos geometry module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (a74ba09) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (543d220) documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">phobos utils module</a></li> 
       </ul>
     </div>  
@@ -50,41 +50,10 @@
 <h1>Submodules<a class="headerlink" href="#submodules" title="Link to this heading">¶</a></h1>
 <section id="phobos-utils-commandline-logging-module">
 <h2>phobos.utils.commandline_logging module<a class="headerlink" href="#phobos-utils-commandline-logging-module" title="Link to this heading">¶</a></h2>
-<dl class="py class" id="module-phobos.utils.commandline_logging">
-<dt class="sig sig-object py" id="phobos.utils.commandline_logging.ColoredFormatter">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">phobos.utils.commandline_logging.</span></span><span class="sig-name descname"><span class="pre">ColoredFormatter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">msg</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">use_color</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.commandline_logging.ColoredFormatter" title="Link to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Formatter</span></code></p>
-<dl class="py method">
-<dt class="sig sig-object py" id="phobos.utils.commandline_logging.ColoredFormatter.format">
-<span class="sig-name descname"><span class="pre">format</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">record</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.commandline_logging.ColoredFormatter.format" title="Link to this definition">¶</a></dt>
-<dd><p>Format the specified record as text.</p>
-<p>The record’s attribute dictionary is used as the operand to a
-string formatting operation which yields the returned string.
-Before formatting the dictionary, a couple of preparatory steps
-are carried out. The message attribute of the record is computed
-using LogRecord.getMessage(). If the formatting string uses the
-time (as determined by a call to usesTime(), formatTime() is
-called to format the event time. If there is exception information,
-it is formatted using formatException() and appended to the message.</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="phobos.utils.commandline_logging.get_logger">
-<span class="sig-prename descclassname"><span class="pre">phobos.utils.commandline_logging.</span></span><span class="sig-name descname"><span class="pre">get_logger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module_name</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.commandline_logging.get_logger" title="Link to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="phobos.utils.commandline_logging.setup_logger_level">
-<span class="sig-prename descclassname"><span class="pre">phobos.utils.commandline_logging.</span></span><span class="sig-name descname"><span class="pre">setup_logger_level</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_level</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'WARNING'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.commandline_logging.setup_logger_level" title="Link to this definition">¶</a></dt>
-<dd><p>Setup tool for inbuilt logging module, set the logging level for output and the filename and you are ready to go.</p>
-</dd></dl>
-
 </section>
-<section id="phobos-utils-git-module">
-<h2>phobos.utils.git module<a class="headerlink" href="#phobos-utils-git-module" title="Link to this heading">¶</a></h2>
-<dl class="py class" id="module-phobos.utils.git">
+<section id="module-phobos.utils.git">
+<span id="phobos-utils-git-module"></span><h2>phobos.utils.git module<a class="headerlink" href="#module-phobos.utils.git" title="Link to this heading">¶</a></h2>
+<dl class="py class">
 <dt class="sig sig-object py" id="phobos.utils.git.MergeRequest">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">phobos.utils.git.</span></span><span class="sig-name descname"><span class="pre">MergeRequest</span></span><a class="headerlink" href="#phobos.utils.git.MergeRequest" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
@@ -213,9 +182,9 @@ it is formatted using formatException() and appended to the message.</p>
 <dd></dd></dl>
 
 </section>
-<section id="phobos-utils-hyrodyn-module">
-<h2>phobos.utils.hyrodyn module<a class="headerlink" href="#phobos-utils-hyrodyn-module" title="Link to this heading">¶</a></h2>
-<dl class="py function" id="module-phobos.utils.hyrodyn">
+<section id="module-phobos.utils.hyrodyn">
+<span id="phobos-utils-hyrodyn-module"></span><h2>phobos.utils.hyrodyn module<a class="headerlink" href="#module-phobos.utils.hyrodyn" title="Link to this heading">¶</a></h2>
+<dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.hyrodyn.debug_report">
 <span class="sig-prename descclassname"><span class="pre">phobos.utils.hyrodyn.</span></span><span class="sig-name descname"><span class="pre">debug_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">report</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">urdf_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submech_file</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">raise_error_failure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.hyrodyn.debug_report" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -226,9 +195,9 @@ it is formatted using formatException() and appended to the message.</p>
 <dd></dd></dl>
 
 </section>
-<section id="phobos-utils-inertia-module">
-<h2>phobos.utils.inertia module<a class="headerlink" href="#phobos-utils-inertia-module" title="Link to this heading">¶</a></h2>
-<dl class="py function" id="module-phobos.utils.inertia">
+<section id="module-phobos.utils.inertia">
+<span id="phobos-utils-inertia-module"></span><h2>phobos.utils.inertia module<a class="headerlink" href="#module-phobos.utils.inertia" title="Link to this heading">¶</a></h2>
+<dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.inertia.calculateBoxInertia">
 <span class="sig-prename descclassname"><span class="pre">phobos.utils.inertia.</span></span><span class="sig-name descname"><span class="pre">calculateBoxInertia</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mass</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">size</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.inertia.calculateBoxInertia" title="Link to this definition">¶</a></dt>
 <dd><p>Returns upper diagonal of inertia tensor of a box as tuple.</p>
@@ -332,9 +301,9 @@ Mechanik 3 - Dynamik’ (2012) by Russel C. Hibbeler this has been fixed.</p>
 </dd></dl>
 
 </section>
-<section id="phobos-utils-misc-module">
-<h2>phobos.utils.misc module<a class="headerlink" href="#phobos-utils-misc-module" title="Link to this heading">¶</a></h2>
-<dl class="py function" id="module-phobos.utils.misc">
+<section id="module-phobos.utils.misc">
+<span id="phobos-utils-misc-module"></span><h2>phobos.utils.misc module<a class="headerlink" href="#module-phobos.utils.misc" title="Link to this heading">¶</a></h2>
+<dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.misc.append_string">
 <span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">append_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.append_string" title="Link to this definition">¶</a></dt>
 <dd><p>Replacement for print so that the printed string is put to s</p>
@@ -475,9 +444,9 @@ Regular expressions can be used.</p>
 <dd></dd></dl>
 
 </section>
-<section id="phobos-utils-xml-module">
-<h2>phobos.utils.xml module<a class="headerlink" href="#phobos-utils-xml-module" title="Link to this heading">¶</a></h2>
-<dl class="py function" id="module-phobos.utils.xml">
+<section id="module-phobos.utils.xml">
+<span id="phobos-utils-xml-module"></span><h2>phobos.utils.xml module<a class="headerlink" href="#module-phobos.utils.xml" title="Link to this heading">¶</a></h2>
+<dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.xml.adapt_mesh_pathes">
 <span class="sig-prename descclassname"><span class="pre">phobos.utils.xml.</span></span><span class="sig-name descname"><span class="pre">adapt_mesh_pathes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_urdf_dir</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy_to</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.xml.adapt_mesh_pathes" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -506,9 +475,9 @@ Regular expressions can be used.</p>
 </dd></dl>
 
 </section>
-<section id="phobos-utils-transform-module">
-<h2>phobos.utils.transform module<a class="headerlink" href="#phobos-utils-transform-module" title="Link to this heading">¶</a></h2>
-<dl class="py function" id="module-phobos.utils.transform">
+<section id="module-phobos.utils.transform">
+<span id="phobos-utils-transform-module"></span><h2>phobos.utils.transform module<a class="headerlink" href="#module-phobos.utils.transform" title="Link to this heading">¶</a></h2>
+<dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.transform.angle_between_vectors">
 <span class="sig-prename descclassname"><span class="pre">phobos.utils.transform.</span></span><span class="sig-name descname"><span class="pre">angle_between_vectors</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">a</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">acute</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.transform.angle_between_vectors" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
@@ -579,9 +548,9 @@ Regular expressions can be used.</p>
 <dd></dd></dl>
 
 </section>
-<section id="phobos-utils-tree-module">
-<h2>phobos.utils.tree module<a class="headerlink" href="#phobos-utils-tree-module" title="Link to this heading">¶</a></h2>
-<dl class="py function" id="module-phobos.utils.tree">
+<section id="module-phobos.utils.tree">
+<span id="phobos-utils-tree-module"></span><h2>phobos.utils.tree module<a class="headerlink" href="#module-phobos.utils.tree" title="Link to this heading">¶</a></h2>
+<dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.tree.find_close_ancestor_links">
 <span class="sig-prename descclassname"><span class="pre">phobos.utils.tree.</span></span><span class="sig-name descname"><span class="pre">find_close_ancestor_links</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkname</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.tree.find_close_ancestor_links" title="Link to this definition">¶</a></dt>
 <dd><p>Returns list of ancestors for the given linkname, that are only a rotational transformation apart.
@@ -652,16 +621,8 @@ submechanism</p>
     <ul>
 <li><a class="reference internal" href="#">phobos utils module</a></li>
 <li><a class="reference internal" href="#submodules">Submodules</a><ul>
-<li><a class="reference internal" href="#phobos-utils-commandline-logging-module">phobos.utils.commandline_logging module</a><ul>
-<li><a class="reference internal" href="#phobos.utils.commandline_logging.ColoredFormatter"><code class="docutils literal notranslate"><span class="pre">ColoredFormatter</span></code></a><ul>
-<li><a class="reference internal" href="#phobos.utils.commandline_logging.ColoredFormatter.format"><code class="docutils literal notranslate"><span class="pre">ColoredFormatter.format()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#phobos.utils.commandline_logging.get_logger"><code class="docutils literal notranslate"><span class="pre">get_logger()</span></code></a></li>
-<li><a class="reference internal" href="#phobos.utils.commandline_logging.setup_logger_level"><code class="docutils literal notranslate"><span class="pre">setup_logger_level()</span></code></a></li>
-</ul>
-</li>
-<li><a class="reference internal" href="#phobos-utils-git-module">phobos.utils.git module</a><ul>
+<li><a class="reference internal" href="#phobos-utils-commandline-logging-module">phobos.utils.commandline_logging module</a></li>
+<li><a class="reference internal" href="#module-phobos.utils.git">phobos.utils.git module</a><ul>
 <li><a class="reference internal" href="#phobos.utils.git.MergeRequest"><code class="docutils literal notranslate"><span class="pre">MergeRequest</span></code></a><ul>
 <li><a class="reference internal" href="#phobos.utils.git.MergeRequest.description"><code class="docutils literal notranslate"><span class="pre">MergeRequest.description</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.git.MergeRequest.get_options"><code class="docutils literal notranslate"><span class="pre">MergeRequest.get_options()</span></code></a></li>
@@ -691,12 +652,12 @@ submechanism</p>
 <li><a class="reference internal" href="#phobos.utils.git.update"><code class="docutils literal notranslate"><span class="pre">update()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#phobos-utils-hyrodyn-module">phobos.utils.hyrodyn module</a><ul>
+<li><a class="reference internal" href="#module-phobos.utils.hyrodyn">phobos.utils.hyrodyn module</a><ul>
 <li><a class="reference internal" href="#phobos.utils.hyrodyn.debug_report"><code class="docutils literal notranslate"><span class="pre">debug_report()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.hyrodyn.get_load_report"><code class="docutils literal notranslate"><span class="pre">get_load_report()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#phobos-utils-inertia-module">phobos.utils.inertia module</a><ul>
+<li><a class="reference internal" href="#module-phobos.utils.inertia">phobos.utils.inertia module</a><ul>
 <li><a class="reference internal" href="#phobos.utils.inertia.calculateBoxInertia"><code class="docutils literal notranslate"><span class="pre">calculateBoxInertia()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.inertia.calculateCylinderInertia"><code class="docutils literal notranslate"><span class="pre">calculateCylinderInertia()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.inertia.calculateEllipsoidInertia"><code class="docutils literal notranslate"><span class="pre">calculateEllipsoidInertia()</span></code></a></li>
@@ -704,7 +665,7 @@ submechanism</p>
 <li><a class="reference internal" href="#phobos.utils.inertia.calculateSphereInertia"><code class="docutils literal notranslate"><span class="pre">calculateSphereInertia()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#phobos-utils-misc-module">phobos.utils.misc module</a><ul>
+<li><a class="reference internal" href="#module-phobos.utils.misc">phobos.utils.misc module</a><ul>
 <li><a class="reference internal" href="#phobos.utils.misc.append_string"><code class="docutils literal notranslate"><span class="pre">append_string()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.check_for_iterable"><code class="docutils literal notranslate"><span class="pre">check_for_iterable()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.color_parser"><code class="docutils literal notranslate"><span class="pre">color_parser()</span></code></a></li>
@@ -734,7 +695,7 @@ submechanism</p>
 <li><a class="reference internal" href="#phobos.utils.misc.trunc"><code class="docutils literal notranslate"><span class="pre">trunc()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#phobos-utils-xml-module">phobos.utils.xml module</a><ul>
+<li><a class="reference internal" href="#module-phobos.utils.xml">phobos.utils.xml module</a><ul>
 <li><a class="reference internal" href="#phobos.utils.xml.adapt_mesh_pathes"><code class="docutils literal notranslate"><span class="pre">adapt_mesh_pathes()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.xml.get_joint_info_dict"><code class="docutils literal notranslate"><span class="pre">get_joint_info_dict()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.xml.read_relative_filename"><code class="docutils literal notranslate"><span class="pre">read_relative_filename()</span></code></a></li>
@@ -742,7 +703,7 @@ submechanism</p>
 <li><a class="reference internal" href="#phobos.utils.xml.transform_object"><code class="docutils literal notranslate"><span class="pre">transform_object()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#phobos-utils-transform-module">phobos.utils.transform module</a><ul>
+<li><a class="reference internal" href="#module-phobos.utils.transform">phobos.utils.transform module</a><ul>
 <li><a class="reference internal" href="#phobos.utils.transform.angle_between_vectors"><code class="docutils literal notranslate"><span class="pre">angle_between_vectors()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.transform.create_transformation"><code class="docutils literal notranslate"><span class="pre">create_transformation()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.transform.get_adjoint"><code class="docutils literal notranslate"><span class="pre">get_adjoint()</span></code></a></li>
@@ -759,7 +720,7 @@ submechanism</p>
 <li><a class="reference internal" href="#phobos.utils.transform.skew_symmetric"><code class="docutils literal notranslate"><span class="pre">skew_symmetric()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#phobos-utils-tree-module">phobos.utils.tree module</a><ul>
+<li><a class="reference internal" href="#module-phobos.utils.tree">phobos.utils.tree module</a><ul>
 <li><a class="reference internal" href="#phobos.utils.tree.find_close_ancestor_links"><code class="docutils literal notranslate"><span class="pre">find_close_ancestor_links()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.tree.find_common_root"><code class="docutils literal notranslate"><span class="pre">find_common_root()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.tree.find_leaves"><code class="docutils literal notranslate"><span class="pre">find_leaves()</span></code></a></li>
@@ -820,13 +781,13 @@ submechanism</p>
         <li class="right" >
           <a href="phobos.geometry.html" title="phobos geometry module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (a74ba09) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (543d220) documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">phobos utils module</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014-2022, DFKI GmbH and University of Bremen.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.5.
     </div>
   </body>
 </html>
