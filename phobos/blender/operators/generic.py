@@ -625,6 +625,8 @@ class AnnotationsOperator(bpy.types.Operator):
         default=False
     )
 
+    # If this is a new annotation and the type already exists,
+    # offer to copy the properties from another object once
     copyPropertiesAsked = False
 
     # Used to store properties that were deleted
@@ -821,8 +823,8 @@ class AnnotationsOperator(bpy.types.Operator):
                 if ancestor is not None:
                     layout.label(text="An annotation with this type already exists. Copy parameters?")
                     split = layout.split()
-                    split.prop(self, 'yes')
-                    split.prop(self, 'no')
+                    split.prop(self, 'yes', icon="CHECKMARK", icon_only=True)
+                    split.prop(self, 'no', icon="CANCEL", icon_only=True)
 
         else:
             layout.prop(self, 'visual_size')
