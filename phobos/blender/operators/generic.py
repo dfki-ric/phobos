@@ -110,6 +110,9 @@ class DynamicProperty(PropertyGroup):
     isEnabled : bpy.props.BoolProperty()
     isEnabledOption : bpy.props.BoolProperty() # Whether this property can be disabled
 
+    delete : bpy.props.BoolProperty()
+    deleteOption : bpy.props.BoolProperty()
+
     dictName: bpy.props.StringProperty()
 
     def assignParent(self, name):
@@ -179,6 +182,16 @@ class DynamicProperty(PropertyGroup):
 
         """
         self.isEnabledOption = True
+
+    def allowDeletion(self):
+        """
+        Call to add a button to delete this property
+
+        The functionality has to be implemented by the operator using DynamicProperties
+
+        self.delete is True if the user wants to delete this DynamicProperty
+        """
+        self.deleteOption = True
 
     def assignValue(self, name, value, boolAsString=False):
         """
@@ -295,6 +308,12 @@ class DynamicProperty(PropertyGroup):
             row.enabled = self.isEnabled
         else:
             row = layout
+
+        self.deleteOption = True
+        if self.deleteOption:
+            line = layout.split(factor=0.9)
+            row = line.row()
+            line.prop(self, 'delete', text="", icon="X", icon_only=True)
 
         if not self.displayName:
             self.displayName = self.name
@@ -608,6 +627,10 @@ class AnnotationsOperator(bpy.types.Operator):
 
     copyPropertiesAsked = False
 
+    # Used to store properties that were deleted
+    # These values will be remove from the object when pressing OK
+    deletedProperties = []
+
     def getPropertyTypeID(self, name):
         for n, id in AnnotationsOperator.TYPES_ROOT:
             if name == n:
@@ -713,6 +736,58 @@ class AnnotationsOperator(bpy.types.Operator):
                 if prop.valueType == DynamicProperty.LIST:
                     return list
 
+    def deleteCustomProperties(self):
+        """Delete properties that are set to be deleted"""
+        for i in range(len(self.custom_properties)):
+            prop = self.custom_properties[i]
+            if prop.delete:
+                # Remove makro if exists
+                parent = prop.dictName
+                name = prop.name
+                self.removeMakro(parent, name)
+                # Remember to remove this value from the object
+                if self.modify and not parent:
+                    self.deletedProperties.append(name)
+                self.custom_properties.remove(i)
+                self.deleteCustomProperties()
+                break
+
+    def removeMakro(self, parent, name):
+        for i in range(len(self.makros)):
+            makro = self.makros[i]
+            p, n = makro
+            if p == parent and n == name:
+                del self.makros[i]
+                break
+
+    def addProperty(self, c1):
+        # The user selected a property type
+        if self.add_property != self.ADD_PROPERTY_TEXT:
+            ID = self.getPropertyTypeID(self.add_property)
+            newName = self.add_property_name
+            # Check if a property with this name already exists
+            if newName and self.getPropertyByName(newName, self.add_property_root) is None:
+                new_prop = self.custom_properties.add()
+                new_prop.valueType = ID
+                if not self.rootType() == list:
+                    new_prop.name = newName
+                # Assign dict
+                if self.add_property_root != self.ANNOTATION_ROOT:
+                    new_prop.assignParent(self.add_property_root)
+
+                # Set as makro
+                if self.add_property == "Makro":
+                    root = self.add_property_root if self.add_property_root != self.ANNOTATION_ROOT else ""
+                    self.makros.append((root, self.add_property_name))
+                    new_prop.displayName = new_prop.name + " (Makro)"
+
+                # In case this property was deleted before, forget
+                if self.add_property_root == self.ANNOTATION_ROOT:
+                    self.deletedProperties.remove(newName)
+            else:
+                c1.alert = True
+            self.add_property = self.ADD_PROPERTY_TEXT
+
     def draw(self, context):
         """
 
@@ -786,28 +861,9 @@ class AnnotationsOperator(bpy.types.Operator):
 
             layout.label(text="Custom properties")
 
-            # The user selected a property type
-            if self.add_property != self.ADD_PROPERTY_TEXT:
-                ID = self.getPropertyTypeID(self.add_property)
-                newName = self.add_property_name
-                # Check if a property with this name already exists
-                if newName and self.getPropertyByName(newName, self.add_property_root) is None:
-                    new_prop = self.custom_properties.add()
-                    new_prop.valueType = ID
-                    if not self.rootType() == list:
-                        new_prop.name = newName
-                    # Assign dict
-                    if self.add_property_root != self.ANNOTATION_ROOT:
-                        new_prop.assignParent(self.add_property_root)
+            self.deleteCustomProperties()
 
-                    # Set as makro
-                    if self.add_property == "Makro":
-                        root = self.add_property_root if self.add_property_root != self.ANNOTATION_ROOT else ""
-                        self.makros.append((root, self.add_property_name))
-                        new_prop.displayName = new_prop.name+" (Makro)"
-                else:
-                    c1.alert = True
-                self.add_property = self.ADD_PROPERTY_TEXT
+            self.addProperty(c1)
 
             DynamicProperty.drawAll(self.custom_properties, layout)
 
@@ -856,6 +912,12 @@ class AnnotationsOperator(bpy.types.Operator):
             ob["$include_parent"] = self.include_parent
             ob["$include_transform"] = self.include_transform
             ob["GA_makros"] = self.makros
+
+        # Remove deleted properties
+        for i in range(len(self.deletedProperties)):
+            name = self.deletedProperties[i]
+            del ob[name]
+        self.deletedProperties = []
 
         # Write custom properties to object
         for i in range(len(self.custom_properties)):
