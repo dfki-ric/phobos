@@ -524,6 +524,32 @@ def deriveInterface(obj):
         **annotations
     )
 
+def deriveAnnotationHelper(value, name, parent, obj):
+    """
+    Resolves makros
+    """
+    if "GA_makros" in obj:
+        if [parent, name] in obj["GA_makros"]:  # This is a makro
+            effParent = sUtils.getEffectiveParent(obj)
+            if obj["$include_parent"] and effParent:
+                while "$parent" in value:
+                    index = value.index("$parent")
+                    propertyIndex = index+len("$parent")
+                    # $parent.{prop}, print property value or null
+                    if propertyIndex+2 < len(value) and value[propertyIndex:propertyIndex+2] == ".{":
+                        propertyEndIndex = value.index("}", propertyIndex)
+                        prop = value[propertyIndex+2:propertyEndIndex].strip()
+                        endReplace = propertyEndIndex
+                        if prop in effParent:
+                            replace = str(effParent[prop])
+                        else:
+                            replace = "null"
+                    else:  # $parent without property, print name
+                        endReplace = propertyIndex-1
+                        replace = effParent.name
+                    value = value[:index]+replace+value[endReplace+1:]
+
+    return value
 
 def deriveAnnotation(obj):
     """Derives the annotation info of an annotation object.
@@ -536,7 +562,9 @@ def deriveAnnotation(obj):
             if hasattr(v, "to_list"):
                 v = v.to_list()
             elif "PropertyGroup" in repr(type(v)):
-                v = {_k: _v for _k, _v in v.items()}
+                v = {_k: deriveAnnotationHelper(_v, _k, k, obj) for _k, _v in v.items()}
+            else:
+                v = deriveAnnotationHelper(v, k, "", obj)
             props[k] = v
 
     props = misc.deepen_dict(props)
