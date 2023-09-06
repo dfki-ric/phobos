@@ -1514,6 +1514,8 @@ class DefineJointConstraintsOperator(Operator):
 
         """
         layout = self.layout
+        if self.name.replace(" ", "_") != self.name:
+            layout.label(text="Created as "+self.name.replace(" ", "_"))
         if len(context.selected_objects) == 1:
             layout.prop(self, "name")
         layout.prop(self, "joint_type", text="joint Type")
@@ -1613,7 +1615,7 @@ class DefineJointConstraintsOperator(Operator):
                 assert joint.parent is not None and joint.parent.phobostype == "link", \
                     f"You need to have a link parented to {joint.name} before you can create a joint"
                 if len(self.name) > 0:
-                    joint["joint/name"] = self.name
+                    joint["joint/name"] = self.name.replace(" ", "_")
                 jUtils.setJointConstraints(
                     joint=joint,
                     jointtype=self.joint_type,
