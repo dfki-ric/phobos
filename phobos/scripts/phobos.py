@@ -1,28 +1,29 @@
 #!python
-from pkg_resources import get_distribution, DistributionNotFound
-
 try:
-    # Change here if project is renamed and does not equal the package name
-    __version__ = get_distribution("phobos").version
-except DistributionNotFound:
-    __version__ = 'v2.0.0'
-finally:
-    del get_distribution, DistributionNotFound
+    # in newer version this deprecates in favor of importlib.resources
+    from importlib.metadata import version, PackageNotFoundError
+except ImportError:
+    try:
+        from importlib_metadata import version, PackageNotFoundError
+    except ImportError:
+        from pkg_resources import get_distribution, DistributionNotFound as PackageNotFoundError
+        def version(package_name):
+            return get_distribution("phobos").version
+try:
+    __version__ = version("phobos")
+except PackageNotFoundError:
+    __version__ = '2.0.0'
+del version, PackageNotFoundError
 
 
 def main():
     import sys
     from .. import scripts
 
-    print(f"\n*** This is phobos {__version__} ***")
+    # print(f"\n*** This is phobos {__version__} ***")
     script_files = [f for f in dir(scripts) if not f.startswith("__") and f != "phobos"]
-    available_scripts = [(f, getattr(scripts, f).INFO, None) for f in script_files if getattr(scripts, f).can_be_used()]
-    unavailable_scripts = [(f, getattr(scripts, f).INFO, getattr(scripts, f).cant_be_used_msg()) for f in script_files
-                           if not getattr(scripts, f).can_be_used()]
 
-    if len(sys.argv) > 1 and sys.argv[1] in [ascr[0] for ascr in available_scripts + unavailable_scripts]:
-        if sys.argv[1] in unavailable_scripts:
-            print(f"Attention: Script might not work properly:" + getattr(scripts, sys.argv[1]).cant_be_used_msg())
+    if len(sys.argv) > 1 and sys.argv[1] in script_files:
         if "--cProfile" in sys.argv:
             print("Running with profiler")
             sys.argv.remove("--cProfile")
@@ -49,6 +50,11 @@ def main():
         else:
             sys.exit(getattr(scripts, sys.argv[1]).main(sys.argv[2:]))
     else:
+        available_scripts = [(f, getattr(scripts, f).INFO, None) for f in script_files if
+                             getattr(scripts, f).can_be_used()]
+        unavailable_scripts = [(f, getattr(scripts, f).INFO, getattr(scripts, f).cant_be_used_msg()) for f in
+                               script_files
+                               if not getattr(scripts, f).can_be_used()]
         print("Phobos is a tool to process simulation models \n")
         print("Usage:")
         print("phobos COMMAND ARGUMENTS")

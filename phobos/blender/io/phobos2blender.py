@@ -131,7 +131,7 @@ def createGeometry(viscol, geomsrc, linkobj=None):
         eUtils.parentObjectsTo(newgeom, linkobj)
         newgeom.matrix_local = mathutils.Matrix(
             viscol.joint_relative_origin.to_matrix()
-            if viscol._related_robot_instance is not None and viscol.relative_to != linkobj.name else viscol.origin.to_matrix()
+            if viscol._related_robot_instance is not None and viscol.origin.relative_to != linkobj.name else viscol.origin.to_matrix()
         )
 
     bUtils.sortObjectToCollection(newgeom, cname=geomsrc)
@@ -164,7 +164,7 @@ def createInertial(inertial: representation.Inertial, newlink: bpy.types.Object,
     eUtils.parentObjectsTo(inertialobject, newlink)
     inertialobject.matrix_local = mathutils.Matrix(
         inertial.joint_relative_origin.to_matrix()
-        if inertial._related_robot_instance is not None and inertial.relative_to != linkobj.name else inertial.origin.to_matrix()
+        if inertial._related_robot_instance is not None and inertial.origin.relative_to != newlink.name else inertial.origin.to_matrix()
     )
     sUtils.selectObjects((inertialobject,), clear=True, active=0)
 
@@ -242,7 +242,7 @@ def createLink(link):
         _scale = deepcopy(newgeom.scale)
         newgeom.matrix_local = mathutils.Matrix(
             viscol.joint_relative_origin.to_matrix()
-            if viscol._related_robot_instance is not None and viscol.relative_to != linkobj.name else viscol.origin.to_matrix()
+            if viscol._related_robot_instance is not None and viscol.origin.relative_to != newlink.name else viscol.origin.to_matrix()
         )
         newgeom.scale = _scale
 
@@ -260,6 +260,10 @@ def createLink(link):
                 newlink[f"link/{prop}"] = value
 
     bUtils.sortObjectToCollection(newlink, 'link')
+
+    if bpy.context.scene.phoboswireframesettings.links:
+        newlink.display_type = "WIRE"
+
     return newlink
 
 
@@ -321,7 +325,6 @@ def createJoint(joint: representation.Joint, linkobj=None):
 
 def createInterface(interface: representation.Interface, parent, scale=None):
     bUtils.toggleLayer('interface', value=True)
-
     if not parent:
         parent = sUtils.getObjectByName(interface.parent)
     assert parent.phobostype == "link"
@@ -339,9 +342,9 @@ def createInterface(interface: representation.Interface, parent, scale=None):
     ifobj.phobostype = "interface"
     ifobj['type'] = interface.type
     ifobj['direction'] = interface.direction
-    eUtils.parentObjectsTo(ifobj, parent)
-    ifobj.matrix_local = interface.origin.to_matrix()
+    ifobj.matrix_local = mathutils.Matrix(interface.origin.to_matrix())
     ifobj.scale = (scale,) * 3
+    eUtils.parentObjectsTo(ifobj, parent)
 
     # write generic custom properties
     for prop, value in interface.to_yaml().items():
@@ -369,19 +372,26 @@ def createSensor(sensor: sensor_representations.Sensor, linkobj=None):
     )
 
     # use resource name provided as: "resource:whatever_name"
-    resource_obj = ioUtils.getResource(['sensor'] + defs.def_settings['sensors'][sensor.blender_type]['shape'].split('://')[1].split('_'))
+    resource_obj = ioUtils.getResource(['sensor', defs.def_settings['sensors'][sensor.blender_type]['shape']])
     if resource_obj:
         log("Assigned resource mesh and materials to new sensor object.", 'DEBUG')
         newsensor.data = resource_obj.data
-        newsensor.scale = (defs.def_settings['sensors'][sensor.blender_type]['size'],) * 3
     else:
-        log("Could not use resource mesh for sensor. Default cube used instead.", 'WARNING')
+        ioUtils.getResource(['sensor', 'default'])
+        log(f"Could not use resource mesh for sensor {sensor.name}. Default sensor used instead.", 'WARNING')
 
     # assign the parent if available
     if linkobj is not None:
         eUtils.parentObjectsTo(newsensor, nUtils.getObjectName(linkobj) if type(linkobj) == str else linkobj)
-        # newsensor.matrix_local = sensor.origin.to_matrix() #TODO
-
+        newsensor.matrix_local = mathutils.Matrix(
+            sensor.origin.to_matrix()
+            if getattr(sensor, "origin", None) is not None
+            else representation.Pose(relative_to=linkobj.name).to_matrix()
+        )
+    try:
+        newsensor.scale = (defs.def_settings['sensors'][sensor.blender_type]['size'],) * 3
+    except KeyError:
+        newsensor.scale = (0.2,) * 3
     # set sensor properties
     newsensor.phobostype = 'sensor'
     newsensor.name = sensor.name
@@ -389,15 +399,16 @@ def createSensor(sensor: sensor_representations.Sensor, linkobj=None):
 
     # write generic custom properties
     for prop, value in sensor.to_yaml().items():
-        if type(value) == dict:
-            for k, v in value.items():
-                newsensor[f"{prop}/{k}"] = v
-        else:
-            newsensor[f"{prop}"] = value
+        if prop not in reserved_keys.SENSOR_KEYS:
+            if type(value) == dict:
+                for k, v in value.items():
+                    newsensor[f"{prop}/{k}"] = v
+            else:
+                newsensor[f"{prop}"] = value
 
     # throw warning if type is not known
     # TODO we need to link this error to the sensor type specifications
-    if sensor.blender_type not in [key.lower() for key in defs.def_settings['sensors']]:
+    if sensor.blender_type.lower() not in [key.lower() for key in defs.def_settings['sensors']]:
         log(
             "Sensor " + sensor.name + " is of unknown/custom type: " + sensor.blender_type + ".",
             'WARNING',
@@ -406,6 +417,7 @@ def createSensor(sensor: sensor_representations.Sensor, linkobj=None):
     # select the new sensor
     sUtils.selectObjects([newsensor], clear=True, active=0)
     return newsensor
+
 
 def createSubmechanism(submechanism, linkobj=None):
     bUtils.toggleLayer('submechanism', value=True)
@@ -420,7 +432,7 @@ def createSubmechanism(submechanism, linkobj=None):
 
     # TODO: Create submechanism objects
     # use resource name provided as: "resource:whatever_name"
-    resource_obj = ioUtils.getResource(['submechanism','default'])
+    resource_obj = ioUtils.getResource(['submechanism', 'default'])
     if resource_obj:
         log("Assigned resource mesh and materials to new sensor object.", 'DEBUG')
         newsubm.data = resource_obj.data

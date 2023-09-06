@@ -330,7 +330,6 @@ def importResources(restuple, filepath=None):
     # if no filepath is provided, use the path from the preferences
     if not filepath:
         filepath = get_blender_resources_path('resources.blend')
-        print(filepath)
 
     # import new objects from resources.blend
     if new_objects:
@@ -339,7 +338,7 @@ def importResources(restuple, filepath=None):
             if objects:
                 bpy.ops.wm.append(directory=filepath + "/Object/", files=objects)
             else:
-                log('Resource objects could not be imported.', 'ERROR')
+                log(f"Resource objects {new_objects} couldn't be imported.", 'ERROR')
                 bUtils.switchToScene(currentscene)
                 return None
     objects = bpy.context.selected_objects

@@ -14,6 +14,8 @@ def matrix_to_quaternion(rotation):
     
 
 def quaternion_to_matrix(quat):
+    if type(quat) == dict:
+        quat = [quat["x"], quat["y"],  quat["z"], quat["w"]]
     try:
         return Rot.from_quat(quat).as_matrix()
     except:

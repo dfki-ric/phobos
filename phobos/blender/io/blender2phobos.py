@@ -33,8 +33,7 @@ def deriveObjectPose(obj, effectiveparent=None, logging=True):
         w2p = representation.Pose.from_matrix(effectiveparent.matrix_world.normalized(), relative_to=effectiveparent.get("link/name", effectiveparent.name))
     else:
         w2p = representation.Pose(relative_to=obj.get("link/name", obj.name))
-        return w2p #If effectiveparent is None, we assume effectiveparent is root
-
+        return w2p  # If effectiveparent is None, we assume effectiveparent is root
     w2o = representation.Pose.from_matrix(obj.matrix_world.normalized(), relative_to=effectiveparent.get("link/name", effectiveparent.name))
     p2o = w2p.inv(relative_to=effectiveparent.get("link/name", effectiveparent.name)).dot(w2o)
     p2o.relative_to = effectiveparent.get("link/name", effectiveparent.name)
@@ -510,7 +509,7 @@ def deriveInterface(obj):
                 v = {_k: _v for _k, _v in v.items()}
             if "/" not in k:
                 annotations[k] = v
-            elif not any([k.startswith(x) for x in reserved_keys.VISCOL_KEYS + reserved_keys.INTERNAL_KEYS]):
+            elif not any([k.startswith(x) for x in reserved_keys.INTERFACE_KEYS + reserved_keys.INTERNAL_KEYS]):
                 k1, k2 = k.split("/", 1)
                 if k1 not in annotations.keys():
                     annotations[k1] = {}
@@ -571,21 +570,28 @@ def deriveSensor(obj, logging=False):
             "Deriving sensor from object " + nUtils.getObjectName(obj, phobostype='sensor') + ".",
             'DEBUG',
         )
+    values = {}
+    for k, v in obj.items():
+        k = k.replace("motor/", "")
+        if k not in reserved_keys.SENSOR_KEYS+reserved_keys.INTERNAL_KEYS:
+            if hasattr(v, "to_list"):
+                v = v.to_list()
+            elif "PropertyGroup" in repr(type(v)):
+                v = {_k: _v for _k, _v in v.items()}
+            values[k] = v
 
-    values = {k.replace("sensor/", ""):  # Backwards compatiblity
-              v.to_list() if hasattr(v, "to_list") else
-              {_k: _v for _k, _v in v.items()} if "PropertyGroup" in repr(type(v)) else
-              v
-              for k, v in obj.items() if k not in reserved_keys.INTERNAL_KEYS}
+    values = misc.deepen_dict(values)
 
     parent = sUtils.getEffectiveParent(obj, ignore_selection=True, include_hidden=True)
-    sensor_type = values.pop("type")
+    if "type" in values:
+        sensor_type = values.pop("type")
 
+    values["name"] = obj.name
     if sensor_type.upper() in ["CAMERASENSOR", "CAMERA"]:
         return sensor_representations.CameraSensor(
              hud_height=240 if values.get('hud_height') is None else values.pop('hud_height'),
              hud_width=0 if values.get('hud_width') is None else values.pop('hud_width'),
-             origin=deriveObjectPose(obj=obj, logging=logging),
+             origin=deriveObjectPose(obj, effectiveparent=parent, logging=logging),
              **values
         )
     else:
@@ -595,6 +601,8 @@ def deriveSensor(obj, logging=False):
             values["link"] = values.get("joint", parent.get("joint/name", parent.name))
         if "frame" in getattr(sensor_representations, sensor_type)._class_variables:
             values["frame"] = values.get("frame", parent.get("link/name", parent.name))
+        if sensor_type == "NodePosition" and "gps" in obj.name.lower():
+            sensor_type = "GPS"
         return getattr(sensor_representations, sensor_type)(**values)
 
 
