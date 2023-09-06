@@ -585,7 +585,7 @@ def deriveSensor(obj, logging=False):
         return sensor_representations.CameraSensor(
              hud_height=240 if values.get('hud_height') is None else values.pop('hud_height'),
              hud_width=0 if values.get('hud_width') is None else values.pop('hud_width'),
-             origin=deriveObjectPose(obj, logging),
+             origin=deriveObjectPose(obj=obj, logging=logging),
              **values
         )
     else:

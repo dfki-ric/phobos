@@ -1599,13 +1599,13 @@ class DefineJointConstraintsOperator(Operator):
             lower = self.lower
             upper = self.upper
         axis = None
+        validInput = True
         if self.joint_type in ["revolute", "prismatic", "continuous"]:
             axis = self.axis
 
-        # Check if joints can be created
-        validInput = True
-        if max(axis) == 0 and min(axis) == 0:
-            validInput = False
+            # Check if joints can be created
+            if max(axis) == 0 and min(axis) == 0:
+                validInput = False
         # set properties for each joint
         if validInput:
             for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
@@ -2279,6 +2279,7 @@ class AddSensorOperator(Operator):
         parameters = self.getSensorParameters()
         # Get sensor category specific class
         sensorClass = getattr(sensor_representations, self.category)
+        # TODO remember parent if link or joint is renamed
         if "link" in sensorClass._class_variables:
             parameters["link"] = parameters.get("link", link.name)
         if "joint" in sensorClass._class_variables:
