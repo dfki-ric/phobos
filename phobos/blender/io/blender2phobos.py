@@ -402,6 +402,10 @@ def deriveLink(obj, objectlist=None, logging=True, errors=None):
         if logging:
             log("No inertia information for link object " + obj.name + ".", 'DEBUG')
     else:
+        # Apply link scale to inertial location
+        com.x = com.x*obj.scale[0]
+        com.y = com.y*obj.scale[0]
+        com.z = com.z*obj.scale[0]
         # add inertia to link
         inertial = representation.Inertial(
             mass=mass,
