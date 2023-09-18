@@ -538,10 +538,10 @@ class AnnotationsOperator(bpy.types.Operator):
     ANNOTATION_ROOT = "Annotation root"
 
     PARAMS = ["$include_parent", "$include_transform", "GA_category", "GA_name", "phobosmatrixinfo",
-              "phobostype", "GA_makros"]
+              "phobostype", "GA_macros"]
 
     TYPES = [(ADD_PROPERTY_TEXT, -1), ("Text", DynamicProperty.STRING),
-             ("Makro", DynamicProperty.STRING), ("Number", DynamicProperty.FLOAT),
+             ("Macro", DynamicProperty.STRING), ("Number", DynamicProperty.FLOAT),
              ("Boolean", DynamicProperty.BOOL)]
 
     TYPES_ROOT = TYPES + [("Dictionary", DynamicProperty.DICT), ("List", DynamicProperty.LIST)]
@@ -579,7 +579,7 @@ class AnnotationsOperator(bpy.types.Operator):
 
     isPopUp = True
 
-    makros = []
+    macros = []
 
     def propertyTypes(self, context):
         items = []
@@ -678,18 +678,18 @@ class AnnotationsOperator(bpy.types.Operator):
                 data[key] = value
         DynamicProperty.assignDict(self.custom_properties.add, data, boolAsString=True)
 
-        # Read makros
-        self.makros = []
-        if "GA_makros" in ob:
-            self.makros = ob["GA_makros"]
-            if isinstance(self.makros, str):
-                self.makros = json.loads(self.makros)
-        for makro in self.makros:
-            parent, name = makro
+        # Read macros
+        self.macroList = []
+        if "GA_macros" in ob:
+            self.macroList = ob["GA_macros"]
+            if isinstance(self.macroList, str):
+                self.macroList = json.loads(self.macroList)
+        for macro in self.macroList:
+            parent, name = macro
             # Find custom property
             for prop in self.custom_properties:
                 if prop.dictName == parent and prop.name == name:
-                    prop.displayName = name+" (Makro)"
+                    prop.displayName = name+" (Macro)"
 
     def invoke(self, context, event):
         """
@@ -704,7 +704,7 @@ class AnnotationsOperator(bpy.types.Operator):
         global annotationEditOnly
         self.modify = annotationEditOnly
         self.objectReady = False
-        self.makros = []
+        self.macroList = []
         self.copyPropertiesAsked = False
         if self.modify:
             ob = context.active_object
@@ -743,10 +743,10 @@ class AnnotationsOperator(bpy.types.Operator):
         for i in range(len(self.custom_properties)):
             prop = self.custom_properties[i]
             if prop.delete:
-                # Remove makro if exists
+                # Remove macro if exists
                 parent = prop.dictName
                 name = prop.name
-                self.removeMakro(parent, name)
+                self.removeMacro(parent, name)
                 # Remember to remove this value from the object
                 if self.modify and not parent:
                     self.deletedProperties.append(name)
@@ -754,12 +754,12 @@ class AnnotationsOperator(bpy.types.Operator):
                 self.deleteCustomProperties()
                 break
 
-    def removeMakro(self, parent, name):
-        for i in range(len(self.makros)):
-            makro = self.makros[i]
-            p, n = makro
+    def removeMacro(self, parent, name):
+        for i in range(len(self.macroList)):
+            macro = self.macroList[i]
+            p, n = macro
             if p == parent and n == name:
-                del self.makros[i]
+                del self.macroList[i]
                 break
 
     def addProperty(self, c1):
@@ -777,11 +777,11 @@ class AnnotationsOperator(bpy.types.Operator):
                 if self.add_property_root != self.ANNOTATION_ROOT:
                     new_prop.assignParent(self.add_property_root)
 
-                # Set as makro
-                if self.add_property == "Makro":
+                # Set as macro
+                if self.add_property == "Macro":
                     root = self.add_property_root if self.add_property_root != self.ANNOTATION_ROOT else ""
-                    self.makros.append((root, self.add_property_name))
-                    new_prop.displayName = new_prop.name + " (Makro)"
+                    self.macroList.append((root, self.add_property_name))
+                    new_prop.displayName = new_prop.name + " (Macro)"
 
                 # In case this property was deleted before, forget
                 if self.add_property_root == self.ANNOTATION_ROOT and newName in self.deletedProperties:
@@ -896,7 +896,7 @@ class AnnotationsOperator(bpy.types.Operator):
                     GA_parent_type=parent.phobostype if parent else None,
                     GA_transform=blender2phobos.deriveObjectPose(context.active_object)
                     if context.active_object is not None and self.include_transform else None,
-                    GA_makros=self.makros
+                    GA_macros=self.macroList
                 ),
                 size=self.visual_size
             )
@@ -913,7 +913,7 @@ class AnnotationsOperator(bpy.types.Operator):
             ob["GA_name"] = self.name
             ob["$include_parent"] = self.include_parent
             ob["$include_transform"] = self.include_transform
-            ob["GA_makros"] = self.makros
+            ob["GA_macros"] = self.macroList
 
         # Remove deleted properties
         for i in range(len(self.deletedProperties)):

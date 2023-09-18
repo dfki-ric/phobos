@@ -526,10 +526,10 @@ def deriveInterface(obj):
 
 def deriveAnnotationHelper(value, name, parent, obj):
     """
-    Resolves makros
+    Resolves macros
     """
-    if "GA_makros" in obj:
-        if [parent, name] in obj["GA_makros"]:  # This is a makro
+    if "GA_macros" in obj:
+        if [parent, name] in obj["GA_macros"]:  # This is a macro
             effParent = sUtils.getEffectiveParent(obj)
             # $parent
             if obj["$include_parent"] and effParent:
