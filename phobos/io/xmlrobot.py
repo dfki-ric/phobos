@@ -761,10 +761,10 @@ class XMLRobot(Representation):
         frame = None
         l_frame = self.get_link(end)
         j_frame = self.get_joint(end)
-        if j_frame is not None:
-            frame = j_frame
-        if frame is None:
+        if l_frame is not None:
             frame = l_frame
+        if frame is None:
+            frame = j_frame
         if frame is None:
             raise AssertionError(f"There is neither a joint nor a link with name {end}")
 
