@@ -531,6 +531,7 @@ def deriveAnnotationHelper(value, name, parent, obj):
     if "GA_makros" in obj:
         if [parent, name] in obj["GA_makros"]:  # This is a makro
             effParent = sUtils.getEffectiveParent(obj)
+            # $parent
             if obj["$include_parent"] and effParent:
                 while "$parent" in value:
                     index = value.index("$parent")
@@ -548,6 +549,26 @@ def deriveAnnotationHelper(value, name, parent, obj):
                         endReplace = propertyIndex-1
                         replace = effParent.name
                     value = value[:index]+replace+value[endReplace+1:]
+            # $transform
+            if obj["$include_transform"] and effParent:
+                while "$transform" in value:
+                    index = value.index("$transform")
+                    indexTail = index+len("$transform")
+                    split = value[indexTail:].split(maxsplit=1)
+                    tail = split[0]
+                    pose = deriveObjectPose(obj, effParent)
+                    if tail[0] != ".":
+                        tail = ".xyz"
+                        replaceEnd = indexTail
+                    else:
+                        replaceEnd = indexTail+len(tail)+1
+                    try:
+                        replace = getattr(pose, tail[1:])
+                    except Exception as e:
+                        print(f"Unknown tail {tail} for $transform")
+                        replace = f"transform{tail} (unknown)"
+
+                    value = value[:index] + str(replace) + value[replaceEnd:]
 
     return value
 

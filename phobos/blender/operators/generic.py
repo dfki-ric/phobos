@@ -784,7 +784,7 @@ class AnnotationsOperator(bpy.types.Operator):
                     new_prop.displayName = new_prop.name + " (Makro)"
 
                 # In case this property was deleted before, forget
-                if self.add_property_root == self.ANNOTATION_ROOT:
+                if self.add_property_root == self.ANNOTATION_ROOT and newName in self.deletedProperties:
                     self.deletedProperties.remove(newName)
             else:
                 c1.alert = True
