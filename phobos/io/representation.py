@@ -827,10 +827,11 @@ class Mesh(Representation, SmurfBase):
                 self._mesh_object = bpy.data.meshes.new_from_object(bpy.context.object)
                 self._mesh_object.name = self.unique_name
                 bpy.ops.object.select_all(action='DESELECT')
-                for obj in delete_objects:
-                    obj.select_set(True)
-                bpy.context.view_layer.objects.active = delete_objects[0]
-                bpy.ops.object.delete()
+                if len(delete_objects) > 0:
+                    for obj in delete_objects:
+                        obj.select_set(True)
+                    bpy.context.view_layer.objects.active = delete_objects[0]
+                    bpy.ops.object.delete()
             elif self.input_type == "file_bobj":
                 raise NotImplementedError("Loading of bobj meshes needs to be debugged!")
                 self.mesh_information = mesh_io.parse_bobj(self.input_file)
