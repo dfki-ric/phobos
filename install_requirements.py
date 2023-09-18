@@ -25,14 +25,14 @@ requirements = {
 optional_requirements = {
     "lxml": "lxml",
     "networkx": "networkx",  # optional for blender
-    "trimesh": "trimesh",  # optional for blender
+    "trimesh": "trimesh",  # optional for blender,
+    "PIL": "Pillow"
 }
 
 extra_requirements = {
     "pybullet": "pybullet",  # optional for blender
     "open3d": "open3d",  # optional for blender
-    "python-fcl": "python-fcl",  # optional for blender,
-    "PIL": "Pillow"  # optional for blender,
+    "python-fcl": "python-fcl",  # optional for blender
 }
 
 

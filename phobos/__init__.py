@@ -52,13 +52,13 @@ optional_requirements = {
     "lxml": "lxml",
     "networkx": "networkx",  # optional for blender
     "trimesh": "trimesh",  # optional for blender
+    "PIL": "Pillow"  # optional for blender
 }
 
 extra_requirements = {
     "pybullet": "pybullet",  # optional for blender
     "open3d": "open3d",  # optional for blender
-    "python-fcl": "python-fcl",  # optional for blender,
-    "PIL": "Pillow"  # optional for blender,
+    "python-fcl": "python-fcl",  # optional for blender
 }
 
 
@@ -80,7 +80,7 @@ def install_requirement(package_name, upgrade_pip=False, lib=None, ensure_pip=Tr
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", f"--target={str(lib)}", package_name])
 
 
-def check_requirements(optional=False, extra=False, force=False, upgrade_pip=False, lib=None):
+def check_requirements(optional=False, extra=False, force=False, upgrade_pip=False, lib=None, install=True):
     import importlib
     print("Checking requirements:")
     # Ensure pip is installed
@@ -99,11 +99,17 @@ def check_requirements(optional=False, extra=False, force=False, upgrade_pip=Fal
             try:
                 try:
                     if importlib.util.find_spec(import_name) is None:
-                        install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
+                        if install:
+                            install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
+                        else:
+                            raise ImportError("Uninstalled requirement:"+ req_name)
                 except AttributeError:  # when using importlib before v3.4
                     loader = importlib.find_loader(import_name)
                     if not issubclass(type(loader), importlib.machinery.SourceFileLoader):
-                        install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
+                        if install:
+                            install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
+                        else:
+                            raise ImportError("Uninstalled requirement:"+ req_name)
             except subprocess.CalledProcessError as e:
                 if import_name in list(optional_requirements.keys()) + list(extra_requirements.keys()):
                     print(f"Couldn't install optional requirement {import_name} ({req_name})")
@@ -226,9 +232,10 @@ if BPY_AVAILABLE:
         from . import utils
         from . import ci
         from . import scripts
+        check_requirements(optional=True, upgrade_pip=False, extra=False, install=False)
     except ImportError as e:
         # this is the first installation in blender so we check the requirements
-        check_requirements(optional=True, upgrade_pip=True, extra=False)
+        check_requirements(optional=True, upgrade_pip=True, extra=False, install=True)
         message = "All Phobos requirements have been installed.\nPlease restart Blender to activate the Phobos add-on!"
 
         def draw(self, context):
