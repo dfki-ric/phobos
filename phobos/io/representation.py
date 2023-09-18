@@ -824,6 +824,10 @@ class Mesh(Representation, SmurfBase):
                 bpy.context.view_layer.objects.active = mesh_objects[0]
                 if len(mesh_objects) > 1:
                     bpy.ops.object.join()
+                # DAE meshes can contain scales. These scales are not that that may be defined by URDF.
+                # Therefore we do apply this scale here, as other software would handle it this way as well.
+                # During export the mesh will problably be overwritten with a mesh containing the true scale.
+                bpy.ops.object.transform_apply(scale=True)
                 self._mesh_object = bpy.data.meshes.new_from_object(bpy.context.object)
                 self._mesh_object.name = self.unique_name
                 bpy.ops.object.select_all(action='DESELECT')
