@@ -61,13 +61,19 @@ extra_requirements = {
     "python-fcl": "python-fcl",  # optional for blender
 }
 
+installation_finished_message = "All Phobos requirements have been installed.\nPlease restart Blender to activate the Phobos add-on!"
+
 
 def install_requirement(package_name, upgrade_pip=False, lib=None, ensure_pip=True):
     if lib is None and BPY_AVAILABLE:
         lib = bpy.utils.user_resource("SCRIPTS", path="modules")
     if ensure_pip:
         # Ensure pip is installed
-        subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
+        try:
+            subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
+        except subprocess.CalledProcessError:
+            print("WARNING: We couldn't do ensurepip, we try to continue anyways")
+            pass
     # Update pip (not mandatory)
     if upgrade_pip:
         print("  Upgrading pip...")
@@ -83,8 +89,12 @@ def install_requirement(package_name, upgrade_pip=False, lib=None, ensure_pip=Tr
 def check_requirements(optional=False, extra=False, force=False, upgrade_pip=False, lib=None, install=True):
     import importlib
     print("Checking requirements:")
-    # Ensure pip is installed
-    subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
+    # Ensure pip is installe
+    try:
+        subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
+    except subprocess.CalledProcessError:
+        print("WARNING: We couldn't do ensurepip, we try to continue anyways")
+        pass
     reqs = [requirements]
     if optional:
         reqs += [optional_requirements]
@@ -128,73 +138,79 @@ def register():
     Returns:
 
     """
-    from . import defs
-    from . import io
-    from . import core
-    from . import geometry
-    from . import utils
-    from . import ci
-    # from . import scripts
+    try:
+        from . import defs
+        from . import io
+        from . import core
+        from . import geometry
+        from . import utils
+        from . import ci
+        # from . import scripts
 
-    # Recursively import all submodules
-    from . import blender
+        # Recursively import all submodules
+        from . import blender
 
-    def import_submodules(package, recursive=True, verbose=False):
-        """Import all submodules of a module, recursively, including subpackages.
-            If a module is already imported it is reloaded instead.
-            Recursion can be turned off.
-            The imported modules are returned as dictionary.
+        def import_submodules(package, recursive=True, verbose=False):
+            """Import all submodules of a module, recursively, including subpackages.
+                If a module is already imported it is reloaded instead.
+                Recursion can be turned off.
+                The imported modules are returned as dictionary.
 
-        Args:
-          package(str | module): package (name or actual module)
-          recursive(bool, optional): recursion active (Default value = True)
-          verbose(bool, optional): import feedback active (Default value = False)
+            Args:
+            package(str | module): package (name or actual module)
+            recursive(bool, optional): recursion active (Default value = True)
+            verbose(bool, optional): import feedback active (Default value = False)
 
-        Returns:
+            Returns:
 
-        """
-        import sys
-        import pkgutil
-        import importlib
+            """
+            import sys
+            import pkgutil
+            import importlib
 
-        modules = sys.modules
+            modules = sys.modules
 
-        # when using string import initial module first
-        if isinstance(package, str):
-            package = importlib.import_module(package)
+            # when using string import initial module first
+            if isinstance(package, str):
+                package = importlib.import_module(package)
 
-        results = {}
-        # iterate over all modules in package path
-        for loader, name, is_pkg in pkgutil.walk_packages(package.__path__):
-            full_name = package.__name__ + '.' + name
+            results = {}
+            # iterate over all modules in package path
+            for loader, name, is_pkg in pkgutil.walk_packages(package.__path__):
+                full_name = package.__name__ + '.' + name
 
-            # reload already imported modules
-            if full_name in modules.keys():
-                if verbose:
-                    print("RELOAD: ", full_name)
-                results[full_name] = importlib.reload(modules[full_name])
-            # otherwise import them
-            else:
-                if verbose:
-                    print("IMPORT: ", full_name)
-                results[full_name] = importlib.import_module(full_name)
+                # reload already imported modules
+                if full_name in modules.keys():
+                    if verbose:
+                        print("RELOAD: ", full_name)
+                    results[full_name] = importlib.reload(modules[full_name])
+                # otherwise import them
+                else:
+                    if verbose:
+                        print("IMPORT: ", full_name)
+                    results[full_name] = importlib.import_module(full_name)
 
-            # recursion on submodules
-            if recursive and is_pkg:
-                results.update(import_submodules(full_name))
-        return results
+                # recursion on submodules
+                if recursive and is_pkg:
+                    results.update(import_submodules(full_name))
+            return results
 
-    print("Importing phobos")
-    import_submodules(blender, verbose=True)
+        print("Importing phobos")
+        import_submodules(blender, verbose=True)
 
-    # bpy.utils.register_module(__name__)
-    blender.operators.selection.register()
-    blender.operators.io.register()
-    blender.operators.editing.register()
-    blender.operators.generic.register()
-    blender.operators.naming.register()
-    blender.operators.poses.register()
-    blender.phobosgui.register()
+        # bpy.utils.register_module(__name__)
+        blender.operators.selection.register()
+        blender.operators.io.register()
+        blender.operators.editing.register()
+        blender.operators.generic.register()
+        blender.operators.naming.register()
+        blender.operators.poses.register()
+        blender.phobosgui.register()
+    except ImportError:
+        def draw(self, context):
+            self.layout.label(text=installation_finished_message)
+        bpy.context.window_manager.popup_menu(draw, title="Phobos: Please restart Blender")  # , icon=icon)
+        raise ImportWarning(installation_finished_message)
 
 
 def unregister():
@@ -236,13 +252,8 @@ if BPY_AVAILABLE:
     except ImportError as e:
         # this is the first installation in blender so we check the requirements
         check_requirements(optional=True, upgrade_pip=True, extra=False, install=True)
-        message = "All Phobos requirements have been installed.\nPlease restart Blender to activate the Phobos add-on!"
 
-        def draw(self, context):
-            self.layout.label(text=message)
-
-        bpy.context.window_manager.popup_menu(draw, title="Phobos: Please restart Blender")  # , icon=icon)
-        print('\033[92m'+'\033[1m'+"Phobos:"+ message+'\033[0m')
+        print('\033[92m'+'\033[1m'+"Phobos:"+ installation_finished_message+'\033[0m')
 else:
         from . import defs
         from . import io
