@@ -1,5 +1,3 @@
-># **NOTE: This is the beta version of phobos2.0.0. Please test and report all issues [here](https://github.com/dfki-ric/phobos/issues). Thanks for your contribution!**
-
 [![latest-release](https://img.shields.io/github/tag/dfki-ric/phobos.svg?label=version&style=flat)](https://github.com/dfki-ric/phobos/releases)
 [![DOI](https://joss.theoj.org/papers/10.21105/joss.01326/status.svg)](https://doi.org/10.21105/joss.01326)
 [![license](https://img.shields.io/github/license/dfki-ric/phobos.svg?style=flat)](https://github.com/dfki-ric/phobos/blob/master/COPYING)
@@ -75,15 +73,15 @@ To install Phobos in blender download the phobos.zip of the release or zip the p
 Phobos has several python dependencies, those have to be installed in blender before you can use phobos.
 There are two ways of installing Phobos:
 
-1. Recommended:
-  a. Directly install the phobos.zip in blender: `Blender->Edit->Preferences->Addons->Install` and activate it.
-  b. Restart Blender.
-  c. Activate Phobos Add-on again.
-2. (Offers inspection of the requirements before installing them) Before installing the phobos.zip you can run the script install_requirements.py with blender's python.
-  a. ```bash
+- Recommended:
+  1. Directly install the phobos.zip in blender: `Blender->Edit->Preferences->Addons->Install` and activate it.
+  2. Restart Blender.
+  3. Activate Phobos Add-on again.
+- (Offers inspection of the requirements before installing them) Before installing the phobos.zip you can run the script install_requirements.py with blender's python.
+  1. ```bash
      ${BLENDER_EXECUTABLE} -b --python install_requirements.py
      ```
-  b. Install the phobos.zip in blender: `Blender->Edit->Preferences->Addons->Install` and activate it.
+  2. Install the phobos.zip in blender: `Blender->Edit->Preferences->Addons->Install` and activate it.
 
 After installation the phobos main menu can be found on the right hand side of the 3D Viewport.
 If not already visible, one can find a very small arrow to open the Blender toolbar (purple circle showing it in the image).
