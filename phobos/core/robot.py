@@ -377,18 +377,9 @@ class Robot(SMURFRobot):
                 for sub_dict in annos:
                     temp_generic_annotations[category].update(sub_dict)
         for category, annos in temp_generic_annotations.items():
-            # deal with existing names
-            if os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), category))):
-                category = "generic_annotation_"+category
-            new_k = category
-            i = 0
-            while os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), new_k))):
-                i += 1
-                new_k = f"{category}_{i}"
-            category = new_k
             # write
             if len(annos) > 0 and category not in self.smurf_annotation_keys:
-                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), category)), "w") as stream:
+                with open(os.path.join(smurf_dir, "{}_generic_annotation_{}.yml".format(self.name.replace('/','_'), category)), "w") as stream:
                     stream.write(dump_json({category: annos}, default_style=False))
                     export_files.append(os.path.split(stream.name)[-1])
 
