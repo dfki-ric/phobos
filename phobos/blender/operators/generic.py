@@ -803,7 +803,7 @@ class AnnotationsOperator(bpy.types.Operator):
         layout.label(text="Type (category) and name of your annotation")
         # Check if an annotation with this name already exists
         localColumn = layout.column()
-        if self.isObjectNameInUse(f"{self.category}:{self.name}"):
+        if not self.objectReady and self.isObjectNameInUse(f"{self.category}:{self.name}"):
             localColumn.alert = True
             localColumn.label(text="An annotation with the same type and name already exists")
         localColumn.prop(self, 'category')
@@ -883,7 +883,7 @@ class AnnotationsOperator(bpy.types.Operator):
             parent = None
             if not hasattr(context.active_object, "phobostype"):
                 log("Annotation will not be parented to the active object, as it is no phobos object", "WARNING")
-            elif self.include_parent:
+            else:
                 parent = context.active_object
             if self.isObjectNameInUse(f"{self.category}:{self.name}"):
                 log("Cannot create annotation, name in use", "WARNING")
@@ -892,7 +892,7 @@ class AnnotationsOperator(bpy.types.Operator):
                 representation.GenericAnnotation(
                     GA_category=self.category,
                     GA_name=self.name,
-                    GA_parent=parent if parent else None,
+                    GA_parent=parent.name if parent else None,
                     GA_parent_type=parent.phobostype if parent else None,
                     GA_transform=blender2phobos.deriveObjectPose(context.active_object)
                     if context.active_object is not None and self.include_transform else None,
