@@ -937,7 +937,7 @@ class EditAnnotationsOperator(bpy.types.Operator):
     """Modify annotations"""
 
     bl_idname = "phobos.edit_annotations"
-    bl_label = "Edit Annotations"
+    bl_label = "Edit Annotation"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'FILE'
     bl_options = {'REGISTER', 'UNDO'}
@@ -957,7 +957,7 @@ class AddAnnotationsOperator(bpy.types.Operator):
     """Modify annotations"""
 
     bl_idname = "phobos.add_annotations"
-    bl_label = "Add Annotations"
+    bl_label = "Add Annotation"
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'FILE'
     bl_options = {'REGISTER', 'UNDO'}
