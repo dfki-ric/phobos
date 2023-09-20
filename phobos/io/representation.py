@@ -269,9 +269,6 @@ class Texture(Representation):
             self.input_type = "file"
             self.image = None
 
-        if BPY_AVAILABLE and self.input_file.startswith("\\\\"): # Fix leading // replaced by \\
-            self.input_file = bpy.path.abspath("//"+self.input_file[2:])
-
         if self.input_file is not None:
             if not os.path.isabs(self.input_file) and "_xmlfile" in kwargs and kwargs["_xmlfile"] is not None:
                 self.input_file = os.path.normpath(os.path.join(os.path.dirname(kwargs["_xmlfile"]), self.input_file))
