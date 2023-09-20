@@ -380,7 +380,7 @@ class Robot(SMURFRobot):
         for category, annos in temp_generic_annotations.items():
             # write
             if len(annos) > 0 and category not in self.smurf_annotation_keys:
-                with open(os.path.join(smurf_dir, "{}_generic_annotation_{}.yml".format(self.name.replace('/','_'), category)), "w") as stream:
+                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), category)), "w") as stream:
                     stream.write(dump_json({category: annos}, default_style=False))
                     export_files.append(os.path.split(stream.name)[-1])
 
