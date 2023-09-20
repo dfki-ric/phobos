@@ -374,6 +374,7 @@ class Robot(SMURFRobot):
                 temp_generic_annotations[category] = annos[0]
             # Elif there are more than one and all annotations have a name
             elif len(annos) > 1 and all(type(x) == dict and len(x.keys()) == 1 for x in annos):
+                temp_generic_annotations[category] = {}
                 for sub_dict in annos:
                     temp_generic_annotations[category].update(sub_dict)
         for category, annos in temp_generic_annotations.items():
