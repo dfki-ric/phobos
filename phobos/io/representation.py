@@ -2200,6 +2200,9 @@ class GenericAnnotation(Representation, SmurfBase):
         self.GA_category = GA_category
         self.GA_name = GA_name
         self.GA_macros = GA_macros
+        # Store parent type for export
+        # TODO: Check if type has to be stored
+        self.GA_parent_type = GA_parent_type
 
         for k, v in annotations.items():
             setattr(self, k, v)

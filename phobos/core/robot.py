@@ -366,7 +366,12 @@ class Robot(SMURFRobot):
         for ga in self.categorized_annotations:
             if ga.GA_category not in temp_generic_annotations:
                 temp_generic_annotations[ga.GA_category] = []
-            temp_generic_annotations[ga.GA_category].append({ga.GA_name: ga.to_yaml()} if ga.GA_name is not None else ga.to_yaml())
+            gaYaml = ga.to_yaml()
+            # Add parent and parent type to export
+            # TODO: Check if type has to be stored
+            gaYaml["GA_parent"] = ga.GA_parent
+            gaYaml["GA_parent_type"] = ga.GA_parent_type
+            temp_generic_annotations[ga.GA_category].append({ga.GA_name: gaYaml} if ga.GA_name is not None else gaYaml)
         # clean-up the temporary lists
         for category, annos in temp_generic_annotations.items():
             # If there is only one annotation of this category
