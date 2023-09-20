@@ -533,6 +533,9 @@ def createAnnotation(ga: representation.GenericAnnotation, parent=None, size=0.1
 
     props = ga.to_yaml()
 
+    # TODO: Check if type has to be stored
+    props.pop("GA_parent_type", None)
+
     for k, v in props.items():
         annot_obj[k] = v
 

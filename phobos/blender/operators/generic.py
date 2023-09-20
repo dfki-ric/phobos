@@ -918,7 +918,8 @@ class AnnotationsOperator(bpy.types.Operator):
         # Remove deleted properties
         for i in range(len(self.deletedProperties)):
             name = self.deletedProperties[i]
-            del ob[name]
+            if name in ob:
+                del ob[name]
         self.deletedProperties = []
 
         # Write custom properties to object
