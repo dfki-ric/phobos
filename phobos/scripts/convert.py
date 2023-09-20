@@ -82,7 +82,7 @@ def main(args):
                 raise IOError(f"Please specify a directory as output, when exporting a world with multiple entities. {args.output} is not a directory.")
             for root in world.get_root_entities():
                 robot = world.assemble(root)
-                robot.export(outputdir=path.join(args.output, f"root-{root.name}"), export_config=resources.get_default_export_config(), with_meshes=args.copy_meshes)
+                robot.export(outputdir=path.join(args.output, f"root-{root.name}"), export_config=getattr(world, "export_config", resources.get_default_export_config()), with_meshes=args.copy_meshes)
     elif args.output.lower().endswith("jpg") or args.output.lower().endswith("png"):
         if robot:
             log.info("Creating thumbnail")

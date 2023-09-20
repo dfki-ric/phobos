@@ -311,7 +311,8 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "rate": "rate"
+        "rate": "rate",
+        "type": "sdf_type"
       },
       "attribute_children": {
         "parent": {
@@ -383,7 +384,8 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "rate": "rate"
+        "rate": "rate",
+        "type": "sdf_type"
       },
       "attribute_children": {
         "parent": {
@@ -402,7 +404,8 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "rate": "rate"
+        "rate": "rate",
+        "type": "sdf_type"
       },
       "attribute_children": {
         "parent": {
@@ -446,7 +449,8 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "rate": "rate"
+        "rate": "rate",
+        "type": "sdf_type"
       },
       "attribute_children": {
         "parent": {
@@ -477,7 +481,8 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "rate": "rate"
+        "rate": "rate",
+        "type": "sdf_type"
       },
       "attribute_children": {
         "parent": {
@@ -502,7 +507,8 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "rate": "rate"
+        "rate": "rate",
+        "type": "sdf_type"
       },
       "attribute_children": {
         "parent": {
@@ -873,7 +879,8 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "rate": "rate"
+        "rate": "rate",
+        "type": "sdf_type"
       },
       "attribute_children": {
         "parent": {
@@ -966,7 +973,7 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "type": "type"
+        "type": "sdf_type"
       },
       "value_children": {
         "always_on": "always_on",
@@ -1012,7 +1019,7 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "type": "type"
+        "type": "sdf_type"
       },
       "value_children": {
         "always_on": "always_on",
@@ -1056,7 +1063,7 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "type": "type"
+        "type": "sdf_type"
       },
       "value_children": {
         "always_on": "always_on",
@@ -1083,7 +1090,7 @@
       "tag": "sensor",
       "attributes": {
         "name": "name",
-        "type": "type"
+        "type": "sdf_type"
       },
       "value_children": {
         "always_on": "always_on",
@@ -1174,13 +1181,13 @@
       }
     },
     "Box": {
-      "tag": "Cylinder",
+      "tag": "Box",
       "attributes": {
         "size": "size"
       }
     },
     "Sphere": {
-      "tag": "Cylinder",
+      "tag": "Sphere",
       "attributes": {
         "radius": "radius"
       }

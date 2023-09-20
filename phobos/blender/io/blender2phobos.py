@@ -770,6 +770,11 @@ def deriveRepresentation(obj, logging=True, adjust=True):
     return repr_instance
 
 
+def fixLinkNames(objectlist):
+    for obj in objectlist:
+        if obj.phobostype == 'link':
+            obj.name = obj.name.replace(" ", "_")
+
 def deriveRobot(root, name='', objectlist=None):
     """
     Returns the phobos.core.Robot instance of a Phobos-Blender model.
@@ -802,6 +807,8 @@ def deriveRobot(root, name='', objectlist=None):
         objectlist = sUtils.getChildren(
             root, selected_only=ioUtils.getExpSettings().selectedOnly, include_hidden=False
         )
+
+    fixLinkNames(objectlist)
 
     # XMLVersion [TODO v2.1.0] Add matching constructor to phobos.core.Robot
     # TODO ErrorMessageWithBox(message="Link {} is not defined as a joint. Use Model Editing > Kinematics > Define Joint".format(obj.name))

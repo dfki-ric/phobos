@@ -575,18 +575,20 @@ class Mesh(Representation, SmurfBase):
         } if mesh_orientation is None else mesh_orientation
         self._exported = {}
         if self.input_file is not None:
+            self.imported = {
+                "filepath": self.input_file
+            }
             git_root = git.get_root(os.path.dirname(self.input_file))
             if git_root is not None:
-                _, _, url = git.get_repo_data(git_root)
-                self.imported = {
-                    "remote": url,
-                    "commit": git.revision(git_root),
-                    "filepath": os.path.relpath(self.input_file, git_root)
-                }
-            else:
-                self.imported = {
-                    "filepath": self.input_file
-                }
+                try:
+                    _, _, url = git.get_repo_data(git_root)
+                    self.imported = {
+                        "remote": url,
+                        "commit": git.revision(git_root),
+                        "filepath": os.path.relpath(self.input_file, git_root)
+                    }
+                except:
+                    pass
         else:
             self.imported = "input file not known"
         self.history = [f"Instantiated with filepath={filepath}->{self.input_file}, scale={scale}, mesh={mesh}, meshname={meshname}, "
@@ -825,13 +827,21 @@ class Mesh(Representation, SmurfBase):
                 bpy.context.view_layer.objects.active = mesh_objects[0]
                 if len(mesh_objects) > 1:
                     bpy.ops.object.join()
+                # DAE meshes can contain scales. These scales are not that that may be defined by URDF.
+                # Therefore we do apply this scale here, as other software would handle it this way as well.
+                # During export the mesh will problably be overwritten with a mesh containing the true scale.
+                bpy.ops.object.transform_apply(scale=True)
                 self._mesh_object = bpy.data.meshes.new_from_object(bpy.context.object)
                 self._mesh_object.name = self.unique_name
                 bpy.ops.object.select_all(action='DESELECT')
-                for obj in delete_objects:
-                    obj.select_set(True)
-                bpy.context.view_layer.objects.active = delete_objects[0]
-                bpy.ops.object.delete()
+                if len(delete_objects+mesh_objects) > 0:
+                    for obj in delete_objects+mesh_objects:
+                        try:
+                            obj.select_set(True)
+                        except ReferenceError:
+                            pass
+                    bpy.context.view_layer.objects.active = (delete_objects+mesh_objects)[0]
+                    bpy.ops.object.delete()
             elif self.input_type == "file_bobj":
                 raise NotImplementedError("Loading of bobj meshes needs to be debugged!")
                 self.mesh_information = mesh_io.parse_bobj(self.input_file)
@@ -1349,7 +1359,7 @@ class Visual(Representation, SmurfBase):
         link = [ln for ln in self._related_robot_instance.links if self in ln.visuals]
         assert len(link) == 1
         transformation = self._related_robot_instance.get_transformation(link[0]).dot(self.origin.to_matrix())
-        return Pose.from_matrix(transformation)
+        return Pose.from_matrix(transformation, relative_to=self._related_robot_instance.get_root())
 
     @property
     def position_from_root(self):

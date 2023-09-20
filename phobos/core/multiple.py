@@ -165,9 +165,10 @@ class Arrangement(Representation, SmurfBase):
     _related_world_instance = None
     _related_entity_instance = None
 
-    def __init__(self, inputfile=None, entities=None, frames=None, **kwargs):
+    def __init__(self, name=None, inputfile=None, entities=None, frames=None, **kwargs):
         Representation.__init__(self)
         SmurfBase.__init__(self, returns=["entities"], **kwargs)
+        self.name = name
         self.entities = _plural(entities)
         self.inputfile = os.path.abspath(inputfile)
         self._frames = _plural(frames)
@@ -284,7 +285,7 @@ class Arrangement(Representation, SmurfBase):
         else:
             raise TypeError(f"Wrong model type of entity {root_entity.name}: {type(root_entity.model)}")
         assembly.unlink_from_world()
-        assembly.rename_all(prefix=root_entity.name + "_")
+        assembly.rename_all(prefix=root_entity.name + "_" if self.name is None else self.name + "_" + root_entity.name + "_")
         entities_in_tree = [root_entity]
 
         attached = 1
