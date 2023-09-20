@@ -19,6 +19,7 @@ from ..utils.misc import read_number_from_config, regex_replace, create_dir, edi
 from ..utils.transform import create_transformation, inv, get_adjoint, round_array
 from ..utils.tree import find_close_ancestor_links, get_joints
 from ..utils.xml import transform_object, get_joint_info_dict
+from ..blender import reserved_keys
 
 log = get_logger(__name__)
 
@@ -371,6 +372,9 @@ class Robot(SMURFRobot):
             # TODO: Check if type has to be stored
             gaYaml["GA_parent"] = ga.GA_parent
             gaYaml["GA_parent_type"] = ga.GA_parent_type
+            # Remove keys that are not required
+            for key in reserved_keys.ANNOTATION_KEYS:
+                gaYaml.pop(key, None)
             temp_generic_annotations[ga.GA_category].append({ga.GA_name: gaYaml} if ga.GA_name is not None else gaYaml)
         # clean-up the temporary lists
         for category, annos in temp_generic_annotations.items():

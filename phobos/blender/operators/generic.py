@@ -538,7 +538,7 @@ class AnnotationsOperator(bpy.types.Operator):
     ANNOTATION_ROOT = "Annotation root"
 
     PARAMS = ["$include_parent", "$include_transform", "GA_category", "GA_name", "phobosmatrixinfo",
-              "phobostype", "GA_macros"]
+              "phobostype", "GA_macros", "GA_parent_type"]
 
     TYPES = [(ADD_PROPERTY_TEXT, -1), ("Text", DynamicProperty.STRING),
              ("Macro", DynamicProperty.STRING), ("Number", DynamicProperty.FLOAT),
