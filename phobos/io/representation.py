@@ -840,10 +840,13 @@ class Mesh(Representation, SmurfBase):
                     bpy.context.view_layer.objects.active = (delete_objects+mesh_objects)[0]
                     bpy.ops.object.delete()
             elif self.input_type == "file_bobj":
-                raise NotImplementedError("Loading of bobj meshes needs to be debugged!")
-                self.mesh_information = mesh_io.parse_bobj(self.input_file)
-                self._mesh_object = mesh_io.mesh_info_dict_2_blender(self.unique_name, **self.mesh_information)
-                bpy.context.view_layer.objects.active = bpy.data.objects.new(self.unique_name, self.mesh_object)
+                log.warn("WARNING: Loading of bobj meshes is experimental and needs to be debugged!")
+                try:
+                    self.mesh_information = mesh_io.parse_bobj(self.input_file)
+                    self._mesh_object = bpy.data.meshes.new(self.unique_name)
+                    mesh.from_pydata(self.mesh_information["vertices"], [], [f[0] for f in self.mesh_information["faces"]])
+                except:
+                    raise ImportError("BOBJ loading is an experimental feature. If you have another mesh source try that.")
             self._operations.append("_loaded_in_blender")
             self._mesh_object["input_file"] = self.input_file
             self.changed = True  # as we there might be unnoticed changes by blender
