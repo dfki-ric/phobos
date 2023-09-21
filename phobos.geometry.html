@@ -5,11 +5,11 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>phobos geometry module &#8212; Phobos 2.0.0 (221b6b3) documentation</title>
+    <title>phobos geometry module &#8212; Phobos 2.0.0 (88f7aa9) documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css?v=514cf933" />
     
-    <script src="_static/documentation_options.js?v=747a8eb2"></script>
+    <script src="_static/documentation_options.js?v=2f5dab10"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="phobos.scenes.html" title="phobos scenes module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (221b6b3) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (88f7aa9) documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">phobos geometry module</a></li> 
       </ul>
     </div>  
@@ -147,23 +147,6 @@ NOTE: For bobj it’s necessary to pass a trimesh.Trimesh as mesh other will rai
 <dt class="sig sig-object py" id="phobos.geometry.io.import_mesh">
 <span class="sig-prename descclassname"><span class="pre">phobos.geometry.io.</span></span><span class="sig-name descname"><span class="pre">import_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">urdf_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.io.import_mesh" title="Link to this definition">¶</a></dt>
 <dd><p>Import the mesh from a given filepath with an urdf_path.</p>
-</dd></dl>
-
-<dl class="py function">
-<dt class="sig sig-object py" id="phobos.geometry.io.mesh_info_dict_2_blender">
-<span class="sig-prename descclassname"><span class="pre">phobos.geometry.io.</span></span><span class="sig-name descname"><span class="pre">mesh_info_dict_2_blender</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertices</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">faces</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vertex_normals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">texture_coords</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">mesh_info_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.io.mesh_info_dict_2_blender" title="Link to this definition">¶</a></dt>
-<dd><p>Creates the blender mesh from the mesh info dict
-:param name: the name of the mesh
-:param **mesh_info_dict: {“vertices”: (n,3) single, “vertex_normals”: (n,3) single, “faces”: [n*[3*(n,3)]] intc, [“texture_coords”: (n,2) single]}</p>
-<dl class="field-list simple">
-<dt class="field-odd">Returns<span class="colon">:</span></dt>
-<dd class="field-odd"><p>bpy.types.Mesh</p>
-</dd>
-</dl>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Remember to link the object to a valid collection</p>
-</div>
 </dd></dl>
 
 <dl class="py function">
@@ -371,7 +354,6 @@ a ‘sphere’, ‘cylinder’, ‘box’ or ‘convex’.</p>
 <li><a class="reference internal" href="#phobos.geometry.io.export_mesh"><code class="docutils literal notranslate"><span class="pre">export_mesh()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.geometry.io.import_mars_mesh"><code class="docutils literal notranslate"><span class="pre">import_mars_mesh()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.geometry.io.import_mesh"><code class="docutils literal notranslate"><span class="pre">import_mesh()</span></code></a></li>
-<li><a class="reference internal" href="#phobos.geometry.io.mesh_info_dict_2_blender"><code class="docutils literal notranslate"><span class="pre">mesh_info_dict_2_blender()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.geometry.io.mesh_info_dict_2_trimesh"><code class="docutils literal notranslate"><span class="pre">mesh_info_dict_2_trimesh()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.geometry.io.parse_bobj"><code class="docutils literal notranslate"><span class="pre">parse_bobj()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.geometry.io.parse_dae"><code class="docutils literal notranslate"><span class="pre">parse_dae()</span></code></a></li>
@@ -448,7 +430,7 @@ a ‘sphere’, ‘cylinder’, ‘box’ or ‘convex’.</p>
         <li class="right" >
           <a href="phobos.scenes.html" title="phobos scenes module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (221b6b3) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (88f7aa9) documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">phobos geometry module</a></li> 
       </ul>
     </div>
