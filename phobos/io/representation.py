@@ -257,7 +257,7 @@ class Texture(Representation):
             self.image = image
             self.input_type = "img"
             if BPY_AVAILABLE and isinstance(image, bpy.types.Image):
-                self.input_file = os.path.normpath(bpy.path.abspath(misc.sys_path(image.filepath)))
+                self.input_file = os.path.normpath(misc.sys_path(bpy.path.abspath(image.filepath)))
                 self.input_type = "img_bpy"
                 if self.unique_name is None:
                     self.unique_name, ext = os.path.splitext(image.name)

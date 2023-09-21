@@ -38,7 +38,10 @@ def sys_path(path):
     if path is None:
         return path
     if platform.system() == "Windows":
-        return path.replace("/", "\\")
+        if path.startswith("//"): # Handles Blender's relative paths
+            return "//" + path[2:].replace("/", "\\")
+        else:
+            return path.replace("/", "\\")
     else:
         return path.replace("\\", "/")
 
