@@ -566,10 +566,16 @@ class Mesh(Representation, SmurfBase):
         # OSG has for obj a special handling which changes this https://github.com/openscenegraph/OpenSceneGraph/blob/2e4ae2ea94595995c1fc56860051410b0c0be605/src/osgPlugins/obj/ReaderWriterOBJ.cpp#L208
         # This can only be switched off via an ReaderWriter option https://github.com/openscenegraph/OpenSceneGraph/blob/2e4ae2ea94595995c1fc56860051410b0c0be605/src/osgPlugins/obj/ReaderWriterOBJ.cpp#L60
         mars_mesh = self.input_file is not None and "mars_obj" in self.input_file and ".mars.obj" in self.input_file
-        self.mesh_orientation = {
-            "up": "Z" if not mars_mesh else "Y",
-            "forward": "Y" if not mars_mesh else "-Z"
-        } if mesh_orientation is None else mesh_orientation
+        if BPY_AVAILABLE and self.input_type == "file_obj":
+            self.mesh_orientation = {
+                "up": bpy.context.preferences.addons["phobos"].preferences.obj_axis_up if not mars_mesh else "Y",
+                "forward": bpy.context.preferences.addons["phobos"].preferences.obj_axis_forward if not mars_mesh else "-Z"
+            } if mesh_orientation is None else mesh_orientation
+        else:
+            self.mesh_orientation = {
+                "up": "Z" if not mars_mesh else "Y",
+                "forward": "Y" if not mars_mesh else "-Z"
+            } if mesh_orientation is None else mesh_orientation
         self._exported = {}
         if self.input_file is not None:
             self.imported = {
