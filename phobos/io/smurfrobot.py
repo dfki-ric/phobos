@@ -191,6 +191,12 @@ class SMURFRobot(XMLRobot):
 
     # [TODO v2.1.0] Refactor this
     def _init_annotations(self):
+        # do some backwards compatibility
+        for key_with_ending_s in self.smurf_annotation_keys + ["controllers"]:
+            if key_with_ending_s[:-1] in self.annotations and key_with_ending_s not in self.annotations:
+                self.annotations[key_with_ending_s] = self.annotations.pop(key_with_ending_s[:-1])
+
+        # now do something with that info
         if 'motors' in self.annotations:
             for motor_def in self.annotations['motors']:
                 # Search for the joint
@@ -215,6 +221,18 @@ class SMURFRobot(XMLRobot):
                     self.add_motor(motor)
                 elif existing is None:
                     self.add_motor(motor)
+
+        if 'controllers' in self.annotations:
+            # This is only for backwards compatibility
+            for c in self.annotations["controllers"]:
+                for m in self.motors:
+                    if str(m.joint) == c.target:
+                        if "name" in c:
+                            c.pop("name")
+                        if "type" in c and c["type"] not in representation.Motor.TYPES:
+                            c.pop("type")
+                        c.pop("target")
+                        m.add_annotations(**c)
 
         if 'sensors' in self.annotations:
             for sensor_def in self.annotations['sensors']:

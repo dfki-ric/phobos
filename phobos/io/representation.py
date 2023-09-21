@@ -1254,8 +1254,8 @@ class GeometryFactory(Representation):
 class Collision(Representation, SmurfBase):
     _class_variables = ["name", "link", "geometry", "origin", "bitmask", "primitive"]
 
-    def __init__(self, name=None, link=None, geometry=None, origin=None, bitmask=None, noDataPackage=False,
-                 reducedDataPackage=False, ccfm=None, primitive=None, **kwargs):
+    def __init__(self, name=None, link=None, geometry=None, origin=None, bitmask=None, noDataPackage=None,
+                 reducedDataPackage=None, ccfm=None, primitive=None, **kwargs):
         _parent_xml = kwargs.get("_parent_xml", None)
         if _parent_xml is not None and link is None:
             link = _parent_xml.attrib.get("name")
@@ -1280,10 +1280,8 @@ class Collision(Representation, SmurfBase):
         self.geometry = _singular(geometry)
         assert isinstance(self.origin, Pose)
         self.bitmask = bitmask
-        if noDataPackage is not None:
-            self.noDataPackage = noDataPackage
-        if reducedDataPackage is not None:
-            self.reducedDataPackage = reducedDataPackage
+        self.noDataPackage = noDataPackage
+        self.reducedDataPackage = reducedDataPackage
         if ccfm is not None:
             self.ccfm = ccfm
         if bitmask is not None:
@@ -1541,7 +1539,7 @@ class Link(Representation, SmurfBase):
     _class_variables = ["name", "visuals", "collisions", "inertial", "kccd_hull", "origin"]
 
     def __init__(self, name=None, visuals=None, inertial=None, collisions=None, origin=None,
-                 noDataPackage=False, reducedDataPackage=False, is_human=None, kccd_hull=None, joint=None, **kwargs):
+                 noDataPackage=None, reducedDataPackage=None, is_human=None, kccd_hull=None, joint=None, **kwargs):
         SmurfBase.__init__(self, **kwargs)
         self.name = name
         self.origin = _singular(origin)
@@ -1554,12 +1552,10 @@ class Link(Representation, SmurfBase):
         for geo in self.visuals + self.collisions:
             if geo.origin.relative_to is None:
                 geo.origin.relative_to = self.name
-        if noDataPackage is not None:
-            self.noDataPackage = noDataPackage
-            self.returns += ['noDataPackage']
-        if reducedDataPackage is not None:
-            self.reducedDataPackage = reducedDataPackage
-            self.returns += ['reducedDataPackage']
+        self.noDataPackage = noDataPackage
+        self.returns += ['noDataPackage']
+        self.reducedDataPackage = reducedDataPackage
+        self.returns += ['reducedDataPackage']
         for geo in self.collisions + self.visuals:
             i = 0
             if geo.name is None:
@@ -1701,7 +1697,7 @@ class Joint(Representation, SmurfBase):
                  axis=None, origin=None, limit=None,
                  dynamics=None, safety_controller=None, calibration=None,
                  mimic=None, joint_dependencies=None, motor=None,
-                 noDataPackage=False, reducedDataPackage=False, cut_joint=False, constraint_axes=None, **kwargs):
+                 noDataPackage=None, reducedDataPackage=None, cut_joint=False, constraint_axes=None, **kwargs):
         assert name is not None
         self.name = name
         self.returns = ['name']
@@ -1737,12 +1733,10 @@ class Joint(Representation, SmurfBase):
         self.cut_joint = cut_joint
         self.constraint_axes = _plural(constraint_axes)
         self.motor = str(motor) if motor is not None else None
-        if noDataPackage is not None:
-            self.noDataPackage = noDataPackage
-            self.returns += ["noDataPackage"]
-        if reducedDataPackage is not None:
-            self.reducedDataPackage = reducedDataPackage
-            self.returns += ["reducedDataPackage"]
+        self.noDataPackage = noDataPackage
+        self.returns += ["noDataPackage"]
+        self.reducedDataPackage = reducedDataPackage
+        self.returns += ["reducedDataPackage"]
         # dynamics
         self.dynamics = _singular(dynamics)
         SmurfBase.__init__(self, **kwargs)
