@@ -815,13 +815,24 @@ class Mesh(Representation, SmurfBase):
                     log.debug(f"{self.input_file} can't be converted to bobj")
                 bpy.ops.object.delete()
             elif self.input_type == "file_dae":
-                bpy.ops.wm.collada_import(filepath=self.input_file)
+                bpy.ops.wm.collada_import(filepath=self.input_file, import_units=False)
+                # import_units=True would apply the DAE included units to the whole blender scene
+                # see https://projects.blender.org/blender/blender/issues/112557
                 self.mesh_information = mesh_io.parse_dae(self.input_file)
                 delete_objects = []
                 mesh_objects = []
                 for obj in bpy.context.selected_objects:
                     if obj.type == "MESH":
                         mesh_objects.append(obj)
+                        parent = obj.parent
+                        while parent:
+                            # if dae delivers units, the objects get scaled,
+                            # as we delete the objects and take only the meshes we need to apply those scales
+                            # REVIEW: we ignore here currently orientation changes as we assume quite simple dae's that only contain meshes
+                            #   if a dae contains more complex stuff we will probalby run into further issues that need to be tackled
+                            #   using the given example then. Please in that case open an issue.
+                            obj.scale *= parent.scale
+                            parent = parent.parent
                     else:
                         delete_objects.append(obj)
                 bpy.ops.object.select_all(action='DESELECT')
