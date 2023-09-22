@@ -1435,15 +1435,15 @@ class PhobosExportPanel(bpy.types.Panel):
         # self.layout.prop(expsets, "heightmapMesh", text="export heightmap as mesh")
 
         layout.separator()
-        splitlayout = layout.split()
+        #splitlayout = layout.split()
         #c1 = splitlayout.column()
-        c2 = splitlayout.column()
+        #c2 = splitlayout.column()
         #c1.label(text="Export Configuration") # doesn't work properly therefore excluded
         #c1.operator('phobos.move_to_scene', text='Move to configuration', icon='SCREEN_BACK')
         #c1.operator(
         #    'phobos.safely_remove_objects_from_scene', text='Remove from configuration', icon='X'
         #)
-        c2.label(text="Export")
+        layout.label(text="Export")
 
         for exportformat, meshtype in requiredMeshes:
             typename = "export_mesh_" + meshtype
@@ -1453,11 +1453,11 @@ class PhobosExportPanel(bpy.types.Panel):
                                       f"import the model")
 
         for wa in exportWarnings:
-            localColumn = c2.column()
+            #localColumn = layout.column()
             #localColumn.alert = True
-            dynamicLabel(text=wa, uiLayout=localColumn, context=context, icon="INFO")
+            dynamicLabel(text=wa, uiLayout=layout, context=context, icon="INFO")
 
-        c2.operator("phobos.export_model", icon="EXPORT")
+        layout.operator("phobos.export_model", icon="EXPORT")
         # [TODO v2.1.0] make this work again in an extra Phobos Scenes tab
         # c2.operator("phobos.export_scene", icon="WORLD_DATA") # doesn't work properly therefore excluded
 
@@ -1691,8 +1691,8 @@ def dynamicLabel(text, uiLayout, context, icon=None):
     panelWidth = context.region.width
     uiScale = bpy.context.preferences.view.ui_scale
     #margin left, margin right, difference panelWidth -> actual panel width
-    margin = uiScale*(20+30+72)
-    letterWidth = uiScale*10.7
+    margin = uiScale*(5+5)
+    letterWidth = uiScale*6
     lettersPerLine = (panelWidth - margin) / letterWidth
     iconWidth = uiScale*50
     lettersPerIconLine = (panelWidth - margin - iconWidth) / letterWidth
