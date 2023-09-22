@@ -286,18 +286,11 @@ def createJoint(joint: representation.Joint, linkobj=None):
     bUtils.activateObjectCollection(linkobj)
     sUtils.selectObjects([linkobj], clear=True, active=0)
 
-    # set axis
+    # check axis
     if joint.axis is not None:
         if mathutils.Vector(tuple(joint.axis)).length == 0.:
             log('Axis of joint {0} is of zero length: '.format(joint.name), 'ERROR')
         joint.axis = (np.array(joint.axis) / np.linalg.norm(joint.axis)).tolist()
-        if np.linalg.norm(joint.axis) != 0:
-            bpy.ops.object.mode_set(mode='EDIT')
-            editbone = linkobj.data.edit_bones[0]
-            length = editbone.length
-            editbone.tail = editbone.head + mathutils.Vector(tuple(joint.axis)).normalized() * length
-            bpy.ops.object.mode_set(mode='OBJECT')
-
     # add constraints to the joint
     jointmodel.setJointConstraints(
         joint=linkobj,

@@ -184,7 +184,7 @@ def setJointConstraints(
         if np.linalg.norm(axis) != 0:
             bpy.ops.object.mode_set(mode='EDIT')
             editbone = joint.data.edit_bones[0]
-            length = editbone.length
+            length = max(editbone.length, 0.1)  # make sure we do not have zero length
             joint["joint/axis"] = mathutils.Vector(tuple(axis))
             editbone.tail = editbone.head + mathutils.Vector(tuple(axis)).normalized() * length
             bpy.ops.object.mode_set(mode='POSE')
