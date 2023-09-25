@@ -1773,7 +1773,7 @@ class AddMotorOperator(Operator):
     maxvelocity : FloatProperty(
         name="Max Speed (m/s or rad/s)",
         default=0.0,
-        description="Maximum velocity of the joint. If you uncheck radian, you can enter °/sec here",
+        description="Maximum velocity of the joint",
     )
     controlp : FloatProperty(
         name="P Gain", default=0.0, description="P gain of position controller."
