@@ -561,10 +561,19 @@ def deriveAnnotationHelper(value, name, parent, obj):
                         tail = ".xyz"
                         replaceEnd = indexTail
                     else:
-                        replaceEnd = indexTail+len(tail)+1
+                        replaceEnd = indexTail+len(tail)
                     try:
                         replace = getattr(pose, tail[1:])
-                    except Exception as e:
+                        if type(replace) == tuple:
+                            string = ""
+                            for i in range(len(replace)):
+                                v = replace[i]
+                                v = str(v)
+                                if i > 0:
+                                    string += ", "
+                                string += v
+                            replace = "(" + string + ")"
+                    except AttributeError as e:
                         print(f"Unknown tail {tail} for $transform")
                         replace = f"transform{tail} (unknown)"
 
