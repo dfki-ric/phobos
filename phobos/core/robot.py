@@ -421,7 +421,7 @@ class Robot(SMURFRobot):
             edit_collisions = {}
         kccd_meshes = os.path.join(outputdir, rel_iv_meshes_path)
         kccd_path = os.path.join(outputdir, dirname)
-        kccd_urdf = os.path.join(kccd_path, self.name.replace('/','_') + ".urdf")
+        kccd_urdf = os.path.join(kccd_path, self.name.replace('/', '_') + ".urdf")
         create_dir(None, kccd_path)
         kccd_robot = self.duplicate()
         kccd_robot.xmlfile = kccd_urdf

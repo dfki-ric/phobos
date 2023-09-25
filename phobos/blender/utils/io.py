@@ -216,6 +216,8 @@ def getExportPath():
     Returns:
 
     """
+    if bpy.context.scene.phobosexportsettings.path.strip() == "":
+        bpy.context.scene.phobosexportsettings.path = bUtils.getPhobosPreferences().modelsfolder
     out = bpy.path.abspath(bpy.context.scene.phobosexportsettings.path)
     if not os.path.isabs(out):
         out = os.path.join(

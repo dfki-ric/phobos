@@ -25,14 +25,14 @@ requirements = {
 optional_requirements = {
     "lxml": "lxml",
     "networkx": "networkx",  # optional for blender
-    "trimesh": "trimesh",  # optional for blender
+    "trimesh": "trimesh",  # optional for blender,
+    "PIL": "Pillow"
 }
 
 extra_requirements = {
     "pybullet": "pybullet",  # optional for blender
     "open3d": "open3d",  # optional for blender
-    "python-fcl": "python-fcl",  # optional for blender,
-    "PIL": "Pillow"  # optional for blender,
+    "python-fcl": "python-fcl",  # optional for blender
 }
 
 
@@ -73,12 +73,13 @@ def check_requirements(optional=False, extra=False, force=False, upgrade_pip=Fal
         for import_name, req_name in r.items():
             print("  Checking", import_name)
             try:
-                if importlib.util.find_spec(import_name) is None:
-                    install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
-            except AttributeError:  # when using importlib before v3.4
-                loader = importlib.find_loader(import_name)
-                if not issubclass(type(loader), importlib.machinery.SourceFileLoader):
-                    install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
+                try:
+                    if importlib.util.find_spec(import_name) is None:
+                        install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
+                except AttributeError:  # when using importlib before v3.4
+                    loader = importlib.find_loader(import_name)
+                    if not issubclass(type(loader), importlib.machinery.SourceFileLoader):
+                        install_requirement(req_name, upgrade_pip=False, lib=lib, ensure_pip=False)
             except subprocess.CalledProcessError as e:
                 if import_name in list(optional_requirements.keys()) + list(extra_requirements.keys()):
                     print(f"Couldn't install optional requirement {import_name} ({req_name})")

@@ -1516,6 +1516,8 @@ class DefineJointConstraintsOperator(Operator):
 
         """
         layout = self.layout
+        if self.name.replace(" ", "_") != self.name:
+            layout.label(text="Created as "+self.name.replace(" ", "_"))
         if len(context.selected_objects) == 1:
             layout.prop(self, "name")
         layout.prop(self, "joint_type", text="joint Type")
@@ -1612,13 +1614,13 @@ class DefineJointConstraintsOperator(Operator):
             lower = self.lower
             upper = self.upper
         axis = None
+        validInput = True
         if self.joint_type in ["revolute", "prismatic", "continuous"]:
             axis = self.axis
 
-        # Check if joints can be created
-        validInput = True
-        if max(axis) == 0 and min(axis) == 0:
-            validInput = False
+            # Check if joints can be created
+            if max(axis) == 0 and min(axis) == 0:
+                validInput = False
         # set properties for each joint
         if validInput:
             for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
@@ -1627,7 +1629,7 @@ class DefineJointConstraintsOperator(Operator):
                     ErrorMessageWithBox(f"Link {joint.name} has to be parented to another link before you can define a joint")
                     return {'CANCELLED'}
                 if len(self.name) > 0:
-                    joint["joint/name"] = self.name
+                    joint["joint/name"] = self.name.replace(" ", "_")
                 jUtils.setJointConstraints(
                     joint=joint,
                     jointtype=self.joint_type,
@@ -2287,6 +2289,7 @@ class AddSensorOperator(Operator):
         parameters = self.getSensorParameters()
         # Get sensor category specific class
         sensorClass = getattr(sensor_representations, self.category)
+        # TODO remember parent if link or joint is renamed
         if "link" in sensorClass._class_variables or sensorClass == sensor_representations.GPS:
             parameters["link"] = parameters.get("link", link.name)
         if "joint" in sensorClass._class_variables:

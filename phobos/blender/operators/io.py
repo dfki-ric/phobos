@@ -13,6 +13,7 @@
 Contains all Blender operators for import and export of models/files.
 """
 
+import os
 import bpy
 from bpy.props import EnumProperty, StringProperty, BoolProperty
 from bpy.types import Operator
@@ -154,6 +155,8 @@ class ExportModelOperator(Operator):
 
         """
         robot = deriveRobot(root)
+        if not robot.name in exportpath:
+            exportpath = os.path.join(exportpath, robot.name)
         export_config = []
         # go through export settings
         for fmt in [et for et in phobos_defs.EXPORT_TYPES if getattr(bpy.context.scene, f'export_entity_{et}', False)]:
@@ -219,6 +222,7 @@ class ExportModelOperator(Operator):
             no_smurf=not getattr(bpy.context.scene, f'export_entity_smurf', False),
             apply_scale=getattr(ioUtils.getExpSettings(), 'applyMeshScale', False)
         )
+        self.report({"INFO"}, "Phobos exported to:", exportpath)
 
     def execute(self, context):
         """
@@ -267,6 +271,7 @@ class ExportModelOperator(Operator):
             bpy.ops.phobos.select_model()
 
         log("Export successful.", "INFO", end="\n\n")
+        self.report({"INFO"}, "Export successful.")
         return {'FINISHED'}
 
 

@@ -82,6 +82,8 @@ def deriveLinkfromObject(obj, scale=1, parent_link=True, parent_objects=True,
         eUtils.parentObjectsTo(obj, newlink)
     if reparent_children:
         eUtils.parentObjectsTo(list(obj.children), newlink)
+    if bpy.context.scene.phoboswireframesettings.links:
+        newlink.display_type = "WIRE"
     return newlink
 
 

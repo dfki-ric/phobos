@@ -111,8 +111,6 @@ class XMLRobot(Representation):
                 child_entity.link = link
                 if child_entity.origin is not None and child_entity.origin.relative_to is None:
                     child_entity.origin.relative_to = link
-            if link != root and link.origin is None:
-                link.origin = representation.Pose(relative_to=None)  # will be set in the joints link_with_robot
         for joint in self.joints:
             if joint.origin.relative_to is None:
                 parent = self.get_parent(joint.name)
@@ -761,12 +759,22 @@ class XMLRobot(Representation):
         frame = None
         l_frame = self.get_link(end)
         j_frame = self.get_joint(end)
-        if j_frame is not None:
-            frame = j_frame
-        if frame is None:
+        if end_type == "link" and l_frame is not None:
             frame = l_frame
-        if frame is None:
+        elif end_type == "link":
+            raise AssertionError(f"There is no link with name {end}")
+        elif end_type == "joint" and j_frame is not None:
+            frame = j_frame
+        elif end_type == "joint":
+            raise AssertionError(f"There is no link with name {end}")
+        elif end_type is None and l_frame is not None:
+            frame = l_frame
+        elif end_type is None and j_frame is not None:
+            frame = j_frame
+        elif end_type is None:
             raise AssertionError(f"There is neither a joint nor a link with name {end}")
+        else:
+            raise KeyError("Unknown end_type given to get_transformation")
 
         if isinstance(frame, representation.Link) and frame.origin is None:
             parent = self.get_parent(frame)
@@ -774,7 +782,7 @@ class XMLRobot(Representation):
                 # end == root
                 return inv(root2start)
             else:
-                return self.get_transformation(end=parent, start=start)
+                return self.get_transformation(end=parent, start=start, end_type="joint")
         elif str(start) == str(frame.origin.relative_to):
             return frame.origin.to_matrix()
         else:

@@ -99,27 +99,6 @@ def blender_2_mesh_info_dict(mesh):
     return n_info
 
 
-def mesh_info_dict_2_blender(name, vertices, faces, vertex_normals=None, texture_coords=None, **mesh_info_dict):
-    """
-    Creates the blender mesh from the mesh info dict
-    Args:
-        name: the name of the mesh
-        **mesh_info_dict: {"vertices": (n,3) single, "vertex_normals": (n,3) single, "faces": [n*[3*(n,3)]] intc, ["texture_coords": (n,2) single]}
-
-    Returns:
-        bpy.types.Mesh
-
-    Note:
-        Remember to link the object to a valid collection
-
-    """
-    assert BPY_AVAILABLE
-    import bpy
-    mesh = bpy.data.meshes.new(name)
-    mesh.from_pydata(vertices, [], [f[0] for f in faces])
-    return mesh
-
-
 def trimesh_2_mesh_info_dict(mesh):
     """
     Creates the mesh info dict
