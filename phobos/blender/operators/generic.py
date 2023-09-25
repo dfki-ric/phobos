@@ -800,17 +800,17 @@ class AnnotationsOperator(bpy.types.Operator):
 
         """
         layout = self.layout
-        layout.label(text="Type (category) and name of your annotation")
-        # Check if an annotation with this name already exists
-        localColumn = layout.column()
-        if not self.objectReady and self.isObjectNameInUse(f"{self.category}:{self.name}"):
-            localColumn.alert = True
-            localColumn.label(text="An annotation with the same type and name already exists")
-        localColumn.prop(self, 'category')
-        localColumn.prop(self, 'name')
-        #layout.prop(self, 'multiple_entries')
 
         if self.isPopUp:
+            layout.label(text="Type (category) and name of your annotation")
+            # Check if an annotation with this name already exists
+            localColumn = layout.column()
+            if not self.objectReady and self.isObjectNameInUse(f"{self.category}:{self.name}"):
+                localColumn.alert = True
+                localColumn.label(text="An annotation with the same type and name already exists")
+            localColumn.prop(self, 'category')
+            localColumn.prop(self, 'name')
+            #layout.prop(self, 'multiple_entries')
 
             if not self.copyPropertiesAsked and not self.modify:
                 ancestor = self.getAnnotationWithType(self.category)
@@ -827,6 +827,7 @@ class AnnotationsOperator(bpy.types.Operator):
                     split.prop(self, 'no', icon="CANCEL", icon_only=True)
 
         else:
+            layout.label(text="Modify the visual size of this annotation")
             layout.prop(self, 'visual_size')
 
         if self.isPopUp:
