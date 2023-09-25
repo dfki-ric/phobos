@@ -839,8 +839,7 @@ class AnnotationsOperator(bpy.types.Operator):
                 dynamicLabel(text="After you have created the annotation object, you can: \n"
                                   "- Position it in the 3d view \n"
                                   "- Parent it to other objects \n"
-                                  "- Define its properties in the custom property panel\n"
-                                  "  To create nested entries use the prop/nest/key syntax for the property name",
+                                  "Define custom properties in the panel below",
                              uiLayout=layout, width=1000)
 
             layout.separator()
