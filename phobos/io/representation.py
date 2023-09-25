@@ -20,6 +20,8 @@ from ..utils import misc, git, transform
 from ..utils.transform import inv
 from ..utils.xml import read_relative_filename
 
+from ..defs import load_json
+
 MESH_INFO_KEYS = ["vertex_normals", "texture_coords", "vertices", "faces"]
 MESH_DATA_TYPES = ["trimesh.base.Trimesh", "trimesh.scene.scene.Scene", "file_obj", "file_stl", "file_dae", "file_iv"]
 if BPY_AVAILABLE:
@@ -1485,11 +1487,51 @@ class Inertial(Representation, SmurfBase):
         """This setter should only be used from the urdf import"""
         _joint_relative_origin_setter(self, value)
 
+# The following classes are for importing and exporting robot confings as kccd files in a json format
+# KCCD definition of the robot. Contains references to the KCCDGeneral, KCCDBody, KCCDFrame and KCCDJoint classes
+class KCCDDefinition(Representation, SmurfBase):
+    _class_variables = ["bodies", "frames", "joints"]
 
-class KCCDHull(Representation, SmurfBase):
-    _class_variables = ["link", "points", "radius"]
+    def __init__(self, general=None, bodies=[], frames=[], joints=[], robot=None, **kwargs):
+        SmurfBase.__init__(self, returns=["general", "bodies", "frames", "joints"], **kwargs)
+        self.general = general
+        self.bodies = bodies
+        self.frames = frames
+        self.joints = joints
 
-    def __init__(self, points=None, radius=None, frame=None, **kwargs):
+    def create_general(self, title=None, safetyDistance=None, reportUpTo=None, computationBudget=None, maxApproximationOrder=None):
+        self.general = KCCDGeneral(title, safetyDistance, reportUpTo, computationBudget, maxApproximationOrder)
+
+
+    def create_body_from_collision(self, coll, npoints=None, iv_mesh=None, kccd_path=None,
+                                   name=None, movesWith=None, color="0x00ff00",
+                                   visualization=None, bodyRadius=None, points=None, **kwargs):
+        self.bodies.append(KCCDBody().from_collision(coll, npoints, iv_mesh, kccd_path, name, movesWith, color, visualization, bodyRadius, points, **kwargs))
+
+
+# Class for general data about the robot, in kccd format
+class KCCDGeneral(Representation, SmurfBase):
+    def __init__(self, title=None, safetyDistance=None, reportUpTo=None, computationBudget=None,
+                 maxApproximationOrder=None, **kwargs):
+        SmurfBase.__init__(self, returns=["title", "safetyDistance", "reportUpTo", "computationBudget", "maxApproximationOrder"], **kwargs)
+        self.title = title
+        self.safetyDistance = safetyDistance
+        self.reportUpTo = reportUpTo
+        self.computationBudget = computationBudget
+        self.maxApproximationOrder = maxApproximationOrder
+
+
+# Class for kccd bodies of the robot
+class KCCDBody(Representation, SmurfBase):
+    # Class variabke visualization currently not used
+    _class_variables = ["movesWith"] #, "visualization"]
+    _type_dict = {
+        "movesWith": ["links", "joints"]#,
+        #"visualization": "visuals",
+    }
+
+    def __init__(self, name=None, movesWith=None, color="0x00ff00",
+                 visualization=None, bodyRadius=None, points=None, npoints=None, **kwargs):
         """
 
         Args:
@@ -1497,35 +1539,49 @@ class KCCDHull(Representation, SmurfBase):
             radius:
             **kwargs:
         """
-        SmurfBase.__init__(returns=["points", "radius", "frame"], **kwargs)
+        SmurfBase.__init__(self, returns=["name", "movesWith", "color", "visualization", "bodyRadius", "points"], **kwargs)
         self._npoints = len(points)
+        self.name = name
+        self.movesWith = movesWith
+        self.color = color
+        self.visualization = visualization
+        self.bodyRadius = bodyRadius
         self.points = points
-        self.radius = radius
-        self.frame = frame
 
+    # Create a body from collision data
     @classmethod
-    def from_collision(self, coll, npoints=None, iv_mesh=None, kccd_path=None):
-        self.frame = coll.link
+    def from_collision(cls, coll, npoints=None, iv_mesh=None, kccd_path=None,
+                       name=None, movesWith=None, color="0x00ff00",
+                       visualization=None, bodyRadius=None, points=None, **kwargs):
+        new_body = KCCDBody(name, movesWith, color, visualization, bodyRadius, points, **kwargs)
+        new_body.fit_collision(coll, npoints, iv_mesh, kccd_path)
+        return new_body
+
+    # Create collision from mesh and given number of points
+    def fit_collision(self, coll, npoints=None, iv_mesh=None, kccd_path=None):
+        if npoints is not None:
+            npoints = self._npoints
+        self.movesWith = coll.link
         if isinstance(coll.geometry, Sphere):
             self._npoints = 1
-            self.radius = coll.geometry.radius
+            self.bodyRadius = coll.geometry.radius
             self.points = [coll.origin.position]
         elif isinstance(coll.geometry, Cylinder):
             self._npoints = 2
-            self.radius = coll.geometry.radius
+            self.bodyRadius = coll.geometry.radius
             axis = coll.origin.to_matrix()[0:3, 0:3].dot(np.array([coll.geometry.length, 0, 0]))
             self.points = [coll.origin.position - axis, coll.origin.position+axis]
-            self.radius = coll.geometry.radius
+            self.bodyRadius = coll.geometry.radius
         elif isinstance(coll.geometry, Box):
             if npoints == 1:
                 self._npoints = 1
                 self.points = [coll.origin.position]
-                self.radius = 2**0.5 * np.linalg.norm(coll.geometry.size)/2
+                self.bodyRadius = 2**0.5 * np.linalg.norm(coll.geometry.size)/2
             elif npoints != 8:
                 log.warning(f"Can create kccd hull for a box either as sphere with one point or with eight. "
                             f"You asked for {npoints}, falling back to 8.")
             self._npoints = 8
-            self.radius = 0.
+            self.bodyRadius = 0.
             self.points = [coll.origin.to_matrix()[0:3, 0:3].dot(c) for c in coll.geometry.get_corners()]
         elif isinstance(coll.geometry, Mesh):
             assert npoints is not None
@@ -1533,17 +1589,105 @@ class KCCDHull(Representation, SmurfBase):
             assert kccd_path is not None and os.path.isdir(kccd_path)
             self._npoints = npoints
             self.points = []
-            log.info(f"Covering {iv_mesh} of {self.frame} with {self._npoints}")
-            out, _ = misc.execute_shell_command(f"kccdcoveriv {iv_mesh} {self._npoints} {self.frame}",
+            log.info(f"Covering {iv_mesh} of {self.movesWith} with {self._npoints}")
+            out, _ = misc.execute_shell_command(f"kccdcoveriv {iv_mesh} {self._npoints} {self.movesWith}",
                                            cwd=kccd_path, silent=True)
             block_lines = out.split("\n")
             for line in block_lines:
                 if line.startswith("BODYRADIUS"):
-                    self.radius = float(line.split[-1])
+                    self.bodyRadius = float(line.split(" ")[-1])
                 elif line.startswith("BODYPOINT"):
-                    line = line.replace("[", "")
+                    line = line.replace(" ]", "")
                     line = line.replace(",", "")
-                    self.points.append(np.array([float(x) for x in line.split()[-3:]]))
+                    line.strip()
+                    for x in line.split(" ")[-3:]:
+                        print(x)
+                    self.points.append(np.array([float(x) for x in line.split(" ")[-3:]]))
+
+
+# Class for kccd frames of the robot
+class KCCDFrame(Representation, SmurfBase):
+    _class_variables = ["movesWith"]
+    _type_dict = {
+        "movesWith": ["links", "joints"]
+    }
+
+    def __init__(self, name=None, movesWith=None, transformation=None, **kwargs):
+        SmurfBase.__init__(self, returns=["name", "movesWith", "transformation"], **kwargs)
+        self.name = name
+        self.movesWith = movesWith
+        self.transformation = transformation
+
+
+# Class for kccd joints of the robot
+class KCCDJoint(Representation, SmurfBase):
+    _class_variables = ["movesWith"]
+    _type_dict = {
+        "movesWith": "links"
+    }
+
+    def __init__(self, name=None, type=None, movesWith=None, axis=None, limits=None, stateIdx=None, orderOfApproximation=None, brakingModel=None, joint=None):
+        SmurfBase.__init__(self, returns=["name", "type", "movesWith", "axis", "limits", "stateIdx", "orderOfApproximation", "brakingModel"])
+        if joint is not None:
+            self.joint = joint
+        else:
+            self.joint = name
+            self._axis = axis
+            self._limits = limits
+            self._type = type
+        self.movesWith = movesWith
+        self.stateIdx = stateIdx
+        self.orderOfApproximation = orderOfApproximation
+        self.brakingModel = brakingModel
+
+        # Excluded so this part won't be exported into kccd file
+        self.excludes += ["joint"]
+
+    @property
+    def axis(self):
+        # Use axis of _related_robot_instance if available
+        if self._related_robot_instance is not None:
+            return self._joint.axis
+        return self._axis
+
+    @property
+    def limits(self):
+        # Use limits of _related_robot_instance if available
+        if self._related_robot_instance is not None:
+            return [self._joint.limit.lower, self._joint.limit.upper]
+        return self._limits
+
+    @property
+    def type(self):
+        # Use joint type of _related_robot_instance if available
+        if self._related_robot_instance is not None:
+            return self._joint.joint_type
+        return self._type
+
+    @property
+    def name(self):
+        return str(self.joint)
+
+
+    def link_with_robot(self, robot, check_linkage_later=False):
+        super(KCCDJoint, self).link_with_robot(robot, check_linkage_later=True)
+
+        if self._related_robot_instance is not None:
+            self._joint = self._related_robot_instance.get_joint(self.name)
+
+        # Check if axis of KCCDJoint and _related_robot_instance are equal
+        for i in range(3):
+            assert np.isclose(self._axis[i], self.axis[i], atol=0.001), "Axis of KCCDJoint and Joint are not equal"
+
+        # Check if limits of KCCDJoint and _related_robot_instance are equal
+        assert np.isclose(self._limits[0], self.limits[0], atol=0.001), "Lower limits of KCCDJoint and Joint are not equal"
+        assert np.isclose(self._limits[1], self.limits[1], atol=0.001), "Upper limits of KCCDJoint and Joint are not equal"
+
+        # Check if type of KCCDJoint and _related_robot_instance is equal
+        assert self._type == self.type, "Type of KCCDJoint and Joint are not equal"
+
+        if not check_linkage_later:
+            self.check_linkage()
 
 
 class Link(Representation, SmurfBase):
