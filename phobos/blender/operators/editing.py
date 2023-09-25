@@ -2306,7 +2306,7 @@ class AddSensorOperator(Operator):
             **parameters  # Pass sensor specific parameters
         )
         if hasattr(sensor, "targets"):
-            sensor.targets = [o for o in context.selected_objects if o.phobostype == "link"]
+            sensor.targets = [o.name for o in context.selected_objects if o.phobostype == "link"]
         sensor_obj = phobos2blender.createSensor(sensor, linkobj=link)
 
         # match the operator to avoid dangers of eval
