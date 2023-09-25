@@ -326,10 +326,37 @@ class Robot(SMURFRobot):
         for annotation in self.smurf_annotation_keys:
             # Check if exists and not empty
             if hasattr(self, annotation) and getattr(self, annotation):
-                annotation_dict = {annotation: []}
-                # Collect all
-                for item in getattr(self, annotation):
-                    annotation_dict[annotation].append(item.to_yaml())
+                # Check if kccd definition of robot exists. If yes, prepare for export to .yml file
+                if annotation == "kccd_definition":
+                    annotation_dict = {
+                        "kccd": {
+                            "general": "",
+                            "bodies": [],
+                            "frames": []
+                        }
+                    }
+                    item = getattr(self, annotation)
+                    annotation_dict["kccd"]["general"] = item.general.to_yaml()
+
+                    for body in getattr(self, annotation).bodies:
+                        # Put 'B_' infront of body name to differentiate between body and frame names
+                        body.name = "B_" + body.name
+                        annotation_dict["kccd"]["bodies"].append(body.to_yaml())
+
+                    for frame in getattr(self, annotation).frames:
+                        annotation_dict["kccd"]["frames"].append(frame.to_yaml())
+
+                    for joint in getattr(self, annotation).joints:
+                        # Add joint to the frame it moves with
+                        for frame in annotation_dict["kccd"]["frames"]:
+                            if joint.movesWith == frame["name"]:
+                                frame["joint"] = joint.to_yaml()
+                                break
+                else:
+                    annotation_dict = {annotation: []}
+                    # Collect all
+                    for item in getattr(self, annotation):
+                        annotation_dict[annotation].append(item.to_yaml())
                 # Export to file
                 annotation_name = annotation
                 if annotation == "submechanisms" or annotation == "exoskeletons":
