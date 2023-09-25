@@ -19,7 +19,7 @@ class SMURFRobot(XMLRobot):
                  inputfile=None, description=None, autogenerate_submechanisms=None, is_human=False, shallow=False):
         self.smurf_annotation_keys = [
             'motors', 'sensors', 'materials', "joints", "links", 'collisions', 'visuals', 'poses',
-            "submechanisms", "exoskeletons", "interfaces"
+            "submechanisms", "exoskeletons", "interfaces", "kccd_definition"
         ]
 
         self.name = name
@@ -39,6 +39,7 @@ class SMURFRobot(XMLRobot):
         self.exoskeletons = []
         # Modular stuff
         self.interfaces = []
+        self.kccd_definition = None
 
         if inputfile is None and smurffile is not None:
             inputfile = smurffile
@@ -127,27 +128,27 @@ class SMURFRobot(XMLRobot):
     # helper methods
     def link_entities(self, check_linkage_later=False):
         super(SMURFRobot, self).link_entities(check_linkage_later=True)
-        for entity in self.submechanisms + self.exoskeletons + self.poses + self.interfaces:
+        for entity in self.submechanisms + self.exoskeletons + self.poses + self.interfaces + [self.kccd_definition]:
             entity.link_with_robot(self, check_linkage_later=True)
         if not check_linkage_later:
             assert self.check_linkage()
 
     def unlink_entities(self, check_linkage_later=False):
         super(SMURFRobot, self).unlink_entities(check_linkage_later=True)
-        for entity in self.submechanisms + self.exoskeletons + self.poses + self.interfaces:
+        for entity in self.submechanisms + self.exoskeletons + self.poses + self.interfaces + [self.kccd_definition]:
             entity.unlink_from_robot(check_linkage_later=True)
         if not check_linkage_later:
             assert self.check_unlinkage()
 
     def check_linkage(self):
         out = super(SMURFRobot, self).check_linkage()
-        for entity in self.submechanisms + self.exoskeletons + self.poses + self.interfaces:
+        for entity in self.submechanisms + self.exoskeletons + self.poses + self.interfaces + [self.kccd_definition]:
             out &= entity.check_linkage()
         return out
 
     def check_unlinkage(self):
         out = super(SMURFRobot, self).check_unlinkage()
-        for entity in self.submechanisms + self.exoskeletons + self.poses + self.interfaces:
+        for entity in self.submechanisms + self.exoskeletons + self.poses + self.interfaces + [self.kccd_definition]:
             out &= entity.check_unlinkage()
         return out
 
@@ -328,6 +329,62 @@ class SMURFRobot(XMLRobot):
                     'interfaces',
                     representation.Interface(**interf)
                 )
+
+        # If found, import kccd file
+        if "kccd" in self.annotations:
+            if "general" in self.annotations["kccd"]:
+                kccd_general = self.annotations["kccd"]["general"]
+                general = representation.KCCDGeneral(kccd_general["title"], kccd_general["safetyDistance"], kccd_general["reportUpTo"], kccd_general["computationBudget"], kccd_general["maxApproximationOrder"])
+
+            if "bodies" in self.annotations["kccd"]:
+                kccd_bodies = self.annotations["kccd"]["bodies"]
+                bodies = []
+                for body in kccd_bodies:
+                    # Remove 'B_'-prefixes from body names
+                    name = body["name"]
+                    x = name.find("B_")
+                    if x != -1:
+                        name = name[x+2:]
+
+                    # Remove 'F_'-prefixes from frame names
+                    movesWith = body["movesWith"] if "movesWith" in body else ""
+                    x = movesWith.find("F_")
+                    if x != -1:
+                        movesWith = movesWith[x+2:]
+
+                    bodies.append(representation.KCCDBody(name, movesWith, body["color"], body["visualization"], body["bodyRadius"], body["points"]))
+
+            if "frames" in self.annotations["kccd"]:
+                kccd_frames = self.annotations["kccd"]["frames"]
+                frames = []
+                joints = []
+                for frame in kccd_frames:
+                    # Remove 'F_'-prefixes from frame names
+                    name = frame["name"]
+                    x = name.find("F_")
+                    if x != -1:
+                        name = name[x+2:]
+
+                    # Remove 'F_'-prefixes from frame names
+                    movesWith = frame["movesWith"] if "movesWith" in frame else ""
+                    x = movesWith.find("F_")
+                    if x != -1:
+                        movesWith = movesWith[x+2:]
+
+                    frames.append(representation.KCCDFrame(name, movesWith if "movesWith" in frame else None, frame["transformation"]))
+
+                    if "joint" in frame:
+                        joint = frame["joint"]
+
+                        movesWith = joint["movesWith"]
+                        x = movesWith.find("F_")
+                        if x != -1:
+                            movesWith = movesWith[x+2:]
+
+                        joints.append(representation.KCCDJoint(joint["name"], joint["type"], movesWith, joint["axis"], joint["limits"], joint["stateIdx"], joint["orderOfApproximation"])) #, joint["brakingModel"]))
+
+            self.kccd_definition = representation.KCCDDefinition(general, bodies, frames, joints, self._related_robot_instance)
+
 
         # [TODO v2.1.0] Check how we can store which properties are defined by which literals to reload them properly from file
         pop_annotations = []
