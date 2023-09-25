@@ -109,7 +109,8 @@
     "LogicalCamera": {
       "default": {
         "opening_height": 90,
-        "opening_width": 90}
+        "opening_width": 90
+      }
     },
     "JointLoad": {
       "default": {}
@@ -133,9 +134,6 @@
       "default": {}
     },
     "Magnetometer": {
-      "default": {}
-    },
-    "GPS": {
       "default": {}
     },
     "WirelessTransceiver": {
