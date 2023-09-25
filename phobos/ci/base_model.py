@@ -312,7 +312,8 @@ class BaseModel(yaml.YAMLObject):
                         flip_axis=child["mirror"]["flip_axis"] if "flip_axis" in child["mirror"].keys() else 1,
                         exclude_meshes=child["mirror"]["exclude_meshes"] if "exclude_meshes" in child["mirror"].keys() else [],
                         target_urdf=combined_model.xmlfile,
-                        final_linking_optional=True
+                        final_linking_optional=True,
+                        name_replacements=child["mirror"].get("name_replacements", {})
                     )
 
                 if "name" not in child["joint"].keys() or child["joint"]["name"] is None:
@@ -460,6 +461,8 @@ class BaseModel(yaml.YAMLObject):
                         self.robot.set_estimated_link_com(linkname, dont_overwrite=True)
                     elif k == "material" or k == "materials":
                         link.materials = v
+                    elif k == "name_editing":
+                        link.name = misc.edit_name_string(link.name, **v)
                     else:
                         link.add_annotation(k, v, overwrite=True)
             
@@ -503,6 +506,8 @@ class BaseModel(yaml.YAMLObject):
                                 joint.limit = representation.JointLimit()
                         if k == "move_joint_axis_to_intersection":
                             self.robot.move_joint_to_intersection(jointname, v)
+                        elif k == "name_editing":
+                            joint.name = misc.edit_name_string(joint.name, **v)
                         elif k == "type":
                             joint.joint_type = v
                         elif k == "min":
@@ -560,6 +565,8 @@ class BaseModel(yaml.YAMLObject):
         )
         
         if hasattr(self, 'collisions'):
+            if "$name_editing" in self.collisions.keys():
+                self.rename("collision", **self.collisions["name_editing"])
             for link in self.robot.links:
                 conf = deepcopy(self.collisions["$default"])
                 exclude = self.collisions["exclude"] if "exclude" in self.collisions.keys() else []
@@ -571,9 +578,7 @@ class BaseModel(yaml.YAMLObject):
                     if type(conf["remove"]) is list:
                         remove_collision(self.robot, link.name, collisionname=conf["remove"])
                     elif type(conf["remove"]) is str:
-                        remove_collision(self.robot, link.name, collisionname=[c.name for c in link.collisions if
-                                                                               re.fullmatch(r"" + conf["remove"],
-                                                                                            c.name) is not None])
+                        remove_collision(self.robot, link.name, collisionname=[c.name for c in link.collisions if re.fullmatch(r"" + conf["remove"], c.name) is not None])
                 if "join" in conf.keys() and conf["join"] is True:
                     if len(link.collisions) > 1:
                         # print("       Joining meshes of", link.name)
@@ -619,6 +624,10 @@ class BaseModel(yaml.YAMLObject):
                             if key in conf:
                                 conf.pop(key)
                         coll.add_annotations(**conf)
+        
+        if hasattr(self, 'visuals'):
+            if "$name_editing" in self.collisions.keys():
+                self.rename("visuals", **self.collisions["name_editing"])
         
         if hasattr(self, "exoskeletons") or hasattr(self, "submechanisms"):
             if hasattr(self, "exoskeletons"):
