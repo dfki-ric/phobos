@@ -1499,21 +1499,24 @@ class KCCDDefinition(Representation, SmurfBase):
         self.frames = frames
         self.joints = joints
 
-    def create_general(self, title=None, safetyDistance=None, reportUpTo=None, computationBudget=None, maxApproximationOrder=None):
+    def create_general(self, title=None, safetyDistance=None,
+                       reportUpTo=None, computationBudget=None, maxApproximationOrder=None):
         self.general = KCCDGeneral(title, safetyDistance, reportUpTo, computationBudget, maxApproximationOrder)
 
 
     def create_body_from_collision(self, coll, npoints=None, iv_mesh=None, kccd_path=None,
                                    name=None, movesWith=None, color="0x00ff00",
                                    visualization=None, bodyRadius=None, points=None, **kwargs):
-        self.bodies.append(KCCDBody().from_collision(coll, npoints, iv_mesh, kccd_path, name, movesWith, color, visualization, bodyRadius, points, **kwargs))
+        self.bodies.append(KCCDBody().from_collision(coll, npoints, iv_mesh, kccd_path, name, movesWith,
+                                                     color, visualization, bodyRadius, points, **kwargs))
 
 
 # Class for general data about the robot, in kccd format
 class KCCDGeneral(Representation, SmurfBase):
     def __init__(self, title=None, safetyDistance=None, reportUpTo=None, computationBudget=None,
                  maxApproximationOrder=None, **kwargs):
-        SmurfBase.__init__(self, returns=["title", "safetyDistance", "reportUpTo", "computationBudget", "maxApproximationOrder"], **kwargs)
+        SmurfBase.__init__(self, returns=["title", "safetyDistance", "reportUpTo",
+                                          "computationBudget", "maxApproximationOrder"], **kwargs)
         self.title = title
         self.safetyDistance = safetyDistance
         self.reportUpTo = reportUpTo
@@ -1539,7 +1542,8 @@ class KCCDBody(Representation, SmurfBase):
             radius:
             **kwargs:
         """
-        SmurfBase.__init__(self, returns=["name", "movesWith", "color", "visualization", "bodyRadius", "points"], **kwargs)
+        SmurfBase.__init__(self, returns=["name", "movesWith", "color", "visualization",
+                                          "bodyRadius", "points"], **kwargs)
         self._npoints = len(points)
         self.name = name
         self.movesWith = movesWith
@@ -1626,8 +1630,10 @@ class KCCDJoint(Representation, SmurfBase):
         "movesWith": "links"
     }
 
-    def __init__(self, name=None, type=None, movesWith=None, axis=None, limits=None, stateIdx=None, orderOfApproximation=None, brakingModel=None, joint=None):
-        SmurfBase.__init__(self, returns=["name", "type", "movesWith", "axis", "limits", "stateIdx", "orderOfApproximation", "brakingModel"])
+    def __init__(self, name=None, type=None, movesWith=None, axis=None, limits=None,
+                 stateIdx=None, orderOfApproximation=None, brakingModel=None, joint=None):
+        SmurfBase.__init__(self, returns=["name", "type", "movesWith", "axis","limits", "stateIdx",
+                                          "orderOfApproximation", "brakingModel"])
         if joint is not None:
             self.joint = joint
         else:

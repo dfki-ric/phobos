@@ -334,7 +334,9 @@ class SMURFRobot(XMLRobot):
         if "kccd" in self.annotations:
             if "general" in self.annotations["kccd"]:
                 kccd_general = self.annotations["kccd"]["general"]
-                general = representation.KCCDGeneral(kccd_general["title"], kccd_general["safetyDistance"], kccd_general["reportUpTo"], kccd_general["computationBudget"], kccd_general["maxApproximationOrder"])
+                general = representation.KCCDGeneral(kccd_general["title"], kccd_general["safetyDistance"],
+                                                     kccd_general["reportUpTo"], kccd_general["computationBudget"],
+                                                     kccd_general["maxApproximationOrder"])
 
             if "bodies" in self.annotations["kccd"]:
                 kccd_bodies = self.annotations["kccd"]["bodies"]
@@ -352,7 +354,8 @@ class SMURFRobot(XMLRobot):
                     if x != -1:
                         movesWith = movesWith[x+2:]
 
-                    bodies.append(representation.KCCDBody(name, movesWith, body["color"], body["visualization"], body["bodyRadius"], body["points"]))
+                    bodies.append(representation.KCCDBody(name, movesWith, body["color"], body["visualization"],
+                                                          body["bodyRadius"], body["points"]))
 
             if "frames" in self.annotations["kccd"]:
                 kccd_frames = self.annotations["kccd"]["frames"]
@@ -381,7 +384,9 @@ class SMURFRobot(XMLRobot):
                         if x != -1:
                             movesWith = movesWith[x+2:]
 
-                        joints.append(representation.KCCDJoint(joint["name"], joint["type"], movesWith, joint["axis"], joint["limits"], joint["stateIdx"], joint["orderOfApproximation"])) #, joint["brakingModel"]))
+                        joints.append(representation.KCCDJoint(joint["name"], joint["type"], movesWith,
+                                                               joint["axis"], joint["limits"], joint["stateIdx"],
+                                                               joint["orderOfApproximation"]))
 
             self.kccd_definition = representation.KCCDDefinition(general, bodies, frames, joints, self._related_robot_instance)
 
