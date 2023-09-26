@@ -222,7 +222,7 @@ class ExportModelOperator(Operator):
             no_smurf=not getattr(bpy.context.scene, f'export_entity_smurf', False),
             apply_scale=getattr(ioUtils.getExpSettings(), 'applyMeshScale', False)
         )
-        self.report({"INFO"}, "Phobos exported to:", exportpath)
+        self.report({"INFO"}, "Phobos exported to:" + exportpath)
 
     def execute(self, context):
         """
