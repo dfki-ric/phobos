@@ -2092,8 +2092,7 @@ class CreateLinksOperator(Operator):
 class AddSensorOperator(Operator):
     """Add a sensor at the position of the selected object.
     It is possible to create a new link for the sensor on the fly. Otherwise,
-    the next link in the hierarchy will be used to parent the sensor to.
-    """
+    the next link in the hierarchy will be used to parent the sensor to"""
 
     bl_idname = "phobos.add_sensor"
     bl_label = "Add Sensor"
