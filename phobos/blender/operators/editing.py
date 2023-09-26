@@ -1774,7 +1774,7 @@ class AddMotorOperator(Operator):
     maxvelocity : FloatProperty(
         name="Max Speed (m/s or rad/s)",
         default=0.0,
-        description="Maximum velocity of the joint. If you uncheck radian, you can enter °/sec here",
+        description="Maximum velocity of the joint",
     )
     controlp : FloatProperty(
         name="P Gain", default=0.0, description="P gain of position controller."
@@ -2293,7 +2293,7 @@ class AddSensorOperator(Operator):
         if "link" in sensorClass._class_variables or sensorClass == sensor_representations.GPS:
             parameters["link"] = parameters.get("link", link.name)
         if "joint" in sensorClass._class_variables:
-            parameters["link"] = parameters.get("joint", link.get("joint/name", link.name))
+            parameters["joint"] = parameters.get("joint", link.get("joint/name", link.name))
         if "frame" in sensorClass._class_variables:
             parameters["frame"] = parameters.get("frame", link.name)
         sensor = sensorClass(
@@ -2302,7 +2302,7 @@ class AddSensorOperator(Operator):
             **parameters  # Pass sensor specific parameters
         )
         if hasattr(sensor, "targets"):
-            sensor.targets = [o for o in context.selected_objects if o.phobostype == "link"]
+            sensor.targets = [o.name for o in context.selected_objects if o.phobostype == "link"]
         sensor_obj = phobos2blender.createSensor(sensor, linkobj=link)
 
         # match the operator to avoid dangers of eval
