@@ -2305,3 +2305,6 @@ class GenericAnnotation(Representation, SmurfBase):
 
     def stringable(self):
         return self.GA_name is not None
+
+
+from .sensor_representations import *
