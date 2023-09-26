@@ -602,7 +602,7 @@ def deriveSensor(obj, logging=False):
         if "link" in getattr(sensor_representations, sensor_type)._class_variables:
             values["link"] = values.get("link", parent.get("link/name", parent.name))
         if "joint" in getattr(sensor_representations, sensor_type)._class_variables:
-            values["link"] = values.get("joint", parent.get("joint/name", parent.name))
+            values["joint"] = values.get("joint", parent.get("joint/name", parent.name))
         if "frame" in getattr(sensor_representations, sensor_type)._class_variables:
             values["frame"] = values.get("frame", parent.get("link/name", parent.name))
         if sensor_type == "NodePosition" and "gps" in obj.name.lower():
