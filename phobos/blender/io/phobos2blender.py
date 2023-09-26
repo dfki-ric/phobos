@@ -494,9 +494,9 @@ def createAnnotation(ga: representation.GenericAnnotation, parent=None, size=0.1
     annot_obj = bUtils.createPrimitive(
         f"{ga.GA_category}:{ga.GA_name if ga.GA_name is not None else 'unnamed'}",
         'box',
-        [1, 1, 1],
+        (1, 1, 1),
         player=defs.layerTypes['annotation'],
-        plocation=None if parent is None else parent.matrix_world.to_translation(),
+        #plocation=None if parent is None else parent.matrix_world.to_translation(), #TODO
         phobostype='annotation'
     )
     annot_obj.scale = (size,) * 3
@@ -522,11 +522,14 @@ def createAnnotation(ga: representation.GenericAnnotation, parent=None, size=0.1
     else:
         annot_obj["$include_parent"] = False
 
-    annot_obj["$include_transform"] = ga.GA_transform is None
+    annot_obj["$include_transform"] = ga._GA_transform is None
 
     props = ga.to_yaml()
 
-    for k, v in misc.flatten_dict(props).items():
+    # TODO: Check if type has to be stored
+    props.pop("GA_parent_type", None)
+
+    for k, v in props.items():
         annot_obj[k] = v
 
     return annot_obj
@@ -579,6 +582,10 @@ def createRobot(robot: core.Robot):
     log("Creating interfaces...", 'INFO')
     for interface in robot.interfaces:
         newobjects.append(createInterface(interface, newlinks[interface.parent]))
+
+    log("Creating annotations...", 'INFO')
+    for anno in robot.generic_annotations:
+        newobjects.append(createAnnotation(anno))
 
     # [TODO v2.1.0] Re-Add SRDF support
     # log("Creating groups...", 'INFO')

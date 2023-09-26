@@ -43,7 +43,8 @@ from ..model import joints as jUtils
 from ..model import links as modellinks
 from ..phobosgui import prev_collections
 from ..phoboslog import log, ErrorMessageWithBox, WarnMessageWithBox
-from ..operators.generic import addObjectFromYaml, DynamicProperty
+from ..operators.generic import addObjectFromYaml, DynamicProperty, AddAnnotationsOperator, \
+    EditAnnotationsOperator, AnnotationsOperator
 from ..utils import blender as bUtils
 from ..utils import editing as eUtils
 from ..utils import general as gUtils
@@ -2199,8 +2200,7 @@ class AddSensorOperator(Operator):
         for i in range(len(self.sensorProperties)):
             name = self.sensorProperties[i].name.replace('_', ' ')
 
-            # use the dynamic props name in the GUI, but without the type id
-            self.sensorProperties[i].draw(layout, name)
+            self.sensorProperties[i].draw(layout, self.sensorProperties)
         layout.label(text="You can add custom properties under")
         layout.label(text="Object Properties > Custom Properties")
 
@@ -3563,6 +3563,9 @@ class ParentOperator(Operator):
 
 classes = (
     DynamicProperty,
+    AnnotationsOperator,
+    AddAnnotationsOperator,
+    EditAnnotationsOperator,
     SafelyRemoveObjectsFromSceneOperator,
     MoveToSceneOperator,
     SortObjectsToLayersOperator,

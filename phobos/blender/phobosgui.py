@@ -1178,6 +1178,7 @@ class PhobosModelPanel(bpy.types.Panel):
         c2.operator('phobos.batch_property', text="Edit", icon='GREASEPENCIL')
         #todo: c2.operator('phobos.copy_props', text="Copy", icon='GHOST')
         c2.operator("phobos.add_annotations")
+        c2.operator("phobos.edit_annotations")
 
         # Kinematics
         layout.separator()
@@ -1711,6 +1712,53 @@ def dynamicLabel(text, uiLayout, context, icon=None):
             nextLine = nextLineUpdated
     if nextLine != "":
         uiLayout.label(text=nextLine, icon=icon if icon and firstLine else "NONE")
+
+def dynamicLabel(text, uiLayout, context=None, width=300, icon=None):
+    """
+    Prints multiline text to uiLayout.label().
+    Pass context for labels in the phobos side panel and width for operator windows
+
+    Args:
+        text:
+        uiLayout: bpy.types.UILayout
+        context:
+        width: Window width, default 300
+        icon: optional, blender icon name
+
+    Returns:
+
+    """
+    uiScale = bpy.context.preferences.view.ui_scale
+
+    if context is not None:
+        panelWidth = context.region.width/uiScale-72
+        # margin left, margin right
+        margin = 60
+    else:
+        panelWidth = width
+        margin = 12
+
+    letterWidth = 10.7
+    lettersPerLine = (panelWidth - margin) / letterWidth
+    iconWidth = 50
+    lettersPerIconLine = (panelWidth - margin - iconWidth) / letterWidth
+    firstLine = True
+    for line in text.split("\n"):
+        nextLine = ""
+        for word in line.split():
+            nextLineUpdated = word if nextLine == "" else nextLine + " " + word
+            if firstLine and icon and len(nextLineUpdated) > lettersPerIconLine:
+                uiLayout.label(text=nextLine, icon=icon)
+                nextLine = word
+                firstLine = False
+            elif len(nextLineUpdated) > lettersPerLine:
+                uiLayout.label(text=nextLine)
+                nextLine = word
+            else:
+                nextLine = nextLineUpdated
+        if nextLine != "":
+            uiLayout.label(text=nextLine, icon=icon if icon and firstLine else "NONE")
+
 
 REGISTER_CLASSES = [
     ModelPoseProp,

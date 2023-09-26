@@ -26,7 +26,7 @@ class XMLRobot(Representation):
                  joints: List[representation.Joint] = None,
                  materials: List[representation.Material] = None,
                  transmissions: List[representation.Transmission] = None,
-                 sensors=None, motors=None, plugins=None,
+                 sensors=None, motors=None, plugins=None, root=None,
                  is_human=False, urdf_version=None, xmlfile=None, _xmlfile=None):
         self._related_robot_instance = self
         super().__init__()
@@ -75,6 +75,9 @@ class XMLRobot(Representation):
         self.regenerate_tree_maps()
         if self.links:
             self.link_entities()
+            if root is not None:
+                assert root in [str(l) for l in self.links], "root specified in xml is no link in the robot"
+                assert root == str(self.get_root()), "root specified in xml is not root of the robot"
 
     def __str__(self):
         return self.name
