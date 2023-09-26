@@ -1626,8 +1626,9 @@ class DefineJointConstraintsOperator(Operator):
         if validInput:
             for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
                 context.view_layer.objects.active = joint
-                assert joint.parent is not None and joint.parent.phobostype == "link", \
-                    f"You need to have a link parented to {joint.name} before you can create a joint"
+                if joint.parent is None or joint.parent.phobostype != "link":
+                    ErrorMessageWithBox(f"Link {joint.name} has to be parented to another link before you can define a joint")
+                    return {'CANCELLED'}
                 if len(self.name) > 0:
                     joint["joint/name"] = self.name.replace(" ", "_")
                 jUtils.setJointConstraints(
@@ -2092,13 +2093,7 @@ class CreateLinksOperator(Operator):
 class AddSensorOperator(Operator):
     """Add a sensor at the position of the selected object.
     It is possible to create a new link for the sensor on the fly. Otherwise,
-    the next link in the hierarchy will be used to parent the sensor to.
-
-    Args:
-
-    Returns:
-
-    """
+    the next link in the hierarchy will be used to parent the sensor to"""
 
     bl_idname = "phobos.add_sensor"
     bl_label = "Add Sensor"
@@ -2202,7 +2197,7 @@ class AddSensorOperator(Operator):
 
             self.sensorProperties[i].draw(layout, self.sensorProperties)
         layout.label(text="You can add custom properties under")
-        layout.label(text="Object Properties > Custom Properties")
+        layout.label(text="Object Properties > Custom Properties", icon="OBJECT_DATA")
 
     def invoke(self, context, event):
         """

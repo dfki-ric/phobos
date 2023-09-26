@@ -10,4 +10,4 @@ INTERNAL_KEYS = ["phobostype", "phobosmatrixinfo"]
 ANNOTATION_KEYS = ["GA_name", "GA_category", "$include_parent", "$include_transform", "GA_macros"]
 SUBMECHANISM_KEYS = ["type", "jointnames_spanningtree", "jointnames_active", "jointnames_independent",
                      "jointnames"]
-SENSOR_KEYS = ["name", "position_offset", "orientation_offset", "origin"]
+SENSOR_KEYS = ["name", "position_offset", "orientation_offset", "origin", "frame", "link", "joint"]
