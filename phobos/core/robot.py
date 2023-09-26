@@ -1850,7 +1850,7 @@ class Robot(SMURFRobot):
             self.rename(targettype, getattr(self, targettype), prefix=prefix, suffix=suffix, replacements=replacements,
                         do_not_double=do_not_double)
 
-    def rename(self, targettype, target, prefix=None, suffix=None, replacements=None, do_not_double=True):
+    def rename(self, targettype, target, prefix=None, suffix=None, replacements=None, do_not_double=True, joint_equals_link_name=False):
         """
         Renames the target with the given args
         Note: Override this in subclasses and call super at the beginning
@@ -1866,7 +1866,8 @@ class Robot(SMURFRobot):
         if type(target) is list:
             for t in target:
                 renamed_entities.update(self.rename(targettype, t, prefix=prefix, suffix=suffix,
-                                                    replacements=replacements, do_not_double=do_not_double))
+                                                    replacements=replacements, do_not_double=do_not_double,
+                                                    joint_equals_link_name=joint_equals_link_name))
             return renamed_entities
         elif type(target) is not str:
             target = str(target)
@@ -1878,10 +1879,14 @@ class Robot(SMURFRobot):
             if suffix is not None and target.endswith(suffix):
                 suffix = None
 
-        if not prefix and not suffix and replacements == {}:
+        if not prefix and not suffix and replacements == {} and not joint_equals_link_name:
             return renamed_entities
 
-        new_name = edit_name_string(target, prefix=prefix, suffix=suffix, replacements=replacements)
+        if targettype.startswith("joint") and joint_equals_link_name:
+            joint = self.get_joint(target)
+            new_name = joint.child if not joint.child.upper().endswith("_LINK") else joint.child[:-5]
+        else:
+            new_name = edit_name_string(target, prefix=prefix, suffix=suffix, replacements=replacements)
         renamed_entities.update(self._rename(targettype, target, new_name))
 
         if targettype in ['link', "links"]:
