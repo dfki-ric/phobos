@@ -571,13 +571,7 @@ class BaseModel(yaml.YAMLObject):
                     config = misc.merge_default(self.joints[jointname], _default)
                     joint.name = misc.edit_name_string(joint.name, **config.get("name_editing", {}))
             if "$name_editing" in self.joints:
-                if self.joints["$name_editing"].get("joint_equals_link_name", False):
-                    for joint in self.robot.joints:
-                        self.robot.rename(targettype="joint", target=joint.name, replacements={
-                            joint.name: joint.child if not joint.child.upper().endswith("_LINK") else joint.child[:-5] 
-                        })
-                else:
-                    self.robot.rename("joints", self.robot.joints, **self.joints.get("$name_editing", {}))
+                self.robot.rename("joints", self.robot.joints, **self.joints.get("$name_editing", {}))
         # as we mess manually with some names, we need to make sure the tree maps are up to date
         self.robot.regenerate_tree_maps()
 
