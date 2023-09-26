@@ -528,6 +528,62 @@ def deriveInterface(obj):
         **annotations
     )
 
+def deriveAnnotationHelper(value, name, parent, obj):
+    """
+    Resolves macros
+    """
+    if "GA_macros" in obj:
+        if [parent, name] in obj["GA_macros"]:  # This is a macro
+            effParent = sUtils.getEffectiveParent(obj)
+            # $parent
+            if obj["$include_parent"] and effParent:
+                while "$parent" in value:
+                    index = value.index("$parent")
+                    propertyIndex = index+len("$parent")
+                    # $parent.{prop}, print property value or null
+                    if propertyIndex+2 < len(value) and value[propertyIndex:propertyIndex+2] == ".{":
+                        propertyEndIndex = value.index("}", propertyIndex)
+                        prop = value[propertyIndex+2:propertyEndIndex].strip()
+                        endReplace = propertyEndIndex
+                        if prop in effParent:
+                            replace = str(effParent[prop])
+                        else:
+                            replace = "null"
+                    else:  # $parent without property, print name
+                        endReplace = propertyIndex-1
+                        replace = effParent.name
+                    value = value[:index]+replace+value[endReplace+1:]
+            # $transform
+            if obj["$include_transform"] and effParent:
+                while "$transform" in value:
+                    index = value.index("$transform")
+                    indexTail = index+len("$transform")
+                    split = value[indexTail:].split(maxsplit=1)
+                    tail = split[0]
+                    pose = deriveObjectPose(obj, effParent)
+                    if tail[0] != ".":
+                        tail = ".xyz"
+                        replaceEnd = indexTail
+                    else:
+                        replaceEnd = indexTail+len(tail)
+                    try:
+                        replace = getattr(pose, tail[1:])
+                        if type(replace) == tuple:
+                            string = ""
+                            for i in range(len(replace)):
+                                v = replace[i]
+                                v = str(v)
+                                if i > 0:
+                                    string += ", "
+                                string += v
+                            replace = "(" + string + ")"
+                    except AttributeError as e:
+                        print(f"Unknown tail {tail} for $transform")
+                        replace = f"transform{tail} (unknown)"
+
+                    value = value[:index] + str(replace) + value[replaceEnd:]
+
+    return value
 
 def deriveAnnotation(obj):
     """Derives the annotation info of an annotation object.
@@ -540,17 +596,16 @@ def deriveAnnotation(obj):
             if hasattr(v, "to_list"):
                 v = v.to_list()
             elif "PropertyGroup" in repr(type(v)):
-                v = {_k: _v for _k, _v in v.items()}
+                v = {_k: deriveAnnotationHelper(_v, _k, k, obj) for _k, _v in v.items()}
+            else:
+                v = deriveAnnotationHelper(v, k, "", obj)
             props[k] = v
 
     props = misc.deepen_dict(props)
 
-    name = obj.split(":")[1]
     return representation.GenericAnnotation(
-        GA_category=obj.split(":")[0],
-        GA_name=name if not name.startswith("unnamed") else None,
-        GA_parent=obj.parent.get("link/name", obj.parent.name),
-        GA_parent_type=obj.parent.phobostype,
+        GA_parent=obj.parent.get("link/name", obj.parent.name) if obj.parent else None,
+        GA_parent_type=obj.parent.phobostype if obj.parent else None,
         GA_transform=deriveObjectPose(obj),
         **props
     )
@@ -842,7 +897,7 @@ def deriveRobot(root, name='', objectlist=None):
     # [TODO v2.1.0] Re-add lights and SRDF support
 
     for named_annotation in [deriveAnnotation(obj) for obj in objectlist if obj.phobostype == 'annotation']:
-        robot.add_categorized_annotation(named_annotation["$name"], {k: v for k, v in named_annotation.items() if k.startswith("$")})
+        robot.categorized_annotations.append(named_annotation)
 
     robot.assert_validity()
     return robot
