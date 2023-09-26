@@ -651,6 +651,7 @@ def deriveSensor(obj, logging=False):
              hud_height=240 if values.get('hud_height') is None else values.pop('hud_height'),
              hud_width=0 if values.get('hud_width') is None else values.pop('hud_width'),
              origin=deriveObjectPose(obj, effectiveparent=parent, logging=logging),
+             link=values.get("link", parent.get("link/name", parent.name)),
              **values
         )
     else:
