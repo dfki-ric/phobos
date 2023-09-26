@@ -558,8 +558,8 @@ class AnnotationsOperator(bpy.types.Operator):
 
     include_transform : BoolProperty(
         name="Include transformation", default=False,
-        description="By using the string key $transform you can include the name of the parent link in your annotations.\n"
-                    "Using &transform.matrix/position/rotation_euler/quaternion let's you choose in which way it is stored."
+        description="By using the string key $transform you can include the transform of the parent link in your annotations.\n"
+                    "Using $transform.xyz/rpy/angle_axis/quaternion let's you choose in which way it is stored."
     )
 
     multiple_entries : BoolProperty(
