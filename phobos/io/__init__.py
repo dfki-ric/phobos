@@ -5,7 +5,7 @@ REGISTER_MODULE_TO_XML_FACTORY(representation)
 
 from . import yaml_reflection
 from . import sensor_representations
-REGISTER_MODULE_TO_XML_FACTORY(sensor_representations)
+#REGISTER_MODULE_TO_XML_FACTORY(sensor_representations)  #happens in representation
 
 from . import poses
 REGISTER_MODULE_TO_XML_FACTORY(poses)

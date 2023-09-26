@@ -101,6 +101,17 @@ class XMLRobot(Representation):
     def visuals(self):
         return self.get_all_visuals()
 
+    @property
+    def sensors_that_dont_belong_to_links_or_joints(self):
+        return [s for s in self.sensors if getattr(s, "link", None) is None and getattr(s, "joint", None) is None]
+
+    @sensors_that_dont_belong_to_links_or_joints.setter
+    def sensors_that_dont_belong_to_links_or_joints(self, value):
+        value = _plural(value)
+        for s in value:
+            if not any([existing.name == s.name and existing.equivalent(s) for existing in self.sensors]):
+                self.add_aggregate("sensor", s)
+
     def annotate_as_human(self):
         for link in self.links:
             link.is_human = True
