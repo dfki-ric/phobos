@@ -180,7 +180,7 @@ class BaseModel(yaml.YAMLObject):
                     kwargs["is_human"] = config["is_human"]
                 kwargs["inputfile"] = config["basefile"]
                 self.dep_models.update({name: Robot(name=name, **kwargs)})
-                # copy the mesh files to the temporary combined model directory
+                self.dep_models[name].clean_meshes()
             elif "repo" in config.keys():
                 repo_path = os.path.join(self.tempdir, "repo", os.path.basename(config["repo"]["git"]))
                 git.clone(
@@ -197,8 +197,7 @@ class BaseModel(yaml.YAMLObject):
                                                    if "submechanisms_in_repo" in config["repo"] else None,
                                 is_human=config["is_human"] if "is_human" in config else False)
                 })
-                # copy the mesh files to the temporary combined model directory
-
+                self.dep_models[name].clean_meshes()
         # now we can join theses models
         # 1. get root model
         if isinstance(self.dep_models[self.assemble["model"]], Robot):
@@ -233,12 +232,15 @@ class BaseModel(yaml.YAMLObject):
             assert self.assemble["take_leaf"] in combined_model, f"{combined_model}"
             combined_model = combined_model[self.assemble["take_leaf"]]
 
+        combined_model.clean_meshes()
+
         if "mirror" in self.assemble.keys():
             combined_model.mirror_model(
                 mirror_plane=self.assemble["mirror"]["plane"] if "plane" in self.assemble["mirror"].keys() else [0, 1, 0],
                 flip_axis=self.assemble["mirror"]["flip_axis"] if "flip_axis" in self.assemble["mirror"].keys() else 1,
                 exclude_meshes=self.assemble["mirror"]["exclude_meshes"] if "exclude_meshes" in self.assemble["mirror"].keys() else [],
-                target_urdf=os.path.dirname(self.basefile)
+                target_urdf=os.path.dirname(self.basefile),
+                name_replacements=self.assemble["mirror"].get("name_replacements", {})
             )
 
         # 2. go recursively through the children and attach them
@@ -407,6 +409,8 @@ class BaseModel(yaml.YAMLObject):
                     self.robot.add_aggregate("material", material_instance)
                     log.debug('Defined Material {}'.format(m_name))
 
+        if hasattr(self, "links") and not hasattr(self, "frames"):
+            self.frames = self.links
         if hasattr(self, "frames"):
             _default = {} if "$default" not in self.frames else self.frames["$default"]
             _ignore_new_links = []
@@ -416,8 +420,9 @@ class BaseModel(yaml.YAMLObject):
                 self.frames[linkname] = misc.merge_default(config, _default)
                 config = copy(self.frames[linkname])
                 if self.robot.get_link(linkname) is None:
-                    assert "transform_frame" not in config and "transform_link" not in config
-                    assert "joint" in config
+                    assert "transform_frame" not in config and "transform_link" not in config, "You can't transform a frame your are about to create, just give it's transformation via the joint."
+                    if "joint" not in config:
+                        raise KeyError(f"Frame {linkname} can't be defined without a joint definiton. Links that are already in the robot:\n" + str([str(l) for l in self.robot.links]))
                     _joint_def = config.pop("joint")
                     _joint_def = misc.merge_default(_joint_def, resources.get_default_joint(_joint_def["type"]))
                     parent_link = _joint_def.pop("parent")
@@ -465,6 +470,8 @@ class BaseModel(yaml.YAMLObject):
                         link.name = misc.edit_name_string(link.name, **v)
                     else:
                         link.add_annotation(k, v, overwrite=True)
+            if "$name_editing" in self.frames:
+                self.robot.rename("links", self.robot.links, **self.frames.get("$name_editing", {}))
             
         if hasattr(self, "joints"):
             if '$replace_joint_types' in self.joints:
@@ -492,10 +499,13 @@ class BaseModel(yaml.YAMLObject):
                 log.error("The following joint changes are defined but the joint does not exist:")
                 for fjd in faulty_joint_defs:
                     log.error(f"- {fjd[0]} "+(f"Did you mean: {fjd[1]}" if len(fjd[1]) > 0 else ""))
+                log.info("However, The following joins DO exist:")
+                for joint in self.robot.joints:
+                    log.info(f"- {joint}")
             remove_joints = []
             for joint in self.robot.joints:
                 jointname = joint.name
-                if jointname in self.joints:
+                if jointname in self.joints or self.joints.get("$all", False):
                     config = misc.merge_default(self.joints[jointname], _default)
                     for k, v in config.items():
                         if k == "remove" and v is True:
@@ -552,6 +562,21 @@ class BaseModel(yaml.YAMLObject):
                 joint.link_with_robot(self.robot)
             for joint in remove_joints:
                 self.robot.remove_joint(joint)
+            for joint in self.robot.joints:
+                jointname = joint.name
+                if jointname in self.joints:
+                    config = misc.merge_default(self.joints[jointname], _default)
+                    joint.name = misc.edit_name_string(joint.name, **config.get("name_editing", {}))
+            if "$name_editing" in self.joints:
+                if self.joints["$name_editing"].get("joint_equals_link_name", False):
+                    for joint in self.robot.joints:
+                        self.robot.rename(targettype="joint", target=joint.name, replacements={
+                            joint.name: joint.child if not joint.child.upper().endswith("_LINK") else joint.child[:-5] 
+                        })
+                else:
+                    self.robot.rename("joints", self.robot.joints, **self.joints.get("$name_editing", {}))
+        # as we mess manually with some names, we need to make sure the tree maps are up to date
+        self.robot.regenerate_tree_maps()
 
         # Check for joint definitions
         self.robot.check_joint_definitions(
@@ -566,7 +591,7 @@ class BaseModel(yaml.YAMLObject):
         
         if hasattr(self, 'collisions'):
             if "$name_editing" in self.collisions.keys():
-                self.rename("collision", **self.collisions["name_editing"])
+                self.rename("collision", self.robot.collisions, **self.collisions["$name_editing"])
             for link in self.robot.links:
                 conf = deepcopy(self.collisions["$default"])
                 exclude = self.collisions["exclude"] if "exclude" in self.collisions.keys() else []
@@ -626,8 +651,8 @@ class BaseModel(yaml.YAMLObject):
                         coll.add_annotations(**conf)
         
         if hasattr(self, 'visuals'):
-            if "$name_editing" in self.collisions.keys():
-                self.rename("visuals", **self.collisions["name_editing"])
+            if "$name_editing" in self.visuals.keys():
+                self.robot.rename("visuals", self.robot.visuals, **self.visuals["$name_editing"])
         
         if hasattr(self, "exoskeletons") or hasattr(self, "submechanisms"):
             if hasattr(self, "exoskeletons"):

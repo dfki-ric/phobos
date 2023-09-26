@@ -1166,6 +1166,11 @@ class Robot(SMURFRobot):
                 submodel.__dict__[k] = v
 
         submodel.get_root().origin = None
+        for link in submodel.links:
+            for vc in link.collisions+link.visuals:
+                if submodel.get_link(vc.origin.relative_to) is None and submodel.get_joint(vc.origin.relative_to) is None:
+                    vc.origin = representation.Pose.from_matrix(self.get_transformation(end=vc.origin.relative_to, start=link), relative_to=link).dot(vc.origin)
+        submodel.export_pdf("test.pdf")
         submodel.link_entities()
 
         if abstract_model and len(self.submechanisms) > 0:
@@ -1438,7 +1443,7 @@ class Robot(SMURFRobot):
         log.info(" Transform Visuals")
         # Transform
         T = create_transformation(translation, rotation)
-        visual.origin = collisvisualvisualon.origin.transformed_by(T, relative_to=visual.object.relative_to)
+        visual.origin = visual.origin.transformed_by(T, relative_to=visual.object.relative_to)
         return True
 
     def transform_collision(self, linkname, translation, rotation):

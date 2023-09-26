@@ -735,6 +735,9 @@ class Mesh(Representation, SmurfBase):
     def has_enough_vertices(self):
         self.load_mesh()
         mesh = deepcopy(mesh_io.as_trimesh(self.mesh_object, silent=True))
+        if getattr(mesh, "bounds", True) is None:  # default is true, as only trimesh has this
+            log.debug(f"Mesh {self.unique_name} seems invalid, as it has no bounds")
+            return False
         zero_transform = transform.create_transformation(xyz=-mesh.centroid)
         mesh.apply_transform(zero_transform)
         if len(mesh.vertices) <= 3:

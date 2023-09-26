@@ -27,9 +27,10 @@ def as_trimesh(scene_or_mesh, scale=None, silent=False):
         if not silent:
             log.error("Received a mesh with multiple materials, material information especially textures may be lost.")
         if len(scene_or_mesh.geometry.values()) == 0:
-            raise IOError(f"{scene_or_mesh.file_name} seems to be an invalid mesh_file")
+            log.warn(f"{scene_or_mesh.metadata.get('file_name', 'Mesh')} seems to be an empty mesh_file")
+            return trimesh.Trimesh(metadata=scene_or_mesh.metadata)
         mesh = trimesh.util.concatenate([
-            trimesh.Trimesh(vertices=m.vertices, faces=m.faces)
+            trimesh.Trimesh(vertices=m.vertices, faces=m.faces, metadata=scene_or_mesh.metadata)
             for m in scene_or_mesh.geometry.values()])
     elif not isinstance(scene_or_mesh, trimesh.Trimesh) and BPY_AVAILABLE:  # we assume it's blender
         import bpy
@@ -51,9 +52,7 @@ def as_trimesh(scene_or_mesh, scale=None, silent=False):
     else:
         mesh = scene_or_mesh
     assert isinstance(mesh, trimesh.Trimesh), f"Can't convert {type(scene_or_mesh)} to trimesh.Trimesh!"
-    if hasattr(mesh, "bounds") and mesh.bounds is None:
-        log.debug(f"Given {type(scene_or_mesh)} has bounds == None, this mesh seems empty.")
-        return None
+
     return mesh
 
 
@@ -108,7 +107,9 @@ def trimesh_2_mesh_info_dict(mesh):
     Returns:
         {"vertices": (n,3) single, "vertex_normals": (n,3) single, "faces": [n*[3*(n,3)]] intc, ["texture_coords": (n,2) single]}
     """
-    assert isinstance(mesh, trimesh.Trimesh)
+    assert isinstance(mesh, trimesh.Trimesh) or mesh is None
+    if mesh is None:
+        return None
     if hasattr(mesh.visual, "uv"):
         write_uv = True
     else:
@@ -300,7 +301,7 @@ def import_mesh(filepath, urdf_path=None):
     else:
         out = trimesh.load_mesh(filepath, maintain_order=True)
     if out.bounds is None:
-        raise IOError(f"{filepath} seems to contain an invalid mesh!")
+        log.warn(f"{filepath} seems to contain an invalid mesh!")
     return out
 
 
