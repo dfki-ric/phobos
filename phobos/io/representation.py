@@ -1626,6 +1626,20 @@ class Link(Representation, SmurfBase):
         self.origin = _singular(value)
         assert self.origin is None or self.origin.relative_to is not None
 
+    @property
+    def sensors(self):
+        assert self._related_robot_instance is not None
+        return [s for s in self._related_robot_instance.sensors if getattr(s, "link", None) == self.name]
+
+    @sensors.setter
+    def sensors(self, value):
+        value = _plural(value)
+        if self._related_robot_instance is None:
+            self._sensors = value
+        else:
+            for s in value:
+                if not any([existing.name == s.name and existing.equivalent(s) for existing in self._related_robot_instance.sensors]):
+                    self._related_robot_instance.add_aggregate("sensor", s)
 
 class JointDynamics(Representation):
     def __init__(self, damping=None, friction=None, spring_stiffness=None, spring_reference=None, **kwargs):
@@ -1735,7 +1749,6 @@ class Joint(Representation, SmurfBase):
         else:
             self.axis = None
         if origin is None and cut_joint is False:
-            log.warn(f"Created joint {name} without specified origin assuming zero-transformation")
             origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=self.parent)
         self.origin = _singular(origin)
         if self.origin.relative_to is None:
@@ -1920,6 +1933,21 @@ class Joint(Representation, SmurfBase):
         if self._related_robot_instance is not None:
             for jd in self._joint_dependencies:
                 jd.link_with_robot(self._related_robot_instance)
+
+    @property
+    def sensors(self):
+        assert self._related_robot_instance is not None
+        return [s for s in self._related_robot_instance.sensors if getattr(s, "joint", None) == self.name]
+
+    @sensors.setter
+    def sensors(self, value):
+        value = _plural(value)
+        if self._related_robot_instance is None:
+            self._sensors = value
+        else:
+            for s in value:
+                if not any([existing.name == s.name and existing.equivalent(s) for existing in self._related_robot_instance.sensors]):
+                    self._related_robot_instance.add_aggregate("sensor", s)
 
 
 class Interface(Representation, SmurfBase):

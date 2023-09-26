@@ -21,7 +21,7 @@
         },
         "sensor": {
           "classname": "SensorFactory",
-          "varname": "sensors"
+          "varname": "sensors_that_dont_belong_to_links_or_joints"
         },
         "transmission": {
           "classname": "Transmission",
@@ -46,6 +46,10 @@
         "collision": {
           "classname": "Collision",
           "varname": "collisions"
+        },
+        "sensor": {
+          "classname": "SensorFactory",
+          "varname": "sensors"
         }
       }
     },
@@ -233,6 +237,10 @@
         "dynamics": {
           "classname": "JointDynamics",
           "varname": "dynamics"
+        },
+        "sensor": {
+          "classname": "SensorFactory",
+          "varname": "sensors"
         }
       },
       "attribute_children": {
@@ -625,7 +633,7 @@
         },
         "sensor": {
           "classname": "SensorFactory",
-          "varname": "sensors"
+          "varname": "sensors_that_dont_belong_to_links_or_joints"
         },
         "plugin": {
           "classname": "PluginFactory",
@@ -658,6 +666,10 @@
         "collision": {
           "classname": "Collision",
           "varname": "collisions"
+        },
+        "sensor": {
+          "classname": "SensorFactory",
+          "varname": "sensors"
         }
       }
     },
@@ -825,6 +837,10 @@
         "mimic": {
           "classname": "JointMimic",
           "varname": "mimic"
+        },
+        "sensor": {
+          "classname": "SensorFactory",
+          "varname": "sensors"
         }
       },
       "nested_children": {
