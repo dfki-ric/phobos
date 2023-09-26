@@ -424,6 +424,9 @@ class BaseModel(yaml.YAMLObject):
                     if "joint" not in config:
                         raise KeyError(f"Frame {linkname} can't be defined without a joint definiton. Links that are already in the robot:\n" + str([str(l) for l in self.robot.links]))
                     _joint_def = config.pop("joint")
+                    if "type" not in _joint_def:
+                        log.debug("No joint type for {linkname} specified assuming fixed.")
+                        _joint_def["type"] = "fixed"
                     _joint_def = misc.merge_default(_joint_def, resources.get_default_joint(_joint_def["type"]))
                     parent_link = _joint_def.pop("parent")
                     parent_joint = self.robot.get_parent(parent_link)
@@ -591,7 +594,7 @@ class BaseModel(yaml.YAMLObject):
         
         if hasattr(self, 'collisions'):
             if "$name_editing" in self.collisions.keys():
-                self.rename("collision", self.robot.collisions, **self.collisions["$name_editing"])
+                self.robot.rename("collision", self.robot.collisions, **self.collisions["$name_editing"])
             for link in self.robot.links:
                 conf = deepcopy(self.collisions["$default"])
                 exclude = self.collisions["exclude"] if "exclude" in self.collisions.keys() else []
@@ -732,6 +735,7 @@ class BaseModel(yaml.YAMLObject):
 
     def export(self):
         self.robot.link_entities()
+        self.robot.submodel_defs = {} # we define these here per model
         ros_pkg_name = self.robot.export(outputdir=self.exportdir, export_config=self.export_config,
                                          rel_mesh_pathes=self.export_meshes, ros_pkg_later=True)
         for vc in self.robot.collisions + self.robot.visuals:

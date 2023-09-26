@@ -375,7 +375,7 @@
               "value_children": {
                 "width": "width",
                 "height": "height",
-                "hfov": "opening_width"
+                "hfov": "opening_width_rad"
               }
             }
           }
@@ -478,7 +478,7 @@
               "value_children": {
                 "width": "width",
                 "height": "height",
-                "hfov": "opening_width"
+                "hfov": "opening_width_rad"
               }
             }
           }
@@ -950,10 +950,12 @@
             "image": {
               "value_children": {
                 "width": "width",
-                "height": "height",
-                "hfov": "opening_width"
+                "height": "height"
               }
             }
+          },
+          "value_children": {
+            "horizontal_fov": "opening_width_rad"
           }
         },
         "contact": {
@@ -1064,7 +1066,7 @@
             }
           },
           "value_children": {
-            "horizontal_fov": "opening_width"
+            "horizontal_fov": "opening_width_rad"
           },
           "children": {
             "pose": {

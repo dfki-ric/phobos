@@ -19,6 +19,7 @@ from ..utils.misc import read_number_from_config, regex_replace, create_dir, edi
 from ..utils.transform import create_transformation, inv, get_adjoint, round_array
 from ..utils.tree import find_close_ancestor_links, get_joints
 from ..utils.xml import transform_object, get_joint_info_dict
+from ..blender import reserved_keys
 
 log = get_logger(__name__)
 
@@ -345,10 +346,10 @@ class Robot(SMURFRobot):
                 export_files.append(os.path.split(stream.name)[-1])
 
         # further annotations
-        for k, v in self.annotations.items():
-            if k not in self.smurf_annotation_keys:
-                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), k)), "w+") as stream:
-                    stream.write(dump_json({k: v}, default_style=False))
+        for category, annos in self.annotations.items():
+            if category not in self.smurf_annotation_keys:
+                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), category)), "w+") as stream:
+                    stream.write(dump_json({category: annos}, default_style=False))
                     export_files.append(os.path.split(stream.name)[-1])
 
         # submodel list
@@ -366,31 +367,33 @@ class Robot(SMURFRobot):
         for ga in self.categorized_annotations:
             if ga.GA_category not in temp_generic_annotations:
                 temp_generic_annotations[ga.GA_category] = []
-            temp_generic_annotations[ga.GA_category].append({ga.GA_name: ga.to_yaml()} if ga.GA_name is not None else ga.to_yaml())
+            gaYaml = ga.to_yaml()
+            # Add parent and parent type to export
+            # TODO: Check if type has to be stored
+            gaYaml["GA_parent"] = ga.GA_parent
+            gaYaml["GA_parent_type"] = ga.GA_parent_type
+            # Remove keys that are not required
+            for key in reserved_keys.ANNOTATION_KEYS:
+                gaYaml.pop(key, None)
+            temp_generic_annotations[ga.GA_category].append({ga.GA_name: gaYaml} if ga.GA_name is not None else gaYaml)
         # clean-up the temporary lists
-        for k, v in temp_generic_annotations.items():
-            if len(v) == 1:
-                temp_generic_annotations[k] = v[0]
-            elif len(v) > 1 and all(type(x) == dict and len(x.keys()) == 1 for x in v):
-                for sub_dict in v:
-                    temp_generic_annotations[k].update(sub_dict)
-        for k, v in temp_generic_annotations.items():
-            # deal with existing names
-            if os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), k))):
-                k = "generic_annotation_"+k
-            new_k = k
-            i = 0
-            while os.path.isfile(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), new_k))):
-                i += 1
-                new_k = f"{k}_{i}"
-            k = new_k
+        for category, annos in temp_generic_annotations.items():
+            # If there is only one annotation of this category
+            if len(annos) == 1:
+                temp_generic_annotations[category] = annos[0]
+            # Elif there are more than one and all annotations have a name
+            elif len(annos) > 1 and all(type(x) == dict and len(x.keys()) == 1 for x in annos):
+                temp_generic_annotations[category] = {}
+                for sub_dict in annos:
+                    temp_generic_annotations[category].update(sub_dict)
+        for category, annos in temp_generic_annotations.items():
             # write
-            if len(v) > 0 and k not in self.smurf_annotation_keys:
-                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), k)), "w") as stream:
-                    stream.write(dump_json({k: v}, default_style=False))
+            if len(annos) > 0 and category not in self.smurf_annotation_keys:
+                with open(os.path.join(smurf_dir, "{}_{}.yml".format(self.name.replace('/','_'), category)), "w") as stream:
+                    stream.write(dump_json({category: annos}, default_style=False))
                     export_files.append(os.path.split(stream.name)[-1])
 
-        # Create the smurf file itsself
+        # Create the smurf file itself
         annotation_dict = {
             'modelname': self.name,
             # 'date': datetime.datetime.now().strftime("%Y%m%d_%H:%M"),
@@ -1170,6 +1173,9 @@ class Robot(SMURFRobot):
             for vc in link.collisions+link.visuals:
                 if submodel.get_link(vc.origin.relative_to) is None and submodel.get_joint(vc.origin.relative_to) is None:
                     vc.origin = representation.Pose.from_matrix(self.get_transformation(end=vc.origin.relative_to, start=link), relative_to=link).dot(vc.origin)
+        for joint in submodel.joints:
+            if submodel.get_link(joint.origin.relative_to) is None and submodel.get_joint(joint.origin.relative_to) is None:
+                joint.origin = representation.Pose.from_matrix(self.get_transformation(end=vc.origin.relative_to, start=link), relative_to=joint.parent).dot(vc.origin)
         submodel.export_pdf("test.pdf")
         submodel.link_entities()
 

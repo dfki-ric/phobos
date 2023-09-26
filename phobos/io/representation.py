@@ -1749,6 +1749,7 @@ class Joint(Representation, SmurfBase):
         else:
             self.axis = None
         if origin is None and cut_joint is False:
+            log.debug(f"Created joint {name} without specified origin assuming zero-transformation")
             origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=self.parent)
         self.origin = _singular(origin)
         if self.origin.relative_to is None:
@@ -2243,9 +2244,9 @@ class GenericAnnotation(Representation, SmurfBase):
     }
 
     def __init__(self, GA_category, GA_name=None, GA_parent=None, GA_parent_type=None, GA_transform: Pose=None,
-                 **annotations):
+                 GA_macros=[], **annotations):
         assert (GA_parent is None and GA_parent_type is None) \
-               or GA_parent_type in ["GA_related_"+str(v) for v in self._class_variables],\
+               or GA_parent_type in [self._type_dict[v] for v in self._class_variables],\
             "Unknown GA_parent_type="+str(GA_parent_type)
         setattr(self, "GA_related_"+str(GA_parent_type), GA_parent)
         self._GA_parent_var = "GA_related_"+str(GA_parent_type)
@@ -2253,10 +2254,20 @@ class GenericAnnotation(Representation, SmurfBase):
         self._GA_transform = GA_transform
         self.GA_category = GA_category
         self.GA_name = GA_name
+        self.GA_macros = GA_macros
+        # Store parent type for export
+        # TODO: Check if type has to be stored
+        self.GA_parent_type = GA_parent_type
 
         for k, v in annotations.items():
-            setattr(self, "_"+k, v)
+            setattr(self, k, v)
 
+            # TODO: Is this required?
+            # In case it is, replace line above
+            # setattr(self, k, v)
+            # with
+            # setattr(self, "_"+k, v)
+            """
             def _getter(instance, varname=k):
                 value = getattr(instance, "_" + varname)
                 if not self._GA_parent_var.endswith("None") and type(value) == str and value.startswith("$parent."):
@@ -2273,8 +2284,7 @@ class GenericAnnotation(Representation, SmurfBase):
                     log.warning(f'{varname} uses the literal: {getattr(instance, "_"+varname)},'
                                 f' but you are overriding it with a non literal value: {value}')
                 setattr(self, "_"+k, v)
-
-            setattr(self, k, property(_getter, _setter))
+            """
 
         SmurfBase.__init__(self, returns=list(annotations.keys()))
 

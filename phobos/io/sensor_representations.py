@@ -228,7 +228,7 @@ class CameraSensor(Sensor):
     def __init__(
             self, name=None, link=None,
             height=480, width=640, hud_height=240, hud_width=0,
-            opening_height=90, opening_width=90,
+            opening_height=90, opening_width=90, opening_height_rad=np.pi/2, opening_width_rad=np.pi/2,
             depth_image=True, show_cam=False, frame_offset=1, origin=None, **kwargs):
         super().__init__(name=name, joint=None, link=link, sensortype='CameraSensor', origin=origin,
                          _sdf_type="camera", _blender_type="Camera",
@@ -237,6 +237,10 @@ class CameraSensor(Sensor):
         self.width = width
         self.hud_height = hud_height
         self.hud_width = hud_width
+        if opening_height_rad is not None:
+            opening_height = opening_height_rad*180/np.pi
+        if opening_width_rad is not None:
+            opening_width = opening_width_rad*180/np.pi
         self.opening_height = opening_height if opening_height is not None else opening_width * height / width
         self.opening_width = opening_width
         self.depth_image = depth_image
@@ -268,6 +272,22 @@ class CameraSensor(Sensor):
         assert self.equivalent(other)
         # Nothing to do here
         pass
+
+    @property
+    def opening_height_rad(self):
+        return self.opening_height*np.pi/180
+
+    @opening_height_rad.setter
+    def opening_height_rad(self, value):
+        return value*180/np.pi
+
+    @property
+    def opening_width_rad(self):
+        return self.opening_height*np.pi/180
+
+    @opening_width_rad.setter
+    def opening_width_rad(self, value):
+        return value*180/np.pi
 
 
 class IMU(Sensor):
