@@ -1735,7 +1735,7 @@ class Joint(Representation, SmurfBase):
         else:
             self.axis = None
         if origin is None and cut_joint is False:
-            log.warn(f"Created joint {name} without specified origin assuming zero-transformation")
+            log.debug(f"Created joint {name} without specified origin assuming zero-transformation")
             origin = Pose(xyz=[0, 0, 0], rpy=[0, 0, 0], relative_to=self.parent)
         self.origin = _singular(origin)
         if self.origin.relative_to is None:

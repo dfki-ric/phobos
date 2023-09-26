@@ -1170,6 +1170,9 @@ class Robot(SMURFRobot):
             for vc in link.collisions+link.visuals:
                 if submodel.get_link(vc.origin.relative_to) is None and submodel.get_joint(vc.origin.relative_to) is None:
                     vc.origin = representation.Pose.from_matrix(self.get_transformation(end=vc.origin.relative_to, start=link), relative_to=link).dot(vc.origin)
+        for joint in submodel.joints:
+            if submodel.get_link(joint.origin.relative_to) is None and submodel.get_joint(joint.origin.relative_to) is None:
+                joint.origin = representation.Pose.from_matrix(self.get_transformation(end=vc.origin.relative_to, start=link), relative_to=joint.parent).dot(vc.origin)
         submodel.export_pdf("test.pdf")
         submodel.link_entities()
 
