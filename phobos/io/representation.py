@@ -653,10 +653,9 @@ class Mesh(Representation, SmurfBase):
         else:
             assert self._related_robot_instance is not None
             assert self._related_robot_instance.mesh_format is not None
-            assert self._related_robot_instance.mesh_format != "input_type" or self.input_type.startswith("file"), \
-                f"No input file to derive the format from! {self} {self.input_type}"
             format = self._related_robot_instance.mesh_format
             if format == "input_type":
+                assert self.input_type.startswith("file"), f"No input file to derive the format from!"
                 format = self.input_type[5:]
             if format not in self._exported:
                 raise IOError(f"The mesh {self.unique_name} with the required mesh format ({format}) has not yet been exported.")

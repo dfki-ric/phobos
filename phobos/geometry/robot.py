@@ -68,8 +68,6 @@ def generate_kccd_optimizer_ready_collision(robot, linkname, outputdir, join_fir
             mesh = geometry.reduce_mesh(mesh, 1-reduce_meshes)
 
         mesh_representation = representation.Mesh(mesh=mesh, meshname="collision_"+linkname)
-        # [TODO pre_v2.0.0] Review whether the mesh export happens on export of this xml anyways
-        mesh_representation.provide_mesh_file(targetpath=outputdir, format="stl")
         link.add_aggregate("collision", representation.Collision(
             origin=representation.Pose(rpy=[0, 0, 0], xyz=[0, 0, 0], relative_to=link),
             geometry=mesh_representation,

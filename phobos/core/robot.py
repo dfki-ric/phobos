@@ -456,7 +456,8 @@ class Robot(SMURFRobot):
                 origin=link.collisions[0].origin,
                 geometry=link.collisions[0].geometry,
             ))
-        kccd_robot.export_urdf(outputfile=kccd_urdf)
+        kccd_robot.export_meshes(kccd_meshes, format="stl", apply_scale=True)
+        kccd_robot.export_urdf(outputfile=kccd_urdf, mesh_format="stl")
         execute_shell_command("urdf2kccd -b " + self.name.replace('/','_') + ".urdf", cwd=kccd_path)
         kccd_kinematics_file = open(kccd_urdf[:-5] + "Kinematics.cfg", "r").read().split("\n\n")
         kccd_kinematics = {}
@@ -658,12 +659,14 @@ class Robot(SMURFRobot):
         graph = pydot.graph_from_dot_data(out)
         graph[0].write_pdf(outputfile)
 
-    def export(self, outputdir, export_config, rel_mesh_pathes=None, ros_pkg_name=None, no_smurf=False,
+    def export(self, outputdir, export_config=None, rel_mesh_pathes=None, ros_pkg_name=None, no_smurf=False,
                ros_pkg_later=False, check_submechs=True, with_meshes=True, use_existing_meshes=False, apply_scale=False):
         assert self.check_linkage()
         outputdir = os.path.abspath(outputdir)
         if rel_mesh_pathes is None:
             rel_mesh_pathes = resources.get_default_rel_mesh_pathes()
+        if export_config is None:
+            export_config = resources.get_default_export_config()
         xml_file_in_smurf = None
         ros_pkg = False
         if ros_pkg_name is None:
@@ -1176,7 +1179,7 @@ class Robot(SMURFRobot):
         for joint in submodel.joints:
             if submodel.get_link(joint.origin.relative_to) is None and submodel.get_joint(joint.origin.relative_to) is None:
                 joint.origin = representation.Pose.from_matrix(self.get_transformation(end=vc.origin.relative_to, start=link), relative_to=joint.parent).dot(vc.origin)
-        submodel.export_pdf("test.pdf")
+
         submodel.link_entities()
 
         if abstract_model and len(self.submechanisms) > 0:
