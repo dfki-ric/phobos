@@ -25,15 +25,15 @@ class ModelTest(object):
         self.old_hyrodyn = None
         self.new_hml_test = get_load_report(self.new.robot.xmlfile, self.new.robot.submechanisms_file)
         self.new_sm_hml_test = []
-        if len([x for x in self.new.robot.submodel_defs if not x["name"].startswith("#submech#")]) > 0:
+        if len([x for x in self.new.robot.submodel_defs if not x.startswith("#submech#")]) > 0:
             sm_path = os.path.join(self.new.exportdir, "submodels")
             for au in self.new.robot.submodel_defs:
-                if au["name"].startswith("#submech#"):
+                if au.startswith("#submech#"):
                     continue
                 self.new_sm_hml_test += [{
-                    "name": au["name"],
-                    "urdf": os.path.join(sm_path, au["name"], "urdf", au["name"] + ".urdf"),
-                    "submech": os.path.normpath(os.path.join(sm_path, au["name"], "smurf", au["name"] + "_submechanisms.yml"))
+                    "name": au,
+                    "urdf": os.path.join(sm_path, au, "urdf", au + ".urdf"),
+                    "submech": os.path.normpath(os.path.join(sm_path, au, "smurf", au + "_submechanisms.yml"))
                 }]
                 self.new_sm_hml_test[-1]["report"] = get_load_report(
                     self.new_sm_hml_test[-1]["urdf"],
@@ -267,10 +267,11 @@ class ModelTest(object):
         return len(self.new.robot.joints) == len(self.old.joints)
 
     def test_load_in_pybullet(self):
-        if not PYBULLET_AVAILABLE:
+        if not check_pybullet_available():
             log.warning('Pybullet not present')
             return True
         try:
+            import pybullet as pb
             client = pb.connect(pb.DIRECT)
             pb.loadURDF(os.path.join(self.new.robot.xmlfile), physicsClientId=client)
             pb.disconnect(client)
