@@ -716,7 +716,7 @@ class Robot(SMURFRobot):
                         name=export["name"],
                         start=export.get("start", None),
                         stop=export.get("stop", None),
-                        include_unstopped_branches=export.get("include_unstopped_branches", None),
+                        include_unstopped_branches=export.get("include_unstopped_branches", False),
                         no_submechanisms=export.get("no_submechanisms", False),
                         abstract_model=export.get("abstract_model", False),
                         remove_fixed=export.get("remove_fixed", False),
