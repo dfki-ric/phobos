@@ -1577,6 +1577,16 @@ class Link(Representation, SmurfBase):
                     geo.name += str(i)
         self.excludes += ["inertial"]
 
+    @property
+    def secure_origin(self):
+        if self.origin is None:
+            return self.joint_relative_origin
+        return self.origin
+
+    @secure_origin.setter
+    def secure_origin(self, value):
+        self.origin = value
+
     def remove_aggregate(self, elem):
         if isinstance(elem, Visual):
             self.visuals.remove(elem)
@@ -1606,17 +1616,20 @@ class Link(Representation, SmurfBase):
     @property
     def joint_relative_origin(self):
         assert self._related_robot_instance is not None
-        assert self.origin is not None
-        out = self.origin
-        if self.origin.relative_to == self._related_robot_instance.get_parent(self):
-            return out
+        if self.origin is not None:
+            out = self.origin
+            if self.origin.relative_to == self._related_robot_instance.get_parent(self):
+                return out
+            else:
+                assert self.origin.relative_to is not None
+                r2x = self._related_robot_instance.get_transformation
+                return Pose.from_matrix(
+                    inv(r2x(self)).dot(r2x(self.origin.relative_to).dot(self.origin.to_matrix())),
+                    relative_to=self._related_robot_instance.get_parent(self)
+                )
         else:
-            assert self.origin.relative_to is not None
-            r2x = self._related_robot_instance.get_transformation
-            return Pose.from_matrix(
-                inv(r2x(self)).dot(r2x(self.origin.relative_to).dot(self.origin.to_matrix())),
-                relative_to=self._related_robot_instance.get_parent(self)
-            )
+            return Pose(relative_to=self._related_robot_instance.get_parent(self))
+
 
     @joint_relative_origin.setter
     def joint_relative_origin(self, value):
