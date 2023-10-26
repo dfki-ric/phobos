@@ -92,6 +92,8 @@ class XMLRobot(Representation):
 
     def assert_validity(self):
         assert self.get_root().origin is None or self.get_root().origin.is_zero()
+        for link in self.links:
+            assert link.origin is None or link.origin.relative_to != link.name
 
     @property
     def collisions(self):
