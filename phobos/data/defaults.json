@@ -40,7 +40,8 @@
         "opening_width": 90,
         "depth_image": true,
         "show_cam": false,
-        "frame_offset": 1
+        "frame_offset": 1,
+        "topic": ""
       }
     },
     "IMU": {
