@@ -258,7 +258,8 @@ class Robot(SMURFRobot):
 
     def export_smurf(self, outputdir=None, outputfile=None, robotfile=None,
                      check_submechs=True, with_submodel_defs=False,
-                     with_meshes=True, mesh_format=None, additional_meshes=None, rel_mesh_pathes=None):
+                     with_meshes=True, mesh_format=None, additional_meshes=None, rel_mesh_pathes=None,
+                     submodels=None):
         """ Export self and all annotations inside a given folder with structure
         """
         assert self.check_linkage()
@@ -355,9 +356,14 @@ class Robot(SMURFRobot):
         # submodel list
         if with_submodel_defs and len(self.submodel_defs) > 0:
             out_submodel_defs = {}
-            for name, definition in self.submodel_defs.items():
-                out_submodel_defs[name] = deepcopy(definition)
-                out_submodel_defs[name]["export_dir"] = os.path.relpath(out_submodel_defs[name]["export_dir"], smurf_dir)
+            if submodels is not None:
+                for name in submodels:
+                    out_submodel_defs[name] = deepcopy(self.submodel_defs[name])
+                    out_submodel_defs[name]["export_dir"] = os.path.relpath(out_submodel_defs[name]["export_dir"], smurf_dir)
+            else:
+                for name, definition in self.submodel_defs.items():
+                    out_submodel_defs[name] = deepcopy(definition)
+                    out_submodel_defs[name]["export_dir"] = os.path.relpath(out_submodel_defs[name]["export_dir"], smurf_dir)
             with open(os.path.join(smurf_dir, "{}_submodels.yml".format(self.name.replace('/','_'))), "w+") as stream:
                 stream.write(dump_json({"submodels": out_submodel_defs}, default_style=False))
                 export_files.append(os.path.split(stream.name)[-1])
@@ -785,7 +791,8 @@ class Robot(SMURFRobot):
                 robotfile=xml_file_in_smurf,
                 check_submechs=check_submechs,
                 with_submodel_defs=True,
-                with_meshes=False  # has been done before
+                with_meshes=False,  # has been done before
+                submodels=[filtered_item['name'] for filtered_item in filter(lambda item: item["type"] == "submodel", export_config)]
             )
         # export ros package files
         if ros_pkg and not ros_pkg_later:
