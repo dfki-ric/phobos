@@ -27,7 +27,8 @@ class XMLRobot(Representation):
                  materials: List[representation.Material] = None,
                  transmissions: List[representation.Transmission] = None,
                  sensors=None, motors=None, plugins=None, root=None,
-                 is_human=False, urdf_version=None, xmlfile=None, _xmlfile=None):
+                 is_human=False, urdf_version=None, xmlfile=None, _xmlfile=None, 
+                 sensors_that_dont_belong_to_links_or_joints=None):
         self._related_robot_instance = self
         super().__init__()
         self.joints = []
@@ -65,9 +66,12 @@ class XMLRobot(Representation):
         self.materials = materials if materials is not None else []
         self.transmissions = transmissions if transmissions is not None else []
         self.sensors = sensors if sensors is not None else []
+        if sensors_that_dont_belong_to_links_or_joints is not None:
+            self.sensors_that_dont_belong_to_links_or_joints = sensors_that_dont_belong_to_links_or_joints
         self.motors = motors if motors is not None else []
         if plugins is not None:
             self.motors += [m for m in _plural(plugins) if isinstance(m, representation.Motor)]
+
 
         if is_human:
             self.annotate_as_human()
