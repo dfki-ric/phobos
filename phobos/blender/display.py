@@ -10,7 +10,8 @@
 
 import collections
 
-import bgl
+import gpu
+from gpu_extras.batch import batch_for_shader
 import blf
 import bpy
 from bpy.props import BoolProperty
@@ -104,24 +105,17 @@ def draw_2dpolygon(points, linecolor=None, fillcolor=None, distance=0.2, linewid
 
     """
     # background
-    bgl.glEnable(bgl.GL_BLEND)
-    bgl.glLineWidth(linewidth)
+    shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
     if fillcolor:
-        #bgl.glColor4f(*fillcolor)
-        bgl.glBegin(bgl.GL_POLYGON)
-        for p in points:
-            bgl.glVertex3f(*p, distance)
-        bgl.glEnd()
+        print("polygon", fillcolor)
+        shader.uniform_float("color", fillcolor)
+        batch = batch_for_shader(shader, 'TRI_FAN', {"pos": points})
+        batch.draw(shader)
     # frame
     if linecolor:
-        #bgl.glColor4f(*linecolor)
-        bgl.glBegin(bgl.GL_LINE_STRIP)
-        for p in points:
-            bgl.glVertex3f(*p, distance)
-        bgl.glVertex3f(*points[0], distance)
-        bgl.glEnd()
-    bgl.glLineWidth(1)
-    bgl.glDisable(bgl.GL_BLEND)
+        shader.uniform_float("color", linecolor)
+        batch = batch_for_shader(shader, 'LINE_STRIP', {"pos": points})
+        batch.draw(shader)
 
 
 def draw_text(text, position, color=(1.0, 1.0, 1.0, 1.0), size=14, dpi=150, font_id=0):
@@ -130,9 +124,7 @@ def draw_text(text, position, color=(1.0, 1.0, 1.0, 1.0), size=14, dpi=150, font
     Args:
       text:
       position:
-      color: (Default value = (1.0)
-      1.0:
-      1.0):
+      color: (Default value = (1.0, 1.0, 1.0, 1.0)):
       size: (Default value = 14)
       dpi: (Default value = 150)
       font_id: (Default value = 0)
@@ -144,6 +136,22 @@ def draw_text(text, position, color=(1.0, 1.0, 1.0, 1.0), size=14, dpi=150, font
     blf.position(font_id, *position, 0.25)
     blf.size(font_id, size, dpi)
     blf.draw(font_id, text)
+
+def get_text_width(text, size=14, dpi=150, font_id=0):
+    """
+
+    Args:
+      text:
+      size: (Default value = 14)
+      dpi: (Default value = 150)
+      font_id: (Default value = 0)
+
+    Returns:
+
+    """
+    #bgl.glColor4f(*color)
+    blf.size(font_id, size, dpi)
+    return blf.dimensions(font_id, text)[0]
 
 
 def draw_textbox(
@@ -209,16 +217,17 @@ def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
 
     """
     blf.size(0, 6, 150)
-    width = bpy.context.region.width
-    start = width - blf.dimensions(0, text)[0] - 6
+    margin = 2
+    width = get_text_width(text, size=6) #bpy.context.region.width
+    start = 20#width - blf.dimensions(0, text)[0] - 6
     points = (
-        (start, slotlower[slot]),
-        (width - 2, slotlower[slot]),
-        (width - 2, slotlower[slot] + slotheight - 4),
-        (start, slotlower[slot] + slotheight - 4),
+        (start - margin, slotlower[slot]),
+        (width + start + margin, slotlower[slot]),
+        (width + start + margin, slotlower[slot] + slotheight - 4),
+        (start - margin, slotlower[slot] + slotheight - 4),
     )
     draw_2dpolygon(points, fillcolor=(*colors[msgtype], 0.2 * opacity))
-    draw_text(text, (start + 2, slotlower[slot] + 4), size=6, color=(1, 1, 1, opacity))
+    draw_text(text, (start, slotlower[slot] + 4), size=6, color=(1, 1, 1, opacity))
     if slot == 0 and offset > 0:
         # draw_text(str(offset) + ' \u25bc', (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, opacity))
         draw_text('+' + str(offset), (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, 1))
@@ -363,8 +372,6 @@ def draw_callback_2d(self, context):
     # bgl.glMatrixMode(bgl.GL_MODELVIEW)
     # bgl.glLoadIdentity()
 
-    bgl.glEnable(bgl.GL_BLEND)
-
     # submechanisms
     if objects and wm.draw_submechanisms:
         submechanism_roots = [obj for obj in bpy.data.objects if 'submechanism/name' in obj]
@@ -451,11 +458,6 @@ def draw_callback_2d(self, context):
                 draw_message(msg['text'], msg['type'], m, opacity, offset=wm.phobos_msg_offset)
             except IndexError:
                 pass
-
-    # restore opengl defaults
-    bgl.glLineWidth(1)
-    bgl.glDisable(bgl.GL_BLEND)
-    #bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
 
 def setProgress(value, info=None):
     """
