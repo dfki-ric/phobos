@@ -113,6 +113,7 @@ def draw_2dpolygon(left, top, width, height, linecolor=None, fillcolor=None, dis
     )
 
     # background
+    gpu.state.blend_set("ALPHA")
     shader = gpu.shader.from_builtin('2D_SMOOTH_COLOR')
     color = len(points)*[fillcolor]
     if fillcolor:
