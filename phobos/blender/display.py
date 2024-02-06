@@ -200,13 +200,9 @@ def draw_textbox(
         origin = origin + Vector((-width - 2 * hborder, 0)) + offset
     else:
         origin = origin + offset
-    points = (
-        origin + Vector((-hborder, -vborder * 1.5)),
-        origin + Vector((width + hborder, -vborder * 1.5)),
-        origin + Vector((width + hborder, height + vborder)),
-        origin + Vector((-hborder, height + vborder)),
-    )
-    draw_2dpolygon(points, fillcolor=backgroundcolor, linecolor=textcolor, linewidth=linewidth)
+    l, t = origin[0]-hborder, origin[1]-vborder * 1.5
+    w, h = width + 2*hborder, height + 2.5*vborder
+    draw_2dpolygon(l, t, w, h, fillcolor=backgroundcolor, linecolor=textcolor, linewidth=linewidth)
     draw_text(text, position=origin, size=textsize, color=textcolor)
 
 
@@ -286,12 +282,12 @@ def draw_joint(joint, length):
     axis = joint.matrix_world @ (length * joint.data.bones[0].vector.normalized())
     endpoint = axis
 
-    #bgl.glColor4f(0.0, 1.0, 0.0, 0.5)
-    bgl.glLineWidth(2)
-    bgl.glBegin(bgl.GL_LINE_STRIP)
-    bgl.glVertex3f(*origin)
-    bgl.glVertex3f(*endpoint)
-    bgl.glEnd()
+    points = (origin, endpoint)
+    color = 2*[(0.0, 1.0, 0.0, 0.5)]
+    shader = gpu.shader.from_builtin("3D_SMOOTH_COLOR")
+    batch = batch_for_shader(shader, "LINE_STRIP", {"pos": points, "color": color})
+    batch.draw(shader)
+
 
 
 def draw_path(path, color=colors['white'], dim3=False, width=4):
@@ -333,22 +329,16 @@ def draw_callback_3d(self, context):
     Returns:
 
     """
-    active = context.object
     selected = context.selected_objects
     wm = context.window_manager
 
-    bgl.glEnable(bgl.GL_BLEND)
+    gpu.state.blend_set("ALPHA")
 
     # joint axes
     if len(selected) > 0:
         if wm.draw_jointaxes:
             for j in [o for o in selected if o.phobostype == 'link']:
                 draw_joint(j, wm.jointaxes_length)
-
-    # restore opengl defaults
-    bgl.glLineWidth(1)
-    bgl.glDisable(bgl.GL_BLEND)
-    #bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
 
 
 def draw_callback_2d(self, context):
