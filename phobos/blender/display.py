@@ -91,7 +91,7 @@ def to2d(coords):
     return view3d_utils.location_3d_to_region_2d(*getRegionData(), coords)
 
 
-def draw_2dpolygon(points, linecolor=None, fillcolor=None, distance=0.2, linewidth=1):
+def draw_2dpolygon(left, top, width, height, linecolor=None, fillcolor=None, distance=0.2, linewidth=1):
     """
 
     Args:
@@ -104,17 +104,23 @@ def draw_2dpolygon(points, linecolor=None, fillcolor=None, distance=0.2, linewid
     Returns:
 
     """
+
+    points = (
+        (left, top),
+        (left + width, top),
+        (left + width, top + height),
+        (left, top + height)
+    )
+
     # background
-    shader = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+    shader = gpu.shader.from_builtin('2D_SMOOTH_COLOR')
+    color = len(points)*[fillcolor]
     if fillcolor:
-        print("polygon", fillcolor)
-        shader.uniform_float("color", fillcolor)
-        batch = batch_for_shader(shader, 'TRI_FAN', {"pos": points})
+        batch = batch_for_shader(shader, 'TRI_FAN', {"pos": points, "color": color})
         batch.draw(shader)
     # frame
     if linecolor:
-        shader.uniform_float("color", linecolor)
-        batch = batch_for_shader(shader, 'LINE_STRIP', {"pos": points})
+        batch = batch_for_shader(shader, 'LINE_STRIP', {"pos": points, "color": color})
         batch.draw(shader)
 
 
@@ -132,7 +138,7 @@ def draw_text(text, position, color=(1.0, 1.0, 1.0, 1.0), size=14, dpi=150, font
     Returns:
 
     """
-    #bgl.glColor4f(*color)
+    blf.color(font_id, *color)
     blf.position(font_id, *position, 0.25)
     blf.size(font_id, size, dpi)
     blf.draw(font_id, text)
@@ -217,17 +223,14 @@ def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
 
     """
     blf.size(0, 6, 150)
-    margin = 2
-    width = get_text_width(text, size=6) #bpy.context.region.width
-    start = 20#width - blf.dimensions(0, text)[0] - 6
-    points = (
-        (start - margin, slotlower[slot]),
-        (width + start + margin, slotlower[slot]),
-        (width + start + margin, slotlower[slot] + slotheight - 4),
-        (start - margin, slotlower[slot] + slotheight - 4),
-    )
-    draw_2dpolygon(points, fillcolor=(*colors[msgtype], 0.2 * opacity))
-    draw_text(text, (start, slotlower[slot] + 4), size=6, color=(1, 1, 1, opacity))
+    margin = 4
+    start = 20
+    blocksize = 10
+    left, top = start, slotlower[slot] + 4
+    width, height = blocksize, blocksize
+    draw_2dpolygon(left, top, width, height, fillcolor=(*colors[msgtype], 0.2 * opacity))
+    draw_text(text, (start + margin + blocksize - 1, slotlower[slot] + 4 - 1), size=6, color=(0, 0, 0, opacity))
+    draw_text(text, (start + margin + blocksize, slotlower[slot] + 4), size=6, color=(1, 1, 1, opacity))
     if slot == 0 and offset > 0:
         # draw_text(str(offset) + ' \u25bc', (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, opacity))
         draw_text('+' + str(offset), (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, 1))
