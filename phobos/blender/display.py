@@ -307,18 +307,20 @@ def draw_path(path, color=colors['white'], dim3=False, width=4):
     for e in range(len(path)):
         origins.append(path[e].matrix_world.to_translation())
 
-    bgl.glEnable(bgl.GL_BLEND)
-    bgl.glLineWidth(width)
-
-    bgl.glBegin(bgl.GL_LINE_STRIP)
-    #bgl.glColor4f(*color)
+    gpu.state.blend_set("ALPHA")
+    points = []
     for o in origins:
         if dim3:
-            bgl.glVertex3f(o)
+            points.append(o)
         else:
-            bgl.glVertex2f(*to2d(o))
-    bgl.glEnd()
-    bgl.glDisable(bgl.GL_BLEND)
+            points.append(to2d(o))
+    c = len(points)*[color]
+    if dim3:
+        shader = gpu.shader.from_builtin("3D_SMOOTH_COLOR")
+    else:
+        shader = gpu.shader.from_builtin("2D_SMOOTH_COLOR")
+    batch = batch_for_shader(shader, "LINE_STRIP", {"pos": points, "color": c})
+    batch.draw(shader)
 
 
 def draw_callback_3d(self, context):
@@ -369,11 +371,12 @@ def draw_callback_2d(self, context):
 
     # submechanisms
     if objects and wm.draw_submechanisms:
-        submechanism_roots = [obj for obj in bpy.data.objects if 'submechanism/name' in obj]
+        submechanism_roots = [obj for obj in bpy.data.objects if obj.phobostype == "submechanism"]
         # draw spanning trees
         for root in submechanism_roots:
-            if 'submechanism/spanningtree' in root:
-                if set(root['submechanism/spanningtree']).intersection(
+            if 'jointnames_spanningtree' in root:
+                spanningTree = root['jointnames_spanningtree']
+                if set(spanningTree).intersection(
                     set(bpy.context.selected_objects)
                 ):
                     linecolor = colors['submechanism']
@@ -381,15 +384,15 @@ def draw_callback_2d(self, context):
                 else:
                     linecolor = (*colors['submechanism'][:3], 0.4)
                     linewidth = 3
-                draw_path(root['submechanism/spanningtree'], color=linecolor, width=linewidth)
+                draw_path(spanningTree, color=linecolor, width=linewidth)
                 # joint['submechanism/independent'],
                 # joint['submechanism/active'])
                 avgpos = Vector()
-                for obj in root['submechanism/spanningtree']:
+                for obj in spanningTree:
                     avgpos += obj.matrix_world.translation
-                origin = to2d(avgpos / len(root['submechanism/spanningtree']))
+                origin = to2d(avgpos / len(spanningTree))
                 draw_textbox(
-                    root['submechanism/name'],
+                    root['name'],
                     origin,
                     textsize=8,
                     textcolor=linecolor,
