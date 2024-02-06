@@ -91,14 +91,16 @@ def to2d(coords):
     return view3d_utils.location_3d_to_region_2d(*getRegionData(), coords)
 
 
-def draw_2dpolygon(left, top, width, height, linecolor=None, fillcolor=None, distance=0.2, linewidth=1):
+def draw_2dpolygon(left, top, width, height, linecolor=None, fillcolor=None, linewidth=1):
     """
 
     Args:
-      points:
+      left:
+      top:
+      width:
+      height:
       linecolor: (Default value = None)
       fillcolor: (Default value = None)
-      distance: (Default value = 0.2)
       linewidth: (Default value = 1)
 
     Returns:
@@ -287,7 +289,6 @@ def draw_joint(joint, length):
     shader = gpu.shader.from_builtin("3D_SMOOTH_COLOR")
     batch = batch_for_shader(shader, "LINE_STRIP", {"pos": points, "color": color})
     batch.draw(shader)
-
 
 
 def draw_path(path, color=colors['white'], dim3=False, width=4):
