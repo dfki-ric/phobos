@@ -684,6 +684,8 @@ def deriveMotor(obj):
         annotations.pop("name")
     if "joint" in annotations:
         annotations.pop("joint")
+    if obj.get("motor/type", None):
+        annotations["type"] = obj.get("motor/type")
     return representation.Motor(
         name=obj.get("motor/name", obj.name),
         joint=obj.get("joint/name", obj.name),
