@@ -14,8 +14,6 @@ import gpu
 from gpu_extras.batch import batch_for_shader
 import blf
 import bpy
-from bpy.props import BoolProperty
-from bpy.types import Operator
 from bpy_extras import view3d_utils
 from mathutils import Vector
 
