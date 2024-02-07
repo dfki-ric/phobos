@@ -206,7 +206,7 @@ def draw_textbox(
     draw_text(text, position=origin, size=textsize, color=textcolor)
 
 
-def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
+def draw_message(text, msgtype, slot, opacity=1.0, scroll=0):
     """
 
     Args:
@@ -214,7 +214,7 @@ def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
       msgtype:
       slot:
       opacity: (Default value = 1.0)
-      offset: (Default value = 0)
+      scroll: (Default value = 0)
 
     Returns:
 
@@ -222,15 +222,16 @@ def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
     blf.size(0, 6, 150)
     margin = 4
     start = 20
+    if slot == 0 and scroll > 0:
+        start = start + get_text_width('+' + str(scroll), size=6) + margin
     blocksize = 10
     left, top = start, slotlower[slot] + 4
     width, height = blocksize, blocksize
     draw_2dpolygon(left, top, width, height, fillcolor=(*colors[msgtype], 0.2 * opacity))
     draw_text(text, (start + margin + blocksize - 1, slotlower[slot] + 4 - 1), size=6, color=(0, 0, 0, opacity))
     draw_text(text, (start + margin + blocksize, slotlower[slot] + 4), size=6, color=(1, 1, 1, opacity))
-    if slot == 0 and offset > 0:
-        # draw_text(str(offset) + ' \u25bc', (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, opacity))
-        draw_text('+' + str(offset), (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, 1))
+    if slot == 0 and scroll > 0:
+        draw_text('+' + str(scroll), (10, slotlower[0] + 4), size=6, color=(1, 1, 1, 1))
 
 
 def draw_progressbar(value):
@@ -445,13 +446,13 @@ def draw_callback_2d(self, context):
     if wm.draw_messages:
         for m in range(wm.phobos_msg_count):
             opacity = 1.0
-            if 1 >= m <= wm.phobos_msg_offset - 1 or m >= wm.phobos_msg_count - 2:
+            if 1 >= m <= wm.phobos_msg_scroll - 1 or m >= wm.phobos_msg_count - 2:
                 opacity = 0.5
-            if wm.phobos_msg_offset > 1 > m or m >= wm.phobos_msg_count - 1:
+            if wm.phobos_msg_scroll > 1 > m or m >= wm.phobos_msg_count - 1:
                 opacity = 0.1
             try:
-                msg = messages[m + wm.phobos_msg_offset]
-                draw_message(msg['text'], msg['type'], m, opacity, offset=wm.phobos_msg_offset)
+                msg = messages[m + wm.phobos_msg_scroll]
+                draw_message(msg['text'], msg['type'], m, opacity, scroll=wm.phobos_msg_scroll)
             except IndexError:
                 pass
 

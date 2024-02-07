@@ -1662,7 +1662,7 @@ class PhobosDisplayPanel(bpy.types.Panel):
             dc1.prop(wm, "draw_progress")
             dc2.prop(wm, "draw_messages")
             dc2.prop(wm, 'phobos_msg_count')
-            dc2.prop(wm, 'phobos_msg_offset')
+            dc2.prop(wm, 'phobos_msg_scroll')
             
         layout.separator()
 
@@ -1812,12 +1812,12 @@ def register():
         description="How many Phobos log messages to show on screen",
     )
 
-    bpy.types.WindowManager.phobos_msg_offset = IntProperty(
-        name='offset',
+    bpy.types.WindowManager.phobos_msg_scroll = IntProperty(
+        name='scroll',
         default=0,
         min=0,
         max=50,
-        description="The Phobos log message index to start with",
+        description="Use this to scroll through the messages",
     )
 
     bpy.types.WindowManager.draw_progress = BoolProperty(name='Progress', default=True)
