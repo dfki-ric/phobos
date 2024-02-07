@@ -44,6 +44,7 @@ requirements = {
     "yaml": "pyyaml",
     "numpy": "numpy",
     "scipy": "scipy",
+    "pkg_resources": "setuptools",
     "collada": "pycollada",
     "pydot": "pydot"
 }
