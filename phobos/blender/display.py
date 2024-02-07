@@ -434,7 +434,7 @@ def draw_callback_2d(self, context):
                 nUtils.getObjectName(interface),
                 to2d(interface.matrix_world.translation),
                 textsize=6,
-                textcolor=(*color, 1.0 if interface.show_name else 0.4),
+                textcolor=(*color[0:3], 1.0 if interface.show_name else 0.4),
                 backgroundcolor=(*bgcolor, 1.0) if interface.show_name else colors['background'],
                 linewidth=3 if interface.show_name else 2,
             )
