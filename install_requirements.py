@@ -31,7 +31,7 @@ optional_requirements = {
 
 extra_requirements = {
     "pybullet": "pybullet",  # optional for blender
-    "open3d": "open3d",  # optional for blender
+    "open3d": "open3d",  # optional for blender, used for mesh adaption by trimesh
     "python-fcl": "python-fcl",  # optional for blender
 }
 
@@ -41,7 +41,11 @@ def install_requirement(package_name, upgrade_pip=False, lib=None, ensure_pip=Tr
         lib = bpy.utils.user_resource("SCRIPTS", path="modules")
     if ensure_pip:
         # Ensure pip is installed
-        subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
+        try:
+            subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
+        except subprocess.CalledProcessError:
+            print("WARNING: We couldn't do ensurepip, we try to continue anyways")
+            pass
     # Update pip (not mandatory)
     if upgrade_pip:
         print("  Upgrading pip...")
@@ -60,7 +64,11 @@ def check_requirements(optional=False, extra=False, force=False, upgrade_pip=Fal
         return
     print("Checking requirements:")
     # Ensure pip is installed
-    subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
+    try:
+        subprocess.check_call([sys.executable, "-m", "ensurepip", "--user"])
+    except subprocess.CalledProcessError:
+        print("WARNING: We couldn't do ensurepip, we try to continue anyways")
+        pass
     reqs = [requirements]
     if optional:
         reqs += [optional_requirements]
