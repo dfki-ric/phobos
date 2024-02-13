@@ -662,6 +662,8 @@ class Robot(SMURFRobot):
     def export(self, outputdir, export_config=None, rel_mesh_pathes=None, ros_pkg_name=None, no_smurf=False,
                ros_pkg_later=False, check_submechs=True, with_meshes=True, use_existing_meshes=False, apply_scale=False):
         assert self.check_linkage()
+
+        main_export_robot_instance = self.duplicate()
         outputdir = os.path.abspath(outputdir)
         if rel_mesh_pathes is None:
             rel_mesh_pathes = resources.get_default_rel_mesh_pathes()
@@ -672,8 +674,8 @@ class Robot(SMURFRobot):
         if ros_pkg_name is None:
             ros_pkg_name = os.path.basename(outputdir)
         # submechanism generation if necessary
-        if self.autogenerate_submechanisms is None or self.autogenerate_submechanisms is True:
-            self.generate_submechanisms()
+        if main_export_robot_instance.autogenerate_submechanisms is None or main_export_robot_instance.autogenerate_submechanisms is True:
+            main_export_robot_instance.generate_submechanisms()
         # export meshes
         if with_meshes and not use_existing_meshes:
             mesh_formats = set()
@@ -682,14 +684,14 @@ class Robot(SMURFRobot):
                 if "mesh_format" in ex:
                     mesh_formats.add(ex["mesh_format"].lower())
             for mf in mesh_formats:
-                self.export_meshes(mesh_output_dir=os.path.join(outputdir, rel_mesh_pathes[mf]), format=mf, apply_scale=apply_scale)
         # export everything else
+                main_export_robot_instance.export_meshes(mesh_output_dir=os.path.join(outputdir, rel_mesh_pathes[mf]), format=mf, apply_scale=apply_scale)
         for export in export_config:
             if export["type"] in KINEMATIC_TYPES:
                 if export.get("link_in_smurf", False):
-                    export_robot_instance = self.duplicate()
+                    export_robot_instance = main_export_robot_instance.duplicate()
                 else:
-                    export_robot_instance = self
+                    export_robot_instance = main_export_robot_instance
                 xml_file = export_robot_instance.export_xml(
                     outputdir=outputdir,
                     format=export["type"],
@@ -708,17 +710,17 @@ class Robot(SMURFRobot):
                 )
                 if not export.get("link_in_smurf", False):
                     if "filename" not in export:
-                        self.additional_files[export["type"]] = xml_file
+                        main_export_robot_instance.additional_files[export["type"]] = xml_file
                     else:
-                        self.additional_files[export["filename"]] = xml_file
+                        main_export_robot_instance.additional_files[export["filename"]] = xml_file
                 ros_pkg |= export["ros_pathes"] if "ros_pathes" in export else None
                 if export.get("link_in_smurf", False):
                     assert xml_file_in_smurf is None, "Only one xml file can be linked in the SMURF"
                     xml_file_in_smurf = xml_file
             elif export["type"] == "submodel":
                 log.debug(f"Exporting submodel {export['name']}")
-                if export["name"] not in self.submodel_defs:
-                    export_robot_instance = self.define_submodel(
+                if export["name"] not in main_export_robot_instance.submodel_defs:
+                    export_robot_instance = main_export_robot_instance.define_submodel(
                         name=export["name"],
                         start=export.get("start", None),
                         stop=export.get("stop", None),
@@ -732,11 +734,11 @@ class Robot(SMURFRobot):
                         move_joint_axis_to_intersection=export.get("move_joint_axis_to_intersection", None)
                     )
                 else:
-                    assert export.get("start", None) == self.submodel_defs[export["name"]]["start"]
-                    assert export.get("stop", None) == self.submodel_defs[export["name"]]["stop"]
-                    assert export.get("include_unstopped_branches", False) == self.submodel_defs[export["name"]]["include_unstopped_branches"]
-                    assert export.get("no_submechanisms", False) == self.submodel_defs[export["name"]]["no_submechanisms"]
-                    export_robot_instance = self.instantiate_submodel(**export)
+                    assert export.get("start", None) == main_export_robot_instance.submodel_defs[export["name"]]["start"]
+                    assert export.get("stop", None) == main_export_robot_instance.submodel_defs[export["name"]]["stop"]
+                    assert export.get("include_unstopped_branches", False) == main_export_robot_instance.submodel_defs[export["name"]]["include_unstopped_branches"]
+                    assert export.get("no_submechanisms", False) == main_export_robot_instance.submodel_defs[export["name"]]["no_submechanisms"]
+                    export_robot_instance = main_export_robot_instance.instantiate_submodel(**export)
                 if "add_floating_base" in export and export["add_floating_base"]:
                     export_robot_instance = export_robot_instance.add_floating_base()
                 _export_config = None
@@ -744,9 +746,9 @@ class Robot(SMURFRobot):
                     _export_config = export["export_config"]
                 else:
                     _export_config = [ec for ec in export_config if ec["type"] != "submodel"]
-                self.submodel_defs[export["name"]]["export_dir"] = os.path.join(outputdir, "submodels", export["name"])
+                main_export_robot_instance.submodel_defs[export["name"]]["export_dir"] = os.path.join(outputdir, "submodels", export["name"])
                 export_robot_instance.export(
-                    outputdir=self.submodel_defs[export["name"]]["export_dir"],
+                    outputdir=main_export_robot_instance.submodel_defs[export["name"]]["export_dir"],
                     export_config=_export_config,
                     rel_mesh_pathes={k: os.path.join("..", "..", v) for k, v in rel_mesh_pathes.items()},
                     with_meshes=False,
@@ -754,9 +756,9 @@ class Robot(SMURFRobot):
                     no_smurf=no_smurf
                 )
             elif export["type"] == "pdf":
-                self.export_pdf(outputfile=os.path.join(outputdir, self.name.replace('/','_') + ".pdf"))
+                main_export_robot_instance.export_pdf(outputfile=os.path.join(outputdir, self.name.replace('/','_') + ".pdf"))
             elif export["type"] == "kccd":
-                export_robot_instance = self.duplicate()
+                export_robot_instance = main_export_robot_instance.duplicate()
                 export_robot_instance.export_kccd(
                     outputdir=outputdir,
                     rel_iv_meshes_path=rel_mesh_pathes["iv"],
@@ -769,7 +771,7 @@ class Robot(SMURFRobot):
                     kwargs["file_name"] = export["file_name"]
                 if "joints" in export:
                     kwargs["joint_desc"] = export["joints"]
-                self.export_joint_limits(
+                main_export_robot_instance.export_joint_limits(
                     outputdir=outputdir,
                     **kwargs
                 )
@@ -780,7 +782,7 @@ class Robot(SMURFRobot):
                 log.error(f"Can't export according to following export configuration:\n{export}")
         # export smurf
         if not no_smurf:
-            self.export_smurf(
+            main_export_robot_instance.export_smurf(
                 outputdir=outputdir,
                 robotfile=xml_file_in_smurf,
                 check_submechs=check_submechs,
@@ -789,7 +791,7 @@ class Robot(SMURFRobot):
             )
         # export ros package files
         if ros_pkg and not ros_pkg_later:
-            self.export_ros_package_files(outputdir, ros_pkg_name)
+            main_export_robot_instance.export_ros_package_files(outputdir, ros_pkg_name)
         elif ros_pkg and ros_pkg_later:
             return ros_pkg_name
 
