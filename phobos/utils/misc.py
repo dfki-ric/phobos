@@ -20,9 +20,21 @@ def duplicate(obj, link_obj=False):
 
 
 def to_pretty_xml_string(xml):
-    xml_string = xml if type(xml) == str else ET.tostring(xml, method='xml').decode('utf-8')
-    xml_string = parseString(xml_string)
-    return xml_string.toprettyxml(indent='  ').replace(u'<?xml version="1.0" ?>', '').strip()
+    if type(xml) == str:
+        xml_string = xml
+    else:
+        try:
+            xml_string = ET.tostring(xml, method='xml').decode('utf-8')
+            xml_string = parseString(xml_string)
+            return xml_string.toprettyxml(indent='  ').replace(u'<?xml version="1.0" ?>', '').strip()
+        except Exception as e:
+            log.warn(f"WARNING: Couldn't generate pretty xml, due to this error: {e}")
+            try:
+                ET.indent(xml, space="  ")
+            except:
+                pass
+            xml_string = ET.tostring(xml, method='xml').decode('utf-8')
+    return xml_string.replace(u'<?xml version="1.0" ?>', '').strip()
 
 
 def merge_default(input_dict, default_dict):
