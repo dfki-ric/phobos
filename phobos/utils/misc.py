@@ -137,13 +137,17 @@ def regex_replace(string, replacements, verbose=False):
 def append_string(s, *args, **kwargs):
     """Replacement for print so that the printed string is put to s"""
     new = " ".join([str(a) for a in args])
+    if ("print" in kwargs.keys() and kwargs["print"]) or "loglevel" in kwargs:
+        loglevel = kwargs.get("loglevel", "info")
+        if "loglevel" in kwargs:
+            kwargs.pop("loglevel")
+        if "print" in kwargs:
+            kwargs.pop("print")
+        getattr(log, loglevel.lower())(" ".join([str(a) for a in args]))
     if "end" in kwargs.keys():
         new += kwargs["end"]
     else:
         new += "\n"
-    if "print" in kwargs.keys() and kwargs["print"]:
-        kwargs.pop("print")
-        log.info(" ".join(args))
     return s + new
 
 
