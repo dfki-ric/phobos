@@ -338,4 +338,4 @@ def color_parser(*args, rgba=None):
 
 
 def to_hex_color(color_as_list):
-    return "#" + "".join([hex(int(x * 255))[2:] for x in color_as_list])
+    return "#" + "".join([f"{int(x * 255):02x}" for x in color_as_list])
