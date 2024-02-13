@@ -10,11 +10,10 @@
 
 import collections
 
-import bgl
+import gpu
+from gpu_extras.batch import batch_for_shader
 import blf
 import bpy
-from bpy.props import BoolProperty
-from bpy.types import Operator
 from bpy_extras import view3d_utils
 from mathutils import Vector
 
@@ -90,38 +89,40 @@ def to2d(coords):
     return view3d_utils.location_3d_to_region_2d(*getRegionData(), coords)
 
 
-def draw_2dpolygon(points, linecolor=None, fillcolor=None, distance=0.2, linewidth=1):
+def draw_2dpolygon(left, top, width, height, linecolor=None, fillcolor=None, linewidth=1):
     """
 
     Args:
-      points:
+      left:
+      top:
+      width:
+      height:
       linecolor: (Default value = None)
       fillcolor: (Default value = None)
-      distance: (Default value = 0.2)
       linewidth: (Default value = 1)
 
     Returns:
 
     """
+
+    points = (
+        (left, top),
+        (left + width, top),
+        (left + width, top + height),
+        (left, top + height)
+    )
+
     # background
-    bgl.glEnable(bgl.GL_BLEND)
-    bgl.glLineWidth(linewidth)
+    gpu.state.blend_set("ALPHA")
+    shader = gpu.shader.from_builtin('2D_SMOOTH_COLOR')
+    color = len(points)*[fillcolor]
     if fillcolor:
-        #bgl.glColor4f(*fillcolor)
-        bgl.glBegin(bgl.GL_POLYGON)
-        for p in points:
-            bgl.glVertex3f(*p, distance)
-        bgl.glEnd()
+        batch = batch_for_shader(shader, 'TRI_FAN', {"pos": points, "color": color})
+        batch.draw(shader)
     # frame
     if linecolor:
-        #bgl.glColor4f(*linecolor)
-        bgl.glBegin(bgl.GL_LINE_STRIP)
-        for p in points:
-            bgl.glVertex3f(*p, distance)
-        bgl.glVertex3f(*points[0], distance)
-        bgl.glEnd()
-    bgl.glLineWidth(1)
-    bgl.glDisable(bgl.GL_BLEND)
+        batch = batch_for_shader(shader, 'LINE_STRIP', {"pos": points, "color": color})
+        batch.draw(shader)
 
 
 def draw_text(text, position, color=(1.0, 1.0, 1.0, 1.0), size=14, dpi=150, font_id=0):
@@ -130,9 +131,24 @@ def draw_text(text, position, color=(1.0, 1.0, 1.0, 1.0), size=14, dpi=150, font
     Args:
       text:
       position:
-      color: (Default value = (1.0)
-      1.0:
-      1.0):
+      color: (Default value = (1.0, 1.0, 1.0, 1.0)):
+      size: (Default value = 14)
+      dpi: (Default value = 150)
+      font_id: (Default value = 0)
+
+    Returns:
+
+    """
+    blf.color(font_id, *color)
+    blf.position(font_id, *position, 0.25)
+    blf.size(font_id, size, dpi)
+    blf.draw(font_id, text)
+
+def get_text_width(text, size=14, dpi=150, font_id=0):
+    """
+
+    Args:
+      text:
       size: (Default value = 14)
       dpi: (Default value = 150)
       font_id: (Default value = 0)
@@ -141,9 +157,8 @@ def draw_text(text, position, color=(1.0, 1.0, 1.0, 1.0), size=14, dpi=150, font
 
     """
     #bgl.glColor4f(*color)
-    blf.position(font_id, *position, 0.25)
     blf.size(font_id, size, dpi)
-    blf.draw(font_id, text)
+    return blf.dimensions(font_id, text)[0]
 
 
 def draw_textbox(
@@ -185,17 +200,13 @@ def draw_textbox(
         origin = origin + Vector((-width - 2 * hborder, 0)) + offset
     else:
         origin = origin + offset
-    points = (
-        origin + Vector((-hborder, -vborder * 1.5)),
-        origin + Vector((width + hborder, -vborder * 1.5)),
-        origin + Vector((width + hborder, height + vborder)),
-        origin + Vector((-hborder, height + vborder)),
-    )
-    draw_2dpolygon(points, fillcolor=backgroundcolor, linecolor=textcolor, linewidth=linewidth)
+    l, t = origin[0]-hborder, origin[1]-vborder * 1.5
+    w, h = width + 2*hborder, height + 2.5*vborder
+    draw_2dpolygon(l, t, w, h, fillcolor=backgroundcolor, linecolor=textcolor, linewidth=linewidth)
     draw_text(text, position=origin, size=textsize, color=textcolor)
 
 
-def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
+def draw_message(text, msgtype, slot, opacity=1.0, scroll=0):
     """
 
     Args:
@@ -203,25 +214,24 @@ def draw_message(text, msgtype, slot, opacity=1.0, offset=0):
       msgtype:
       slot:
       opacity: (Default value = 1.0)
-      offset: (Default value = 0)
+      scroll: (Default value = 0)
 
     Returns:
 
     """
     blf.size(0, 6, 150)
-    width = bpy.context.region.width
-    start = width - blf.dimensions(0, text)[0] - 6
-    points = (
-        (start, slotlower[slot]),
-        (width - 2, slotlower[slot]),
-        (width - 2, slotlower[slot] + slotheight - 4),
-        (start, slotlower[slot] + slotheight - 4),
-    )
-    draw_2dpolygon(points, fillcolor=(*colors[msgtype], 0.2 * opacity))
-    draw_text(text, (start + 2, slotlower[slot] + 4), size=6, color=(1, 1, 1, opacity))
-    if slot == 0 and offset > 0:
-        # draw_text(str(offset) + ' \u25bc', (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, opacity))
-        draw_text('+' + str(offset), (start - 30, slotlower[0] + 4), size=6, color=(1, 1, 1, 1))
+    margin = 4
+    start = 20
+    if slot == 0 and scroll > 0:
+        start = start + get_text_width('+' + str(scroll), size=6) + margin
+    blocksize = 10
+    left, top = start, slotlower[slot] + 4
+    width, height = blocksize, blocksize
+    draw_2dpolygon(left, top, width, height, fillcolor=(*colors[msgtype], 0.2 * opacity))
+    draw_text(text, (start + margin + blocksize - 1, slotlower[slot] + 4 - 1), size=6, color=(0, 0, 0, opacity))
+    draw_text(text, (start + margin + blocksize, slotlower[slot] + 4), size=6, color=(1, 1, 1, opacity))
+    if slot == 0 and scroll > 0:
+        draw_text('+' + str(scroll), (10, slotlower[0] + 4), size=6, color=(1, 1, 1, 1))
 
 
 def draw_progressbar(value):
@@ -273,12 +283,11 @@ def draw_joint(joint, length):
     axis = joint.matrix_world @ (length * joint.data.bones[0].vector.normalized())
     endpoint = axis
 
-    #bgl.glColor4f(0.0, 1.0, 0.0, 0.5)
-    bgl.glLineWidth(2)
-    bgl.glBegin(bgl.GL_LINE_STRIP)
-    bgl.glVertex3f(*origin)
-    bgl.glVertex3f(*endpoint)
-    bgl.glEnd()
+    points = (origin, endpoint)
+    color = 2*[(0.0, 1.0, 0.0, 0.5)]
+    shader = gpu.shader.from_builtin("3D_SMOOTH_COLOR")
+    batch = batch_for_shader(shader, "LINE_STRIP", {"pos": points, "color": color})
+    batch.draw(shader)
 
 
 def draw_path(path, color=colors['white'], dim3=False, width=4):
@@ -297,18 +306,20 @@ def draw_path(path, color=colors['white'], dim3=False, width=4):
     for e in range(len(path)):
         origins.append(path[e].matrix_world.to_translation())
 
-    bgl.glEnable(bgl.GL_BLEND)
-    bgl.glLineWidth(width)
-
-    bgl.glBegin(bgl.GL_LINE_STRIP)
-    #bgl.glColor4f(*color)
+    gpu.state.blend_set("ALPHA")
+    points = []
     for o in origins:
         if dim3:
-            bgl.glVertex3f(o)
+            points.append(o)
         else:
-            bgl.glVertex2f(*to2d(o))
-    bgl.glEnd()
-    bgl.glDisable(bgl.GL_BLEND)
+            points.append(to2d(o))
+    c = len(points)*[color]
+    if dim3:
+        shader = gpu.shader.from_builtin("3D_SMOOTH_COLOR")
+    else:
+        shader = gpu.shader.from_builtin("2D_SMOOTH_COLOR")
+    batch = batch_for_shader(shader, "LINE_STRIP", {"pos": points, "color": c})
+    batch.draw(shader)
 
 
 def draw_callback_3d(self, context):
@@ -320,22 +331,16 @@ def draw_callback_3d(self, context):
     Returns:
 
     """
-    active = context.object
     selected = context.selected_objects
     wm = context.window_manager
 
-    bgl.glEnable(bgl.GL_BLEND)
+    gpu.state.blend_set("ALPHA")
 
     # joint axes
     if len(selected) > 0:
         if wm.draw_jointaxes:
             for j in [o for o in selected if o.phobostype == 'link']:
                 draw_joint(j, wm.jointaxes_length)
-
-    # restore opengl defaults
-    bgl.glLineWidth(1)
-    bgl.glDisable(bgl.GL_BLEND)
-    #bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
 
 
 def draw_callback_2d(self, context):
@@ -363,15 +368,14 @@ def draw_callback_2d(self, context):
     # bgl.glMatrixMode(bgl.GL_MODELVIEW)
     # bgl.glLoadIdentity()
 
-    bgl.glEnable(bgl.GL_BLEND)
-
     # submechanisms
     if objects and wm.draw_submechanisms:
-        submechanism_roots = [obj for obj in bpy.data.objects if 'submechanism/name' in obj]
+        submechanism_roots = [obj for obj in bpy.data.objects if obj.phobostype == "submechanism"]
         # draw spanning trees
         for root in submechanism_roots:
-            if 'submechanism/spanningtree' in root:
-                if set(root['submechanism/spanningtree']).intersection(
+            if 'jointnames_spanningtree' in root:
+                spanningTree = root['jointnames_spanningtree']
+                if set(spanningTree).intersection(
                     set(bpy.context.selected_objects)
                 ):
                     linecolor = colors['submechanism']
@@ -379,15 +383,15 @@ def draw_callback_2d(self, context):
                 else:
                     linecolor = (*colors['submechanism'][:3], 0.4)
                     linewidth = 3
-                draw_path(root['submechanism/spanningtree'], color=linecolor, width=linewidth)
+                draw_path(spanningTree, color=linecolor, width=linewidth)
                 # joint['submechanism/independent'],
                 # joint['submechanism/active'])
                 avgpos = Vector()
-                for obj in root['submechanism/spanningtree']:
+                for obj in spanningTree:
                     avgpos += obj.matrix_world.translation
-                origin = to2d(avgpos / len(root['submechanism/spanningtree']))
+                origin = to2d(avgpos / len(spanningTree))
                 draw_textbox(
-                    root['submechanism/name'],
+                    root['name'],
                     origin,
                     textsize=8,
                     textcolor=linecolor,
@@ -429,7 +433,7 @@ def draw_callback_2d(self, context):
                 nUtils.getObjectName(interface),
                 to2d(interface.matrix_world.translation),
                 textsize=6,
-                textcolor=(*color, 1.0 if interface.show_name else 0.4),
+                textcolor=(*color[0:3], 1.0 if interface.show_name else 0.4),
                 backgroundcolor=(*bgcolor, 1.0) if interface.show_name else colors['background'],
                 linewidth=3 if interface.show_name else 2,
             )
@@ -442,20 +446,15 @@ def draw_callback_2d(self, context):
     if wm.draw_messages:
         for m in range(wm.phobos_msg_count):
             opacity = 1.0
-            if 1 >= m <= wm.phobos_msg_offset - 1 or m >= wm.phobos_msg_count - 2:
+            if 1 >= m <= wm.phobos_msg_scroll - 1 or m >= wm.phobos_msg_count - 2:
                 opacity = 0.5
-            if wm.phobos_msg_offset > 1 > m or m >= wm.phobos_msg_count - 1:
+            if wm.phobos_msg_scroll > 1 > m or m >= wm.phobos_msg_count - 1:
                 opacity = 0.1
             try:
-                msg = messages[m + wm.phobos_msg_offset]
-                draw_message(msg['text'], msg['type'], m, opacity, offset=wm.phobos_msg_offset)
+                msg = messages[m + wm.phobos_msg_scroll]
+                draw_message(msg['text'], msg['type'], m, opacity, scroll=wm.phobos_msg_scroll)
             except IndexError:
                 pass
-
-    # restore opengl defaults
-    bgl.glLineWidth(1)
-    bgl.glDisable(bgl.GL_BLEND)
-    #bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
 
 def setProgress(value, info=None):
     """
