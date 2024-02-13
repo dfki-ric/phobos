@@ -29,7 +29,7 @@ class Pipeline(yaml.YAMLObject):
     def __init__(self, configfile, model_file=None, processed_model_exists=False, subclass=False):
         self.processing_failed = {}
         self.test_results = {}
-        self.configdir = os.path.abspath(os.path.dirname(configfile))
+        self.configdir = os.path.dirname(os.path.abspath(configfile))
         self.processed_model_exists = processed_model_exists
         if not os.path.isfile(configfile):
             raise Exception('{} not found!'.format(configfile))
@@ -39,6 +39,8 @@ class Pipeline(yaml.YAMLObject):
         kwargs = load_json(open(configfile, 'r'))['pipeline']
         for (k, v) in kwargs.items():
             setattr(self, k, v)
+
+        self.root = os.path.expandvars(self.root)
 
         if model_file:
             self.model_definitions = [model_file]
@@ -50,10 +52,11 @@ class Pipeline(yaml.YAMLObject):
         if not subclass:
             assert hasattr(self, "model_definitions") and len(self.model_definitions) > 0
             assert hasattr(self, "root") and self.root is not None and len(self.root) > 0
-    
-            self.root = os.path.abspath(os.path.join(self.configdir, self.root))
+
+            if not os.path.abspath(self.root):
+                self.root = os.path.abspath(os.path.join(self.configdir, self.root))
             log.info(f"Working from {self.root}")
-            self.git_rev = git.revision(os.path.abspath(self.configdir))
+            self.git_rev = git.revision(self.configdir)
             self.temp_dir = os.path.join(self.root, "temp")
             self.faillog = os.path.join(self.temp_dir, "failures.txt")
             self.test_protocol = os.path.join(self.temp_dir, "test_protocol.txt")

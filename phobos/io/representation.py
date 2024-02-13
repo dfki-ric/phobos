@@ -646,7 +646,12 @@ class Mesh(Representation, SmurfBase):
     @property
     def abs_filepath(self):
         if len(self._exported) == 0:
-            out = self.input_file if self.input_file is not None else self._mesh_object.get("input_file", None)
+            out = self.input_file
+            if out is None and self._mesh_object:
+                try:
+                    out = self._mesh_object["input_file"]
+                except:
+                    out = None
             if out is None:
                 raise IOError(f"This mesh ({self.unique_name}) hasn't been exported nor is an input file known, which could be used.")
             return out
@@ -711,7 +716,7 @@ class Mesh(Representation, SmurfBase):
         return os.path.isfile(self.abs_filepath)
 
     def available(self):
-        return self.file_exists() or self.mesh_object is not None
+        return self.mesh_object is not None or self.file_exists()
 
     def is_lfs_checked_out(self):
         if self.input_file is not None and os.path.isfile(self.input_file):

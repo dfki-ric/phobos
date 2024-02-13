@@ -23,10 +23,12 @@ class BaseModel(yaml.YAMLObject):
         self.processed_model_exists = processed_model_exists
         self.pipeline = pipeline
 
+        self.configfile = None
         if type(configfile) is str:
             if not os.path.isfile(configfile):
                 raise Exception('{} not found!'.format(configfile))
             self.cfg = load_json(open(configfile, 'r'))
+            self.configfile = configfile
         else:
             self.cfg = configfile
 
@@ -151,11 +153,12 @@ class BaseModel(yaml.YAMLObject):
                 # create a robot with the basic properties given
                 self.robot = Robot(name=self.robotname if self.robotname else None)
         else:
-            if os.path.exists(os.path.join(self.exportdir, "smurf", self.robotname + ".smurf")):
+            load_file = os.path.join(self.exportdir, "smurf", getattr(self, "filename", self.robotname) + ".smurf")
+            if os.path.exists(load_file):
                 self.robot = Robot(name=self.robotname if self.robotname else None,
-                                   inputfile=os.path.join(self.exportdir, "smurf", self.robotname + ".smurf"))
+                                   inputfile=load_file)
             else:
-                raise Exception('Preprocessed file {} not found!'.format(self.basefile))
+                raise Exception('Preprocessed file {} not found!'.format(load_file))
 
     def _join_to_basefile(self):
         # get all the models we need
@@ -735,7 +738,12 @@ class BaseModel(yaml.YAMLObject):
         for vc in self.robot.collisions + self.robot.visuals:
             if isinstance(vc.geometry, representation.Mesh):
                 self.processed_meshes = self.processed_meshes.union([os.path.realpath(f["filepath"]) for f in vc.geometry._exported.values()])
-                self.processed_meshes.add(os.path.realpath(vc.geometry.abs_filepath))
+                try:
+                    self.processed_meshes.add(os.path.realpath(vc.geometry.abs_filepath))
+                except IOError:
+                    # This mesh has been edited and has no source mesh any more that could provide a file path
+                    pass
+
         if "keep_files" in self.deployment:
             git.reset(self.targetdir, "autobuild", "master")
             misc.store_persisting_files(self.pipeline, self.targetdir, self.deployment["keep_files"], self.exportdir)
