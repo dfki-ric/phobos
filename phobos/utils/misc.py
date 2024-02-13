@@ -142,17 +142,23 @@ def is_binary_file(filepath):
         return bool(f.read(256).translate(None, textchars))
 
 
-def execute_shell_command(cmd, cwd=None, dry_run=False, silent=False):
+def execute_shell_command(cmd, cwd=None, dry_run=False, silent=False, verbose=False):
     if cwd is None:
         cwd = os.getcwd()
     if not silent:
         log.debug(("Skipping" if dry_run else "Executing") + f": {cmd} in {cwd}")
     if dry_run:
         return "", ""
-    proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=cwd)
+    proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=cwd, executable="/bin/bash")
     # proc.wait()
     (out, err) = proc.communicate()
-    if not silent:
+    if verbose:
+        log.info("Executing: "+cmd+" in "+cwd)
+        log.info(out.decode('UTF-8'))
+        log.info(err.decode('UTF-8'))
+        log.info(f"Subprocess returned {proc.returncode}")
+    elif not silent:
+        log.debug("Executing: "+cmd+" in "+cwd)
         log.debug(out.decode('UTF-8'))
         log.debug(err.decode('UTF-8'))
         log.debug(f"Subprocess returned {proc.returncode}")
