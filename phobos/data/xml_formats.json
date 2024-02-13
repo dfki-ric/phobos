@@ -645,7 +645,11 @@
       "children": {
         "link": {
           "classname": "Link",
-          "varname": "links"
+          "varname": "physical_links"
+        },
+        "frame": {
+          "classname": "Frame",
+          "varname": "frames"
         },
         "joint": {
           "classname": "Joint",

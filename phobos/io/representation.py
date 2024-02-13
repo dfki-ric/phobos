@@ -1552,7 +1552,7 @@ class Link(Representation, SmurfBase):
     _class_variables = ["name", "visuals", "collisions", "inertial", "kccd_hull", "origin"]
 
     def __init__(self, name=None, visuals=None, inertial=None, collisions=None, origin=None,
-                 noDataPackage=None, reducedDataPackage=None, is_human=None, kccd_hull=None, joint=None, **kwargs):
+                 noDataPackage=None, reducedDataPackage=None, is_human=None, kccd_hull=None, **kwargs):
         SmurfBase.__init__(self, **kwargs)
         self.name = name
         self.origin = _singular(origin)
@@ -1652,6 +1652,37 @@ class Link(Representation, SmurfBase):
             for s in value:
                 if not any([existing.name == s.name and existing.equivalent(s) for existing in self._related_robot_instance.sensors]):
                     self._related_robot_instance.add_aggregate("sensor", s)
+
+
+class Frame(Link):
+    _class_variables = ["name", "attached_to", "origin"]
+    _type_dict = {"attached_to": "frames"}
+
+    def __init__(self, name=None,  origin=None, attached_to=None,
+                 noDataPackage=None, reducedDataPackage=None, is_human=None, joint=None, **kwargs):
+        super().__init__(name, origin, noDataPackage, reducedDataPackage, is_human, joint, **kwargs)
+        self._attached_to = attached_to
+
+    @property
+    def attached_to(self):
+        if self._attached_to:
+            return self._attached_to
+        elif self.origin:
+            return self.origin.relative_to
+        elif self._related_robot_instance:
+            return self.joint_relative_origin.relative_to
+        else:
+            return None
+
+    @attached_to.setter
+    def attached_to(self, attached_to):
+        if self.origin and self.origin.relative_to == attached_to:
+            self._attached_to = None
+        elif self._related_robot_instance and self.joint_relative_origin.relative_to == attached_to:
+            self._attached_to = None
+        else:
+            self._attached_to = attached_to
+
 
 class JointDynamics(Representation):
     def __init__(self, damping=None, friction=None, spring_stiffness=None, spring_reference=None, **kwargs):
