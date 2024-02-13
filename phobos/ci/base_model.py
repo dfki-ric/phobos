@@ -811,11 +811,10 @@ class BaseModel(yaml.YAMLObject):
             with open(readme_path, "w") as readme:
                 readme.write(content)
         if uses_lfs:
-            readme_content = open(readme_path, "r").read()
-            if "# Git LFS for mesh repositories" not in readme_content:
-                with open(readme_path, "a") as readme:
-                    readme.write(open(resources.get_resources_path("GitLFS_README.md.in")).read())
-
+                readme_content = open(readme_path, "r").read()
+                if "Git LFS" not in readme_content:
+                    with open(readme_path, "a") as readme:
+                        readme.write(open(resources.get_resources_path("GitLFS_README.md.in")).read())
         # update additional submodules
         if "submodules" in self.deployment:
             for subm in self.deployment["submodules"]:
