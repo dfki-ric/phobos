@@ -26,7 +26,7 @@ NA_DEPL = int('10000000', 2)
 
 
 class Pipeline(yaml.YAMLObject):    
-    def __init__(self, configfile, processed_model_exists, subclass=False):
+    def __init__(self, configfile, model_file=None, processed_model_exists=False, subclass=False):
         self.processing_failed = {}
         self.test_results = {}
         self.configdir = os.path.abspath(os.path.dirname(configfile))
@@ -39,6 +39,9 @@ class Pipeline(yaml.YAMLObject):
         kwargs = load_json(open(configfile, 'r'))['pipeline']
         for (k, v) in kwargs.items():
             setattr(self, k, v)
+
+        if model_file:
+            self.model_definitions = [model_file]
 
         self.temp_dir = os.path.join(self.root, "temp")
         self.faillog = os.path.join(self.temp_dir, "failures.txt")
