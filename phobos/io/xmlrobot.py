@@ -28,8 +28,9 @@ class XMLRobot(Representation):
                  joints: List[representation.Joint] = None,
                  materials: List[representation.Material] = None,
                  transmissions: List[representation.Transmission] = None,
-                 sensors=None, motors=None, plugins=None, root=None,
-                 is_human=False, urdf_version=None, xmlfile=None, _xmlfile=None):
+                 sensors=None, sensors_that_dont_belong_to_links_or_joints=None, motors=None,
+                 plugins=None, root=None, is_human=False,
+                 urdf_version=None, xmlfile=None, _xmlfile=None):
         self._related_robot_instance = self
         super().__init__()
         self.joints = []
@@ -39,6 +40,8 @@ class XMLRobot(Representation):
         self.materials = []
         self.transmissions = [] # [TODO v2.1.0] currently not fully supported
         self.sensors = []
+        if sensors_that_dont_belong_to_links_or_joints is not None:
+            self.sensors_that_dont_belong_to_links_or_joints = sensors_that_dont_belong_to_links_or_joints
         self.plugins = []  # Currently just a place holder
         self.motors = []
         self.xmlfile = xmlfile if xmlfile is not None else _xmlfile
