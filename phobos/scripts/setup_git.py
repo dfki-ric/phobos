@@ -22,7 +22,6 @@ def main(args):
     parser.add_argument('-r', '--remote', type=str, help='The git-repository remote url (required for -c)', action="store", default=None)
     parser.add_argument('-i', '--init', help='Call git init (instead of -c)', action="store_true", default=False)
     parser.add_argument('-c', '--clone', help='Clone the repo (requires remote; instead of -i)', action="store_true", default=False)
-    parser.add_argument('-e', '--apply-on-existing', help='Use this when you want to apply this on an existing directory', action="store_true", default=False)
     parser.add_argument('-l', '--no-lfs', help='Do not use git-lfs', action="store_true", default=False)
     parser.add_argument("--loglevel", help="The log level", choices=["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"],
                         default=BASE_LOG_LEVEL)
@@ -33,30 +32,27 @@ def main(args):
         log.info("Creating directory")
         if args.clone:
             assert args.remote is not None
-            os.makedirs(os.path.basename(args.directory), exist_ok=True)
+            log.info("Cloning "+args.remote)
             git.clone(
                 repo=args.remote,
                 target=args.directory,
-                cwd=args.directory
+                cwd=os.getcwd()
             )
         else:
             os.makedirs(args.directory, exist_ok=True)
-    elif not args.apply_on_existing:
-        raise FileExistsError(args.directory + " already exists!")
 
-    if args.init:
-        assert not args.clone
+    if args.init and not args.clone:
         log.info("Initalizing repository")
         misc.execute_shell_command("git init", args.directory)
         if args.remote:
             git.add_remote(args.directory, args.remote, "origin")
 
     if not args.no_lfs:
+        log.info("Installing git lfs")
         git.install_lfs(
             args.directory,
             ["*.stl", "*.obj", ".mtl", "*.bobj", "*.iv", "*.dae", "*.blend", "*.pdf", "*.jpg", "*.jpeg", "*.png"]
         )
-        misc.execute_shell_command("git add .gitattributes", cwd=args.directory)
 
     git.ignore(args.directory, ["*.blend1", "*.log", "*.gv"])
     misc.execute_shell_command("git add .gitignore", cwd=args.directory)
