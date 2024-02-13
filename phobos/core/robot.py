@@ -815,15 +815,20 @@ class Robot(SMURFRobot):
                       packagexml_path)
             with open(packagexml_path, "r") as packagexml:
                 content = packagexml.read()
-                if any([x is None for x in [author, maintainer, url]]):
-                    _author, _maintainer, _url = git.get_repo_data(outputdir)
                 content = misc.regex_replace(content, {
-                    "\$INPUTNAME": ros_pkg_name,
-                    "\$AUTHOR": f"<author>{author if author is not None else _author}</author>",
-                    "\$MAINTAINER": f"<maintainer>{maintainer if maintainer is not None else _maintainer}</maintainer>",
-                    "\$URL": f"<url>{url if url is not None else _url}</url>",
-                    "\$VERSION": f"def: {version if version is not None else self.version}"
+                    "\$INPUTNAME": ros_pkg_name
                 })
+                try:
+                    if any([x is None for x in [author, maintainer, url]]):
+                        _author, _maintainer, _url = git.get_repo_data(outputdir)
+                    content = misc.regex_replace(content, {
+                        "\$AUTHOR": f"<author>{author if author is not None else _author}</author>",
+                        "\$MAINTAINER": f"<maintainer>{maintainer if maintainer is not None else _maintainer}</maintainer>",
+                        "\$URL": f"<url>{url if url is not None else _url}</url>",
+                        "\$VERSION": f"def: {version if version is not None else self.version}"
+                    })
+                except:
+                    log.info("Couldn't obtain author, maintainer, url info from git")
             with open(packagexml_path, "w") as packagexml:
                 packagexml.write(content)
 
