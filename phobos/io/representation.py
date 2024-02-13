@@ -646,7 +646,12 @@ class Mesh(Representation, SmurfBase):
     @property
     def abs_filepath(self):
         if len(self._exported) == 0:
-            out = self.input_file if self.input_file is not None else self._mesh_object.get("input_file", None)
+            out = self.input_file
+            if out is None and self._mesh_object:
+                try:
+                    out = self._mesh_object["input_file"]
+                except:
+                    out = None
             if out is None:
                 raise IOError(f"This mesh ({self.unique_name}) hasn't been exported nor is an input file known, which could be used.")
             return out
@@ -711,7 +716,7 @@ class Mesh(Representation, SmurfBase):
         return os.path.isfile(self.abs_filepath)
 
     def available(self):
-        return self.file_exists() or self.mesh_object is not None
+        return self.mesh_object is not None or self.file_exists()
 
     def is_lfs_checked_out(self):
         if self.input_file is not None and os.path.isfile(self.input_file):
@@ -1552,7 +1557,7 @@ class Link(Representation, SmurfBase):
     _class_variables = ["name", "visuals", "collisions", "inertial", "kccd_hull", "origin"]
 
     def __init__(self, name=None, visuals=None, inertial=None, collisions=None, origin=None,
-                 noDataPackage=None, reducedDataPackage=None, is_human=None, kccd_hull=None, joint=None, **kwargs):
+                 noDataPackage=None, reducedDataPackage=None, is_human=None, kccd_hull=None, **kwargs):
         SmurfBase.__init__(self, **kwargs)
         self.name = name
         self.origin = _singular(origin)
@@ -1576,6 +1581,16 @@ class Link(Representation, SmurfBase):
                 if i > 0:
                     geo.name += str(i)
         self.excludes += ["inertial"]
+
+    @property
+    def secure_origin(self):
+        if self.origin is None:
+            return self.joint_relative_origin
+        return self.origin
+
+    @secure_origin.setter
+    def secure_origin(self, value):
+        self.origin = value
 
     def remove_aggregate(self, elem):
         if isinstance(elem, Visual):
@@ -1606,17 +1621,20 @@ class Link(Representation, SmurfBase):
     @property
     def joint_relative_origin(self):
         assert self._related_robot_instance is not None
-        assert self.origin is not None
-        out = self.origin
-        if self.origin.relative_to == self._related_robot_instance.get_parent(self):
-            return out
+        if self.origin is not None:
+            out = self.origin
+            if self.origin.relative_to == self._related_robot_instance.get_parent(self):
+                return out
+            else:
+                assert self.origin.relative_to is not None
+                r2x = self._related_robot_instance.get_transformation
+                return Pose.from_matrix(
+                    inv(r2x(self)).dot(r2x(self.origin.relative_to).dot(self.origin.to_matrix())),
+                    relative_to=self._related_robot_instance.get_parent(self)
+                )
         else:
-            assert self.origin.relative_to is not None
-            r2x = self._related_robot_instance.get_transformation
-            return Pose.from_matrix(
-                inv(r2x(self)).dot(r2x(self.origin.relative_to).dot(self.origin.to_matrix())),
-                relative_to=self._related_robot_instance.get_parent(self)
-            )
+            return Pose(relative_to=self._related_robot_instance.get_parent(self))
+
 
     @joint_relative_origin.setter
     def joint_relative_origin(self, value):
@@ -1639,6 +1657,37 @@ class Link(Representation, SmurfBase):
             for s in value:
                 if not any([existing.name == s.name and existing.equivalent(s) for existing in self._related_robot_instance.sensors]):
                     self._related_robot_instance.add_aggregate("sensor", s)
+
+
+class Frame(Link):
+    _class_variables = ["name", "attached_to", "origin"]
+    _type_dict = {"attached_to": "frames"}
+
+    def __init__(self, name=None,  origin=None, attached_to=None,
+                 noDataPackage=None, reducedDataPackage=None, is_human=None, joint=None, **kwargs):
+        super().__init__(name, origin, noDataPackage, reducedDataPackage, is_human, joint, **kwargs)
+        self._attached_to = attached_to
+
+    @property
+    def attached_to(self):
+        if self._attached_to:
+            return self._attached_to
+        elif self.origin:
+            return self.origin.relative_to
+        elif self._related_robot_instance:
+            return self.joint_relative_origin.relative_to
+        else:
+            return None
+
+    @attached_to.setter
+    def attached_to(self, attached_to):
+        if self.origin and self.origin.relative_to == attached_to:
+            self._attached_to = None
+        elif self._related_robot_instance and self.joint_relative_origin.relative_to == attached_to:
+            self._attached_to = None
+        else:
+            self._attached_to = attached_to
+
 
 class JointDynamics(Representation):
     def __init__(self, damping=None, friction=None, spring_stiffness=None, spring_reference=None, **kwargs):

@@ -23,10 +23,12 @@ class BaseModel(yaml.YAMLObject):
         self.processed_model_exists = processed_model_exists
         self.pipeline = pipeline
 
+        self.configfile = None
         if type(configfile) is str:
             if not os.path.isfile(configfile):
                 raise Exception('{} not found!'.format(configfile))
             self.cfg = load_json(open(configfile, 'r'))
+            self.configfile = configfile
         else:
             self.cfg = configfile
 
@@ -34,7 +36,6 @@ class BaseModel(yaml.YAMLObject):
         self.modelname = ""
         self.robotname = ""
         self.test = {}
-        self.export_config = []
         kwargs = {}
         if 'model' in self.cfg.keys():
             kwargs = self.cfg['model']
@@ -43,7 +44,6 @@ class BaseModel(yaml.YAMLObject):
         # check whether all necessary configurations are there
         assert hasattr(self, "modelname") and len(self.modelname) > 0
         assert hasattr(self, "robotname") and len(self.robotname) > 0
-        assert hasattr(self, "export_config") and len(self.export_config) >= 1
         assert hasattr(self, "test") and len(self.test) >= 1
         self.test = misc.merge_default(
             self.test,
@@ -62,6 +62,8 @@ class BaseModel(yaml.YAMLObject):
         # parse export_config
         self.export_meshes = {}
         self.export_xmlfile = None
+        if not hasattr(self, "export_config"):
+            self.export_config = self.pipeline.default_export_config
         for ec in self.export_config:
             if ec["type"] in KINEMATIC_TYPES:
                 assert "mesh_format" in ec
@@ -151,11 +153,12 @@ class BaseModel(yaml.YAMLObject):
                 # create a robot with the basic properties given
                 self.robot = Robot(name=self.robotname if self.robotname else None)
         else:
-            if os.path.exists(os.path.join(self.exportdir, "smurf", self.robotname + ".smurf")):
+            load_file = os.path.join(self.exportdir, "smurf", getattr(self, "filename", self.robotname) + ".smurf")
+            if os.path.exists(load_file):
                 self.robot = Robot(name=self.robotname if self.robotname else None,
-                                   inputfile=os.path.join(self.exportdir, "smurf", self.robotname + ".smurf"))
+                                   inputfile=load_file)
             else:
-                raise Exception('Preprocessed file {} not found!'.format(self.basefile))
+                raise Exception('Preprocessed file {} not found!'.format(load_file))
 
     def _join_to_basefile(self):
         # get all the models we need
@@ -475,7 +478,7 @@ class BaseModel(yaml.YAMLObject):
                         link.add_annotation(k, v, overwrite=True)
             if "$name_editing" in self.frames:
                 self.robot.rename("links", self.robot.links, **self.frames.get("$name_editing", {}))
-            
+
         if hasattr(self, "joints"):
             if '$replace_joint_types' in self.joints:
                 for joint in self.robot.joints:
@@ -585,7 +588,7 @@ class BaseModel(yaml.YAMLObject):
                     and self.joints["$default"]["backup"]
             ) else None
         )
-        
+
         if hasattr(self, 'collisions'):
             if "$name_editing" in self.collisions.keys():
                 self.robot.rename("collision", self.robot.collisions, **self.collisions["$name_editing"])
@@ -620,7 +623,7 @@ class BaseModel(yaml.YAMLObject):
                     # leads to problems in reusing identic meshes
                     # if conf["shape"] == "convex":
                     #     reduceMeshCollision(self.robot, link.name, reduction=0.3)
-            
+
             if "auto_bitmask" in self.collisions.keys() and \
                     self.collisions["auto_bitmask"] is True:
                 log.debug("         Setting auto bitmask")
@@ -646,11 +649,11 @@ class BaseModel(yaml.YAMLObject):
                             if key in conf:
                                 conf.pop(key)
                         coll.add_annotations(**conf)
-        
+
         if hasattr(self, 'visuals'):
             if "$name_editing" in self.visuals.keys():
                 self.robot.rename("visuals", self.robot.visuals, **self.visuals["$name_editing"])
-        
+
         if hasattr(self, "exoskeletons") or hasattr(self, "submechanisms"):
             if hasattr(self, "exoskeletons"):
                 self.robot.load_submechanisms({"exoskeletons": deepcopy(self.exoskeletons)},
@@ -671,7 +674,7 @@ class BaseModel(yaml.YAMLObject):
         #     self.robot.define_submodel(name=self.export_total_submechanisms, start=root,
         #                                stop=tree.find_leaves(self.robot, spanningtree),
         #                                only_urdf=True)
-        
+
         if hasattr(self, "sensors"):
             multi_sensors = [x for x in dir(sensor_representations) if
                              not x.startswith("__") and x not in sensor_representations.__IMPORTS__ and
@@ -704,12 +707,12 @@ class BaseModel(yaml.YAMLObject):
                 if sensor_ is not None:
                     self.robot.add_sensor(sensor_)
                     log.debug('      Attached {} {}'.format(s["type"], s['name']))
-        
+
         if hasattr(self, "poses"):
             for (cn, config) in self.poses.items():
                 pose = poses.JointPoseSet(robot=self.robot, name=cn, configuration=config)
                 self.robot.add_pose(pose)
-        
+
         if hasattr(self, "annotations"):
             log.debug('  Adding further annotations.')
 
@@ -735,7 +738,12 @@ class BaseModel(yaml.YAMLObject):
         for vc in self.robot.collisions + self.robot.visuals:
             if isinstance(vc.geometry, representation.Mesh):
                 self.processed_meshes = self.processed_meshes.union([os.path.realpath(f["filepath"]) for f in vc.geometry._exported.values()])
-                self.processed_meshes.add(os.path.realpath(vc.geometry.abs_filepath))
+                try:
+                    self.processed_meshes.add(os.path.realpath(vc.geometry.abs_filepath))
+                except IOError:
+                    # This mesh has been edited and has no source mesh any more that could provide a file path
+                    pass
+
         if "keep_files" in self.deployment:
             git.reset(self.targetdir, "autobuild", "master")
             misc.store_persisting_files(self.pipeline, self.targetdir, self.deployment["keep_files"], self.exportdir)
@@ -811,11 +819,10 @@ class BaseModel(yaml.YAMLObject):
             with open(readme_path, "w") as readme:
                 readme.write(content)
         if uses_lfs:
-            readme_content = open(readme_path, "r").read()
-            if "# Git LFS for mesh repositories" not in readme_content:
-                with open(readme_path, "a") as readme:
-                    readme.write(open(resources.get_resources_path("GitLFS_README.md.in")).read())
-
+                readme_content = open(readme_path, "r").read()
+                if "Git LFS" not in readme_content:
+                    with open(readme_path, "a") as readme:
+                        readme.write(open(resources.get_resources_path("GitLFS_README.md.in")).read())
         # update additional submodules
         if "submodules" in self.deployment:
             for subm in self.deployment["submodules"]:

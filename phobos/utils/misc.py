@@ -20,9 +20,21 @@ def duplicate(obj, link_obj=False):
 
 
 def to_pretty_xml_string(xml):
-    xml_string = xml if type(xml) == str else ET.tostring(xml, method='xml').decode('utf-8')
-    xml_string = parseString(xml_string)
-    return xml_string.toprettyxml(indent='  ').replace(u'<?xml version="1.0" ?>', '').strip()
+    if type(xml) == str:
+        xml_string = xml
+    else:
+        try:
+            xml_string = ET.tostring(xml, method='xml').decode('utf-8')
+            xml_string = parseString(xml_string)
+            return xml_string.toprettyxml(indent='  ').replace(u'<?xml version="1.0" ?>', '').strip()
+        except Exception as e:
+            log.warn(f"WARNING: Couldn't generate pretty xml, due to this error: {e}")
+            try:
+                ET.indent(xml, space="  ")
+            except:
+                pass
+            xml_string = ET.tostring(xml, method='xml').decode('utf-8')
+    return xml_string.replace(u'<?xml version="1.0" ?>', '').strip()
 
 
 def merge_default(input_dict, default_dict):
@@ -125,13 +137,17 @@ def regex_replace(string, replacements, verbose=False):
 def append_string(s, *args, **kwargs):
     """Replacement for print so that the printed string is put to s"""
     new = " ".join([str(a) for a in args])
+    if ("print" in kwargs.keys() and kwargs["print"]) or "loglevel" in kwargs:
+        loglevel = kwargs.get("loglevel", "info")
+        if "loglevel" in kwargs:
+            kwargs.pop("loglevel")
+        if "print" in kwargs:
+            kwargs.pop("print")
+        getattr(log, loglevel.lower())(" ".join([str(a) for a in args]))
     if "end" in kwargs.keys():
         new += kwargs["end"]
     else:
         new += "\n"
-    if "print" in kwargs.keys() and kwargs["print"]:
-        kwargs.pop("print")
-        log.info(" ".join(args))
     return s + new
 
 
@@ -142,17 +158,23 @@ def is_binary_file(filepath):
         return bool(f.read(256).translate(None, textchars))
 
 
-def execute_shell_command(cmd, cwd=None, dry_run=False, silent=False):
+def execute_shell_command(cmd, cwd=None, dry_run=False, silent=False, verbose=False):
     if cwd is None:
         cwd = os.getcwd()
     if not silent:
         log.debug(("Skipping" if dry_run else "Executing") + f": {cmd} in {cwd}")
     if dry_run:
         return "", ""
-    proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=cwd)
+    proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=cwd, executable="/bin/bash")
     # proc.wait()
     (out, err) = proc.communicate()
-    if not silent:
+    if verbose:
+        log.info("Executing: "+cmd+" in "+cwd)
+        log.info(out.decode('UTF-8'))
+        log.info(err.decode('UTF-8'))
+        log.info(f"Subprocess returned {proc.returncode}")
+    elif not silent:
+        log.debug("Executing: "+cmd+" in "+cwd)
         log.debug(out.decode('UTF-8'))
         log.debug(err.decode('UTF-8'))
         log.debug(f"Subprocess returned {proc.returncode}")
@@ -338,4 +360,4 @@ def color_parser(*args, rgba=None):
 
 
 def to_hex_color(color_as_list):
-    return "#" + "".join([hex(int(x * 255))[2:] for x in color_as_list])
+    return "#" + "".join([f"{int(x * 255):02x}" for x in color_as_list])

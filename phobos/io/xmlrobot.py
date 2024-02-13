@@ -23,11 +23,14 @@ class XMLRobot(Representation):
     _related_entity_instance = None
 
     def __init__(self, name=None, version=None, links: List[representation.Link] = None,
+                 frames: List[representation.Link] = None,
+                 physical_links: List[representation.Link] = None,
                  joints: List[representation.Joint] = None,
                  materials: List[representation.Material] = None,
                  transmissions: List[representation.Transmission] = None,
-                 sensors=None, motors=None, plugins=None, root=None,
-                 is_human=False, urdf_version=None, xmlfile=None, _xmlfile=None):
+                 sensors=None, sensors_that_dont_belong_to_links_or_joints=None, motors=None,
+                 plugins=None, root=None, is_human=False,
+                 urdf_version=None, xmlfile=None, _xmlfile=None):
         self._related_robot_instance = self
         super().__init__()
         self.joints = []
@@ -37,6 +40,8 @@ class XMLRobot(Representation):
         self.materials = []
         self.transmissions = [] # [TODO v2.1.0] currently not fully supported
         self.sensors = []
+        if sensors_that_dont_belong_to_links_or_joints is not None:
+            self.sensors_that_dont_belong_to_links_or_joints = sensors_that_dont_belong_to_links_or_joints
         self.plugins = []  # Currently just a place holder
         self.motors = []
         self.xmlfile = xmlfile if xmlfile is not None else _xmlfile
@@ -60,6 +65,12 @@ class XMLRobot(Representation):
                 self.add_aggregate("joint", joint)
         if links is not None:
             for link in links:
+                self.add_aggregate("link", link)
+        if frames is not None:
+            for frame in frames:
+                self.add_aggregate("link", frame)
+        if physical_links is not None:
+            for link in physical_links:
                 self.add_aggregate("link", link)
 
         self.materials = materials if materials is not None else []
@@ -92,6 +103,8 @@ class XMLRobot(Representation):
 
     def assert_validity(self):
         assert self.get_root().origin is None or self.get_root().origin.is_zero()
+        for link in self.links:
+            assert link.origin is None or link.origin.relative_to != link.name
 
     @property
     def collisions(self):
@@ -104,6 +117,22 @@ class XMLRobot(Representation):
     @property
     def sensors_that_dont_belong_to_links_or_joints(self):
         return [s for s in self.sensors if getattr(s, "link", None) is None and getattr(s, "joint", None) is None]
+
+    @property
+    def frames(self):
+        return [lnk for lnk in self.links if not(lnk.inertial or lnk.collision or lnk.visual)]
+
+    @frames.setter
+    def frames(self, frames):
+        self.add_aggregate("link". frames)
+
+    @property
+    def physical_links(self):
+        return [lnk for lnk in self.links if (lnk.inertial or lnk.collision or lnk.visual)]
+
+    @physical_links.setter
+    def physical_links(self, links):
+        self.add_aggregate("link". links)
 
     @sensors_that_dont_belong_to_links_or_joints.setter
     def sensors_that_dont_belong_to_links_or_joints(self, value):

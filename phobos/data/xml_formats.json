@@ -385,7 +385,8 @@
             "collision": "targets"
           }
         },
-        "gps": {}
+        "gps": {},
+        "imu": {}
       }
     },
     "Joint6DOF": {
@@ -529,6 +530,25 @@
           "varname": "origin"
         }
       }
+    },
+    "IMU": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "rate": "rate",
+        "type": "sdf_type"
+      },
+      "attribute_children": {
+        "parent": {
+          "link": "link"
+        }
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      }
     }
   },
   "sdf": {
@@ -625,7 +645,11 @@
       "children": {
         "link": {
           "classname": "Link",
-          "varname": "links"
+          "varname": "physical_links"
+        },
+        "frame": {
+          "classname": "Frame",
+          "varname": "frames"
         },
         "joint": {
           "classname": "Joint",
@@ -653,7 +677,7 @@
       "children": {
         "pose": {
           "classname": "Pose",
-          "varname": "origin"
+          "varname": "secure_origin"
         },
         "inertial": {
           "classname": "Inertial",
@@ -963,7 +987,8 @@
             "collision": "targets"
           }
         },
-        "gps": {}
+        "gps": {},
+        "imu": {}
       }
     },
     "Joint6DOF": {
@@ -1105,6 +1130,26 @@
       }
     },
     "GPS": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "type": "sdf_type"
+      },
+      "value_children": {
+        "always_on": "always_on",
+        "rate": "rate",
+        "visualize": "visualize",
+        "topic": "topic",
+        "enable_metrics": "enable_metrics"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      }
+    },
+    "IMU": {
       "tag": "sensor",
       "attributes": {
         "name": "name",
