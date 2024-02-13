@@ -1,9 +1,10 @@
 import logging
 import sys
+import os
 
 SUPPORTED_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"]
 LOGGER_NAME = "phobos_log"
-BASE_LOG_LEVEL = "WARNING"
+BASE_LOG_LEVEL = os.getenv("PHOBOS_LOG_LEVEL", "WARNING")
 LOG_FILE_CONVENTION = None
 
 #The background is set with 40 plus the number of the color, and the foreground with 30
