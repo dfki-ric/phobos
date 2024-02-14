@@ -1553,11 +1553,12 @@ class KCCDHull(Representation, SmurfBase):
 class Link(Representation, SmurfBase):
     _class_variables = ["name", "visuals", "collisions", "inertial", "kccd_hull", "origin"]
 
-    def __init__(self, name=None, visuals=None, inertial=None, collisions=None, origin=None,
+    def __init__(self, name=None, visuals=None, inertial=None, collisions=None, origin=None, originRoot=None,
                  noDataPackage=None, reducedDataPackage=None, is_human=None, kccd_hull=None, joint=None, **kwargs):
         SmurfBase.__init__(self, **kwargs)
         self.name = name
         self.origin = _singular(origin)
+        self.originRoot = _singular(originRoot)
         self.is_human = is_human
         self.returns += ['name', "is_human"]
         self.visuals = _plural(visuals)

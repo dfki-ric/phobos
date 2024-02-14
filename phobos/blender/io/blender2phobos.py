@@ -435,13 +435,14 @@ def deriveLink(obj, objectlist=None, logging=True, errors=None):
         root = sUtils.getEffectiveParent(root)
 
     # Exporting pose relative to root link because gazebo 9 ignores relative_to attribute
+    # Remove originRoot in a future update
 
     return representation.Link(
         name=obj.get("link/name", obj.name),  # this is for backwards compatibility normally the linkname should be the object name
         visuals=visuals,
         collisions=collisions,
         inertial=inertial,
-        origin=deriveObjectPose(obj, effectiveparent=root),
+        originRoot=deriveObjectPose(obj, effectiveparent=root),
         # [TODO v2.1.0] Add KCCD support
         kccd_hull=None,
         **annotations
