@@ -1104,17 +1104,19 @@ class Mesh(Representation, SmurfBase):
         elif BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
             from ..blender.utils import blender as bUtils
             objname = "tmp_export_" + self.unique_name
-            tmpobject = bUtils.createPrimitive(objname, 'box', self.scale)
+            tmpobject = bUtils.createPrimitive(objname, 'box', (1,1,1))
+            tmpobject.scale = self.scale
             # copy the mesh here
-            tmpobject.data = self.mesh_object
+            tmpobject.data = self.mesh_object.copy()
             bpy.ops.object.select_all(action='DESELECT')
             tmpobject.select_set(True)
             bpy.ops.object.transform_apply(scale=True)
             bpy.ops.object.select_all(action='DESELECT')
             tmpobject.select_set(True)
+            self.mesh_object = tmpobject.data
             bpy.ops.object.delete()
         else:
-            raise NotImplentedError()
+            raise NotImplementedError()
 
         self._operations.append("apply_scale")
         self.history.append(f"apply_scale {self.scale}")
@@ -1551,11 +1553,12 @@ class KCCDHull(Representation, SmurfBase):
 class Link(Representation, SmurfBase):
     _class_variables = ["name", "visuals", "collisions", "inertial", "kccd_hull", "origin"]
 
-    def __init__(self, name=None, visuals=None, inertial=None, collisions=None, origin=None,
+    def __init__(self, name=None, visuals=None, inertial=None, collisions=None, origin=None, originRoot=None,
                  noDataPackage=None, reducedDataPackage=None, is_human=None, kccd_hull=None, joint=None, **kwargs):
         SmurfBase.__init__(self, **kwargs)
         self.name = name
         self.origin = _singular(origin)
+        self.originRoot = _singular(originRoot)
         self.is_human = is_human
         self.returns += ['name', "is_human"]
         self.visuals = _plural(visuals)
