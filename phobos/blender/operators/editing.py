@@ -1859,26 +1859,8 @@ class AddMotorOperator(Operator):
         Returns:
 
         """
-        active_obj = (
-            context.active_object
-            and context.active_object.phobostype == 'link'
-            and context.active_object.mode == 'OBJECT'
-        )
 
-        if not active_obj:
-            return False
-            # for obj in context.selected_objects:
-            #     if obj.mode == 'OBJECT' and obj.phobostype == 'link':
-            #         active_obj = obj
-            #         context.view_layer.objects.active = obj
-            #         break
-            # if not active_obj:
-        else:
-            active_obj = context.active_object
-
-        joint_obj = 'joint/type' in active_obj and active_obj['joint/type'] != 'fixed'
-
-        return joint_obj
+        return len([o for o in context.selected_objects if o.phobostype == "link"]) > 0
 
     def execute(self, context):
         """
