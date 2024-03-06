@@ -1859,8 +1859,9 @@ class AddMotorOperator(Operator):
         Returns:
 
         """
-
-        return len([o for o in context.selected_objects if o.phobostype == "link"]) > 0
+        objects = [o for o in context.selected_objects if o.phobostype == "link"
+                   and "joint/type" in o and o["joint/type"] != "fixed"]
+        return len(objects) > 0
 
     def execute(self, context):
         """
@@ -1871,7 +1872,8 @@ class AddMotorOperator(Operator):
         Returns:
 
         """
-        objects = [o for o in context.selected_objects if o.phobostype == "link"]
+        objects = [o for o in context.selected_objects if o.phobostype == "link"
+                   and "joint/type" in o and o["joint/type"] != "fixed"]
         for obj in objects:
             phobos2blender.createMotor(representation.Motor(
                 name=obj.name+"_motor",
@@ -1882,6 +1884,9 @@ class AddMotorOperator(Operator):
                 i=self.controli,
                 d=self.controld
             ), linkobj=obj)
+        n = len(objects)
+        s = "" if n == 1 else "s"
+        log(message=f"Added a motor to {n} joint{s}", level="INFO")
         return {'FINISHED'}
 
 
