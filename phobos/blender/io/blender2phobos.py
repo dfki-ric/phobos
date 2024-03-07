@@ -74,8 +74,8 @@ def deriveMaterial(mat, logging=False, errors=None):
             transparency = mat.node_tree.nodes["Specular BSDF"].inputs["Transparency"].default_value
         elif "Principled BSDF" in mat.node_tree.nodes.keys():
             diffuse_color = mat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value
-            specular_color = np.array(diffuse_color) * mat.node_tree.nodes["Principled BSDF"].inputs["Specular"].default_value
-            emissive = np.array(mat.node_tree.nodes["Principled BSDF"].inputs["Emission"].default_value)
+            specular_color = np.array(diffuse_color) * mat.node_tree.nodes["Principled BSDF"].inputs["Specular Tint"].default_value
+            emissive = np.array(mat.node_tree.nodes["Principled BSDF"].inputs["Emission Color"].default_value)
             shininess = 1-mat.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value
             transparency = 1-mat.node_tree.nodes["Principled BSDF"].inputs["Alpha"].default_value
     if diffuse_color is None:
