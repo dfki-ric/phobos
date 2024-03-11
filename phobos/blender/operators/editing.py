@@ -1758,7 +1758,7 @@ class DissolveLink(Operator):
 
 class AddMotorOperator(Operator):
     """Add a motor to the selected joint.
-    It is possible to add motors to multiple joints at the same time"""
+It is possible to add motors to multiple joints at the same time"""
 
     bl_idname = "phobos.add_motor"
     bl_label = "Add Motor"
@@ -1859,26 +1859,9 @@ class AddMotorOperator(Operator):
         Returns:
 
         """
-        active_obj = (
-            context.active_object
-            and context.active_object.phobostype == 'link'
-            and context.active_object.mode == 'OBJECT'
-        )
-
-        if not active_obj:
-            return False
-            # for obj in context.selected_objects:
-            #     if obj.mode == 'OBJECT' and obj.phobostype == 'link':
-            #         active_obj = obj
-            #         context.view_layer.objects.active = obj
-            #         break
-            # if not active_obj:
-        else:
-            active_obj = context.active_object
-
-        joint_obj = 'joint/type' in active_obj and active_obj['joint/type'] != 'fixed'
-
-        return joint_obj
+        objects = [o for o in context.selected_objects if o.phobostype == "link"
+                   and "joint/type" in o and o["joint/type"] != "fixed"]
+        return len(objects) > 0
 
     def execute(self, context):
         """
@@ -1889,7 +1872,8 @@ class AddMotorOperator(Operator):
         Returns:
 
         """
-        objects = [o for o in context.selected_objects if o.phobostype == "link"]
+        objects = [o for o in context.selected_objects if o.phobostype == "link"
+                   and "joint/type" in o and o["joint/type"] != "fixed"]
         for obj in objects:
             phobos2blender.createMotor(representation.Motor(
                 name=obj.name+"_motor",
@@ -1900,6 +1884,9 @@ class AddMotorOperator(Operator):
                 i=self.controli,
                 d=self.controld
             ), linkobj=obj)
+        n = len(objects)
+        s = "" if n == 1 else "s"
+        log(message=f"Added a motor to {n} joint{s}", level="INFO")
         return {'FINISHED'}
 
 
