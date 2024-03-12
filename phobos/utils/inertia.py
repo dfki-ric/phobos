@@ -126,7 +126,16 @@ def calculateMeshInertia(mass, data, scale=None):
             vertices = numpy.asarray([numpy.asarray(scale * v.co) for v in data.vertices])
             prev_mode = bpy.context.mode
             bpy.ops.object.mode_set(mode='EDIT')
+            # store selected vertices
+            selected_vertices = [v.index for v in data.vertices if v.select]
+            # select all vertices for conversion
+            bpy.ops.mesh.select_all(action='SELECT')
             bpy.ops.mesh.quads_convert_to_tris(quad_method='FIXED')
+            # reset selected vertices
+            bpy.ops.mesh.select_all(action='DESELECT')
+            bpy.ops.object.mode_set(mode='OBJECT')
+            for i in selected_vertices:
+                data.vertices[i].select = True
             bpy.ops.object.mode_set(mode=prev_mode)
             faces = [[v for v in p.vertices] for p in data.polygons]
             triangle_normals = numpy.asarray([t.normal for t in data.polygons])
