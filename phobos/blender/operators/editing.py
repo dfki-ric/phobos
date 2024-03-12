@@ -1571,6 +1571,7 @@ class DefineJointConstraintsOperator(Operator):
 
         """
         obj = context.active_object
+        self.name = ""
         if any([k.startswith("joint") for k in obj.keys()]):
             if "joint/limits/lower" in obj:
                 self.lower = obj["joint/limits/lower"]
