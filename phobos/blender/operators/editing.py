@@ -1519,6 +1519,8 @@ class DefineJointConstraintsOperator(Operator):
 
         """
         layout = self.layout
+        for msg in self.executeMessage:
+            layout.label(text=msg)
         if self.name.replace(" ", "_") != self.name:
             layout.label(text="Created as "+self.name.replace(" ", "_"))
         if len(context.selected_objects) == 1:
@@ -1556,9 +1558,6 @@ class DefineJointConstraintsOperator(Operator):
                 layout.prop(self, "upper", text="upper [m]")
                 layout.prop(self, "spring", text="spring constant [N/m]")
                 layout.prop(self, "damping", text="damping constant")
-
-        for msg in self.executeMessage:
-            layout.label(text=msg)
 
     def invoke(self, context, event):
         """
@@ -3081,7 +3080,6 @@ class AssignSubmechanism(Operator):
         if len(self.executeMessage) > 0:
             for t in self.executeMessage:
                 layout.label(text=t)
-
 
     def execute(self, context):
         """
