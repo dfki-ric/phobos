@@ -1507,6 +1507,8 @@ class DefineJointConstraintsOperator(Operator):
         name="Joint Axis", default=[0.0, 0.0, 1], description="Damping constant of the joint", size=3
     )
 
+    executeMessage = []
+
     def draw(self, context):
         """
 
@@ -1517,6 +1519,8 @@ class DefineJointConstraintsOperator(Operator):
 
         """
         layout = self.layout
+        for msg in self.executeMessage:
+            layout.label(text=msg)
         if self.name.replace(" ", "_") != self.name:
             layout.label(text="Created as "+self.name.replace(" ", "_"))
         if len(context.selected_objects) == 1:
@@ -1566,6 +1570,7 @@ class DefineJointConstraintsOperator(Operator):
 
         """
         obj = context.active_object
+        self.name = ""
         if any([k.startswith("joint") for k in obj.keys()]):
             if "joint/limits/lower" in obj:
                 self.lower = obj["joint/limits/lower"]
@@ -1592,6 +1597,7 @@ class DefineJointConstraintsOperator(Operator):
 
         """
         log('Defining joint constraints for joint: ', 'INFO')
+        self.executeMessage = []
         lower = 0
         upper = 0
         velocity = self.maxvelocity
@@ -1622,8 +1628,10 @@ class DefineJointConstraintsOperator(Operator):
             # Check if joints can be created
             if max(axis) == 0 and min(axis) == 0:
                 validInput = False
+                self.executeMessage.append("Please set the joint axis to define the joint")
         # set properties for each joint
         if validInput:
+            defined = 0
             for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
                 context.view_layer.objects.active = joint
                 if joint.parent is None or joint.parent.phobostype != "link":
@@ -1642,6 +1650,7 @@ class DefineJointConstraintsOperator(Operator):
                     damping=self.damping,
                     axis=(np.array(axis) / np.linalg.norm(axis)).tolist() if axis is not None else None
                 )
+                defined = defined+1
 
                 if "joint/name" not in joint:
                     joint["joint/name"] = joint.name + "_joint"
@@ -1656,6 +1665,8 @@ class DefineJointConstraintsOperator(Operator):
                         ),
                         linkobj=joint
                     )
+            jointPluralS = "" if defined == 1 else "s"
+            self.executeMessage.append(f"Defined {defined} joint{jointPluralS}")
 
         return {'FINISHED'}
 
@@ -3069,7 +3080,6 @@ class AssignSubmechanism(Operator):
         if len(self.executeMessage) > 0:
             for t in self.executeMessage:
                 layout.label(text=t)
-
 
     def execute(self, context):
         """
