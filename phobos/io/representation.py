@@ -525,11 +525,13 @@ class Mesh(Representation, SmurfBase):
         self.material = material
         filepath = misc.sys_path(filepath if posix_path is None else posix_path)
         if mesh is not None:
-            assert meshname is not None and type(meshname) == str
+            if meshname is None or type(meshname) != str:
+                raise AssertionError(f"Invalid mesh name {meshname}.")
             self.original_mesh_name = meshname
             self._mesh_object = mesh
             self.input_type = str(type(mesh))[8:-2]  # handle: <class 'the type name'>
-            assert self.input_type in MESH_DATA_TYPES
+            if self.input_type not in MESH_DATA_TYPES:
+                raise AssertionError(f"The input type {self.input_type} of object {meshname} is not recognized.")
             self.input_file = None
             self.unique_name = meshname
             self._mesh_information = None
