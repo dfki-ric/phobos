@@ -1579,13 +1579,13 @@ class DefineJointConstraintsOperator(Operator):
             if "joint/limits/effort" in obj:
                 self.maxeffort = obj["joint/limits/effort"]
             if "joint/limits/velocity" in obj:
-                self.maxspeed = obj["joint/limits/velocity"]
+                self.maxvelocity = obj["joint/limits/velocity"]
             if "joint/type" in obj:
                 self.joint_type = obj["joint/type"]
             if "joint/axis" in obj:
                 self.axis = obj["joint/axis"]
             self.name = obj.get("joint/name", obj.name)
-        return self.execute(context)
+        return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
         """
@@ -1635,7 +1635,7 @@ class DefineJointConstraintsOperator(Operator):
             for joint in (obj for obj in context.selected_objects if obj.phobostype == 'link'):
                 context.view_layer.objects.active = joint
                 if joint.parent is None or joint.parent.phobostype != "link":
-                    ErrorMessageWithBox(f"Link {joint.name} has to be parented to another link before you can define a joint")
+                    self.report({'ERROR'}, f"Link {joint.name} has to be parented to another link before you can define a joint.")
                     return {'CANCELLED'}
                 if len(self.name) > 0:
                     joint["joint/name"] = self.name.replace(" ", "_")
@@ -2048,6 +2048,14 @@ class CreateLinksOperator(Operator):
         name="Link Name", description="A name for a single newly created link.", default='new_link'
     )
 
+    def invoke(self, context, event):
+        """Sets the default location based on whether objects are selected."""
+        if context.selected_objects:
+            self.location = 'selected objects'
+        else:
+            self.location = '3D cursor'
+        return context.window_manager.invoke_props_dialog(self)
+
     def execute(self, context):
         """
 
@@ -2060,7 +2068,8 @@ class CreateLinksOperator(Operator):
         if self.location == '3D cursor':
             phobos2blender.createLink(representation.Link(name=self.linkname, scale=self.size))
         elif len(context.selected_objects) > 0:
-            objs_to_create_links = context.selected_objects
+            # Make a true copy of the list, so it's not affected by selection changes
+            objs_to_create_links = list(context.selected_objects)
             for obj in objs_to_create_links:
                 modellinks.deriveLinkfromObject(obj, scale=self.size, scaleByBoundingBox=self.sizeCheck,
                                                 parent_objects=self.parent_objects, parent_link=self.parent_link)
@@ -2897,7 +2906,12 @@ class AddSubmodel(Operator):
         return {'FINISHED'}
 
 
-# [TODO v2.0.0] REVIEW this
+def get_submodel_types(self, context):
+    """Returns a list of submodel types for the EnumProperty."""
+    return tuple([(sub,) * 3 for sub in defs.definitions['submodeltypes']])
+
+
+# [TODO v2.2.0] REVIEW this
 class DefineSubmodel(Operator):
     """Define a new submodel from objects"""
 
@@ -2914,9 +2928,8 @@ class DefineSubmodel(Operator):
     )
 
     submodeltype : EnumProperty(
-        items=tuple([(sub,) * 3 for sub in defs.definitions['submodeltypes']]),
+        items=get_submodel_types,
         name="Submodel type",
-        default="mechanism",
         description="The type for the new submodel",
     )
 
@@ -3358,8 +3371,7 @@ class SetModelRoot(Operator):
         oldroot = sUtils.getRoot(obj=context.active_object)
 
         if newroot == oldroot:
-            log("Object is already root.", 'INFO')
-            return {'CANCELLED'}
+            log("Object is already root. Re-applying properties to ensure consistency.", 'INFO')
 
         # gather model information from old root
         modelprops = eUtils.getProperties(oldroot, category='model')

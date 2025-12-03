@@ -13,9 +13,9 @@
 Contains the Blender operators used to edit/add poses for Phobos models.
 """
 
-import bgl
-import blf
 import bpy
+import gpu
+from gpu_extras.batch import batch_for_shader
 from bpy.props import StringProperty, EnumProperty
 from bpy.types import Operator
 
@@ -62,6 +62,15 @@ class StorePoseOperator(Operator):
     bl_label = "Store Current Pose"
     bl_options = {'REGISTER', 'UNDO'}
 
+    @classmethod
+    def poll(cls, context):
+        """The operator is only active if there is at least one defined model root."""
+        # A true model root has a 'model/name' property.
+        for root in sUtils.getRoots():
+            if 'model/name' in root:
+                return True
+        return False
+
     def updatePoseName(self, context):
         self.pose_name = self.pose_name.replace(" ", "_").replace(":", "_").replace("'", "_").replace('"', "_")
 
@@ -75,6 +84,10 @@ class StorePoseOperator(Operator):
         description="Name of new pose",
         update=updatePoseName
     )
+
+    def invoke(self, context, event):
+        """Opens a dialog to enter the pose name."""
+        return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
         """
@@ -157,89 +170,97 @@ class DeletePoseOperator(Operator):
 
 # show robot model on 3dview
 def draw_preview_callback(self):
-    """TODO Missing documentation"""
-
+    """Draws a 2D preview of the selected pose in the 3D View."""
     # Search for View_3d window
-    area = None
-    if bpy.context.area.type != 'VIEW_3D':
-        return bpy.context.area
-    else:
-        for oWindow in bpy.context.window_manager.windows:
-            oScreen = oWindow.screen
-            for oArea in oScreen.areas:
-                if oArea.type == 'VIEW_3D':
-                    area = oArea
+    area = bpy.context.area
+    if area.type != 'VIEW_3D':
+        # This can happen if the context changes, just stop drawing
+        return
 
     modelsPosesColl = bUtils.getPhobosPreferences().models_poses
     activeModelPoseIndex = bpy.context.scene.active_ModelPose
 
-    if (len(modelsPosesColl) > 0) and area:
+    if not modelsPosesColl or activeModelPoseIndex >= len(bpy.data.images):
+        return
 
-        # Draw a textured quad
-        area_widths = [
-            region.width for region in bpy.context.area.regions if region.type == 'WINDOW'
-        ]
-        area_heights = [
-            region.height for region in bpy.context.area.regions if region.type == 'WINDOW'
-        ]
-        if (len(area_widths) > 0) and (len(area_heights) > 0):
+    image_name = bpy.data.images[activeModelPoseIndex].name
+    if image_name not in modelsPosesColl:
+        return
 
-            active_preview = modelsPosesColl[bpy.data.images[activeModelPoseIndex].name]
-            im = bpy.data.images[activeModelPoseIndex]
+    active_preview = modelsPosesColl[image_name]
+    im = bpy.data.images[image_name]
 
-            view_width = area_widths[0]
-            view_height = area_heights[0]
-            tex_start_x = 50
-            tex_end_x = view_width - 50
-            tex_start_y = 50
-            tex_end_y = view_height - 50
-            if im.size[0] < view_width:
-                diff = int((view_width - im.size[0]) / 2)
-                tex_start_x = diff
-                tex_end_x = diff + im.size[0]
-            if im.size[1] < view_height:
-                diff = int((view_height - im.size[1]) / 2)
-                tex_start_y = diff
-                tex_end_y = diff + im.size[1]
+    # Find the 3D view region
+    region = None
+    for r in area.regions:
+        if r.type == 'WINDOW':
+            region = r
+            break
+    if region is None:
+        return
 
-            # Draw information
-            font_id = 0  # XXX, need to find out how best to get this.
-            blf.position(font_id, tex_start_x, tex_end_y + 20, 0)
-            blf.size(font_id, 20, 72)
-            blf.draw(font_id, active_preview.label)
+    view_width = region.width
+    view_height = region.height
 
-            tex = im.bindcode
-            bgl.glEnable(bgl.GL_TEXTURE_2D)
-            # if using blender 2.77 change tex to tex[0]
-            bgl.glBindTexture(bgl.GL_TEXTURE_2D, tex)
+    # --- Modern GPU Drawing ---
+    shader_img = gpu.shader.from_builtin('2D_IMAGE')
+    shader_bg = gpu.shader.from_builtin('2D_UNIFORM_COLOR')
+    
+    # Calculate image placement
+    tex_start_x = 50
+    tex_end_x = view_width - 50
+    tex_start_y = 50
+    tex_end_y = view_height - 50
+    
+    if im.size[0] < view_width - 100:
+        diff = int((view_width - im.size[0]) / 2)
+        tex_start_x = diff
+        tex_end_x = diff + im.size[0]
+    if im.size[1] < view_height - 100:
+        diff = int((view_height - im.size[1]) / 2)
+        tex_start_y = diff
+        tex_end_y = diff + im.size[1]
 
-            # Background
-            bgl.glEnable(bgl.GL_BLEND)
+    # 1. Draw Background
+    vertices_bg = (
+        (0, 0), (view_width, 0),
+        (0, view_height), (view_width, view_height)
+    )
+    indices_bg = ((0, 1, 2), (1, 2, 3))
+    
+    batch_bg = batch_for_shader(shader_bg, 'TRIS', {"pos": vertices_bg}, indices=indices_bg)
+    shader_bg.bind()
+    shader_bg.uniform_float("color", (0, 0, 0, 0.3))
+    gpu.state.blend_set('ALPHA')
+    batch_bg.draw(shader_bg)
+    gpu.state.blend_set('NONE')
 
-            bgl.glBegin(bgl.GL_QUADS)
-            bgl.glColor4f(0, 0, 0, 0.3)
-            bgl.glVertex2i(0, 0)
-            bgl.glVertex2i(0, view_height)
-            bgl.glVertex2i(view_width, view_height)
-            bgl.glVertex2i(view_width, 0)
+    # 2. Draw Image
+    if im.bindcode is None:
+        im.gl_load()
+    
+    shader_img.bind()
+    shader_img.uniform_int("image", im.bindcode)
+    
+    vertices_img = (
+        (tex_start_x, tex_start_y), (tex_end_x, tex_start_y),
+        (tex_start_x, tex_end_y), (tex_end_x, tex_end_y)
+    )
+    tex_coords_img = ((0, 0), (1, 0), (0, 1), (1, 1))
 
-            # Draw Image
-            bgl.glColor4f(1, 1, 1, 1)
-            bgl.glTexCoord2f(0, 0)
-            bgl.glVertex2i(int(tex_start_x), int(tex_start_y))
-            bgl.glTexCoord2f(0, 1)
-            bgl.glVertex2i(int(tex_start_x), int(tex_end_y))
-            bgl.glTexCoord2f(1, 1)
-            bgl.glVertex2i(int(tex_end_x), int(tex_end_y))
-            bgl.glTexCoord2f(1, 0)
-            bgl.glVertex2i(int(tex_end_x), int(tex_start_y))
-            bgl.glEnd()
+    batch_img = batch_for_shader(
+        shader_img, 'TRI_STRIP',
+        {"pos": vertices_img, "texCoord": tex_coords_img}
+    )
+    batch_img.draw(shader_img)
 
-            # restore opengl defaults
-            bgl.glColor4f(0.0, 0.0, 0.0, 1.0)
-            bgl.glDisable(bgl.GL_QUADS)
-            bgl.glDisable(bgl.GL_BLEND)
-            bgl.glDisable(bgl.GL_TEXTURE_2D)
+    # 3. Draw Text
+    font_id = 0
+    font_size = 20
+    gpu.text.size(font_id, font_size)
+    gpu.text.position(font_id, tex_start_x, tex_end_y + 20, 0)
+    gpu.text.color(font_id, 1.0, 1.0, 1.0, 1.0)
+    gpu.text.draw(font_id, active_preview.label)
 
 
 class ChangePreviewOperator(bpy.types.Operator):
