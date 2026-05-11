@@ -21,6 +21,7 @@ from ..utils import misc, git, transform
 from ..utils.transform import inv
 from ..utils.xml import read_relative_filename
 from .. import defs as phobos_defs
+from ..blender.utils.blender import blenderVersionIsAtLeast
 
 MESH_INFO_KEYS = ["vertex_normals", "texture_coords", "vertices", "faces"]
 MESH_DATA_TYPES = ["trimesh.base.Trimesh", "trimesh.scene.scene.Scene", "file_obj", "file_stl", "file_dae", "file_iv"]
@@ -811,7 +812,7 @@ class Mesh(Representation, SmurfBase):
                     break
         if BPY_AVAILABLE and self.mesh_object is None:
             # A new file handler API was introduced in Blender 4.1
-            b41Import = bpy.app.version[0] == 4 and bpy.app.version[1] >= 1
+            b41Import = blenderVersionIsAtLeast((4,1))
             bpy.ops.object.select_all(action='DESELECT')
             if self.input_type == "file_stl":
                 if b41Import:
@@ -1029,7 +1030,7 @@ class Mesh(Representation, SmurfBase):
             else:
                 log.warn(f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh can't be exported as bobj")
             return
-        elif format.lower() == "bobj" and (not self._info_in_sync and "texture_coords" in self._mesh_information):
+        elif format.lower() == "bobj" and (not self._info_in_sync and self._mesh_information is not None and "texture_coords" in self._mesh_information):
             if throw_on_invalid_bobj:
                 raise IOError(
                     f"Couldn't provide mesh {self.unique_name} to {targetpath}, because this mesh has been edited and thus the textures might have get mixed up.")
@@ -1051,7 +1052,7 @@ class Mesh(Representation, SmurfBase):
             return
         # export for blender
         # A new file handler API was introduced in Blender 4.1
-        b41Export = bpy.app.version[0] == 4 and bpy.app.version[1] >= 1
+        b41Export = blenderVersionIsAtLeast((4,1))
         if BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
             from ..blender.utils import blender as bUtils
             objname = "tmp_export_"+self.unique_name
@@ -1063,26 +1064,38 @@ class Mesh(Representation, SmurfBase):
             if format.lower() == 'obj':
                 axis_forward = bpy.context.preferences.addons["phobos"].preferences.obj_axis_forward
                 axis_up = bpy.context.preferences.addons["phobos"].preferences.obj_axis_up
+                # If user wants to export texture, we also export .mtl file associated to the .obj file
+                export_texture = bpy.context.scene.phobosexportsettings.exportTextures
+                # Adapt export path type for the .mtl files to also use relative path
+                path_mode_relative = "AUTO"
+                if "relative" in getattr(bpy.context.scene.phobosexportsettings, "urdfOutputPathtype"):
+                    path_mode_relative = "RELATIVE"
                 if b41Export:
+                    # Adapt axis forward and UP to match the expected values
+                    # E.g. "-X" becomes "NEGATIVE_X"
+                    axis_forward = axis_forward.replace("-", "NEGATIVE_")
+                    axis_up = axis_up.replace("-", "NEGATIVE_")
                     bpy.ops.wm.obj_export(
                         filepath=targetpath,
                         export_selected_objects=True,
                         export_normals=True,
-                        export_materials=False,
+                        export_materials=export_texture,
                         apply_modifiers=True,
                         forward_axis=axis_forward,
                         up_axis=axis_up,
+                        path_mode=path_mode_relative,
                     )
                 else:
                     bpy.ops.export_scene.obj(
                         filepath=targetpath,
                         use_selection=True,
                         use_normals=True,
-                        use_materials=False,
+                        use_materials=export_texture,
                         use_mesh_modifiers=True,
                         use_blen_objects=False,
                         axis_forward=axis_forward,
                         axis_up=axis_up,
+                        path_mode=path_mode_relative,
                     )
             elif format.lower() == 'stl':
                 if b41Export:
