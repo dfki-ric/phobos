@@ -12,7 +12,7 @@ except ImportError:
 try:
     __version__ = version("phobos")
 except PackageNotFoundError:
-    __version__ = '2.0.0'
+    __version__ = '2.1.0'
 del version, PackageNotFoundError
 
 

@@ -12,15 +12,19 @@
 """
 Contains the functions required to model a joint within Blender.
 """
+import math
 
 import bpy
 import mathutils
 import numpy as np
+from bpy.app.handlers import persistent
 
 from ..phoboslog import log
 from ..utils import io as ioUtils
+from ..utils import selection as sUtils
 from ..utils.validation import validate
 
+from ..reserved_keys import JOINT_KEYS
 
 def getJointConstraints(joint):
     """Returns the constraints defined in the joint as tuple of two lists.
@@ -118,13 +122,22 @@ def setJointConstraints(
     jointtype,
     lower=0.0,
     upper=0.0,
+    lower2=0.0,
+    upper2=0.0,
     spring=None,
     damping=None,
     velocity=None,
     effort=None,
+    velocity2=None,
+    effort2=None,
     maxeffort_approximation=None,
     maxspeed_approximation=None,
-    axis = None
+    axis = None,
+    axis2 = None,
+    gearboxreferencebody=None,
+    gearboxratio=None,
+    screwthreadpitch=None,
+    visualaxis=None,
 ):
     """Sets the constraints for a given joint and jointtype.
     
@@ -150,18 +163,6 @@ def setJointConstraints(
     Returns:
 
     """
-    if lower is None:
-        lower = 0.0
-    if upper is None:
-        upper = 0.0
-    if velocity is None:
-        velocity = 0.0
-    if effort is None:
-        effort = 0.0
-    if spring is None:
-        spring = 0.0
-    if damping is None:
-        damping = 0.0
 
     bpy.ops.object.select_all(action='DESELECT')
     joint.select_set(True)
@@ -177,37 +178,36 @@ def setJointConstraints(
         joint.pose.bones[0].constraints.remove(cons)
 
     # set axis
-    if axis is not None:
-        if mathutils.Vector(tuple(axis)).length == 0.:
-            log('Axis of joint {0} is of zero length: '.format(joint.name), 'ERROR')
-        axis = (np.array(axis) / np.linalg.norm(axis)).tolist()
-        if np.linalg.norm(axis) != 0:
-            bpy.ops.object.mode_set(mode='EDIT')
-            editbone = joint.data.edit_bones[0]
-            length = max(editbone.length, 0.1)  # make sure we do not have zero length
-            joint["joint/axis"] = mathutils.Vector(tuple(axis))
-            editbone.tail = editbone.head + mathutils.Vector(tuple(axis)).normalized() * length
-            bpy.ops.object.mode_set(mode='POSE')
+    for ax, parameter in [(axis, "joint/axis"), (axis2, "joint/axis2")]:
+        if ax is not None:
+            if mathutils.Vector(tuple(ax)).length == 0.:
+                log('Axis of joint {0} is of zero length: '.format(joint.name), 'ERROR')
+            ax = (np.array(ax) / np.linalg.norm(ax)).tolist()
+            joint[parameter] = mathutils.Vector(tuple(ax))
+
+    # rotate joint object
+    visualaxis = visualaxis if visualaxis is not None else axis if axis is not None else [0, 0, 1]
+    if np.linalg.norm(visualaxis) != 0:
+        bpy.ops.object.mode_set(mode='EDIT')
+        editbone = joint.data.edit_bones[0]
+        length = max(editbone.length, 0.1)  # make sure we do not have zero length
+        editbone.tail = editbone.head + mathutils.Vector(tuple(visualaxis)).normalized() * length
+        bpy.ops.object.mode_set(mode='POSE')
 
     # add spring & damping
-    if jointtype in ['revolute', 'prismatic'] and (spring or damping):
-        try:
-            bpy.ops.rigidbody.constraint_add(type='GENERIC_SPRING')
-            bpy.context.object.rigid_body_constraint.spring_stiffness_y = spring
-            bpy.context.object.rigid_body_constraint.spring_damping_y = damping
-        except RuntimeError:
-            log("No Blender Rigid Body World present, only adding custom properties.", 'ERROR')
-
-        # TODO we should make sure that the rigid body constraints gets changed
-        # if the values below are changed manually by the user
+    if spring or damping:
         joint['joint/dynamics/spring_stiffness'] = spring
         joint['joint/dynamics/damping'] = damping
+        applySpringDamping(joint)
 
     # set constraints accordingly
     joint['joint/limits/lower'] = lower
     joint['joint/limits/upper'] = upper
+    joint['joint/limits/lower2'] = lower2
+    joint['joint/limits/upper2'] = upper2
     joint.data.bones.active = joint.pose.bones[0].bone
     joint.data.bones.active.select = True
+    remove_screwdrivers(joint)
     if jointtype == 'revolute':
         set_revolute(joint, lower, upper)
     elif jointtype == 'continuous':
@@ -221,43 +221,146 @@ def setJointConstraints(
         pass
     elif jointtype == 'planar':
         set_planar(joint)
+    elif jointtype == 'ball':
+        set_ball(joint, upper)
+    elif jointtype == 'universal':
+        set_universal(joint, lower, upper, lower2, upper2)
+    elif jointtype == 'screw':
+        set_screw(joint, lower, upper, axis, screwthreadpitch)
+    elif jointtype == 'gearbox':
+        set_gearbox(joint, axis, axis2, gearboxratio)
     else:
         log("Unknown joint type for joint " + joint.name + ". Behaviour like floating.", 'WARNING')
     joint['joint/type'] = jointtype
     bpy.ops.object.mode_set(mode='OBJECT')
 
     # check for approximation functions of effort and speed
-    if jointtype in ['revolute', 'continuous', 'prismatic']:
-        joint['joint/limits/velocity'] = velocity
-        joint['joint/limits/effort'] = effort
-        if maxeffort_approximation:
-            if all(elem in ['function', 'coefficients'] for elem in maxeffort_approximation):
-                joint['joint/limits/maxeffort_approximation'] = maxeffort_approximation['function']
-                joint['joint/limits/maxeffort_coefficients'] = maxeffort_approximation['coefficients']
-            else:
-                log(
-                    "Approximation for max effort ill-defined in joint object {}.".format(
-                        joint.name
-                    ),
-                    'ERROR',
-                )
-        if maxspeed_approximation:
-            if all(elem in ['function', 'coefficients'] for elem in maxspeed_approximation):
-                joint['joint/limits/maxspeed_approximation'] = maxspeed_approximation['function']
-                joint['joint/limits/maxspeed_coefficients'] = maxspeed_approximation['coefficients']
-            else:
-                log(
-                    "Approximation for max speed ill-defined in joint object {}.".format(
-                        joint.name
-                    ),
-                    'ERROR',
-                )
+    joint['joint/limits/velocity'] = velocity
+    joint['joint/limits/effort'] = effort
+    joint['joint/limits/velocity2'] = velocity2
+    joint['joint/limits/effort2'] = effort2
+    if maxeffort_approximation:
+        if all(elem in ['function', 'coefficients'] for elem in maxeffort_approximation):
+            joint['joint/limits/maxeffort_approximation'] = maxeffort_approximation['function']
+            joint['joint/limits/maxeffort_coefficients'] = maxeffort_approximation['coefficients']
+        else:
+            log(
+                "Approximation for max effort ill-defined in joint object {}.".format(
+                    joint.name
+                ),
+                'ERROR',
+            )
+    if maxspeed_approximation:
+        if all(elem in ['function', 'coefficients'] for elem in maxspeed_approximation):
+            joint['joint/limits/maxspeed_approximation'] = maxspeed_approximation['function']
+            joint['joint/limits/maxspeed_coefficients'] = maxspeed_approximation['coefficients']
+        else:
+            log(
+                "Approximation for max speed ill-defined in joint object {}.".format(
+                    joint.name
+                ),
+                'ERROR',
+            )
+
+    # gearbox
+    joint['joint/gearbox/reference_body'] = gearboxreferencebody
+    joint['joint/gearbox/ratio'] = gearboxratio
+
+    # screw
+    joint['joint/screw/thread_pitch'] = screwthreadpitch
 
     # set link/joint visualization
     resource_obj = ioUtils.getResource(('joint', jointtype))
     if resource_obj:
         log("Assigned resource to {}.".format(joint.name), 'DEBUG')
         joint.pose.bones[0].custom_shape = resource_obj
+
+    # delete unused properties
+    for key in JOINT_KEYS:
+        key = "joint/"+key
+        if key in joint and joint[key] is None:
+            del joint[key]
+
+
+@persistent
+def load_handler(dummy):
+    bpy.app.handlers.depsgraph_update_post.append(sdUpdater)
+
+
+bpy.app.handlers.load_post.append(load_handler)
+
+sdUpdaterObj = None
+sdUpdaterDamping = 0
+sdUpdaterSpring = 0
+springKey = 'joint/dynamics/spring_stiffness'
+dampingKey = 'joint/dynamics/damping'
+
+def sdUpdater(scene):
+    """
+    Updates spring and damping if the values are changed by the user
+    """
+    global sdUpdaterObj, sdUpdaterDamping, sdUpdaterSpring
+    obj = bpy.context.object
+
+    if obj is None:
+        return
+
+    if sdUpdaterObj == obj:
+        changeDetected = False
+
+        # See if damping changed
+        if dampingKey in obj:
+            damping = obj[dampingKey]
+            if damping != sdUpdaterDamping:
+                changeDetected = True
+
+        # See if spring changed
+        if springKey in obj:
+            spring = obj[springKey]
+            if spring != sdUpdaterSpring:
+                changeDetected = True
+
+        # Apply new constraint if either changed
+        if changeDetected:
+            applySpringDamping(obj)
+
+    else:  # A new object was selected, remember spring and damping
+        sdUpdaterObj = obj
+        sdUpdaterDamping = obj[dampingKey] if dampingKey in obj else None
+        sdUpdaterSpring = obj[springKey] if springKey in obj else None
+
+
+def applySpringDamping(joint):
+    """
+    Adds a rigid body constraint to a joint
+    """
+    global sdUpdaterObj, sdUpdaterDamping, sdUpdaterSpring
+
+    # Read spring and damping from joint
+    spring = joint[springKey] if springKey in joint else 0
+    damping = joint[dampingKey] if dampingKey in joint else 0
+
+    # Remember values of selected object
+    sdUpdaterSpring = spring
+    sdUpdaterDamping = damping
+    sdUpdaterObj = joint
+
+    if spring == 0 and damping == 0:
+        # Remove constraint
+        bpy.ops.rigidbody.constraint_remove()
+    else:
+        # Add new constraint if it's not present
+        constraintExists = joint.rigid_body_constraint is not None
+        try:
+            if not constraintExists:
+                bpy.ops.rigidbody.constraint_add(type='GENERIC_SPRING')
+            # Add spring and damping via rigid body constraint
+            bpy.context.object.rigid_body_constraint.spring_stiffness_y = spring
+            bpy.context.object.rigid_body_constraint.spring_damping_y = damping
+            bpy.context.object.rigid_body_constraint.use_spring_y = True
+        except RuntimeError:
+            log("No Blender Rigid Body World present, only adding custom properties.", 'ERROR')
+
 
 
 def getJointType(joint):
@@ -526,13 +629,12 @@ def set_planar(joint):
     crot.owner_space = 'LOCAL'
 
 
-def set_ball(joint):
+def set_ball(joint, limit):
     """
 
     Args:
       joint:
-      lower:
-      upper:
+      limit:
 
     Returns:
 
@@ -550,5 +652,223 @@ def set_ball(joint):
     # fix rotation x, z
     bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
     crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.use_limit_x = True
+    crot.min_x = -limit
+    crot.max_x = limit
+    crot.use_limit_z = True
+    crot.min_z = -limit
+    crot.max_z = limit
     crot.owner_space = 'LOCAL'
 
+
+def set_universal(joint, lower, upper, lower2, upper2):
+    """
+
+    Args:
+      upper2:
+      lower2:
+      upper:
+      lower:
+      joint:
+
+    Returns:
+
+    """
+    # fix location
+    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+    cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
+    cloc.use_min_x = True
+    cloc.use_min_y = True
+    cloc.use_min_z = True
+    cloc.use_max_x = True
+    cloc.use_max_y = True
+    cloc.use_max_z = True
+    cloc.owner_space = 'LOCAL'
+    # fix rotation x, z
+    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+    crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.use_limit_x = True
+    crot.min_x = lower
+    crot.max_x = upper
+    crot.use_limit_z = True
+    crot.min_z = lower2
+    crot.max_z = upper2
+    crot.owner_space = 'LOCAL'
+
+
+def remove_screwdrivers(joint):
+    """
+    Delete all drivers phobos created on a given joint
+    Args:
+        joint:
+
+    Returns:
+
+    """
+    bone = joint.pose.bones[0]
+    if joint.animation_data is not None and joint.animation_data.drivers is not None:
+        for fcurve in joint.animation_data.drivers:
+            if fcurve.data_path == f'pose.bones["{bone.name}"].rotation_euler':
+                if fcurve.driver.variables[0].name.startswith("phobos"):
+                    joint.animation_data.drivers.remove(fcurve)
+                else:
+                    # TODO This is not our driver, it could interfere with our drivers
+                    pass
+
+
+def set_screw(joint, lower, upper, axis, pitch):
+    """
+
+    Args:
+      pitch: Meters traveled per revolution
+      joint:
+      lower:
+      upper:
+      axis:
+
+    Returns:
+
+    """
+
+    # fix location except for y-axis
+    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+    cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
+    cloc.use_min_x = True
+    cloc.use_min_z = True
+    cloc.use_max_x = True
+    cloc.use_max_z = True
+    if lower == upper:
+        cloc.use_min_y = False
+        cloc.use_max_y = False
+    else:
+        cloc.use_min_y = True
+        cloc.use_max_y = True
+        cloc.min_y = lower
+        cloc.max_y = upper
+    cloc.owner_space = 'LOCAL'
+    # fix rotation
+    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+    crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.use_limit_x = True
+    crot.min_x = 0
+    crot.max_x = 0
+    crot.use_limit_y = False
+    crot.min_y = 0
+    crot.max_y = 0
+    crot.use_limit_z = True
+    crot.min_z = 0
+    crot.max_z = 0
+    crot.owner_space = 'LOCAL'
+
+    bone = joint.pose.bones[0]
+    bone.rotation_mode = 'XYZ'
+
+    if axis:
+        # add screwdriver
+        axisName = ["x", "y", "z"]
+        maxValue = 0
+        maxIndex = 0
+        for index, value in enumerate(axis):
+            if value > maxValue:
+                maxValue = value
+                maxIndex = index
+        rotationExpression = f"phobosvar * {2 * math.pi / (maxValue * pitch)}"
+        fcurve = bone.driver_add("rotation_euler", 1)
+        driver = fcurve.driver
+
+        variable = driver.variables.new()
+        variable.name = "phobosvar"
+        variable.type = "TRANSFORMS"
+        target = variable.targets[0]
+        target.id = joint
+        target.bone_target = "Bone"
+        target.transform_type = f'LOC_{axisName[maxIndex].upper()}'
+
+        driver.expression = rotationExpression
+
+
+def set_gearbox(joint, axis, axis2, ratio):
+    """
+
+    Args:
+      joint:
+
+    Returns:
+
+    """
+    # fix location
+    bpy.ops.pose.constraint_add(type='LIMIT_LOCATION')
+    cloc = getJointConstraint(joint, 'LIMIT_LOCATION')
+    cloc.use_min_x = True
+    cloc.use_min_y = True
+    cloc.use_min_z = True
+    cloc.use_max_x = True
+    cloc.use_max_y = True
+    cloc.use_max_z = True
+    cloc.owner_space = 'LOCAL'
+    # free rotation
+    bpy.ops.pose.constraint_add(type='LIMIT_ROTATION')
+    crot = getJointConstraint(joint, 'LIMIT_ROTATION')
+    crot.owner_space = 'LOCAL'
+
+    bone = joint.pose.bones[0]
+    bone.rotation_mode = 'XYZ'
+
+    # TODO create gearbox drivers, the code below might help
+
+    """
+    
+    if axis is not None:
+        # add driver
+
+        x, y, z = axis  # parent
+        vx, vy, vz = "phobosX", "phobosY", "phobosZ"
+        xreq, yreq, zreq = x != 0, y != 0, z != 0  # value required?
+        xexp, yexp, zexp = f"{x}*{vx}", f"{y}*{vy}", f"{z}*{vz}"  # value expression
+
+        exps = []  # added expressions
+        if xreq:
+            exps.append(xexp)
+        if yreq:
+            exps.append(yexp)
+        if zreq:
+            exps.append(zexp)
+        exp = "+".join(exps)
+
+        input = f"{ratio} * ({exp})"
+        parent = sUtils.getEffectiveParent(joint)
+
+        for index, value in enumerate(axis2):
+            if value != 0:
+                fcurve = bone.driver_add("rotation_euler", index)
+                driver = fcurve.driver
+
+                if xreq:
+                    variable = driver.variables.new()
+                    variable.name = "phobosX"
+                    variable.type = "TRANSFORMS"
+                    target = variable.targets[0]
+                    target.id = parent
+                    target.bone_target = "Bone"
+                    target.transform_type = 'ROT_X'
+
+                if yreq:
+                    variable = driver.variables.new()
+                    variable.name = "phobosY"
+                    variable.type = "TRANSFORMS"
+                    target = variable.targets[0]
+                    target.id = parent
+                    target.bone_target = "Bone"
+                    target.transform_type = 'ROT_Y'
+
+                if zreq:
+                    variable = driver.variables.new()
+                    variable.name = "phobosZ"
+                    variable.type = "TRANSFORMS"
+                    target = variable.targets[0]
+                    target.id = parent
+                    target.bone_target = "Bone"
+                    target.transform_type = 'ROT_Z'
+
+                driver.expression = f"{value} * {input}"
+    """

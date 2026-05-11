@@ -66,16 +66,28 @@ def deriveMaterial(mat, logging=False, errors=None):
                 diffuseTexture = representation.Texture(image=tex.image)
             elif tex.outputs["Color"].links[0].to_socket.node.name == "Normal Map" and tex.image is not None:
                 normalTexture = representation.Texture(image=tex.image)
+        # A new file handler API was introduced in Blender 4.1
+        b41Export = bpy.app.version[0] == 4 and bpy.app.version[1] >= 1
         if "Specular BSDF" in mat.node_tree.nodes.keys():
             diffuse_color = mat.node_tree.nodes["Specular BSDF"].inputs["Base Color"].default_value
-            specular_color = mat.node_tree.nodes["Specular BSDF"].inputs["Specular"].default_value
-            emissive = mat.node_tree.nodes["Specular BSDF"].inputs["Emissive Color"].default_value
+            if b41Export:
+                specular_color = mat.node_tree.nodes["Specular BSDF"].inputs["Specular Tint"].default_value
+                emissive = mat.node_tree.nodes["Specular BSDF"].inputs["Emission Color"].default_value
+            else:
+                specular_color = mat.node_tree.nodes["Specular BSDF"].inputs["Specular"].default_value
+                emissive = mat.node_tree.nodes["Specular BSDF"].inputs["Emissive Color"].default_value
             shininess = 1-mat.node_tree.nodes["Specular BSDF"].inputs["Roughness"].default_value
             transparency = mat.node_tree.nodes["Specular BSDF"].inputs["Transparency"].default_value
         elif "Principled BSDF" in mat.node_tree.nodes.keys():
             diffuse_color = mat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value
-            specular_color = np.array(diffuse_color) * mat.node_tree.nodes["Principled BSDF"].inputs["Specular"].default_value
-            emissive = np.array(mat.node_tree.nodes["Principled BSDF"].inputs["Emission"].default_value)
+            if b41Export:
+                specular_color = np.array(diffuse_color) * mat.node_tree.nodes["Principled BSDF"].inputs[
+                    "Specular Tint"].default_value
+                emissive = np.array(mat.node_tree.nodes["Principled BSDF"].inputs["Emission Color"].default_value)
+            else:
+                specular_color = np.array(diffuse_color) * mat.node_tree.nodes["Principled BSDF"].inputs[
+                    "Specular"].default_value
+                emissive = np.array(mat.node_tree.nodes["Principled BSDF"].inputs["Emission"].default_value)
             shininess = 1-mat.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value
             transparency = 1-mat.node_tree.nodes["Principled BSDF"].inputs["Alpha"].default_value
     if diffuse_color is None:
@@ -119,7 +131,7 @@ def deriveGeometry(obj, duplicate_mesh=False, fast_init=True, **kwargs):
     elif gtype == 'mesh':
         blender_mesh = obj.data.copy() if duplicate_mesh else obj.data
         return representation.Mesh(
-            scale=list(obj.matrix_world.to_scale()),
+            scale=list(obj.scale),
             mesh=blender_mesh,
             meshname=blender_mesh.name,
             fast_init=fast_init
@@ -430,11 +442,19 @@ def deriveLink(obj, objectlist=None, logging=True, errors=None):
                     annotations[k1] = {}
                 annotations[k1][k2] = v
 
+    root = obj
+    while sUtils.getEffectiveParent(root) is not None:
+        root = sUtils.getEffectiveParent(root)
+
+    # Exporting pose relative to root link because gazebo 9 ignores relative_to attribute
+    # Remove origin_root in a future update
+
     return representation.Link(
         name=obj.get("link/name", obj.name),  # this is for backwards compatibility normally the linkname should be the object name
         visuals=visuals,
         collisions=collisions,
         inertial=inertial,
+        origin_root=deriveObjectPose(obj, effectiveparent=root),
         # [TODO v2.1.0] Add KCCD support
         kccd_hull=None,
         **annotations
@@ -473,12 +493,16 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
         ErrorMessageWithBox(msg)
         raise KeyError("joint/type: "+msg)
 
+    axis = list(values.get("joint/axis")) if "joint/axis" in values else None
+    axis2 = list(values.get("joint/axis2")) if "joint/axis2" in values else None
+
     return representation.Joint(
         name=values.get("joint/name", obj.name),
         parent=parent.get("link/name", parent.name),  # backwards compatibility
         child=obj.get("link/name", obj.name),  # backwards compatibility
         joint_type=values["joint/type"],
-        axis=list(values.get("joint/axis", [0, 0, 1])) if values["joint/type"] in ["revolute", "prismatic", "continuous"] else None,
+        axis=axis,
+        axis2=axis2,
         origin=deriveObjectPose(obj),
         limit=representation.JointLimit(
             effort=values.get("joint/limits/effort", None),
@@ -486,6 +510,12 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
             lower=values.get("joint/limits/lower", None),
             upper=values.get("joint/limits/upper", None)
         ) if any([k.startswith("joint/limits/") for k in values.keys()]) else None,
+        limit2=representation.JointLimit(
+            effort=values.get("joint/limits/effort", None),
+            velocity=values.get("joint/limits/velocity", None),
+            lower=values.get("joint/limits/lower2", None),
+            upper=values.get("joint/limits/upper2", None)
+        ) if "joint/limits/lower2" in values or "joint/limits/upper2" in values else None,
         dynamics=representation.JointDynamics(
             damping=values.get("joint/dynamics/damping", None),
             friction=values.get("joint/dynamics/friction", None),
@@ -498,7 +528,10 @@ def deriveJoint(obj, logging=False, adjust=False, errors=None):
             multiplier=values["joint/mimic/multiplier"],
             offset=values["joint/mimic/offset"]
         ) if "joint/mimic/joint" in values.keys() else None,
-        motor=values.get("motor/name", None)
+        motor=values.get("motor/name", None),
+        gearbox_ratio=values.get("joint/gearbox/ratio", None),
+        gearbox_reference_body=values.get("joint/gearbox/reference_body", None),
+        screw_thread_pitch=values.get("joint/screw/thread_pitch", None),
     )
 
 

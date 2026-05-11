@@ -16,10 +16,10 @@ log = get_logger(__name__)
 
 class SMURFRobot(XMLRobot):
     def __init__(self, name=None, xmlfile=None, submechanisms_file=None, smurffile=None, verify_meshes_on_import=True,
-                 inputfile=None, description=None, autogenerate_submechanisms=None, is_human=False, shallow=False):
+                 inputfile=None, description=None, autogenerate_submechanisms=None, is_human=False, shallow=False, **kwargs):
         self.smurf_annotation_keys = [
             'motors', 'sensors', 'materials', "joints", "links", 'collisions', 'visuals', 'poses',
-            "submechanisms", "exoskeletons", "interfaces"
+            "submechanisms", "exoskeletons", "interfaces", "submodels"
         ]
 
         self.name = name
@@ -63,28 +63,34 @@ class SMURFRobot(XMLRobot):
                     if len(smurffiles) == 1:
                         smurffile = os.path.join(inputfile, "smurf", smurffiles[0])
                         log.info(f"Found smurf directory with {smurffile} in the input directory!")
+                    else:
+                        raise ValueError(f"Found multiple smurf files can't decide which one to take: {smurffiles}")
                 elif "urdf" in content:
                     urdffiles = [f for f in os.listdir(os.path.join(inputfile, "urdf")) if f.endswith("urdf")]
                     if len(urdffiles) == 1:
                         xmlfile = os.path.join(inputfile, "urdf", urdffiles[0])
                         log.info(f"Found urdf directory with {xmlfile} in the input directory!")
+                    else:
+                        raise ValueError(f"Found multiple urdf files can't decide which one to take: {urdffiles}")
                 elif "sdf" in content:
                     sdffiles = [f for f in os.listdir(os.path.join(inputfile, "sdf")) if f.endswith("sdf")]
                     if len(sdffiles) == 1:
                         xmlfile = os.path.join(inputfile, "sdf", sdffiles[0])
                         log.info(f"Found sdf directory with {xmlfile} in the input directory!")
+                    else:
+                        raise ValueError(f"Found multiple sdf files can't decide which one to take: {sdffiles}")
                 elif any([f for f in relevant_files if f.endswith(".urdf")]) == 1:
                     xmlfile = os.path.join(inputfile, [f for f in relevant_files if f.endswith("urdf")][0])
                     log.info(f"Found urdf file {xmlfile} in the input directory!")
                 elif any([f for f in relevant_files if f.endswith(".sdf")]) == 1:
                     xmlfile = os.path.join(inputfile, [f for f in relevant_files if f.endswith("sdf")][0])
                     log.info(f"Found sdf file {xmlfile} in the input directory!")
-                if inputfile is None:
-                    raise ValueError("Couldn't find a valid input file in the given directory!")
+                else:
+                    raise ValueError("Couldn't find a valid input file in the given directory!", content)
             else:
                 raise ValueError("Can't parse robot from: "+inputfile + ("(can't parse)" if os.path.exists(inputfile) else "(not found)"))
 
-        super(SMURFRobot, self).__init__(is_human=is_human)
+        super(SMURFRobot, self).__init__(is_human=is_human, **kwargs)
         self.xmlfile = misc.sys_path(xmlfile)
         self.smurffile = misc.sys_path(smurffile)
         self.submechanisms_file = misc.sys_path(submechanisms_file)
@@ -98,7 +104,8 @@ class SMURFRobot(XMLRobot):
             base_robot = parse_xml(self.xmlfile)
             assert type(base_robot) == XMLRobot, f"{type(base_robot)}"
             for k, v in base_robot.__dict__.items():
-                setattr(self, k, v)
+                if not getattr(self, k, None):
+                    setattr(self, k, v)
 
         self.description = "" if description is None else description
 
@@ -158,6 +165,7 @@ class SMURFRobot(XMLRobot):
                 smurf_dict = load_json(stream)
                 self.name = smurf_dict['modelname']
                 self.inputfiles = smurf_dict['files']
+                self.version = smurf_dict.get('version', None)
 
                 # Process the file to get the absolute path
                 for i, f in enumerate(self.inputfiles):
@@ -293,6 +301,16 @@ class SMURFRobot(XMLRobot):
                     log.debug(f"But there are: {[str(v) for v in self.visuals]}")
 
         if 'collisions' in self.annotations:
+            # Ignore the primitive collisions as they shoudl be existent in smurf
+            primitives = []
+            for coll in self.collisions:
+                if "primitive_collision" in coll.name:
+                    primitives.append(coll)
+            for p in primitives:
+                link = self.get_link(p.link)
+                if p in link._collisions:
+                    link._collisions.remove(p)
+            # now parse what's in smurf
             for collision in self.annotations['collisions']:
                 coll_instance = self.get_collision_by_name(collision['name'])
                 if coll_instance is not None:
@@ -303,8 +321,22 @@ class SMURFRobot(XMLRobot):
                         collision.pop("geometry")
                     coll_instance.add_annotations(overwrite=False, **collision)
                 else:
-                    log.error(f"There is no collision with name {collision['name']} in this robot.")
-                    log.debug(f"But there are: {[str(c) for c in self.collisions]}")
+                    assert "link" in collision
+                    link = self.get_link(collision["link"], verbose=True)
+                    assert link is not None
+                    if "joint_relative_origin" in collision:
+                        collision.pop("joint_relative_origin")
+                    if "origin" in collision:
+                        origin = collision.pop("origin")
+                        origin = representation.Pose(**origin)
+                    try:
+                        if "geometry" in collision:
+                            collision["geometry"]["mesh_format"] = self.get_used_mesh_formats()[0]
+                        link.collisions += [representation.Collision(origin=origin, _smurffile=self.smurffile, **collision)]
+                        # TODO: It might be a good idea to check whether all primitives are really employed by the smurf before discarding them
+                    except Exception as e:
+                        print(collision)
+                        raise e
 
         if 'submechanisms' in self.annotations:
             for submech in self.annotations['submechanisms']:
@@ -329,10 +361,15 @@ class SMURFRobot(XMLRobot):
                     representation.Interface(**interf)
                 )
 
+        if 'submodels' in self.annotations:
+            self.submodel_defs = self.annotations["submodels"]
+
         # [TODO v2.1.0] Check how we can store which properties are defined by which literals to reload them properly from file
         pop_annotations = []
         for k, v in self.annotations.items():
-            if k not in self.smurf_annotation_keys:
+            if k == "_autogenerated":
+                pop_annotations.append(k)
+            elif k not in self.smurf_annotation_keys:
                 pop_annotations.append(k)
                 log.info(f"Adding generic annotation of category {k}")
                 if type(v) == list:
@@ -448,7 +485,10 @@ class SMURFRobot(XMLRobot):
         no_problems = True
         for link in self.links:
             for vc in link.collisions + link.visuals:
-                no_problems &= not isinstance(vc.geometry, representation.Mesh) or not vc.geometry.available()
+                if isinstance(vc.geometry, representation.Mesh):
+                    no_problems &= vc.geometry.available()
+                # else:
+                #     no_problems &= vc.primitives is not None or vc.geometry is not None
         return no_problems
 
     # [ToDo v2.1.0] Support here all powers of GenericAnnotation

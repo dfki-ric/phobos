@@ -309,7 +309,6 @@ class DynamicProperty(PropertyGroup):
         else:
             row = layout
 
-        self.deleteOption = True
         if self.deleteOption:
             line = layout.split(factor=0.9)
             row = line.row()
@@ -771,6 +770,7 @@ class AnnotationsOperator(bpy.types.Operator):
             if newName and self.getPropertyByName(newName, self.add_property_root) is None:
                 new_prop = self.custom_properties.add()
                 new_prop.valueType = ID
+                new_prop.deleteOption = True
                 if not self.rootType() == list:
                     new_prop.name = newName
                 # Assign dict

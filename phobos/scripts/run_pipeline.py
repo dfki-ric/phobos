@@ -20,6 +20,7 @@ def main(args):
 
     parser = argparse.ArgumentParser(description=INFO, prog="phobos "+os.path.basename(__file__)[:-3])
     parser.add_argument('config_file', type=str, help='Path to the pipeline configfile', default="pipeline.yml")
+    parser.add_argument('-m', '--model_file', type=str, help='Path to the model definition to process', default=None)
     parser.add_argument('-p', '--process', help='Process Models', action='store_true', default=False)
     parser.add_argument('-t', '--test', help='Test Models', action='store_true', default=False)
     parser.add_argument('-d', '--deploy', help='Deploy Models (This is made for usage in the phobos-CI-docker rather than local/manual usage)', action='store_true', default=False)
@@ -38,7 +39,7 @@ def main(args):
     if any([args.process, args.test, args.deploy, args.verify]) is True:
         if os.path.isfile(args.config_file):
             from phobos.ci.pipeline import Pipeline
-            pipeline = Pipeline(args.config_file, processed_model_exists=not args.process)
+            pipeline = Pipeline(args.config_file, model_file=args.model_file, processed_model_exists=not args.process)
         else:
             raise FileNotFoundError("Config file not found!")
 

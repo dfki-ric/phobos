@@ -26,7 +26,7 @@ def get_vertex_id(x, vertices):
     ).nonzero()[0][0]
 
 
-def create_box(mesh, oriented=True, scale=1.0):
+def create_box(mesh, oriented=False, scale=1.0):
     """
     Create a box element.
     """
@@ -53,7 +53,7 @@ def create_box(mesh, oriented=True, scale=1.0):
     else:
         raise ValueError(f"Received {type(mesh)}")
 
-    return representation.Box(size=extent), transform
+    return representation.Box(size=extent, origin=None), transform
 
 
 def create_sphere(mesh, scale=1.0):
@@ -64,7 +64,7 @@ def create_sphere(mesh, scale=1.0):
     if isinstance(mesh, trimesh.Trimesh) or isinstance(mesh, trimesh.Scene):
         # scale the mesh
         mesh = deepcopy(mesh)
-        mesh.apply_transform(np.diag(scale + [1]))
+        #mesh.apply_transform(np.diag(scale + [1]))
         half_ext = mesh.bounding_box.extents
         transform = mesh.bounding_box.primitive.transform
     elif BPY_AVAILABLE and isinstance(mesh, bpy.types.Object):
@@ -78,7 +78,7 @@ def create_sphere(mesh, scale=1.0):
 
     r = np.sqrt(half_ext[0]**2 + half_ext[1]**2 + half_ext[2]**2)
 
-    return representation.Sphere(radius=r * 0.5), transform
+    return representation.Sphere(radius=r * 0.5, origin=None), transform
 
 
 def create_cylinder(mesh, scale=1.0):
@@ -90,20 +90,14 @@ def create_cylinder(mesh, scale=1.0):
     if isinstance(mesh, trimesh.Trimesh) or isinstance(mesh, trimesh.Scene):
         # scale the mesh
         mesh = deepcopy(mesh)
-        mesh.apply_transform(np.diag(scale + [1]))
+        #mesh.apply_transform(np.diag(scale + [1]))
         c = mesh.bounding_cylinder
         transform = mesh.bounding_cylinder.primitive.transform
         # Find the length and the axis
-        axis = mesh.bounding_cylinder.direction
-        orthogonal = np.array(axis)
-        if axis[0] != 0.0:
-            orthogonal[0] = -axis[0]
-        elif axis[1] != 0.0:
-            orthogonal[1] = -axis[1]
-        elif axis[2] != 0.0:
-            orthogonal[2] = -axis[2]
+        axis = c.direction
+        orthogonal = np.array([axis[1], axis[2], axis[0]])
         length = np.abs(c.direction).dot(c.extents)
-        diameter = np.cross(axis, orthogonal).dot(c.extents)
+        diameter = np.abs(np.cross(axis, orthogonal).dot(c.extents))
     elif BPY_AVAILABLE:
         bound_box = np.array(mesh.bound_box) * np.array(scale)
         extent = (np.max(bound_box, axis=0) - np.min(bound_box, axis=0))
@@ -120,7 +114,7 @@ def create_cylinder(mesh, scale=1.0):
     else:
         raise ValueError(f"Received {type(mesh)}")
 
-    return representation.Cylinder(radius=diameter/2, length=length), transform
+    return representation.Cylinder(radius=diameter/2, length=length, origin=None), transform
 
 
 def get_reflection_matrix(point=np.array((0, 0, 0)), normal=np.array((0, 1, 0))):
@@ -128,23 +122,34 @@ def get_reflection_matrix(point=np.array((0, 0, 0)), normal=np.array((0, 1, 0)))
 
 
 def improve_mesh(mesh):
+    v = len(mesh.vertices)
+    f = len(mesh.faces)
     mesh.fix_normals()
     mesh.fill_holes()
     mesh.merge_vertices()
     mesh.remove_duplicate_faces()
     mesh.remove_infinite_values()
     mesh.remove_unreferenced_vertices()
+    v_ = len(mesh.vertices)
+    f_ = len(mesh.faces)
+    log.info(f"Improved mesh: {f} -> {f_} ({np.round(1000 * f_ / f) / 10}%) faces, {v} -> {v_} ({np.round(1000 * v_ / v) / 10}%) vertices")
     return mesh
 
 
-def reduce_mesh(mesh, factor):
-    mesh = improve_mesh(mesh)
-    n = np.ceil(factor * len(mesh.faces))
-    out = mesh.simplify_quadratic_decimation(n)
+def reduce_mesh(mesh, factor, max_faces=None, min_faces=None):
     v = len(mesh.vertices)
-    v_ = len(out.vertices)
     f = len(mesh.faces)
+    out = improve_mesh(deepcopy(mesh))
+    n = np.ceil(factor * len(out.faces))
+    if max_faces:
+        n = min(n, max_faces)
+    if min_faces and min_faces:
+        n = max(n, min_faces)
+    if n < len(out.faces):
+        out = out.simplify_quadratic_decimation(n)
+    v_ = len(out.vertices)
     f_ = len(out.faces)
+    out = improve_mesh(out)
     log.info(f"Reduced {f} -> {f_} ({np.round(1000 * f_ / f) / 10}%) faces and {v} -> {v_} ({np.round(1000 * v_ / v) / 10}%) vertices")
     return out
 

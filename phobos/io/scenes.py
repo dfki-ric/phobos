@@ -44,17 +44,6 @@ class Physics(Representation, SmurfBase):
         super(Physics, self).__init__(ode=ode, gravity=gravity)
 
 
-class Frame(Representation):
-    _class_variables = ["name", "attached_to", "origin"]
-    _type_dict = {"attached_to": "frames"}
-
-    def __init__(self, name=None, attached_to=None, origin=None):
-        super(Frame, self).__init__()
-        self.name = name
-        self.attached_to = attached_to
-        self.origin = origin
-
-
 # [TODO v2.1.0] Add SDF-/MARS-Scene support
 class Environment(Representation, SmurfBase):
     def __init__(self):

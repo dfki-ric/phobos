@@ -320,7 +320,10 @@ def selectObjects(objects, clear=True, active=-1):
     if clear:
         bpy.ops.object.select_all(action='DESELECT')
     for obj in objects:
-        obj.select_set(True)
+        try:
+            obj.select_set(True)
+        except RuntimeError:  # Skip objects that are not in a view layer (joints)
+            pass
     if active >= 0:
         bpy.context.view_layer.objects.active = objects[active]
 

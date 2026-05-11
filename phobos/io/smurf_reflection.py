@@ -51,7 +51,7 @@ class SmurfBase(YamlReflection):
                 continue
             # The object has to know which properties to export, this is done via
             self.returns.append(category)
-            if overwrite or getattr(self, category, None) is None:
+            if overwrite or not getattr(self, category, None):
                 if category in self.type_dict.keys():
                     if type(information) == list:
                         information = [x if type(x) == str else str(x) for x in information]

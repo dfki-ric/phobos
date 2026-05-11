@@ -62,6 +62,36 @@ def getBlenderVersion():
     return bpy.app.version[0] * 100 + bpy.app.version[1]
 
 
+def blenderVersionIsAtLeast(required_version: tuple) -> bool:
+    """
+    Check if the current Blender version is greater than or equal to a given version.
+
+    Args:
+        required_version (tuple): Version you want to check against.
+                                  Example: (4, 0) or (3, 6, 2)
+
+    Returns:
+        bool: True if the current Blender version >= required_version, False otherwise.
+    """
+    current_version = bpy.app.version
+
+    for blender_v, required_v in zip(current_version, required_version):
+        if blender_v > required_v:
+            log(f"Current version {current_version} > {required_version}", "DEBUG")
+            return True
+        if blender_v < required_v:
+            log(f"Current version {current_version} < {required_version}", "DEBUG")
+            return False
+
+    # If we get here, all compared numbers are equal
+    if len(current_version) >= len(required_version):
+        log(f"Current version {current_version} >= {required_version}", "DEBUG")
+        return True  # current_version is equal or has more patch info
+    else:
+        log(f"Could not parse version provided to blenderVersionIsAtLeast: {required_version}", "ERROR")
+        return False
+
+
 def getPhobosPreferences():
     """TODO Missing documentation"""
     return bpy.context.preferences.addons["phobos"].preferences
