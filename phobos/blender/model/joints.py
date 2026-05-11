@@ -206,8 +206,6 @@ def setJointConstraints(
     # set constraints accordingly
     joint['joint/limits/lower'] = lower
     joint['joint/limits/upper'] = upper
-    joint.data.bones.active = joint.pose.bones[0].bone
-    joint.data.bones.active.select = True
     if jointtype == 'revolute':
         set_revolute(joint, lower, upper)
     elif jointtype == 'continuous':

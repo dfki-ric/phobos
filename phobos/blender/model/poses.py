@@ -123,7 +123,7 @@ def storePose(root, posename):
 
     """
     if not posename:
-        log("No pose name given", "WARN")
+        log("No pose name given", "WARNING")
         return
     if root:
         links = sUtils.getChildren(root, ('link',), True, False)
@@ -159,10 +159,10 @@ def loadPose(modelname, posename):
 
     """
     if not modelname:
-        log("No model name given", "WARN")
+        log("No model name given", "WARNING")
         return
     if not posename:
-        log("No pose name given", "WARN")
+        log("No pose name given", "WARNING")
         return
     root = sUtils.getModelRoot(modelname)
     if not root:
@@ -204,10 +204,10 @@ def deletePose(modelname, posename):
 
     """
     if not modelname:
-        log("No model name given", "WARN")
+        log("No model name given", "WARNING")
         return
     if not posename:
-        log("No pose name given", "WARN")
+        log("No pose name given", "WARNING")
         return
     root = sUtils.getModelRoot(modelname)
     if not root:
@@ -241,7 +241,7 @@ def getPoses(modelname):
 
     """
     if not modelname:
-        log("No model name given", "WARN")
+        log("No model name given", "WARNING")
         return
     root = sUtils.getModelRoot(modelname)
     if not root:

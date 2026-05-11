@@ -101,7 +101,13 @@ def log(message, level="INFO", prefix="", guionly=False, logfile=True, end='\n')
         prefs.logtofile = False
         prefs.logtoterminal = True
 
-    if LOGLEVELS.index(level) > LOGLEVELS.index(prefs.loglevel):
+    try:
+        level_index = LOGLEVELS.index(level)
+    except ValueError:
+        print(f"Phobos internal log error: Invalid log level '{level}' used. Defaulting to INFO.")
+        level_index = LOGLEVELS.index('INFO')
+
+    if level_index > LOGLEVELS.index(prefs.loglevel):
         return
 
     date = datetime.now().strftime("%Y%m%d_%H:%M:%S")

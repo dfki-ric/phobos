@@ -53,11 +53,6 @@ class ModelPoseProp(bpy.types.PropertyGroup):
     preview : StringProperty()
 
 
-def set_loglevel(self, level):
-    setup_logger_level(LOGLEVELS[level] if level != LOGLEVELS.index("NONE") else 1)
-    self["loglevel"] = level
-
-
 def get_username():
     try:
         user = os.getlogin()
@@ -78,6 +73,16 @@ class PhobosPrefs(AddonPreferences):
 
     bl_idname = "phobos"
 
+    # Handler functions for the loglevel property
+    def set_loglevel(self, value):
+        """Setter for the loglevel EnumProperty. Updates the storage and the logger."""
+        self.loglevel_storage = value
+        setup_logger_level(LOGLEVELS[value] if value != LOGLEVELS.index("NONE") else 1)
+
+    def get_loglevel(self):
+        """Getter for the loglevel EnumProperty. Reads from the storage."""
+        return self.loglevel_storage
+
     modelsfolder: StringProperty(name="modelsfolder", subtype="DIR_PATH",
                                  default=os.path.expanduser(os.path.join("~", "phobos-models")))
 
@@ -97,9 +102,19 @@ class PhobosPrefs(AddonPreferences):
 
     logfile : StringProperty(name="logfile", subtype="FILE_PATH", default=".")
 
+    # Storage property for the loglevel enum index. Must not start with an underscore.
+    loglevel_storage : IntProperty(
+        name="Loglevel Storage",
+        default=LOGLEVELS.index("WARNING")
+    )
+
+    # The EnumProperty visible in the UI, using get/set to access the storage property
     loglevel : EnumProperty(
-        name="loglevel", items=tuple(((l,) * 3 for l in LOGLEVELS)), default="WARNING",
-        set=set_loglevel, get=lambda self: self["loglevel"] if "loglevel" in self else LOGLEVELS.index("WARNING")
+        name="loglevel",
+        items=tuple(((l,) * 3 for l in LOGLEVELS)),
+        description="Set the logging level for Phobos.",
+        get=get_loglevel,
+        set=set_loglevel
     )
 
     logtofile : BoolProperty(name="logtofile", default=False)

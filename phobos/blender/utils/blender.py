@@ -395,10 +395,20 @@ def createPreview(objects, export_path, modelname, render_resolution=256, opengl
         light = bpy.context.active_object
         light.matrix_world = cam.matrix_world
         # set background
-        oldcolor = bpy.data.worlds['World'].node_tree.nodes['Background'].inputs[0].default_value[:3]
-        bpy.data.worlds['World'].node_tree.nodes['Background'].inputs[0].default_value[:3] = (1,1,1)
+        world = bpy.data.worlds.get('World')
+        background_node = None
+        if world and world.node_tree:
+            background_node = world.node_tree.nodes.get('Background')
+
+        oldcolor = None
+        if background_node:
+            oldcolor = background_node.inputs[0].default_value[:3]
+            background_node.inputs[0].default_value = (1.0, 1.0, 1.0, 1.0)
+
         bpy.ops.render.render()
-        bpy.data.worlds['World'].node_tree.nodes['Background'].inputs[0].default_value[:3] = oldcolor
+
+        if background_node and oldcolor is not None:
+            background_node.inputs[0].default_value[:3] = oldcolor
         sUtils.selectObjects([cam, light], True, 0)
         bpy.ops.object.delete()
 
