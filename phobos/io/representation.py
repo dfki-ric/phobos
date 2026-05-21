@@ -21,11 +21,11 @@ from ..utils import misc, git, transform
 from ..utils.transform import inv
 from ..utils.xml import read_relative_filename
 from .. import defs as phobos_defs
-from ..blender.utils.blender import blenderVersionIsAtLeast
 
 MESH_INFO_KEYS = ["vertex_normals", "texture_coords", "vertices", "faces"]
 MESH_DATA_TYPES = ["trimesh.base.Trimesh", "trimesh.scene.scene.Scene", "file_obj", "file_stl", "file_dae", "file_iv"]
 if BPY_AVAILABLE:
+    from ..blender.utils.blender import blenderVersionIsAtLeast
     import bpy
 
     def _bpy_mesh_dc(inst, memo={}):
@@ -1052,8 +1052,8 @@ class Mesh(Representation, SmurfBase):
             return
         # export for blender
         # A new file handler API was introduced in Blender 4.1
-        b41Export = blenderVersionIsAtLeast((4,1))
         if BPY_AVAILABLE and isinstance(self.mesh_object, bpy.types.Mesh):
+            b41Export = blenderVersionIsAtLeast((4,1))
             from ..blender.utils import blender as bUtils
             objname = "tmp_export_"+self.unique_name
             tmpobject = bUtils.createPrimitive(objname, 'box', (1.0, 1.0, 1.0))
