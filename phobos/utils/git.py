@@ -2,13 +2,26 @@ import os
 
 from . import misc
 from .misc import execute_shell_command
+from ..defs import load_json
 from ..commandline_logging import get_logger
 
 log = get_logger(__name__)
 
+GIT_C_OPTION = ""
+RUNNING_FOR_AZURE = os.getenv("RUNNING_FOR_AZURE", False)
+if bool(os.getenv("SET_GIT_HTTP_EXTRAHEADER_FOR_AZURE", 0)):
+    RUNNING_FOR_AZURE = True
+    # than we are running an azure agent for whom we need
+    GIT_C_OPTION = "-c http.extraheader=\"AUTHORIZATION: bearer ${SYSTEM_ACCESSTOKEN}\""
+
+GIT_SUCCESS_BRANCH = os.getenv("GIT_SUCCESS_BRANCH", "master")
+GIT_PRODUCTION_BRANCH = os.getenv("GIT_PRODUCTION_BRANCH", GIT_SUCCESS_BRANCH)
+GIT_FAILURE_BRANCH = os.getenv("GIT_FAILURE_BRANCH", "$CI_UPDATE_TARGET_BRANCH")
+GIT_REMOTE_NAME = os.getenv("GIT_REMOTE_NAME", "autobuild")
+
 
 class MergeRequest(object):
-    target = "master"
+    target = GIT_SUCCESS_BRANCH
     title = ""
     description = ""
     mention = ""
@@ -24,7 +37,7 @@ class MergeRequest(object):
         options = " -o merge_request.create"
         options += " -o merge_request.target='" + self.target + "'"
         options += " -o merge_request.title='" + self.title + "'"
-        options += " -o merge_request.description='" + self.mention + " " + self.description + "<br/>" + self._tag + "'"
+        options += " -o merge_request.description='" + self.mention + " " + self.description.replace("'", "\"") + "<br/>" + self._tag + "'"
         if len(self.mention.strip().strip("@").split()) != 0:
             options += " -o merge_request.assign='" + self.mention.strip().strip("@").split()[0] + "'"
         return options
@@ -39,12 +52,12 @@ def get_root(cwd):
 
 
 def clone(repo, target, branch=None, cwd=None, recursive=False, ignore_failure=False, commit_id=None,
-          shallow=1, pipeline=None):
+          shallow=1, pipeline=None, recreate=False, remote=GIT_REMOTE_NAME, all_branches=False):
     execute_shell_command("git lfs install || true", cwd)
-    if os.path.exists(target):
+    if os.path.exists(target) and recreate:
         log.info(f"Deleting {pipeline.relpath(target) if pipeline is not None else target}")
         os.system("rm -rf {}".format(target))
-    cmd = "git clone"
+    cmd = "git "+GIT_C_OPTION+" clone -o "+remote
     if branch is not None:
         cmd += " -b " + branch
     if recursive:
@@ -53,6 +66,8 @@ def clone(repo, target, branch=None, cwd=None, recursive=False, ignore_failure=F
         cmd += " --depth " + str(shallow) + " "
         if recursive:
             cmd += " --shallow-submodules "
+        if all_branches:
+            cmd += " --no-single-branch "
     cmd += " " + repo + " " + target  # not loading with --recursive as we don't need the meshes submodule
     if cwd is None and pipeline is not None:
         cwd = pipeline.root
@@ -63,25 +78,58 @@ def clone(repo, target, branch=None, cwd=None, recursive=False, ignore_failure=F
         checkout(commit_id, target, force=True)
 
 
-def checkout(commit_id, repo, force=False):
+def checkout(repo, commit_id=None, branch=None, remote=GIT_REMOTE_NAME, force=False):
+    assert commit_id or branch
     execute_shell_command("git stash", repo)
-    execute_shell_command("git checkout " + ("-f " if force else "") + commit_id, repo)
+    if commit_id:
+        execute_shell_command("git checkout " + ("-f " if force else "") + commit_id, repo)
+    else: # branch
+        execute_shell_command("git checkout " + ("-f " if force else "") + f"-t {remote}/{branch}", repo)
     execute_shell_command("git submodule update --init --recursive ", repo)
 
 
-def update(repo, update_remote="autobuild", update_target_branch="$CI_UPDATE_TARGET_BRANCH"):
+def update(repo, update_remote=GIT_REMOTE_NAME, update_target_branch=GIT_FAILURE_BRANCH):
     execute_shell_command("git stash", repo)
-    execute_shell_command("git branch " + update_target_branch + " || true", repo)
-    execute_shell_command("git checkout " + update_target_branch, repo)
-    execute_shell_command("git remote -v update || true", repo)
-    execute_shell_command("git fetch --all || true", repo)
-    execute_shell_command("git reset --hard " + update_remote + "/" + update_target_branch + " || true", repo)
+    execute_shell_command("git "+GIT_C_OPTION+" remote -v update || true", repo)
+    execute_shell_command("git "+GIT_C_OPTION+" fetch --all || true", repo)
+    try:
+        execute_shell_command("git branch -D " + update_target_branch + " || true", repo)
+        execute_shell_command(f"git checkout -f -t {update_remote}/{update_target_branch} -b {update_target_branch}", repo)
+    except:
+        execute_shell_command("git branch " + update_target_branch + " || true", repo)
+        execute_shell_command("git checkout -f --theirs " + update_target_branch, repo)
+    execute_shell_command("git "+GIT_C_OPTION+" reset --hard " + update_remote + "/" + update_target_branch + " || true", repo)
+    execute_shell_command("git "+GIT_C_OPTION+" config pull.rebase false", repo)
     if update_target_branch.startswith("$"):
         update_target_branch = os.environ[update_target_branch[1:]]
-    if update_target_branch == "master":
-        execute_shell_command("git pull " + update_remote + " $CI_UPDATE_TARGET_BRANCH -s ours || true", repo)
-    else:  # update_target_branch == "$CI_UPDATE_TARGET_BRANCH"
-        execute_shell_command("git pull " + update_remote + " master -s ours || true", repo)
+    # we are using reset GIT_PRODUCTION_BRANCH + merge strategy ours to merge with out conflicts from the production branch and build up on this (#TODO may be we should rename this method)
+    if update_target_branch == GIT_SUCCESS_BRANCH:
+        # if we are pushing to the GIT_SUCCESS_BRANCH, everything what happened on GIT_FAILURE_BRANCH is no obsolete again.
+        # To have the tree clean we merge GIT_FAILURE_BRANCH to close open merge requests and show that development on the
+        # formerly failed version has been finished
+        # if there was no failure before this is already in the tree anyways
+        try:
+            execute_shell_command("git "+GIT_C_OPTION+" pull " + update_remote + " "+GIT_FAILURE_BRANCH+" -s ours --no-ff --commit --no-edit", repo)
+        except Exception as e:
+            log.warning(f"Pull failed: {e}")
+            execute_shell_command("git branch "+GIT_FAILURE_BRANCH)
+            execute_shell_command("git checkout "+GIT_FAILURE_BRANCH)
+    elif GIT_SUCCESS_BRANCH != GIT_PRODUCTION_BRANCH:  # update_target_branch == GIT_FAILURE_BRANCH
+        # if we are pushing to the GIT_FAILURE_BRANCH we merge changes from the last good version to get the tree clean and
+        # continue upon that version
+        try:
+            execute_shell_command("git "+GIT_C_OPTION+" pull " + update_remote + " "+GIT_SUCCESS_BRANCH+" -s ours  --no-ff --commit --no-edit", repo)
+        except Exception as e:
+            log.warning(f"Pull failed: {e}")
+            execute_shell_command("git branch "+GIT_SUCCESS_BRANCH)
+            execute_shell_command("git checkout "+GIT_SUCCESS_BRANCH)
+    # pull the latest changes from the production branch if there is one
+    try:
+        execute_shell_command("git "+GIT_C_OPTION+" pull " + update_remote + " "+GIT_PRODUCTION_BRANCH+" -s ours  --no-ff --commit --no-edit", repo)
+    except Exception as e:
+        log.warning(f"Pull failed: {e}")
+        execute_shell_command("git branch "+GIT_PRODUCTION_BRANCH)
+        execute_shell_command("git checkout "+GIT_PRODUCTION_BRANCH)
 
 
 def revision(repo):
@@ -117,28 +165,79 @@ def commit(repo, message=None, origin_repo=None):
         message += "Update from phobos-CI run \nBased on " + os.environ["CI_PROJECT_NAME"] + " commit " + os.environ[
             "CI_COMMIT_SHORT_SHA"]
     elif message is None:
-        message = "Commit generated by manual pipeline script run"
-    log.info(f"Commiting to {repo}")
+        message = "[CI] Commit generated by manual pipeline script run"
+    log.info(f"Commiting to {repo} on branch {get_branch(repo)}")
     commit_message = ""
     for m in message.split("\n"):
         commit_message += " -m '" + m + "'"
     execute_shell_command("git add -A * || true", repo)
-    execute_shell_command("git commit " + commit_message + " || true", repo)
+    execute_shell_command("git commit " + commit_message, repo)
     return revision(repo)
 
 
-def reset(repo, remote, branch):
-    execute_shell_command("git reset --hard " + remote + "/" + branch, repo)
+def reset(repo, remote, branch, hard=True):
+    if hard:
+        execute_shell_command("git "+GIT_C_OPTION+" reset --hard " + remote + "/" + branch, repo)
+    else:
+        execute_shell_command("git "+GIT_C_OPTION+" reset --mixed " + remote + "/" + branch, repo)
+        execute_shell_command("git stash", repo)
 
 
 def add_remote(repo, target_remote_url, target_remote_name="target_remote"):
-    execute_shell_command("git remote add " + target_remote_name + " " + target_remote_url + " || true", repo)
-    execute_shell_command("git remote -v update || true", repo)
+    execute_shell_command("git "+GIT_C_OPTION+" remote add " + target_remote_name + " " + target_remote_url + " || true", repo)
+    execute_shell_command("git "+GIT_C_OPTION+" remote -v update || true", repo)
 
 
-def push(repo, remote="target_remote", branch="$CI_UPDATE_TARGET_BRANCH", merge_request=None):
-    options = "" if merge_request is None else merge_request.get_options()
-    execute_shell_command("git push " + remote + " " + branch + " " + options, repo, dry_run=False)
+def push(repo, remote="target_remote", branch=GIT_FAILURE_BRANCH, merge_request=None):
+    if RUNNING_FOR_AZURE:
+        _, _, url = get_repo_data(repo, remote_name=remote)
+        log.info(f"Pushing to remote: {remote}/{branch} at {url}")
+        execute_shell_command("git "+GIT_C_OPTION+" push " + remote + " " + branch , repo, dry_run=False, verbose=True)
+        if merge_request is not None:
+            first_part, repository_name = url.split("/_git/")
+            _, org_and_project = first_part.split(".com/")
+            org, project = org_and_project.split("/")
+            _tb = " --target-branch \""+merge_request.target+"\""
+            _sb = " --source-branch \""+branch+"\""
+            _org = " --organization \"https://dev.azure.com/"+org+"/\""
+            _p = " --project \""+project+"\""
+            _r = " --repository \""+repository_name+"\""
+            _t = " --title \""+merge_request.title+"\""
+            _d = " -d \""+merge_request.description.strip().replace('"', "'").replace("\n", "\" \"").replace("--", "#") +"\""
+            if merge_request.mention:
+                users = merge_request.mention.split(";")
+                # user_ids = []
+                # for user in users:
+                #     try:
+                #         std, _ = execute_shell_command("az ad user list --display-name "+user.strip())
+                #         entry = load_json(std)
+                #         user_ids.append(entry[0]["id"])
+                #     except:
+                #         log.error("AZ: Couldn't obtain user id for name: "+user)
+                _rv = " --reviewers"
+                for user in users:
+                    _rv += f" \"{user}\""
+            try:
+                cmd = "az repos pr create"
+                execute_shell_command(cmd + _tb + _sb + _org + _p + _r + _t + _d + _rv, repo, dry_run=False, verbose=True)
+            except:
+                # the command probably failed because the pr is already there
+                cmd = "az repos pr list"
+                pr, _ = execute_shell_command(cmd +_tb + _p + _r, repo, dry_run=False, verbose=True)
+                pr_dict = load_json(pr)
+                _pr = " --id " + str(pr_dict[0]["pullRequestId"])
+                cmd = "az repos pr update"
+                execute_shell_command(cmd + _pr + _d + _org + _t + " || true", repo, dry_run=False, verbose=True)
+                try:
+                    cmd = "az repos pr reviewer add"
+                    execute_shell_command(cmd + _pr + _org + _rv + " || true", repo, dry_run=False, verbose=True)
+                except:
+                    # probably some user is already assigned, and because azure is stupid it fails instead of being happy about less work
+                    # we don't handle this yet
+                    pass
+    else:
+        options = "" if merge_request is None else merge_request.get_options()
+        execute_shell_command("git "+GIT_C_OPTION+" push " + remote + " " + branch + " " + options, repo, dry_run=False, verbose=True)
     return os.environ[branch[1:]] if branch.startswith("$") else branch
 
 
@@ -157,17 +256,20 @@ def clear_repo(repo):
 
 
 def add_submodule(repo, remote, path, commit=None, branch="master"):
-    execute_shell_command("git remote rename autobuild origin || true", repo)
-    execute_shell_command("git submodule add -b " + branch + " -f " + remote + " " + path, repo)
-    execute_shell_command("git submodule update --init --recursive " + path, repo)
+    if GIT_REMOTE_NAME != "origin":
+        execute_shell_command(f"git remote rename {GIT_REMOTE_NAME} origin || true", repo)
+    execute_shell_command("git "+GIT_C_OPTION+" submodule add -b " + branch + " -f " + remote + " " + path, repo)
+    execute_shell_command("git "+GIT_C_OPTION+" submodule update --init --recursive " + path, repo)
     if commit is not None:
-        execute_shell_command("git remote update", os.path.join(repo, path))
+        execute_shell_command("git "+GIT_C_OPTION+" remote update", os.path.join(repo, path))
         execute_shell_command("git checkout --detach " + commit, os.path.join(repo, path))
-    execute_shell_command("git remote rename origin autobuild || true", repo)
+    if GIT_REMOTE_NAME != "origin":
+        execute_shell_command(f"git remote rename origin {GIT_REMOTE_NAME} || true", repo)
 
 
 def install_lfs(repo, track):
-    execute_shell_command("git remote rename autobuild origin || true", repo)
+    if GIT_REMOTE_NAME != "origin":
+        execute_shell_command(f"git remote rename {GIT_REMOTE_NAME} origin || true", repo)
     execute_shell_command("git lfs install || true", repo, silent=True)
     if ".gitattributes" not in os.listdir(repo) or False:
         if type(track) is str:
@@ -177,7 +279,8 @@ def install_lfs(repo, track):
             for t in track:
                 execute_shell_command("git lfs track '" + t.lower() + "' || true", repo, silent=True)
                 execute_shell_command("git lfs track '" + t.upper() + "' || true", repo, silent=True)
-    execute_shell_command("git remote rename origin autobuild || true", repo)
+    if GIT_REMOTE_NAME != "origin":
+        execute_shell_command(f"git remote rename origin {GIT_REMOTE_NAME} || true", repo)
     execute_shell_command("git add .gitattributes || true", repo)
 
 
@@ -189,24 +292,21 @@ def ignore(repo, ignore):
     if os.path.isfile(ign_file):
         with open(ign_file, "r") as f:
             content = [l if not l.endswith("\n") else l[:-1] for l in f.readlines()]
-    with open(".gitignore", "a") as f:
+    with open(ign_file, "a") as f:
         for i in ignore:
             if i not in content:
                 f.write(i+"\n")
 
 
-def get_repo_data(directory):
+def get_repo_data(directory, remote_name=GIT_REMOTE_NAME):
     author, _ = execute_shell_command("git show -s | grep Author || true", directory)
-    author = " ".join(author.split()[1:])
-    maintainer, _ = execute_shell_command("git config user.name; git config user.email", directory, silent=True)
-    maintainer = " ".join(maintainer.split())
-    if maintainer == " ":
-        maintainer = ""
+    author = " ".join(author.split()[1:]).strip()
+    maintainer, _ = execute_shell_command("git config user.name || true; git config user.email || true", directory, silent=True)
+    maintainer = " ".join(maintainer.split()).strip()
     if author == "":
         author = maintainer
-    url, _ = execute_shell_command("git remote get-url --push autobuild || true", directory, silent=True)
-    if url == "":
-        url, _ = execute_shell_command("git remote get-url --push origin || true", directory, silent=True)
+    url, _ = execute_shell_command(f"git remote get-url --push {remote_name} || true", directory, silent=True)
+    assert url != ""
     return author.strip().replace("<", "").replace(">", ""), maintainer.strip().replace("<", "").replace(">", ""),\
            url.strip()
 

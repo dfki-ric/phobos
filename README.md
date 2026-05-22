@@ -24,9 +24,13 @@ Bremen, together with the [Robotics
 Group](http://www.informatik.uni-bremen.de/robotik/index_en.php) of the
 [University of Bremen](http://www.uni-bremen.de/en.html).
 
-Please contact [Henning Wiedemann](https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/hewi04.html)
+Please contact [Malte Langosz](https://robotik.dfki-bremen.de/de/ueber-uns/mitarbeiter/maro02.html)
 for any inquiries, or any questions and feedback not suited for the issues
 page.
+
+## Version 2.1.0
+Version 2.1.0 refactors especially the phobos-ci usage and improves the configurability by config inheritance. However these are breaking changes to the pipeline configuration. See PR #364 for more details on the changes.
+
 
 ## Version 2.0.0
 With version 2.0.0 we did a refactoring of Phobos and its now possible to use phobos as a normal python package and command line tool (see below).

@@ -30,11 +30,11 @@ from bpy.props import (
     BoolVectorProperty,
     CollectionProperty,
 )
-from bpy.types import Operator
+from bpy.types import Operator, PropertyGroup
 from idprop.types import IDPropertyGroup
 from phobos.io import hyrodyn
 
-from .. import defs as defs
+from .. import defs as defs, phobosgui
 from .. import display as display
 from ..io import phobos2blender, blender2phobos
 from ..model import controllers as controllermodel
@@ -42,7 +42,7 @@ from ..model import inertia as inertialib
 from ..model import joints as jUtils
 from ..model import links as modellinks
 from ..phobosgui import prev_collections
-from ..phoboslog import log, ErrorMessageWithBox, WarnMessageWithBox
+from ..phoboslog import log, ErrorMessageWithBox, WarnMessageWithBox, InfoMessageWithBox
 from ..operators.generic import addObjectFromYaml, DynamicProperty, AddAnnotationsOperator, \
     EditAnnotationsOperator, AnnotationsOperator
 from ..utils import blender as bUtils
@@ -514,6 +514,11 @@ class SetPhobosType(Operator):
 
         for obj in context.selected_objects:
             obj.phobostype = self.phobostype
+        phobosgui.updateSidebar()
+
+        if self.phobostype in ["collision", "visual"]:
+            bpy.ops.phobos.define_geometry()
+
         return {'FINISHED'}
 
     @classmethod
@@ -527,6 +532,15 @@ class SetPhobosType(Operator):
 
         """
         return context.selected_objects
+
+    def draw(self, context):
+
+        layout = self.layout
+
+        layout.prop(self, 'phobostype')
+
+        if self.phobostype in ["collision", "visual"]:
+            layout.prop(context.scene.set_geometry_type_props, 'geomType')
 
     def invoke(self, context, event):
         """
@@ -777,16 +791,17 @@ class RenameCustomProperty(Operator):
         return ob is not None and ob.mode == 'OBJECT' and len(context.selected_objects) > 0
 
 
+class SetGeometryTypeProperties(PropertyGroup):
+    geomType: EnumProperty(
+        items=defs.geometrytypes, name="Geometry", default="box", description="Phobos geometry type"
+    )
+
 class SetGeometryType(Operator):
     """Edit geometry type of selected object(s)"""
 
     bl_idname = "phobos.define_geometry"
     bl_label = "Define Geometry"
     bl_options = {'UNDO'}
-
-    geomType : EnumProperty(
-        items=defs.geometrytypes, name="Type", default="box", description="Phobos geometry type"
-    )
 
     def execute(self, context):
         """
@@ -800,16 +815,17 @@ class SetGeometryType(Operator):
         objs = context.selected_objects
         for obj in objs:
             if obj.phobostype == 'collision' or obj.phobostype == 'visual':
-                obj['geometry/type'] = self.geomType
+                obj['geometry/type'] = context.scene.set_geometry_type_props.geomType
             else:
                 log("The object '" + obj.name + "' is no collision or visual.", 'WARNING')
 
         log(
             "Changed geometry type for {} object{}".format(len(objs), 's' if len(objs) > 1 else '')
-            + " to {}.".format(self.geomType),
+            + " to {}.".format(context.scene.set_geometry_type_props.geomType),
             'INFO',
         )
         log("    Objects: " + str([obj.name for obj in objs]), 'DEBUG')
+        phobosgui.updateSidebar()
         return {'FINISHED'}
 
     @classmethod
@@ -836,7 +852,7 @@ class SetGeometryType(Operator):
         """
         layout = self.layout
 
-        layout.prop(self, 'geomType')
+        layout.prop(context.scene.set_geometry_type_props, 'geomType')
 
     def invoke(self, context, event):
         """
@@ -1045,11 +1061,25 @@ class GenerateInertialObjectsOperator(Operator):
         description="Clear existing inertial objects of selected links.",
     )
 
+    _toggling : BoolProperty(
+        name="Ensure no infinite recursion when toggling visuals and collisions",
+        default=False,
+        description="Used to avoid infine recursion when toggling visuals/collisions",
+    )
+
     def toggleVisual(self, context):
+        if self._toggling:
+            return
+        self._toggling = True
         self.collisions = not bool(self.visuals)
+        self._toggling = False
 
     def toggleCollision(self, context):
+        if self._toggling:
+            return
+        self._toggling = True
         self.visuals = not bool(self.collisions)
+        self._toggling = False
 
     visuals : BoolProperty(
         name="visual",
@@ -1336,13 +1366,14 @@ class CreateCollisionObjects(Operator):
                 )
                 ob = phobos2blender.createGeometry(collision, geomsrc="collision", linkobj=sUtils.getEffectiveParent(vis, include_hidden=True, ignore_selection=True))
             else:
+                global_location = vis.matrix_world.to_translation()
                 ob = bUtils.createPrimitive(
                     collname,
                     'cylinder',
                     (1., 1., 1.),
                     defs.layerTypes['collision'],
                     materialname,
-                    phobos_vis.origin.position,
+                    global_location,
                     phobos_vis.origin.rotation,
                     'collision'
                 )
@@ -1455,6 +1486,21 @@ class SetCollisionGroupOperator(Operator):
         return ob is not None and ob.phobostype == 'collision' and ob.mode == 'OBJECT'
 
 
+def getOrthogonal(axis1, axis2):
+    """
+    Returns an axis orthogonal to two given orthogonal axes
+    """
+    return np.cross(axis1, axis2)
+
+
+def isOrthogonal(axis1, axis2):
+    """
+    See if two axes are orthogonal
+    """
+    scalarProduct = axis1[0] * axis2[0] + axis1[1] * axis2[1] + axis1[2] * axis2[2]
+    return scalarProduct == 0
+
+
 class DefineJointConstraintsOperator(Operator):
     """Add bone constraints to the joint (link)"""
 
@@ -1462,16 +1508,36 @@ class DefineJointConstraintsOperator(Operator):
     bl_label = "Define Joint(s)"
     bl_options = {'REGISTER', 'UNDO'}
 
-    name : StringProperty(
+    name: StringProperty(
         name='Joint Name', default="", description='Defines the name of the joint (leave empty for same name as link)'
     )
 
-    active : BoolProperty(
+    active: BoolProperty(
         name='Active', default=False, description='Add a motor to the joint'
     )
 
-    useRadian : BoolProperty(
-        name='Use Radian', default=True, description='Use degrees or rad for joints'
+    def toggleRadian(self, context):
+        """
+        Convert limits and max velocity to radians or degrees when toggling the checkbox
+        Args:
+            context:
+
+        Returns:
+
+        """
+        if self.useRadian:
+            method = math.radians
+        else:
+            method = math.degrees
+        self.upper = method(self.upper)
+        self.lower = method(self.lower)
+        self.maxvelocity = method(self.maxvelocity)
+        self.upper2 = method(self.upper2)
+        self.lower2 = method(self.lower2)
+        self.maxvelocity2 = method(self.maxvelocity2)
+
+    useRadian: BoolProperty(
+        name='Use Radian', default=True, description='Use degrees or rad for joints', update=toggleRadian
     )
 
     joint_type : EnumProperty(
@@ -1481,9 +1547,9 @@ class DefineJointConstraintsOperator(Operator):
         items=defs.jointtypes,
     )
 
-    lower : FloatProperty(name="Lower", default=-3.14, description="Lower constraint of the joint")
+    lower: FloatProperty(name="Lower", default=-3.14, description="Lower constraint of the joint")
 
-    upper : FloatProperty(name="Upper", default=3.14, description="Upper constraint of the joint")
+    upper: FloatProperty(name="Upper", default=3.14, description="Upper constraint of the joint")
 
     maxeffort : FloatProperty(
        name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
@@ -1495,19 +1561,139 @@ class DefineJointConstraintsOperator(Operator):
        description="Maximum velocity of the joint. If you uncheck radian, you can enter °/sec here",
     )
 
-    spring : FloatProperty(
+    lower2: FloatProperty(name="Lower", default=-3.14, description="Lower constraint of the joint")
+
+    upper2: FloatProperty(name="Upper", default=3.14, description="Upper constraint of the joint")
+
+    maxeffort2: FloatProperty(
+       name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
+    )
+
+    maxvelocity2: FloatProperty(
+       name="Max Velocity (m/s or rad/s)",
+       default=0.0,
+       description="Maximum velocity of the joint. If you uncheck radian, you can enter °/sec here",
+    )
+
+    spring: FloatProperty(
         name="Spring Constant", default=0.0, description="Spring constant of the joint"
     )
 
-    damping : FloatProperty(
+    damping: FloatProperty(
         name="Damping Constant", default=0.0, description="Damping constant of the joint"
     )
 
     axis: FloatVectorProperty(
-        name="Joint Axis", default=[0.0, 0.0, 1], description="Damping constant of the joint", size=3
+        name="Joint Axis", default=[0.0, 0.0, 1], description="First joint axis", size=3
     )
 
+    axis2: FloatVectorProperty(
+        name="2nd Joint Axis", default=[0.0, 0.0, 1], description="Second joint axis", size=3
+    )
+
+    def reference_bodies(self, context):
+        """
+        Get a list of available reference bodies. Can be any joint that is not selected
+        Args:
+            context:
+
+        Returns:
+
+        """
+        return [
+            (link["joint/name"],)*3 for link in bpy.data.objects
+            if link.phobostype == "link" and link not in context.selected_objects
+               and "joint/name" in link
+        ]
+
+    reference_body: EnumProperty(
+        name='Gearbox Reference Body',
+        default=0,
+        description="Gearbox Reference Body",
+        items=reference_bodies,
+    )
+
+    gearbox_ratio: FloatProperty(
+        name='Gearbox Ratio',
+        description='theta 2 = -gearbox ratio * theta 1',
+        default=1
+    )
+
+    screw_thread_pitch: FloatProperty(
+        name='Screw Thread Pitch',
+        description='Meters traveled per revolution',
+        default=1,
+    )
+
+    flipAxis: BoolProperty(
+        name='Flip Visual Axis', default=False, description='Flip calculated axis'
+    )
+
+    def __init__(self):
+        self.sRefBody = False  # Show gearbox options: reference body drop down and gearbox ratio
+        self.sAxis = False  # Show first axis
+        self.sLimit = False  # Show axis limits
+        self.sLimitEqual = False  # Upper and lower limits are the same
+        self.sEffort = False  # Show max axis effort (N or Nm)
+        self.sVelocity = False  # Show max axis velocity (meters/s or angle/s)
+        self.isAngle = False  # Rotating joint, affects max velocity, effort and limits
+        self.sAxis2 = False  # Show second axis
+        self.sSpring = False  # Show spring
+        self.sDamping = False  # Show damping
+        self.sThreadPitch = False  # Show screw parameter
+        self.sAxisFlip = False  # Show checkbox to flip calculated axis
+        self.setOptionalParameters()
+
     executeMessage = []
+
+    def setOptionalParameters(self):
+        """
+        Show or hide parameters according to selected joint type
+        """
+        self.sRefBody = False  # Show gearbox options: reference body drop down and gearbox ratio
+        self.sAxis = False  # Show first axis
+        self.sLimit = False  # Show axis limits
+        self.sLimitEqual = False  # Upper and lower limits are the same
+        self.sEffort = False  # Show max axis effort (N or Nm)
+        self.sVelocity = False  # Show max axis velocity (meters/s or angle/s)
+        self.isAngle = False  # Rotating joint, affects max velocity, effort and limits
+        self.sAxis2 = False  # Show second axis
+        self.sSpring = False  # Show spring
+        self.sDamping = False  # Show damping
+        self.sThreadPitch = False  # Show screw parameter
+        self.sAxisFlip = False  # Show checkbox to flip calculated axis
+
+        # reference body
+        if self.joint_type == 'gearbox':
+            self.sRefBody = True
+
+        # axis
+        if self.joint_type in ["revolute", "prismatic", "continuous", "planar", "universal", "screw", "ball"]:
+            self.sAxis = True
+        if self.joint_type in ["revolute", "prismatic", "continuous", "planar", "floating", "universal", "screw"]:
+            self.sEffort = True
+            self.sVelocity = True
+        if self.joint_type in ['revolute', 'continuous', 'universal', 'ball']:
+            self.isAngle = True
+        if self.joint_type in ["revolute", "prismatic", "universal"]:
+            self.sLimit = True
+        if self.joint_type == "ball":
+            self.sLimit = True
+            self.sLimitEqual = True
+        if self.joint_type == "gearbox":
+            self.sAxis = "Axis for theta 1 (reference body to parent)"
+            self.sAxis2 = "Axis for theta 2 (reference body to child)"
+        if self.joint_type == "universal":
+            self.sAxis2 = True
+            self.sAxisFlip = True
+        if self.joint_type == "screw":
+            self.sLimit = True
+            self.sThreadPitch = True
+
+        # spring, damping
+        if self.joint_type in ["revolute", "prismatic", "universal"]:
+            self.sSpring = True
+            self.sDamping = True
 
     def draw(self, context):
         """
@@ -1529,35 +1715,108 @@ class DefineJointConstraintsOperator(Operator):
 
         # enable/disable optional parameters
         if not self.joint_type == 'fixed':
+            self.setOptionalParameters()
+
+            # display selected options
+
             layout.prop(self, "active", text="Active (adds a default motor you can adapt later)")
-            if self.joint_type in ["revolute", "prismatic", "continuous"]:
-                layout.prop(self, "axis", text="Sets the joint axis")
-            if self.joint_type == "revolute":
-                layout.prop(self, "useRadian", text="use radian")
-            layout.prop(
-                self,
-                "maxeffort",
-                text="max effort ["
-                + ('Nm]' if self.joint_type in ['revolute', 'continuous'] else 'N]'),
-            )
-            if self.joint_type in ['revolute', 'continuous']:
+
+            if self.sRefBody:
+                layout.prop(self, "reference_body", text="Ref. Body")
+                layout.prop(self, "gearbox_ratio", text="Gearbox Ratio")
+
+            if self.sAxis:
+                if type(self.sAxis) == str:
+                    layout.prop(self, "axis", text=self.sAxis)
+                else:
+                    layout.prop(self, "axis", text="Joint Axis")
+            if self.sLimit:
+                if self.isAngle:
+                    if self.sLimitEqual:
+                        layout.prop(self, "upper", text="limit [rad]" if self.useRadian else "limit [°]")
+                    else:
+                        layout.prop(self, "lower", text="lower limit [rad]" if self.useRadian else "lower [°]")
+                        layout.prop(self, "upper", text="upper limit [rad]" if self.useRadian else "upper [°]")
+                else:
+                    layout.prop(self, "lower", text="lower limit [m]")
+                    layout.prop(self, "upper", text="upper limit [m]")
+
+            if self.sEffort:
+                # max effort
                 layout.prop(
                     self,
-                    "maxvelocity",
-                    text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"),
+                    "maxeffort",
+                    text="max effort ["
+                         + ('Nm]' if self.isAngle else 'N]'),
                 )
-            else:
-                layout.prop(self, "maxvelocity", text="max velocity [m/s]")
-            if self.joint_type == 'revolute':
-                layout.prop(self, "lower", text="lower [rad]" if self.useRadian else "lower [°]")
-                layout.prop(self, "upper", text="upper [rad]" if self.useRadian else "upper [°]")
+
+            if self.sVelocity:
+                # max velocity in angle/s or distance/s
+                if self.isAngle:
+                    layout.prop(
+                        self,
+                        "maxvelocity",
+                        text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"),
+                    )
+                else:
+                    layout.prop(self, "maxvelocity", text="max velocity [m/s]")
+
+            if self.sAxis2:
+                if type(self.sAxis2) == str:
+                    layout.prop(self, "axis2", text=self.sAxis2)
+                else:
+                    layout.prop(self, "axis2", text="Joint Axis 2")
+                if self.sLimit:
+                    if self.isAngle:
+                        layout.prop(self, "lower2", text="lower limit [rad]" if self.useRadian else "lower [°]")
+                        layout.prop(self, "upper2", text="upper limit [rad]" if self.useRadian else "upper [°]")
+                    else:
+                        layout.prop(self, "lower2", text="lower limit [m]")
+                        layout.prop(self, "upper2", text="upper limit [m]")
+
+                if self.sEffort:
+                    # max effort
+                    layout.prop(
+                        self,
+                        "maxeffort2",
+                        text="max effort ["
+                             + ('Nm]' if self.isAngle else 'N]'),
+                    )
+
+                if self.sVelocity:
+                    # max velocity in angle/s or distance/s
+                    if self.isAngle:
+                        layout.prop(
+                            self,
+                            "maxvelocity2",
+                            text="max velocity [" + ("rad/s]" if self.useRadian else "°/s]"),
+                        )
+                    else:
+                        layout.prop(self, "maxvelocity2", text="max velocity [m/s]")
+
+            if self.sSpring or self.sDamping or self.sThreadPitch:
+                layout.separator()
+
+            if self.sSpring:
                 layout.prop(self, "spring", text="spring constant [N/m]")
+
+            if self.sDamping:
                 layout.prop(self, "damping", text="damping constant")
-            elif self.joint_type == 'prismatic':
-                layout.prop(self, "lower", text="lower [m]")
-                layout.prop(self, "upper", text="upper [m]")
-                layout.prop(self, "spring", text="spring constant [N/m]")
-                layout.prop(self, "damping", text="damping constant")
+
+            if self.sThreadPitch:
+                layout.prop(self, "screw_thread_pitch")
+
+            # checkbox radian/degrees
+            if self.isAngle:
+                layout.prop(self, "useRadian", text="use radian")
+
+            # checkbox flip axis
+            if self.sAxisFlip:
+                layout.prop(self, "flipAxis", text="flip visual axis")
+
+        for msg in self.executeMessage:
+            layout.label(text=msg)
+
 
     def invoke(self, context, event):
         """
@@ -1596,20 +1855,27 @@ class DefineJointConstraintsOperator(Operator):
         Returns:
 
         """
-        log('Defining joint constraints for joint: ', 'INFO')
         self.executeMessage = []
-        lower = 0
-        upper = 0
+        self.setOptionalParameters()
+        lower = None
+        upper = None
+        lower2 = None
+        upper2 = None
         velocity = self.maxvelocity
         effort = self.maxeffort
+        velocity2 = self.maxvelocity2
+        effort2 = self.maxeffort2
+        reference_body = None
+        gearbox_ratio = None
+        if self.joint_type == "gearbox":
+            reference_body = self.reference_body
+            gearbox_ratio = self.gearbox_ratio
 
         # lower and upper limits
-        if self.joint_type in ["revolute", "continuous", "sphere"]:
+        if self.joint_type in ["revolute", "continuous"]:
             # velocity calculation
             if not self.useRadian:
                 velocity = self.maxvelocity * ((2 * math.pi) / 360)  # from °/s to rad/s
-            else:
-                velocity = self.maxvelocity
         if self.joint_type == 'revolute':
             if not self.useRadian:
                 lower = math.radians(self.lower)
@@ -1617,18 +1883,72 @@ class DefineJointConstraintsOperator(Operator):
             else:
                 lower = self.lower
                 upper = self.upper
-        elif self.joint_type == "prismatic":
+        elif self.joint_type in ["prismatic", "screw"]:
             lower = self.lower
             upper = self.upper
+        elif self.joint_type == "ball":
+            lower = -self.upper
+            upper = self.upper
+            if not self.useRadian:
+                lower = lower * math.pi / 180
+                upper = upper * math.pi / 180
+        elif self.joint_type == "universal":
+            lower = self.lower
+            upper = self.upper
+            lower2 = self.lower2
+            upper2 = self.upper2
+
+        # valid input ?
         axis = None
+        axis2 = None
         validInput = True
-        if self.joint_type in ["revolute", "prismatic", "continuous"]:
+        screw_thread_pitch = self.screw_thread_pitch
+        visual_axis = None
+        if self.joint_type in ["revolute", "prismatic", "continuous", "gearbox", "universal", "screw"]:
             axis = self.axis
 
             # Check if joints can be created
             if max(axis) == 0 and min(axis) == 0:
                 validInput = False
                 self.executeMessage.append("Please set the joint axis to define the joint")
+            else:
+                axis = (np.array(axis) / np.linalg.norm(axis)).tolist()
+        if self.joint_type in ["gearbox", "universal"]:
+            axis2 = self.axis2
+
+            # Check if joints can be created
+            if max(axis2) == 0 and min(axis2) == 0:
+                validInput = False
+                self.executeMessage.append("Please set the joint axis2 to define the joint")
+            else:
+                axis2 = (np.array(axis2) / np.linalg.norm(axis2)).tolist()
+                if self.joint_type == "universal":
+                    if not isOrthogonal(axis, axis2):
+                        self.executeMessage.append("Axes should be orthogonal")
+                    else:
+                        visual_axis = getOrthogonal(axis, axis2)
+                        if self.flipAxis:
+                            visual_axis = -visual_axis
+                        formatter = {
+                            "float": lambda x: f"{x:.3g}" if x != int(x) else str(int(x))
+                        }
+                        vis = np.array2string(visual_axis, precision=3, suppress_small=True, formatter=formatter)
+                        self.executeMessage.append("Visual axis: "+vis)
+        if self.joint_type == "screw":
+            if screw_thread_pitch == 0:
+                validInput = False
+                self.executeMessage.append("Cannot create a screw joint with thread pitch 0")
+
+        if self.joint_type == "gearbox":
+            if len(self.reference_bodies(context)) == 0:
+                validInput = False
+                self.executeMessage.append("No reference bodies available")
+                self.executeMessage.append("Create another joint to select it as reference")
+                self.executeMessage.append("body")
+            elif self.reference_body == "":
+                validInput = False
+                self.executeMessage.append("Select a reference body")
+
         # set properties for each joint
         if validInput:
             defined = 0
@@ -1639,16 +1959,26 @@ class DefineJointConstraintsOperator(Operator):
                     return {'CANCELLED'}
                 if len(self.name) > 0:
                     joint["joint/name"] = self.name.replace(" ", "_")
+
                 jUtils.setJointConstraints(
                     joint=joint,
                     jointtype=self.joint_type,
-                    lower=lower,
-                    upper=upper,
-                    velocity=velocity,
-                    effort=effort,
-                    spring=self.spring,
-                    damping=self.damping,
-                    axis=(np.array(axis) / np.linalg.norm(axis)).tolist() if axis is not None else None
+                    lower=lower if self.sLimit else None,
+                    upper=upper if self.sLimit else None,
+                    lower2=lower2 if self.sLimit and self.sAxis2 else None,
+                    upper2=upper2 if self.sLimit and self.sAxis2 else None,
+                    velocity=velocity if self.sVelocity else None,
+                    effort=effort if self.sEffort else None,
+                    velocity2=velocity2 if self.sAxis2 and self.sVelocity else None,
+                    effort2=effort2 if self.sAxis2 and self.sEffort else None,
+                    spring=self.spring if self.sSpring else None,
+                    damping=self.damping if self.sDamping else None,
+                    axis=axis if self.sAxis else None,
+                    axis2=axis2 if self.sAxis2 else None,
+                    gearboxreferencebody=reference_body if self.sRefBody else None,
+                    gearboxratio=gearbox_ratio if self.sRefBody else None,
+                    screwthreadpitch=screw_thread_pitch if self.sThreadPitch else None,
+                    visualaxis=visual_axis
                 )
                 defined = defined+1
 
@@ -1774,11 +2104,16 @@ class AddMotorOperator(Operator):
     bl_idname = "phobos.add_motor"
     bl_label = "Add Motor"
     bl_options = {'UNDO'}
+    bl_description = "Add a motor to the selected joint.\n" \
+                     "It is possible to add motors to multiple joints at the same time"
     lastMotorDefault = None
 
-    template : EnumProperty(items=[(n,n,n) for n in resources.get_motor_defaults()], name='Template', description="The template to use for this motor")
-    motorType : EnumProperty(items=[(n,n,n) for n in representation.Motor.BUILD_TYPES], name="Motor type", description='The motor type')
-    controllerType: EnumProperty(items=[(n,n,n) for n in representation.Motor.TYPES], name="Controller type", description='The controller type')
+    template : EnumProperty(items=[(n,n,n) for n in resources.get_motor_defaults()], name='Template',
+                            description="The template to use for this motor")
+    motorType : EnumProperty(items=[(n,n,n) for n in representation.Motor.BUILD_TYPES], name="Motor type",
+                             description='The motor type')
+    controllerType: EnumProperty(items=[(n,n,n) for n in representation.Motor.TYPES], name="Controller type",
+                                 description='The controller type')
     maxeffort : FloatProperty(
         name="Max Effort (N or Nm)", default=0.0, description="Maximum effort of the joint"
     )
@@ -1870,26 +2205,9 @@ class AddMotorOperator(Operator):
         Returns:
 
         """
-        active_obj = (
-            context.active_object
-            and context.active_object.phobostype == 'link'
-            and context.active_object.mode == 'OBJECT'
-        )
-
-        if not active_obj:
-            return False
-            # for obj in context.selected_objects:
-            #     if obj.mode == 'OBJECT' and obj.phobostype == 'link':
-            #         active_obj = obj
-            #         context.view_layer.objects.active = obj
-            #         break
-            # if not active_obj:
-        else:
-            active_obj = context.active_object
-
-        joint_obj = 'joint/type' in active_obj and active_obj['joint/type'] != 'fixed'
-
-        return joint_obj
+        objects = [o for o in context.selected_objects if o.phobostype == "link"
+                   and "joint/type" in o and o["joint/type"] != "fixed"]
+        return len(objects) > 0
 
     def execute(self, context):
         """
@@ -1900,7 +2218,8 @@ class AddMotorOperator(Operator):
         Returns:
 
         """
-        objects = [o for o in context.selected_objects if o.phobostype == "link"]
+        objects = [o for o in context.selected_objects if o.phobostype == "link"
+                   and "joint/type" in o and o["joint/type"] != "fixed"]
         for obj in objects:
             phobos2blender.createMotor(representation.Motor(
                 name=obj.name+"_motor",
@@ -1911,6 +2230,9 @@ class AddMotorOperator(Operator):
                 i=self.controli,
                 d=self.controld
             ), linkobj=obj)
+        n = len(objects)
+        s = "" if n == 1 else "s"
+        log(message=f"Added a motor to {n} joint{s}", level="INFO")
         return {'FINISHED'}
 
 
@@ -1993,12 +2315,10 @@ class RemoveMotorOperator(Operator):
                         del obj[mProp]
                         if not motorRemoved:
                             motorRemoved = True
-                            removedMotors+=1
+                            removedMotors += 1
         if len(context.selected_objects) > 1 and removedMotors > 0:
             pluralS = "s" if removedMotors > 1 else ""
-            WarnMessageWithBox(message=f"{removedMotors} motor{pluralS} removed from selected objects",
-                               title="Phobos Message", icon="INFO")
-        print("Motor removed")
+            InfoMessageWithBox(message=f"{removedMotors} motor{pluralS} removed from selected objects", silent_for=0)
         return {'FINISHED'}
 
     @classmethod
@@ -2118,6 +2438,9 @@ class AddSensorOperator(Operator):
     bl_idname = "phobos.add_sensor"
     bl_label = "Add Sensor"
     bl_options = {'REGISTER', 'UNDO'}
+    bl_description = "Add a sensor at the position of the selected object. \n" \
+    "It is possible to create a new link for the sensor on the fly. Otherwise, \n" \
+    "the next link in the hierarchy will be used to parent the sensor to"
 
 
     def sensorlist(self, context):
@@ -2346,7 +2669,7 @@ class AddSensorOperator(Operator):
         return {'FINISHED'}
 
 #
-# # [TODO v2.0.0] REVIEW this
+# # [TODO v2.2.0] REVIEW this
 # def addControllerFromYaml(controller_dict, annotations, selected_objs, active_obj, *args):
 #     """Execution function for the temporary operator to add controllers from yaml files.
 #
@@ -2391,7 +2714,7 @@ class AddSensorOperator(Operator):
 #     return controller_objs, annotation_objs, []
 #
 #
-# # [TODO v2.0.0] REVIEW this
+# # [TODO v2.2.0] REVIEW this
 # class AddControllerOperator(Operator):
 #     """Add a controller at the position of the selected object."""
 #
@@ -2544,7 +2867,7 @@ class AddSensorOperator(Operator):
 #         return {'FINISHED'}
 #
 #
-# # [TODO v2.0.0] REVIEW this
+# # [TODO v2.2.0] REVIEW this
 # def getControllerParameters(name):
 #     """Returns the controller parameters for the controller type with the provided
 #     name.
@@ -2561,7 +2884,7 @@ class AddSensorOperator(Operator):
 #         return []
 #
 #
-# # [TODO v2.0.0] REVIEW this
+# # [TODO v2.2.0] REVIEW this
 # def getDefaultControllerParameters(scene, context):
 #     """Returns the default controller parameters for the controller of the active
 #     object.
@@ -2580,7 +2903,7 @@ class AddSensorOperator(Operator):
 #         return None
 #
 
-# [TODO v2.0.0] REVIEW this
+# [TODO v2.2.0] REVIEW this
 class CreateMimicJointOperator(Operator):
     """Make a number of joints follow a specified joint"""
 
@@ -2777,7 +3100,7 @@ class AddHeightmapOperator(Operator):
         return {'RUNNING_MODAL'}
 
 
-# [TODO v2.0.0] REVIEW this
+# [TODO v2.2.0] REVIEW this
 class AddSubmodel(Operator):
     """Add a submodel instance to the scene"""
 
@@ -2905,13 +3228,13 @@ class AddSubmodel(Operator):
         eUtils.instantiateSubmodel(self.submodelname, objectname)
         return {'FINISHED'}
 
-
+# [TODO v2.1.0] REVIEW this
 def get_submodel_types(self, context):
     """Returns a list of submodel types for the EnumProperty."""
     return tuple([(sub,) * 3 for sub in defs.definitions['submodeltypes']])
 
 
-# [TODO v2.2.0] REVIEW this
+# [TODO v2.1.0] REVIEW this
 class DefineSubmodel(Operator):
     """Define a new submodel from objects"""
 
@@ -3124,9 +3447,9 @@ class AssignSubmechanism(Operator):
                 parameters = {
                     'type': '{0}R'.format(len(self.joints)),
                     #'jointnames': [j["joint/name"] for j in self.joints], #Is autogenerated
-                    'jointnames_spanningtree': [j.get("joint/name",j.name) for j in self.joints],
-                    'jointnames_active': [j.get("joint/name",j.name) for j in self.joints],
-                    'jointnames_independent': [j.get("joint/name",j.name) for j in self.joints],
+                    'jointnames_spanningtree': [j.get("joint/name", j.name) for j in self.joints],
+                    'jointnames_active': [j.get("joint/name", j.name) for j in self.joints],
+                    'jointnames_independent': [j.get("joint/name", j.name) for j in self.joints],
                     'name': self.mechanism_name,
                     'contextual_name': self.contextual_name
                 }
@@ -3144,7 +3467,7 @@ class AssignSubmechanism(Operator):
                 size = len(mechanismdata['joints']['spanningtree'])
                 if len(self.joints) == size:
                     jointmap = {
-                        getattr(self, 'jointtype' + str(i)): self.joints[i].get("joint/name",self.joints[i].name)
+                        getattr(self, 'jointtype' + str(i)): self.joints[i].get("joint/name", self.joints[i].name)
                         for i in range(len(self.joints))
                     }
                     for j in mechanismdata['joints']['spanningtree']:
@@ -3205,9 +3528,12 @@ class SelectSubmechanism(Operator):
         Returns:
 
         """
-        return bUtils.compileEnumPropertyList(
-            [r['name'] for r in context.scene.objects if r.phobostype == "submechanism"]
-        )
+        list = []
+        for r in context.scene.objects:
+            if r.phobostype == "submechanism":
+                el = (r['contextual_name'], r['contextual_name']+" - "+r['name'], "Type " + r['type'])
+                list.append(el)
+        return list
 
     def get_submechanism_roots(self, context):
         """
@@ -3220,7 +3546,7 @@ class SelectSubmechanism(Operator):
         """
         return SelectSubmechanism.get_submechanism_roots_static(context)
 
-    submechanism : EnumProperty(
+    submechanism: EnumProperty(
         name="Submechanism",
         description="submechanism which to select",
         items=get_submechanism_roots,
@@ -3276,17 +3602,14 @@ class SelectSubmechanism(Operator):
 
         """
         root = sUtils.getObjectByProperty('contextual_name', self.submechanism)
-        jointIDs = root['jointnames_spanningtree']
-        jointlist = [
-            sUtils.getObjectByProperty('joint/name', id) for id in jointIDs
-        ]
-        sUtils.selectObjects([root] + jointlist, clear=True, active=0)
+        joints = root['jointnames_spanningtree']
+        sUtils.selectObjects([root] + joints, clear=True, active=0)
         return {'FINISHED'}
 
 
 
 
-# [TODO v2.0.0] REVIEW this
+# [TODO v2.2.0] REVIEW this
 class MergeLinks(Operator):
     """Merge links"""
 
@@ -3561,7 +3884,16 @@ class ParentOperator(Operator):
         children = context.selected_objects
         for child in children:
             if child != parent:
+                if sUtils.getEffectiveParent(parent) == child:
+                    root = sUtils.getEffectiveParent(child)
+                    sUtils.selectObjects([parent], active=0, clear=True)
+                    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
+                    if root is not None:
+                        eUtils.parentObjectsTo(parent, root)
+
                 eUtils.parentObjectsTo(child, parent)
+
+        sUtils.selectObjects(children, active=children.index(parent) or 0, clear=True)
 
         return {'FINISHED'}
 
@@ -3593,6 +3925,7 @@ classes = (
     CreateInterfaceOperator,
     CopyCustomProperties,
     RenameCustomProperty,
+    SetGeometryTypeProperties,
     SetGeometryType,
     SmoothenSurfaceOperator,
     EditInertialData,
@@ -3628,9 +3961,13 @@ def register():
     for classdef in classes:
         bpy.utils.register_class(classdef)
 
+    bpy.types.Scene.set_geometry_type_props = bpy.props.PointerProperty(type=SetGeometryTypeProperties)
+
 
 def unregister():
     """TODO Missing documentation"""
     print("Unregistering operators.editing...")
     for classdef in classes:
         bpy.utils.unregister_class(classdef)
+
+    del bpy.types.Scene.set_geometry_type_props

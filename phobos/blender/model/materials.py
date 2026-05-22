@@ -32,6 +32,8 @@ def createPhobosMaterials():
                 new_material.node_tree.nodes.remove(principled_bsdf)
             shader_node = new_material.node_tree.nodes.new('ShaderNodeEeveeSpecular')
             material_output = new_material.node_tree.nodes.get('Material Output')
+            if material_output is None:
+                material_output = new_material.node_tree.nodes.new("ShaderNodeOutputMaterial")
             new_material.node_tree.links.new(shader_node.outputs[0], material_output.inputs[0])
             shader_node.inputs['Base Color'].default_value = tuple(mat['diffuse'])
             new_material.show_transparent_back = False

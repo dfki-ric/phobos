@@ -13,3 +13,4 @@ doc/_build
 *_wip**
 tests/api/test_data/.temp**
 *.zip
+*.code-workspace

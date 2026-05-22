@@ -17,7 +17,7 @@
         },
         "material": {
           "classname": "Material",
-          "varname": "materials"
+          "varname": "referenced_materials"
         },
         "sensor": {
           "classname": "SensorFactory",
@@ -45,7 +45,7 @@
         },
         "collision": {
           "classname": "Collision",
-          "varname": "collisions"
+          "varname": "export_collisions"
         },
         "sensor": {
           "classname": "SensorFactory",
@@ -62,7 +62,7 @@
     "Material": {
       "tag": "material",
       "attributes": {
-        "name": "name"
+        "name": "referenced_name"
       },
       "children": {
         "texture": {
@@ -117,12 +117,7 @@
         },
         "material": {
           "classname": "Material",
-          "varname": "material_"
-        }
-      },
-      "attribute_children": {
-        "material": {
-          "name": "material"
+          "varname": "material_reference"
         }
       },
       "nested_children": {
@@ -290,7 +285,7 @@
       }
     },
     "TransmissionJoint": {
-      "tag": "transmission",
+      "tag": "joint",
       "attributes": {
         "name": "name"
       },
@@ -302,7 +297,7 @@
       "tag": "transmission",
       "attributes": {
         "name": "name",
-        "type": "type"
+        "type": "transmission_type"
       },
       "children": {
         "joint": {
@@ -385,7 +380,8 @@
             "collision": "targets"
           }
         },
-        "gps": {}
+        "gps": {},
+        "imu": {}
       }
     },
     "Joint6DOF": {
@@ -529,6 +525,36 @@
           "varname": "origin"
         }
       }
+    },
+    "IMU": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "rate": "rate",
+        "type": "sdf_type"
+      },
+      "attribute_children": {
+        "parent": {
+          "link": "link"
+        }
+      },
+      "children": {
+        "origin": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      }
+    },
+    "Plugin": {
+      "tag": "plugin",
+      "attributes": {
+        "filename": "plugin_filename",
+        "name": "plugin_name"
+      },
+      "value_children": {
+        "parameters": "parameters",
+        "controller_manager_node_name": "controller_manager_node_name"
+      }
     }
   },
   "sdf": {
@@ -653,7 +679,7 @@
       "children": {
         "pose": {
           "classname": "Pose",
-          "varname": "origin"
+          "varname": "origin_root"
         },
         "inertial": {
           "classname": "Inertial",
@@ -665,7 +691,7 @@
         },
         "collision": {
           "classname": "Collision",
-          "varname": "collisions"
+          "varname": "export_collisions"
         },
         "sensor": {
           "classname": "SensorFactory",
@@ -859,11 +885,31 @@
           "value_children": {
             "xyz": "axis"
           }
+        },
+        "axis2": {
+          "tag": "axis2",
+          "children": {
+            "limit": {
+              "classname": "JointLimit",
+              "varname": "limit2"
+            },
+            "dynamics": {
+              "classname": "JointDynamics",
+              "varname": "dynamics"
+            }
+          },
+          "value_children": {
+            "xyz": "axis2"
+          }
         }
       },
       "value_children": {
         "parent": "parent",
-        "child": "child"
+        "child": "child",
+        "gearbox_ratio": "gearbox_ratio",
+        "gearbox_reference_body": "gearbox_reference_body",
+        "screw_thread_pitch": "screw_thread_pitch",
+        "thread_pitch": "thread_pitch"
       }
     },
     "JointLimit": {
@@ -963,7 +1009,8 @@
             "collision": "targets"
           }
         },
-        "gps": {}
+        "gps": {},
+        "imu": {}
       }
     },
     "Joint6DOF": {
@@ -1124,6 +1171,26 @@
         }
       }
     },
+    "IMU": {
+      "tag": "sensor",
+      "attributes": {
+        "name": "name",
+        "type": "sdf_type"
+      },
+      "value_children": {
+        "always_on": "always_on",
+        "rate": "rate",
+        "visualize": "visualize",
+        "topic": "topic",
+        "enable_metrics": "enable_metrics"
+      },
+      "children": {
+        "pose": {
+          "classname": "Pose",
+          "varname": "origin"
+        }
+      }
+    },
     "PluginFactory": {
       "tag": "plugin",
       "attributes": {
@@ -1163,6 +1230,17 @@
         "cmd_min": "cmd_min",
         "cmd_offset":  "cmd_offset"
       }
+    },
+    "Plugin": {
+      "tag": "plugin",
+      "attributes": {
+        "filename": "plugin_filename",
+        "name": "plugin_name"
+      },
+      "value_children": {
+        "parameters": "parameters",
+        "controller_manager_node_name": "controller_manager_node_name"
+      }
     }
   },
   "x3d": {
@@ -1179,8 +1257,8 @@
       "tag": "IndexedFaceSet",
       "attributes": {
         "coordIndex": "x3d_faces",
-        "colorPerVertex": "$false",
-        "normalPerVertex": "$false"
+        "colorPerVertex": "@false",
+        "normalPerVertex": "@false"
       },
       "attribute_children": {
         "Coordinate": {
@@ -1221,9 +1299,9 @@
             "diffuseFactor": "diffuse_rgb",
             "specularFactor": "specular_rgb",
             "shininessFactor": "shininess",
-            "ambientFactor": "$.588 .588 .588",
-            "normalScale": "$2 2 2",
-            "normalBias": "$-1 -1 1"
+            "ambientFactor": "@.588 .588 .588",
+            "normalScale": "@2 2 2",
+            "normalBias": "@-1 -1 1"
           },
           "children": {
             "ImageTexture": {

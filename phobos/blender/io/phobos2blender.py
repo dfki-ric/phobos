@@ -96,9 +96,14 @@ def createGeometry(viscol, geomsrc, linkobj=None):
         newgeom = bUtils.createPrimitive(viscol.name, geometry_type, dimensions, phobostype=geomsrc, pmaterial="phobos_collision")
         newgeom.select_set(True)
     else:
+        # [TODO] we need to handle here the primitive alternatives that are available when loading from smurf
+        # They can be returned as second return value to make clear that they are different
+        # Also they should get another colored material
+        # When we do this we should add support to edit and create such primitive alternatives
+        # Also they will currently not be exported.
         log(
             "Unknown geometry type of "
-            + type(geometry)
+            + str(type(geometry))
             + viscol.name
             + '. Placing empty coordinate system.',
             "ERROR",
@@ -216,6 +221,11 @@ def createLink(link):
         geometries.append((geom, viscol))
     for viscol in link.collisions:
         geom = createGeometry(viscol, "collision")
+        if geom is None:
+            # [TODO] this happens when we load from SMURF if this collision has primitives defined but no mesh
+            # we need to display those primitive alternatives in Blender, too.
+            # Yet, we are completely ignoring them
+            continue
         bound_box = (
             max(bound_box[0], max([c[0] for c in geom.bound_box])),
             max(bound_box[1], max([c[1] for c in geom.bound_box])),

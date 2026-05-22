@@ -183,6 +183,42 @@ prev_collections = {}
 phobosIcon = 0
 
 
+class PhobosSearch(bpy.types.PropertyGroup):
+
+    def onSearch(self, context):
+        updateSidebar()
+
+    def clearSearch(self, context):
+        self.clear = False
+        self.search = ""
+
+    search: StringProperty(
+        name="Search",
+        default="",
+        update=onSearch
+    )
+
+    clear: bpy.props.BoolProperty(
+        update=clearSearch
+    )
+
+
+def findableOperator(layout, operator, tags, **kwargs):
+    localColumn = layout.column()
+    if len(bpy.context.scene.phobossearch.search) > 0:
+        search = bpy.context.scene.phobossearch.search.lower().split(" ")
+        tagsSplit = tags.lower().split(" ")
+        for s in search:
+            for t in tagsSplit:
+                if s in t:
+                    localColumn.alert = True
+                    break
+            else:
+                continue
+            break
+    localColumn.operator(operator, **kwargs)
+
+
 class PhobosWireFrameSettings(bpy.types.PropertyGroup):
     """Stores global wire frame setting"""
 
@@ -505,21 +541,31 @@ class PhobosToolsPanel(bpy.types.Panel):
         """
         layout = self.layout
 
+        #Search bar
+        uiScale = bpy.context.preferences.view.ui_scale
+        panelWidth = context.region.width / uiScale - 72
+        buttonWidth = 40
+        searchSplit = layout.split(factor= (panelWidth-buttonWidth)/panelWidth )
+        sp1 = searchSplit.column()
+        sp1.prop(bpy.context.scene.phobossearch, 'search')
+        sp2 = searchSplit.column()
+        sp2.prop(bpy.context.scene.phobossearch, 'clear', text="", icon="X", icon_only=True)
+
         # Tools & Selection Menu
         tsinlayout = layout.split()
         tsc1 = tsinlayout.column(align=True)
         tsc1.label(text="Select...", icon='HAND')
-        tsc1.operator('phobos.select_root', text='Root')
-        tsc1.operator('phobos.select_model', text='Robot')
-        tsc1.operator('phobos.select_objects_by_phobostype', text="by Phobostype")
-        tsc1.operator('phobos.select_objects_by_name', text="by Name")
+        findableOperator(tsc1, 'phobos.select_root', text='Root', tags="select root link")
+        findableOperator(tsc1, 'phobos.select_model', text='Robot', tags="select robot")
+        findableOperator(tsc1, 'phobos.select_objects_by_phobostype', text="by Phobostype", tags="select phobos type")
+        findableOperator(tsc1, 'phobos.select_objects_by_name', text="by Name", tags="select objects by name")
         tsc2 = tsinlayout.column(align=True)
         tsc2.label(text="Tools", icon='MODIFIER')
-        tsc2.operator('phobos.sort_objects_to_layers', icon='IMGDISPLAY')
-        tsc2.operator('phobos.set_xray')
+        findableOperator(tsc2, 'phobos.sort_objects_to_layers', icon='IMGDISPLAY', tags="sort objects to layer")
+        findableOperator(tsc2, 'phobos.set_xray', tags="set xray x-ray vision")
         # [TODO v2.1.0] REVIEW this
         # tsc2.operator('phobos.toggle_namespaces')
-        tsc2.operator('phobos.measure_distance')
+        findableOperator(tsc2, 'phobos.measure_distance', tags="measure distance")
         # [TODO v2.1.0] Re-add this
         # tsc2.operator('phobos.validate')
 
@@ -864,7 +910,7 @@ ignoredProps = set(
 )
 
 
-# [TODO v2.0.0] Improve e.g. add edit tools
+# [TODO v2.2.0] Improve e.g. add edit tools
 class PhobosPropertyInformationPanel(bpy.types.Panel):
     """Contains all properties sorted in different categories"""
 
@@ -1177,23 +1223,25 @@ class PhobosModelPanel(bpy.types.Panel):
         inlayout = layout.split()
         rc1 = inlayout.column(align=True)
         rc2 = inlayout.column(align=True)
-        rc1.operator('phobos.name_model')
-        rc2.operator('phobos.set_version')
+        findableOperator(rc1, 'phobos.name_model', tags="name model")
+        findableOperator(rc2, 'phobos.set_version', tags="set model version")
 
         inlayout = layout.split()
         c1 = inlayout.column(align=True)
         c2 = inlayout.column(align=True)
         c1.label(text='General', icon='MESH_CUBE')
-        c1.operator('phobos.set_phobostype')
-        c1.operator('phobos.batch_rename')
-        c1.operator('phobos.set_model_root')
+        findableOperator(c1, 'phobos.set_phobostype', tags="set object phobostype")
+        findableOperator(c1, 'phobos.batch_rename', tags="set object batch rename")
+        findableOperator(c1, 'phobos.set_model_root', tags="set object model root")
 
         c2.label(text="Custom properties", icon='WORDWRAP_ON')
-        c2.operator('phobos.rename_custom_property', text="Rename", icon='OUTLINER_DATA_FONT')
-        c2.operator('phobos.batch_property', text="Edit", icon='GREASEPENCIL')
+        findableOperator(c2, 'phobos.rename_custom_property', text="Rename", icon='OUTLINER_DATA_FONT',
+                         tags="custom property properties rename")
+        findableOperator(c2, 'phobos.batch_property', text="Edit", icon='GREASEPENCIL',
+                         tags="custom property properties batch edit")
         #todo: c2.operator('phobos.copy_props', text="Copy", icon='GHOST')
-        c2.operator("phobos.add_annotations")
-        c2.operator("phobos.edit_annotations")
+        findableOperator(c2, "phobos.add_annotations", tags="add annotations")
+        findableOperator(c2, "phobos.edit_annotations", tags="edit annotations")
 
         # Kinematics
         layout.separator()
@@ -1201,20 +1249,20 @@ class PhobosModelPanel(bpy.types.Panel):
         kc1 = kinlayout.column(align=True)
         kc2 = kinlayout.column(align=True)
         kc1.label(text='Kinematics', icon='ARMATURE_DATA')
-        kc1.operator("phobos.create_links")
-        kc1.operator('phobos.merge_links')
-        kc1.operator('phobos.dissolve_link')
-        kc1.operator('phobos.define_joint_constraints')
-        kc1.operator("phobos.create_mimic_joint")
+        findableOperator(kc1, "phobos.create_links", tags="create links")
+        findableOperator(kc1, 'phobos.merge_links', tags="merge links")
+        findableOperator(kc1, 'phobos.dissolve_link', tags="dissolve delete remove links")
+        findableOperator(kc1, 'phobos.define_joint_constraints', tags="define links joints constraints")
+        findableOperator(kc1, "phobos.create_mimic_joint", tags="create links mimic joints")
         # [Todo v2.1.0] kc1.operator('phobos.add_kinematic_chain', icon='CONSTRAINT')
-        kc1.operator('phobos.parent')
+        findableOperator(kc1, 'phobos.parent', tags="parent objects bone")
 
         # Visual/Collisions
         kc2.label(text='Visual/Collision', icon='GROUP')
-        kc2.operator('phobos.define_geometry')
-        kc2.operator('phobos.smoothen_surface')
-        kc2.operator('phobos.create_collision_objects')
-        kc2.operator('phobos.set_collision_group')
+        findableOperator(kc2, 'phobos.define_geometry', tags="define geometry")
+        findableOperator(kc2, 'phobos.smoothen_surface', tags="smoothen surface")
+        findableOperator(kc2, 'phobos.create_collision_objects', tags="create collisions objects")
+        findableOperator(kc2, 'phobos.set_collision_group', tags="set collision group")
 
         # Mechanics
         layout.separator()
@@ -1223,32 +1271,32 @@ class PhobosModelPanel(bpy.types.Panel):
         mc2 = mechlayout.column(align=True)
         #todo: mc1.label(text='Mechanisms', icon='SCRIPTWIN')
         mc1.label(text='Mechanisms')
-        mc1.operator('phobos.assign_submechanism')
-        mc1.operator('phobos.select_submechanism')
+        findableOperator(mc1, 'phobos.assign_submechanism', tags="assign submechanisms")
+        findableOperator(mc1, 'phobos.select_submechanism', tags="select submechanisms")
 
         # Poses
         mc2.label(text='Poses', icon='POSE_HLT')
-        mc2.operator('phobos.store_pose')
-        mc2.operator('phobos.load_pose')
-        mc2.operator('phobos.delete_pose')
+        findableOperator(mc2, 'phobos.store_pose', tags="store current poses")
+        findableOperator(mc2, 'phobos.load_pose', tags="load poses")
+        findableOperator(mc2, 'phobos.delete_pose', tags="delete dissolve remove poses")
 
         # Hardware
         layout.separator()
         minlayout = layout.split()
         hw1 = minlayout.column(align=True)
         hw1.label(text="Hardware", icon='MOD_SCREW')
-        hw1.operator('phobos.add_motor')
-        hw1.operator('phobos.remove_motor')
+        findableOperator(hw1, 'phobos.add_motor', tags="add motor")
+        findableOperator(hw1, 'phobos.remove_motor', tags="delete dissolve remove motor")
         # [TODO v2.1.0] hw1.operator('phobos.add_controller')
-        hw1.operator('phobos.add_sensor')
-        hw1.operator('phobos.create_interface')
+        findableOperator(hw1, 'phobos.add_sensor', tags="add sensor")
+        findableOperator(hw1, 'phobos.create_interface', tags="create interface")
 
         # Masses & Inertia
         mc1 = minlayout.column(align=True)
         mc1.label(text="Masses & Inertia", icon='PHYSICS')
-        mc1.operator('phobos.calculate_mass')
-        mc1.operator('phobos.generate_inertial_objects')
-        mc1.operator('phobos.edit_inertial_data')
+        findableOperator(mc1, 'phobos.calculate_mass', tags="calculate mass")
+        findableOperator(mc1, 'phobos.generate_inertial_objects', tags="generate create inertials")
+        findableOperator(mc1, 'phobos.edit_inertial_data', tags="edit inertials mass")
 
 
 # TODO bring this back or just delete it
@@ -1376,7 +1424,10 @@ class PhobosExportPanel(bpy.types.Panel):
         cmesh.label(text="Meshes")
         for meshtype in phobos_defs.MESH_TYPES:
             typename = "export_mesh_" + meshtype
-            cmesh.prop(bpy.context.scene, typename)
+            if meshtype == "bobj":
+                cmesh.prop(bpy.context.scene, typename, text="bobj (exp.)")
+            else:
+                cmesh.prop(bpy.context.scene, typename)
 
         # Settings for submodel export
         inlayout2 = self.layout.split()
@@ -1663,7 +1714,8 @@ class PhobosDisplayPanel(bpy.types.Panel):
         layout = self.layout
 
         if not wm.drawing_status:
-            layout.operator('phobos.display_information', icon='INFO')
+            findableOperator(layout, 'phobos.display_information', icon='INFO',
+                             tags="draw display visualize model information messages")
         else:
             layout.prop(wm, 'drawing_status', icon='INFO')
             layout.separator()
@@ -1687,9 +1739,9 @@ class PhobosDisplayPanel(bpy.types.Panel):
         kc1 = kinlayout.column(align=True)
         kc2 = kinlayout.column(align=True)
 
-        kc1.operator('phobos.display_wire')
+        findableOperator(kc1, 'phobos.display_wire', tags="toggle wireframe")
         icon = "SPHERE" if bpy.context.scene.phoboswireframesettings.links else "MATERIAL"
-        kc2.operator('phobos.display_wire_links', icon=icon)
+        findableOperator(kc2, 'phobos.display_wire_links', icon=icon, tags="toggle wireframe")
 
 def dynamicLabel(text, uiLayout, context, icon=None):
     """
@@ -1774,10 +1826,21 @@ def dynamicLabel(text, uiLayout, context=None, width=300, icon=None):
         if nextLine != "":
             uiLayout.label(text=nextLine, icon=icon if icon and firstLine else "NONE")
 
+def updateSidebar():
+    """
+    Redraws the blender sidebar. Use when changing an object's property does not
+    trigger a redraw to avoid confusion.
+    """
+    for window in bpy.context.window_manager.windows:
+        for area in window.screen.areas:
+            if area.type == 'PROPERTIES':
+                area.tag_redraw()
+
 
 REGISTER_CLASSES = [
     ModelPoseProp,
     PhobosPrefs,
+    PhobosSearch,
     PhobosWireFrameSettings,
     PhobosExportSettings,
     # CHECK is this needed and right?
@@ -1844,11 +1907,12 @@ def register():
     # add i/o settings to scene to preserve settings for every model
     for meshtype in phobos_defs.MESH_TYPES:
         typename = "export_mesh_" + meshtype
-        setattr(bpy.types.Scene, typename, BoolProperty(name=meshtype, default=False))
+        setattr(bpy.types.Scene, typename, BoolProperty(name=meshtype, default=meshtype == "stl"))
 
     for entitytype in phobos_defs.EXPORT_TYPES:
         typename = "export_entity_" + entitytype
-        setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype, default=entitytype == "smurf"))
+        setattr(bpy.types.Scene, typename, BoolProperty(name=entitytype,
+                                                        default=entitytype == "smurf" or entitytype == "urdf"))
 
     # [TODO v2.1.0] Re-add scene export
     # for scenetype in scenes.scene_types:
@@ -1909,6 +1973,7 @@ def register():
     # bpy.utils.register_class(PhobosScenePanel)
 
     # add phobos settings to scene
+    bpy.types.Scene.phobossearch = PointerProperty(type=PhobosSearch)
     bpy.types.Scene.phoboswireframesettings = PointerProperty(type=PhobosWireFrameSettings)
     bpy.types.Scene.phobosexportsettings = PointerProperty(type=PhobosExportSettings)
     bpy.types.Scene.active_ModelPose = bpy.props.IntProperty(

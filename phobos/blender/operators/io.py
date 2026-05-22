@@ -20,7 +20,7 @@ from bpy.types import Operator
 
 from ..io.blender2phobos import deriveRobot
 from ..io.phobos2blender import createRobot
-from ..phoboslog import log
+from ..phoboslog import log, ErrorMessageWithBox
 from ..utils import blender as bUtils
 from ..utils import io as ioUtils
 from ..utils import naming as nUtils
@@ -28,7 +28,7 @@ from ..utils import selection as sUtils
 
 from ... import core
 from ... import defs as phobos_defs
-from ...utils.resources import get_default_rel_mesh_pathes
+from ...utils.resources import get_default_rel_mesh_paths
 
 
 # [TODO v2.1.0] let this use the phobos API as well
@@ -140,7 +140,7 @@ class ExportModelOperator(Operator):
         elif modellist:
             self.modelname = modellist[0][0]
             return self.execute(context)
-        log("No properly defined models to export.", 'ERROR')
+        ErrorMessageWithBox("No properly defined models to export.")
         return {'CANCELLED'}
 
     def exportModel(self, root, exportpath='.'):
@@ -215,7 +215,7 @@ class ExportModelOperator(Operator):
         robot.export(
             outputdir=exportpath,
             export_config=export_config,
-            rel_mesh_pathes=get_default_rel_mesh_pathes(),
+            rel_mesh_paths=get_default_rel_mesh_paths(),
             ros_pkg_name=None if len(ioUtils.getRosPackageName()) == 0 else ioUtils.getRosPackageName(),
             with_meshes=True,
             use_existing_meshes=len([mt for mt in phobos_defs.MESH_TYPES if getattr(bpy.context.scene, "export_mesh_"+mt, False)]) == 0,
@@ -233,14 +233,31 @@ class ExportModelOperator(Operator):
         Returns:
 
         """
+        prev_active = context.active_object
+        prev_selected = context.selected_objects
+        if prev_active is None:
+            if len(context.selectable_objects) == 0:
+                ErrorMessageWithBox("No exportable objects")
+                return {'CANCELLED'}
+            if ioUtils.getExpSettings().selectedOnly:
+                if len(prev_selected) == 0:
+                    ErrorMessageWithBox("No objects are selected to export. Deselect export option 'Selected only' or select objects")
+                    return {'CANCELLED'}
+                else:
+                    context.view_layer.objects.active = context.selected_objects[0]
+            else:
+                context.view_layer.objects.active = context.selectable_objects[0]
+        prev_mode = bpy.context.object.mode
+        bpy.ops.object.mode_set(mode='OBJECT')
+
         roots = ioUtils.getExportModels()
         if not roots:
-            log("No properly defined models selected or present in scene.", 'ERROR')
+            ErrorMessageWithBox("No properly defined models selected or present in scene.")
             return {'CANCELLED'}
         elif not self.exportall:
             roots = [root for root in roots if nUtils.getModelName(root) == self.modelname]
             if len(roots) > 1:
-                log(
+                ErrorMessageWithBox(
                     "Ambiguous model definitions: "
                     + self.modelname
                     + " exists "
@@ -259,19 +276,14 @@ class ExportModelOperator(Operator):
             log("Export path: " + exportpath, "DEBUG")
             self.exportModel(root, exportpath)
 
-        # select all exported models after export is done
-        if ioUtils.getExpSettings().selectedOnly:
-            for root in roots:
-                objectlist = sUtils.getChildren(root, selected_only=True, include_hidden=False)
-                sUtils.selectObjects(objectlist, clear=False)
-        else:
-            bpy.ops.object.select_all(action='DESELECT')
-            for root in roots:
-                sUtils.selectObjects(list([root]), False)
-            bpy.ops.phobos.select_model()
-
         log("Export successful.", "INFO", end="\n\n")
         self.report({"INFO"}, "Export successful.")
+
+        # Select previously selected objects
+        prev_active_index = prev_selected.index(prev_active) if prev_active in prev_selected else -1
+        context.view_layer.objects.active = context.selectable_objects[0]
+        bpy.ops.object.mode_set(mode=prev_mode)
+        sUtils.selectObjects(prev_selected, active=prev_active_index)
         return {'FINISHED'}
 
 

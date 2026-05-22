@@ -15,7 +15,7 @@ class JointPose(SmurfBase):
 
     @property
     def position(self):
-        if self._joint and self._joint.limit:
+        if self._joint and self._joint.limit and self._joint.limit.lower and self._joint.limit.upper:
             return min(self._joint.limit.upper, max(self._joint.limit.lower, self._position))
         else:
             return self._position
@@ -76,13 +76,13 @@ class JointPoseSet(SmurfBase):
             self.configuration = []
             for joint, position in configuration.items():
                 # Check for joint
-                if robot.get_joint(joint):
-                    c_joint = robot.get_joint(joint)
+                c_joint = robot.get_joint(joint)
+                if c_joint and c_joint.joint_type != "fixed":
                     self.configuration.append(
                         JointPose(joint=c_joint, position=position)
                     )
 
-    def conflicts_with(self, other):
+    def conflicts_with(self, other, new_name=None):
         for tc in self.configuration:
             for oc in other.configuration:
                 if tc.joint == oc.joint and tc.position != oc.position:
@@ -91,6 +91,6 @@ class JointPoseSet(SmurfBase):
 
     @classmethod
     def merge(cls, first, second):
-        assert not first.conflicts_with(second)
+        assert not first.conflicts_with(second) and first.name == second.name
         first_joints = [str(p.joint) for p in first.configuration]
-        return first.configuration + [jp for jp in second.configuration if str(jp.joint) not in first_joints]
+        return JointPoseSet(name=first.name, configuration=first.configuration + [jp for jp in second.configuration if str(jp.joint) not in first_joints])

@@ -1,4 +1,6 @@
-<package format="2">
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>$INPUTNAME</name>
   <version>$VERSION</version>
   <description>
@@ -7,13 +9,21 @@
   $AUTHOR
   $MAINTAINER
   $URL
-  <buildtool_depend>catkin</buildtool_depend>
-  <!--<depend>roslaunch</depend>-->
-  <depend>robot_state_publisher</depend>
-  <depend>rviz</depend>
-  <depend>joint_state_publisher</depend>
-  <!--<depend>gazebo</depend>-->
+  $LICENSE
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <exec_depend>urdf</exec_depend>
+  <exec_depend>xacro</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>robot_state_publisher</exec_depend>
+  <exec_depend>joint_state_publisher_gui</exec_depend>
+  <exec_depend>rviz2</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
   <export>
-    <architecture_independent />
+    <build_type>ament_cmake</build_type>
   </export>
 </package>

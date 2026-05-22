@@ -60,7 +60,7 @@ def transform_object(obj, T, relative_to):
 
 
 def adapt_mesh_pathes(robot, new_urdf_dir, copy_to=None):
-    # [TODO pre_v2.0.0] Check whether this has become obsolete due to export adaption
+    # [TODO v2.2.0] Check whether this has become obsolete due to export adaption
     for link in robot.links:
         for geo in link.visuals + link.collisions:
             if isinstance(geo.geometry, representation.Mesh):
@@ -86,8 +86,8 @@ def read_relative_filename(filename, start_file_path):
         start_file_path = os.path.abspath(start_file_path)
     if start_file_path.split(".")[-1] in IMPORT_TYPES:
         start_file_path = os.path.dirname(start_file_path)  # /bla/blub/xyz/blib.xyz -> /bla/blub/xyz
-    if filename.startswith("package://"):  # ROS Package
-        if os.path.basename(start_file_path) in IMPORT_TYPES+["xacro"]:
+    if filename.startswith("package:"):  # ROS Package
+        if os.path.basename(start_file_path) in IMPORT_TYPES:
             package_dir = os.path.dirname(start_file_path)  # /bla/blub/xyz -> /bla/blub
         else:
             raise IOError("Can't derive package_dir from " + start_file_path + ". "

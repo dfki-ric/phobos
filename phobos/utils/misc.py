@@ -2,12 +2,14 @@ import os
 import platform
 import re
 import subprocess
+import glob
 from copy import deepcopy
 from xml.dom.minidom import parseString
 from xml.etree import ElementTree as ET
 
 import numpy as np
 
+from ..defs import load_json
 from ..commandline_logging import get_logger
 
 log = get_logger(__name__)
@@ -19,10 +21,29 @@ def duplicate(obj, link_obj=False):
     return deepcopy(obj)
 
 
+def abspath(in_path, base=os.getcwd()):
+    out = os.path.expanduser(os.path.expandvars(in_path))
+    if not os.path.isabs(out):
+        out = os.path.join(base, in_path)
+    return os.path.normpath(os.path.expanduser(os.path.expandvars(out)))
+
+
 def to_pretty_xml_string(xml):
-    xml_string = xml if type(xml) == str else ET.tostring(xml, method='xml').decode('utf-8')
-    xml_string = parseString(xml_string)
-    return xml_string.toprettyxml(indent='  ').replace(u'<?xml version="1.0" ?>', '').strip()
+    if type(xml) == str:
+        xml_string = xml
+    else:
+        try:
+            xml_string = ET.tostring(xml, method='xml').decode('utf-8')
+            xml_string = parseString(xml_string)
+            return xml_string.toprettyxml(indent='  ').replace(u'<?xml version="1.0" ?>', '').strip()
+        except Exception as e:
+            log.warn(f"WARNING: Couldn't generate pretty xml, due to this error: {e}")
+            try:
+                ET.indent(xml, space="  ")
+            except:
+                pass
+            xml_string = ET.tostring(xml, method='xml').decode('utf-8')
+    return xml_string.replace(u'<?xml version="1.0" ?>', '').strip()
 
 
 def merge_default(input_dict, default_dict):
@@ -32,6 +53,20 @@ def merge_default(input_dict, default_dict):
         if _k not in input_dict:
             input_dict[_k] = _v
     return input_dict
+
+
+def patch_dict(base_dict, patch, patch_list_strategy="APPEND"):
+    patched = deepcopy(base_dict)
+    for k, v in patch.items():
+        if k in patched and type(patched[k]) == dict and type(v) == dict:
+            patched[k] = patch_dict(patched[k], v, patch_list_strategy=patch_list_strategy)
+        elif patch_list_strategy.upper() == "APPEND" and k in patched and type(patched[k]) == list and type(v) == list:
+            patched[k] = patched[k] + v
+        elif patch_list_strategy.upper() == "PREPEND" and k in patched and type(patched[k]) == list and type(v) == list:
+            patched[k] = v + patched[k]
+        else: # patch_list_strategy = REPLACE
+            patched[k] = v
+    return patched
 
 
 def sys_path(path):
@@ -92,7 +127,98 @@ def trunc(values, decimals=0):
     return np.trunc(values*10**decimals)/(10**decimals)
 
 
-def regex_replace(string, replacements, verbose=False):
+def is_int(val):
+    if type(val) == int:
+        return True
+    try:
+        int(val)
+        return True
+    except ValueError:
+        return False
+
+
+def is_float(val):
+    if type(val) == float:
+        return True
+    try:
+        float(val)
+        return True
+    except ValueError:
+        return False
+
+
+def serialize(entry, float_fmt=None, **kwargs) -> str:
+    """
+
+    Args:
+        entry: The entry to serialize
+        precision_dict: the float format in the style "%.6f"
+
+    Returns:
+
+    """
+    assert entry is not None
+    if hasattr(entry, "tolist"):
+        entry = entry.tolist()
+    if type(entry) in [list, tuple, np.array]:
+        entry = [serialize(v, float_fmt=float_fmt) for v in entry]
+        return " ".join(entry)
+    elif type(entry) in [int, np.intc, np.int64, bool]:
+        return str(int(entry))
+    elif type(entry) in [float, np.float64]:
+        return float_fmt % entry if float_fmt is not None else str(entry)
+    else:
+        return str(entry)
+
+
+def deserialize(string: str, key=None):
+    string = string.strip()
+    if " " in string and not key in ["uri", "url", "file", "filepath", "filename"]:
+        _list = string.split()
+        if all([is_int(v) for v in _list]):
+            return [int(v) for v in _list]
+        elif all([is_float(v) for v in _list]):
+            return [float(v) for v in _list]
+        else:
+            return _list
+    elif is_int(string):
+        return int(string)
+    elif is_float(string):
+        return float(string)
+    else:
+        return string
+
+
+def get_var(object, varname_string, default="ABORT", float_fmt=None):
+    # if the var name startswith @ it shall be taken as is
+    if varname_string.startswith("@"):
+        return varname_string[1:]
+    #if varname contains a | the parts will be evaluated separately (only possible for strings)
+    if "|" in varname_string:
+        var = ""
+        for part in varname_string.split("|"):
+            var += serialize(get_var(object, part, default=default), float_fmt=float_fmt)
+        return var
+    # if varname contains . it will access sub values of a var
+    if "." in varname_string:
+        var = object
+        for var_part in varname_string.split("."):
+            if default == "ABORT":
+                var = getattr(var, var_part)
+            else:
+                log.debug(f"{varname_string} of {repr(object)} does not exist returning {default}")
+                var = getattr(var, var_part, default)
+    else:
+        if default == "ABORT":
+            var = getattr(object, varname_string)
+        else:
+            if not hasattr(object, varname_string):
+                log.debug(f"{varname_string} of {repr(object)} does not exist returning {default}")
+            var = getattr(object, varname_string, default)
+    return var
+
+
+def regex_replace(string, replacements, verbose=False, correspondance=None, float_fmt=None):
     """
     In string applies all replacements defined in replacements dict.
     It can be a list of dicts or a dict of strings that shall be replaced.0
@@ -102,6 +228,8 @@ def regex_replace(string, replacements, verbose=False):
     after = before
     if type(replacements) is dict:
         for old, new in replacements.items():
+            if new.startswith("~") and correspondance is not None:
+                new = str(get_var(correspondance, new[1:], float_fmt=float_fmt))
             after = re.sub(
                 r"" + old,
                 new,
@@ -110,6 +238,8 @@ def regex_replace(string, replacements, verbose=False):
     elif type(replacements) is list:
         for entry in replacements:
             for old, new in entry.items():
+                if new.startswith("~") and correspondance is not None:
+                    new = str(get_var(correspondance, new[1:], float_fmt=float_fmt))
                 after = re.sub(
                     r"" + old,
                     new,
@@ -125,13 +255,17 @@ def regex_replace(string, replacements, verbose=False):
 def append_string(s, *args, **kwargs):
     """Replacement for print so that the printed string is put to s"""
     new = " ".join([str(a) for a in args])
+    if ("print" in kwargs.keys() and kwargs["print"]) or "loglevel" in kwargs:
+        loglevel = kwargs.get("loglevel", "info")
+        if "loglevel" in kwargs:
+            kwargs.pop("loglevel")
+        if "print" in kwargs:
+            kwargs.pop("print")
+        getattr(log, loglevel.lower())(" ".join([str(a) for a in args]))
     if "end" in kwargs.keys():
         new += kwargs["end"]
     else:
         new += "\n"
-    if "print" in kwargs.keys() and kwargs["print"]:
-        kwargs.pop("print")
-        log.info(" ".join(args))
     return s + new
 
 
@@ -142,17 +276,29 @@ def is_binary_file(filepath):
         return bool(f.read(256).translate(None, textchars))
 
 
-def execute_shell_command(cmd, cwd=None, dry_run=False, silent=False):
+def execute_shell_command(cmd, cwd=None, dry_run=False, silent=False, verbose=False, executable=None):
     if cwd is None:
         cwd = os.getcwd()
     if not silent:
         log.debug(("Skipping" if dry_run else "Executing") + f": {cmd} in {cwd}")
     if dry_run:
         return "", ""
-    proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=cwd)
+
+    if verbose:
+        log.info("Executing: "+cmd+" in "+cwd)
+    elif not silent:
+        log.debug("Executing: "+cmd+" in "+cwd)
+    if executable:
+        proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=cwd, executable=executable)
+    else:
+        proc = subprocess.Popen([cmd], stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, cwd=cwd)
     # proc.wait()
     (out, err) = proc.communicate()
-    if not silent:
+    if verbose:
+        log.info(out.decode('UTF-8'))
+        log.info(err.decode('UTF-8'))
+        log.info(f"Subprocess returned {proc.returncode}")
+    elif not silent:
         log.debug(out.decode('UTF-8'))
         log.debug(err.decode('UTF-8'))
         log.debug(f"Subprocess returned {proc.returncode}")
@@ -187,7 +333,7 @@ def get_thumbnail(robotfile, icon_size=512):
     if robotfile.lower().endswith(".smurf"):
         base_dir = os.path.dirname(robotfile)
         with open(robotfile, "r") as f:
-            robotfile = [x for x in yaml.safe_load(f.read())["files"] if x.endswith("df")][0]
+            robotfile = [x for x in load_json(f.read())["files"] if x.endswith("df")][0]
         robotfile = os.path.normpath(os.path.join(base_dir, robotfile))
     # use pybullet to get an image
     import pybullet as pb
@@ -247,40 +393,46 @@ def recreate_dir(pipeline, directory):
     create_dir(pipeline, directory)
 
 
-def copy(pipeline, src, dst, silent=False):
+def copy(pipeline, src, dst, silent=True):
     if not silent:
-        log.debug(f"Copying {pipeline.relpath(src) if pipeline is not None else src} to {pipeline.relpath(dst) if pipeline is not None else dst}")
+        log.info(f"Copying {pipeline.relpath(src) if pipeline is not None else src} to {pipeline.relpath(dst) if pipeline is not None else dst}")
     execute_shell_command("mkdir -p {} || true".format(os.path.dirname(dst)), silent=True)
     os.system("cp -rP {} {}".format(src, dst))
 
 
 def store_persisting_files(pipeline, repo, list_of_files, temp_dir):
     log.debug("Storing the following files:")
+    expanded_files = []
     for f in list_of_files:
+        expanded_files += glob.glob(f)
+    for f in expanded_files:
         src = os.path.join(repo, f)
         dst = os.path.join(temp_dir, f)
         create_dir(pipeline, os.path.dirname(dst))
         log.debug(pipeline.relpath(src))
-        copy(pipeline, src, dst, silent=False)
+        copy(pipeline, src, os.path.dirname(dst)+"/", silent=False)
 
 
 def restore_persisting_files(pipeline, repo, list_of_files, temp_dir):
     log.debug("Restoring the following files:")
+    expanded_files = []
     for f in list_of_files:
+        expanded_files += glob.glob(f)
+    for f in expanded_files:
         src = os.path.join(temp_dir, f)
         dst = os.path.join(repo, f)
         create_dir(pipeline, os.path.dirname(dst))
         log.debug(pipeline.relpath(dst))
-        copy(pipeline, src, dst, silent=False)
+        copy(pipeline, src, os.path.dirname(dst)+"/", silent=False)
 
 
-def edit_name_string(name, prefix=None, suffix=None, replacements=None):
+def edit_name_string(name, prefix=None, suffix=None, replacements=None, do_not_double=True, correspondance=None, float_fmt="%.3f"):
     if replacements is None:
         replacements = {}
-    name = regex_replace(name, replacements)
-    if prefix:
+    name = regex_replace(name, replacements, correspondance=correspondance, float_fmt=float_fmt)
+    if prefix and (not do_not_double or not name.startswith(prefix)):
         name = str(prefix) + name
-    if suffix:
+    if suffix and (not do_not_double or not name.endswith(suffix)):
         name = name + str(suffix)
     return name
 
@@ -338,4 +490,43 @@ def color_parser(*args, rgba=None):
 
 
 def to_hex_color(color_as_list):
-    return "#" + "".join([hex(int(x * 255))[2:] for x in color_as_list])
+    return "#" + "".join([f"{int(x * 255):02x}" for x in color_as_list])
+
+
+def singular(prop):
+    """
+    Makes sure the prop is single and not a list
+    Args:
+        prop: The property to check
+
+    Returns:
+        prop as a single element
+    Raises:
+        Assertion error if prop is a list with more than one element
+    """
+    if type(prop) == list:
+        if len(prop) == 1:
+            return prop[0]
+        elif len(prop) == 0:
+            return None
+        else:
+            raise AssertionError(f"Got list with content {prop} where only a single element is allowed.")
+    else:
+        return prop
+
+
+def plural(prop):
+    """
+    Makes sure prop is a list
+    Args:
+        prop: The property to check
+
+    Returns:
+        prop as list
+    """
+    if type(prop) == list:
+        return prop
+    elif prop is None:
+        return []
+    else:
+        return [prop]

@@ -49,10 +49,13 @@ def rpy_to_matrix(rpy):
 
 
 def matrix_to_rpy(R):
-    try:
-        angles = Rot.from_matrix(R).as_euler(EULER_CONVENTION)
-    except:
-        angles = Rot.from_dcm(R).as_euler(EULER_CONVENTION)
+    determinant = np.linalg.det(R)
+    if determinant < 0:  # This is a reflection matrix
+        scale = np.sign(np.diag(R))
+        scaling_matrix = np.diag(scale)
+        R = np.dot(R, np.linalg.inv(scaling_matrix))
+    angles = Rot.from_matrix(R).as_euler(EULER_CONVENTION)
+
     return order_angles(angles, EULER_CONVENTION, RPY_CONVENTION)
 
 

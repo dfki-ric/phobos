@@ -65,6 +65,11 @@ jointtypes = (
     ('fixed',) * 3,
     ('floating',) * 3,
     ('planar',) * 3,
+    ('gearbox', 'gearbox (sdf only)', 'geared revolute joint'),
+    # ('revolute2', 'revolute2 (sdf only)', 'same as two revolute joints connected in series'),
+    ('ball', 'ball (sdf only)', 'a ball and socket joint'),
+    ('screw', 'screw (sdf only)', 'a single degree of freedom joint with coupled sliding and rotational motion'),
+    ('universal', 'universal (sdf only)', 'like a ball joint, but constrains one degree of freedom')
 )
 
 geometrytypes = (('box',) * 3, ('cylinder',) * 3, ('sphere',) * 3, ('mesh',) * 3)

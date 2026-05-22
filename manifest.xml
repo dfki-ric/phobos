@@ -34,7 +34,7 @@
   <depend package="pyyaml"/><!-- optional="1"/>-->
   <!--  Only used for kccd collision export -->
   <depend package="control/kccdtools" optional="1"/>
-  <!--  Only necessary when using the blender add-on-->
+  <!--  Only necessary when using the blender add-on or for collision mesh processing-->
   <depend package="blender" optional="1"/>
   <!--  Only used for certain tests-->
   <depend package="control/hyrodyn" optional="1" />

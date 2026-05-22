@@ -9,6 +9,9 @@ import trimesh
 from . import geometry
 from . import io
 from ..io import representation
+from ..commandline_logging import get_logger
+
+log = get_logger(__name__)
 
 
 def generate_kccd_optimizer_ready_collision(robot, linkname, outputdir, join_first=True, merge_additionally=None,
@@ -99,9 +102,9 @@ def find_zero_pose_collisions(robot):
     return zero_pose_colls if colls_exist else None
 
 
-def replace_geometry(element, shape='box', oriented=False, scale=1.0):
+def replace_geometry(element, shape='box', oriented=False, scale=1.0, apply_primitives=False):
     """
-    Replace the geometry of the element with an oriented shape. urdf_path is needed for mesh loading.
+    Creates a geometry of the element with an oriented shape. urdf_path is needed for mesh loading.
     Args:
         element: An geometry element representation.Visual or representation.Collision
         shape: ['box', 'sphere', 'cylinder', 'convex']
@@ -112,7 +115,7 @@ def replace_geometry(element, shape='box', oriented=False, scale=1.0):
         None
     """
     if type(element) is list:
-        return [replace_geometry(e, shape, oriented, scale) for e in element]
+        return [replace_geometry(e, shape, oriented, scale, apply_primitives) for e in element]
 
     if element is None:
         return
@@ -120,22 +123,25 @@ def replace_geometry(element, shape='box', oriented=False, scale=1.0):
     if not isinstance(element.geometry, representation.Mesh):
         return
 
-    mesh = io.as_trimesh(element.geometry.load_mesh(), silent=True)
-    mesh.apply_transform(element.origin.to_matrix())
-
-    if shape == 'sphere':
-        element.geometry, transform = geometry.create_sphere(mesh, scale=scale)
-        element.origin = representation.Pose.from_matrix(transform, relative_to=element.link)
-    elif shape == 'cylinder':
-        element.geometry, transform = geometry.create_cylinder(mesh, scale=scale)
-        element.origin = representation.Pose.from_matrix(transform, relative_to=element.link)
-    elif shape == 'box':
-        element.geometry, transform = geometry.create_box(mesh, oriented=oriented, scale=scale)
-        element.origin = representation.Pose.from_matrix(transform, relative_to=element.link)
-    elif shape == 'convex':
+    if shape == 'convex':
         element.geometry.to_convex_hull()
         element.geometry.scale = scale
         element.origin = representation.Pose.from_matrix(np.identity(4), relative_to=element.link)
+    elif shape in ["sphere", "cylinder", "box"]:
+        mesh = io.as_trimesh(element.geometry.load_mesh(), silent=True)
+        if shape == 'sphere':
+            geo, transform = geometry.create_sphere(mesh, scale=scale)
+        elif shape == 'cylinder':
+            geo, transform = geometry.create_cylinder(mesh, scale=scale)
+        elif shape == 'box':
+            geo, transform = geometry.create_box(mesh, oriented=oriented, scale=scale)
+        new_origin = representation.Pose.from_matrix(np.array(element.origin.to_matrix()).dot(np.array(transform)), relative_to=element.link)
+        if not apply_primitives:
+            geo.origin = new_origin
+            element.primitives.append(geo)
+        else:
+            element.geometry = geo
+            element.origin = new_origin
     else:
         raise Exception('Shape {} not implemented. Please choose sphere, cylinder, box or convex.'.format(shape))
     return
@@ -159,10 +165,9 @@ def join_collisions(robot, linkname, collisionnames=None, name_id=None, only_ret
     primitives = []
     file_types = set()
     for e in elements:
-        if not isinstance(e.geometry, representation.Mesh):
-            primitives += [e]
-            continue
-        else:
+        if e.primitives:
+            primitives += e.primitives
+        if e.geometry is not None:
             mesh = io.as_trimesh(e.geometry.load_mesh(), silent=True)
             name = e.name
             if name.lower().startswith("collision_"):
@@ -172,12 +177,19 @@ def join_collisions(robot, linkname, collisionnames=None, name_id=None, only_ret
             name = str.replace(name, "/", "")
             names.append(name)
             mesh.apply_transform(e.origin.to_matrix())
+            #mesh = geometry.improve_mesh(mesh)
+            mesh = mesh.convex_hull
+            #assert mesh.is_volume, f"Convex-Hull of{e.geometry.abs_filepath} is no volume"
             meshes.append(mesh)
             file_types.add(e.geometry.input_type)
             if not only_return:
                 link.remove_aggregate(e)
+    try:
+        mesh = trimesh.boolean.union(meshes, engine="blender")
+    except ValueError as error:
+        log.warning(f"In link {linkname} this mesh issue occurs {error}\n Trying to skip the volume check. (This issues occurs since trimesh update 4.1.4->4.2.0 Message from trimesh.)")
+        mesh = trimesh.boolean.union(meshes, engine="blender", check_volume=False)
 
-    mesh = trimesh.util.concatenate(meshes)
     if only_return:
         return mesh
 
@@ -191,11 +203,12 @@ def join_collisions(robot, linkname, collisionnames=None, name_id=None, only_ret
     link.add_aggregate("collision", representation.Collision(
         origin=representation.Pose(rpy=[0, 0, 0], xyz=[0, 0, 0], relative_to=link),
         geometry=mesh_representation,
-        name="collision_"+link.name
+        name="collision_"+link.name,
+        primitives=primitives
     ))
 
 
-def replace_collisions(robot, shape='box', oriented=False, exclude=None):
+def replace_collisions(robot, shape='box', oriented=False, exclude=None, apply_primitives=False):
     """Replace all collisions of the robot ( except exclude's ) with a given shape. This can be
     a 'sphere', 'cylinder', 'box' or 'convex'.
     """
@@ -203,22 +216,22 @@ def replace_collisions(robot, shape='box', oriented=False, exclude=None):
         exclude = []
     for link in robot.links:
         if link.name not in exclude:
-            replace_collision(robot, link.name, shape=shape, oriented=oriented)
+            replace_collision(robot, link.name, shape=shape, oriented=oriented, apply_primitives=apply_primitives)
     return
 
 
-def replace_collision(robot, linkname, shape='box', oriented=False, scale=1.0):
+def replace_collision(robot, linkname, shape='box', oriented=False, scale=1.0, apply_primitives=False):
     """Replace the collision(s) stated in linkname of the robot with an oriented shape.
     """
     if isinstance(linkname, list):
-        [replace_collision(robot, lname, shape=shape, oriented=oriented, scale=scale) for lname in linkname]
+        [replace_collision(robot, lname, shape=shape, oriented=oriented, scale=scale, apply_primitives=False) for lname in linkname]
         return
 
     assert type(linkname) is str
     link = robot.get_link(linkname)
-    if link and hasattr(link, 'collision'):
+    if link:
         # print("Processing {}...".format(link.name))
-        geometry.replace_geometry(link.collisions, shape=shape, oriented=oriented, scale=scale)
+        replace_geometry(link.collisions, shape=shape, oriented=oriented, scale=scale, apply_primitives=apply_primitives)
     return
 
 

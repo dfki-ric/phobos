@@ -1,42 +1,40 @@
 try:
-    from lxml import etree as ET
+    from lxml import etree as ET, QName
 except ImportError:
     from xml.etree import ElementTree as ET
+    QName = None
 
 import json
 from typing import List
+from copy import deepcopy
 
 import numpy as np
 import pkg_resources
 
+from ..defs import KINEMATIC_TYPES
 from .base import Representation, Linkable
-from ..utils.misc import to_pretty_xml_string
+from ..utils.misc import to_pretty_xml_string, patch_dict, get_var, deserialize, is_int, is_float, plural, singular
 
 from ..commandline_logging import get_logger
 log = get_logger(__name__)
 
+XML_REFLECTIONS = {
+    "urdf": {
+        "read": True,
+        "write": True
+    },
+    "sdf": {
+        "read": True,
+        "write": True
+    },
+    "x3d": {
+        "read": False,
+        "write": True
+    }
+}
 FORMATS = json.load(open(pkg_resources.resource_filename("phobos", "data/xml_formats.json"), "r"))
+
 REGISTERED_CLASSES = {}
-
-
-def is_int(val):
-    if type(val) == int:
-        return True
-    try:
-        int(val)
-        return True
-    except ValueError:
-        return False
-
-
-def is_float(val):
-    if type(val) == float:
-        return True
-    try:
-        float(val)
-        return True
-    except ValueError:
-        return False
 
 
 def get_class(classname):
@@ -51,40 +49,53 @@ def get_class(classname):
     return cls
 
 
-def get_var(object, varname_string, default="ABORT"):
-    if varname_string.startswith("$"):
-        return varname_string[1:]
-    if "." in varname_string:
-        var = object
-        for var_part in varname_string.split("."):
-            if default == "ABORT":
-                var = getattr(var, var_part)
-            else:
-                log.debug(f"{varname_string} of {repr(object)} does not exist returning {default}")
-                var = getattr(var, var_part, default)
-    else:
-        if default == "ABORT":
-            var = getattr(object, varname_string)
+# instead of misc.serialize
+def serialize(entry, float_fmt=None, **kwargs) -> str:
+    """
+
+    Args:
+        entry: The entry to serialize
+        precision_dict: the float format in the style "%.6f"
+
+    Returns:
+
+    """
+    assert entry is not None
+    if hasattr(entry, "tolist"):
+        entry = entry.tolist()
+    if type(entry) in [list, tuple, np.array]:
+        entry = [serialize(v, float_fmt=float_fmt) for v in entry]
+        return " ".join(entry)
+    elif type(entry) in [int, np.intc, np.int64, bool]:
+        return str(int(entry))
+    elif type(entry) in [float, np.float64]:
+        return float_fmt % entry if float_fmt is not None else str(entry)
+    elif isinstance(entry, Linkable):
+        if entry._related_robot_instance is not None and kwargs.get("robot_instance", None) is not None and \
+            str(entry._related_robot_instance._related_entity_instance) != str(kwargs["robot_instance"]._related_entity_instance):
+                return str(entry._related_robot_instance._related_entity_instance) + "::" + str(entry)
         else:
-            log.debug(f"{varname_string} of {repr(object)} does not exist returning {default}")
-            var = getattr(object, varname_string, default)
-    return var
+            return str(entry)
+    else:
+        return str(entry)
 
 
 class XMLDefinition(object):
     def __init__(self, dialect, tag, value=None, attributes=None, children=None, value_children=None,
-                 attribute_children=None, nested_children=None):
+                 attribute_children=None, nested_children=None, text=None):
         self.dialect = dialect
         self.xml_tag = tag
         self.xml_value = value
         self.xml_attributes = attributes if attributes else {}
         self.xml_children = children if children else {}
-        for _, child_def in self.xml_children.items():
-            try:
-                child_def["class"] = get_class(child_def["classname"])
-                assert child_def["class"].__name__ == child_def["classname"]
-            except TypeError:
-                raise TypeError(f"Faulty XMLDefinition for dialect '{dialect}' and tag '{tag}': {child_def}")
+        self.xml_text = text
+        if type(self.xml_children) == dict:
+            for _, child_def in self.xml_children.items():
+                try:
+                    child_def["class"] = get_class(child_def["classname"])
+                    assert child_def["class"].__name__ == child_def["classname"]
+                except TypeError:
+                    raise TypeError(f"Faulty XMLDefinition for dialect '{dialect}' and tag '{tag}': {child_def}")
         self.xml_value_children = value_children if value_children else {}
         self.xml_attribute_children = attribute_children if attribute_children else {}
         self.xml_nested_children = {}
@@ -105,38 +116,50 @@ class XMLDefinition(object):
         Returns:
             An XML object
         """
+        _xml_tag = self.xml_tag
+        if self.xml_tag == "__DYNAMIC__":
+            _xml_tag = object.xml_tag
+            if QName:
+                _xml_tag == QName(**_xml_tag.split(":"))
         # attributes
         if float_fmt_dict is None:
             float_fmt_dict = {}
         attrib = {}
-        for attname, varname in self.xml_attributes.items():
-            val = get_var(object, varname, None)
-            if val is not None:
-                attrib[attname] = self._serialize(val, float_fmt=float_fmt_dict.get(attname, float_fmt_dict.get("default", None)), **kwargs)
-        out = ET.Element(self.xml_tag, attrib=attrib)
-        # value
-        if self.xml_value is not None:
-            assert all([x == {} for x in [self.xml_children, self.xml_value_children, self.xml_attribute_children,
-                                          self.xml_nested_children]])
-            val = get_var(object, self.xml_value, None)
-            out.text = self._serialize(val, float_fmt=float_fmt_dict.get(self.xml_tag, float_fmt_dict.get("default", None)), **kwargs)
-            if val is not None:
-                return out
+        _xml_attributes = self.xml_attributes
+        if type(self.xml_attributes) == str:
+            _xml_attributes = get_var(object, self.xml_attributes, default={})
+            if _xml_attributes is None:
+                _xml_attributes = {}
+            assert type(_xml_attributes) == dict, self.xml_attributes+": "+repr(_xml_attributes)
+        for attname, varname in _xml_attributes.items():
+            if type(self.xml_attributes) != str:
+                val = get_var(object, varname, None)
             else:
-                return
+                val = varname
+            if val is not None:
+                attrib[attname] = serialize(val, float_fmt=float_fmt_dict.get(attname, float_fmt_dict.get("default", None)), **kwargs)
+        out = ET.Element(_xml_tag, attrib=attrib)
         # normal children
         children = []
-        for _, var in self.xml_children.items():
-            obj = get_var(object, var["varname"], None)
-            if type(obj) == list:
+        if type(self.xml_children) == str:
+            # this way we can export children directly from list and keep the order
+            obj = get_var(object, self.xml_children)
+            if obj:
+                assert type(obj) == list
                 children += [o for o in obj if o is not None and (not isinstance(o, Representation) or not o.is_empty())]
-            elif isinstance(obj, var["class"]):
-                children += [obj]
-            elif hasattr(object, "_"+var["varname"]):
-                _obj = getattr(object, "_"+var["varname"])
-                if _obj is not None and (not isinstance(_obj, Representation) or not _obj.is_empty()):
-                    children += [_obj]
-        for child in sorted(children, key=lambda x: x.sort_string()):
+        else:
+            for _, var in self.xml_children.items():
+                obj = get_var(object, var["varname"], None)
+                if type(obj) == list:
+                    children += [o for o in obj if o is not None and (not isinstance(o, Representation) or not o.is_empty())]
+                elif isinstance(obj, var["class"]):
+                    children += [obj]
+                elif hasattr(object, "_"+var["varname"]):
+                    _obj = getattr(object, "_"+var["varname"])
+                    if _obj is not None and (not isinstance(_obj, Representation) or not _obj.is_empty()):
+                        children += [_obj]
+            children = sorted(children, key=lambda x: x.sort_string())
+        for child in children:
             try:
                 e = child.to_xml(self.dialect, float_fmt_dict=float_fmt_dict, **kwargs)
                 if e is not None:
@@ -147,40 +170,85 @@ class XMLDefinition(object):
                 else:
                     raise error
         # children that are created from a simple property and have only attributes
-        for tag, attribute_map in self.xml_attribute_children.items():
-            _attrib = {attname: self._serialize(get_var(object, varname, None), float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)), **kwargs)
-                       for attname, varname in attribute_map.items() if get_var(object, varname, None) is not None}
-            if len(_attrib) == 0:
-                continue
-            e = ET.Element(tag, attrib=_attrib)
-            out.append(e)
+        if type(self.xml_attribute_children) == str:
+            _xml_attribute_children = get_var(object, self.xml_attribute_children, {})
+            if _xml_attribute_children:
+                for tag, attribute_map in _xml_attribute_children:
+                    _attrib = {attname: serialize(var, float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)), **kwargs)
+                            for attname, var in attribute_map.items() if var is not None}
+                    if len(_attrib) == 0:
+                        continue
+                    e = ET.Element(tag, attrib=_attrib)
+                    out.append(e)
+        else:
+            for tag, attribute_map in self.xml_attribute_children.items():
+                _attrib = {attname: serialize(get_var(object, varname, None), float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)), **kwargs)
+                        for attname, varname in attribute_map.items() if get_var(object, varname, None) is not None}
+                if len(_attrib) == 0:
+                    continue
+                e = ET.Element(tag, attrib=_attrib)
+                out.append(e)
         # children that have the a value as text
-        for tag, varname in self.xml_value_children.items():
-            val = get_var(object, varname, None)
-            if val is not None:
-                if type(val) == list and all([not is_int(v) and not is_float(v) and type(v) == str for v in val]):
-                    for v in val:
+        if type(self.xml_value_children) == str:
+            _xml_value_children = get_var(object, self.xml_value_children, {})
+            if _xml_value_children:
+                for tag, val in get_var(object, _xml_value_children, {}):
+                    if val is not None:
+                        if type(val) == list and all([not is_int(v) and not is_float(v) and type(v) == str for v in val]):
+                            for v in val:
+                                e = ET.Element(tag)
+                                _t = serialize(v, float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)), **kwargs)
+                                try:
+                                    e.text = _t
+                                except TypeError as error:
+                                    print(_t, type(_t))
+                                    raise error
+                                out.append(e)
+                        else:
+                            e = ET.Element(tag)
+                            _t = serialize(val, float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)), **kwargs)
+                            try:
+                                e.text = _t
+                            except TypeError as error:
+                                print(_t, type(_t))
+                                raise error
+                            out.append(e)
+        else:
+            for tag, varname in self.xml_value_children.items():
+                val = get_var(object, varname, None)
+                if val is not None:
+                    if type(val) == list and all([not is_int(v) and not is_float(v) and type(v) == str for v in val]):
+                        for v in val:
+                            e = ET.Element(tag)
+                            _t = serialize(v, float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)), **kwargs)
+                            try:
+                                e.text = _t
+                            except TypeError as error:
+                                print(_t, type(_t))
+                                raise error
+                            out.append(e)
+                    else:
                         e = ET.Element(tag)
-                        _t = self._serialize(v, float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)), **kwargs)
+                        _t = serialize(val, float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)), **kwargs)
                         try:
                             e.text = _t
                         except TypeError as error:
                             print(_t, type(_t))
                             raise error
                         out.append(e)
-                else:
-                    e = ET.Element(tag)
-                    _t = self._serialize(val, float_fmt=float_fmt_dict.get(tag, float_fmt_dict.get("default", None)), **kwargs)
-                    try:
-                        e.text = _t
-                    except TypeError as error:
-                        print(_t, type(_t))
-                        raise error
-                    out.append(e)
         # children that are nested in another element
         if self.xml_nested_children != {}:
             for _, nest in self.xml_nested_children.items():
                 out.append(nest.to_xml(object, float_fmt_dict=float_fmt_dict, **kwargs))
+        # value
+        if self.xml_value is not None:
+            assert len(out) == 0
+            val = get_var(object, self.xml_value, None)
+            out.text = serialize(val, float_fmt=float_fmt_dict.get(_xml_tag, float_fmt_dict.get("default", None)), **kwargs)
+            if val is not None:
+                return out
+            else:
+                return
         return out
 
     def kwargs_from_xml(self, xml: ET.Element, **kwargs):
@@ -188,15 +256,15 @@ class XMLDefinition(object):
         _smurffile = kwargs.get("_smurffile", None)
         # value
         if self.xml_value is not None and xml.text is not None:
-            kwargs[self.xml_value] = self._deserialize(xml.text, key=xml.tag)
+            kwargs[self.xml_value] = deserialize(xml.text, key=xml.tag)
         # attributes
         for attname, varname in self.xml_attributes.items():
             if attname in xml.attrib:
-                kwargs[varname] = self._deserialize(xml.attrib[attname], key=attname)
+                kwargs[varname] = deserialize(xml.attrib[attname], key=attname)
         for child in xml:
             if self.xml_value is not None:
                 # value
-                kwargs[self.xml_value] = self._deserialize(
+                kwargs[self.xml_value] = deserialize(
                     child.text, key=child.tag
                 )
             if child.tag in self.xml_children.keys():
@@ -210,10 +278,10 @@ class XMLDefinition(object):
                 # children that are created from a simple property and have only attributes
                 for attname, varname in self.xml_attribute_children[child.tag].items():
                     if attname in child.attrib.keys():
-                        kwargs[varname] = self._deserialize(child.attrib[attname], key=attname)
+                        kwargs[varname] = deserialize(child.attrib[attname], key=attname)
             if child.tag in self.xml_value_children.keys():
                 # children that have the a value as text
-                kwargs[self.xml_value_children[child.tag]] = self._deserialize(child.text, key=child.tag)
+                kwargs[self.xml_value_children[child.tag]] = deserialize(child.text, key=child.tag)
             if child.tag in self.xml_nested_children.keys():
                 # children that are nested in another element
                 _kwargs = self.xml_nested_children[child.tag].kwargs_from_xml(child,
@@ -226,52 +294,6 @@ class XMLDefinition(object):
                     else:
                         kwargs[k] = v
         return kwargs
-
-    def _serialize(self, entry, float_fmt=None, **kwargs) -> str:
-        """
-
-        Args:
-            entry: The entry to serialize
-            precision_dict: the float format in the style "%.6f"
-
-        Returns:
-
-        """
-        assert entry is not None
-        if hasattr(entry, "tolist"):
-            entry = entry.tolist()
-        if type(entry) in [list, tuple, np.array]:
-            entry = [self._serialize(v, float_fmt=float_fmt) for v in entry]
-            return " ".join(entry)
-        elif type(entry) in [int, np.intc, np.int64, bool]:
-            return str(int(entry))
-        elif type(entry) in [float, np.float64]:
-            return float_fmt % entry if float_fmt is not None else str(entry)
-        elif isinstance(entry, Linkable):
-            if entry._related_robot_instance is not None and kwargs.get("robot_instance", None) is not None and \
-               str(entry._related_robot_instance._related_entity_instance) != str(kwargs["robot_instance"]._related_entity_instance):
-                    return str(entry._related_robot_instance._related_entity_instance) + "::" + str(entry)
-            else:
-                return str(entry)
-        else:
-            return str(entry)
-
-    def _deserialize(self, string: str, key=None):
-        string = string.strip()
-        if " " in string and not key in ["uri", "url", "file", "filepath", "filename"]:
-            _list = string.split()
-            if all([is_int(v) for v in _list]):
-                return [int(v) for v in _list]
-            elif all([is_float(v) for v in _list]):
-                return [float(v) for v in _list]
-            else:
-                return _list
-        elif is_int(string):
-            return int(string)
-        elif is_float(string):
-            return float(string)
-        else:
-            return string
 
 
 class XMLFactory(XMLDefinition):
@@ -316,22 +338,6 @@ class XMLFactory(XMLDefinition):
         if self.available_in_dialect:
             return self.from_xml(classtype, ET.fromstring(xml_string))
         return None
-
-
-XML_REFLECTIONS = {
-    "urdf": {
-        "read": True,
-        "write": True
-    },
-    "sdf": {
-        "read": True,
-        "write": True
-    },
-    "x3d": {
-        "read": False,
-        "write": True
-    }
-}
 
 
 def class_factory(cls, only=None):
@@ -399,40 +405,4 @@ def REGISTER_MODULE_TO_XML_FACTORY(module):
             class_factory(getattr(module, classname))
 
 
-def singular(prop):
-    """
-    Makes sure the prop is single and not a list
-    Args:
-        prop: The property to check
 
-    Returns:
-        prop as a single element
-    Raises:
-        Assertion error if prop is a list with more than one element
-    """
-    if type(prop) == list:
-        if len(prop) == 1:
-            return prop[0]
-        elif len(prop) == 0:
-            return None
-        else:
-            raise AssertionError(f"Got list with content {prop} where only a single element is allowed.")
-    else:
-        return prop
-
-
-def plural(prop):
-    """
-    Makes sure prop is a list
-    Args:
-        prop: The property to check
-
-    Returns:
-        prop as list
-    """
-    if type(prop) == list:
-        return prop
-    elif prop is None:
-        return []
-    else:
-        return [prop]
