@@ -5,12 +5,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>phobos utils module &#8212; Phobos 2.0.0 (4e37f7f) documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=def86cc0" />
+    <title>phobos utils module &#8212; Phobos 2.1.0 (8d2df7a) documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
     
-    <script src="_static/documentation_options.js?v=b4864922"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/documentation_options.js?v=4e162a14"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
@@ -18,7 +18,7 @@
     <link rel="next" title="phobos ci module" href="phobos.ci.html" />
     <link rel="prev" title="phobos geometry module" href="phobos.geometry.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="phobos.geometry.html" title="phobos geometry module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (4e37f7f) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.1.0 (8d2df7a) documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">phobos utils module</a></li> 
       </ul>
     </div>  
@@ -96,7 +96,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.git.checkout">
-<span class="sig-prename descclassname"><span class="pre">phobos.utils.git.</span></span><span class="sig-name descname"><span class="pre">checkout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">commit_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.checkout" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.git.</span></span><span class="sig-name descname"><span class="pre">checkout</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commit_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'autobuild'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.checkout" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
@@ -107,7 +107,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.git.clone">
-<span class="sig-prename descclassname"><span class="pre">phobos.utils.git.</span></span><span class="sig-name descname"><span class="pre">clone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_failure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commit_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shallow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.clone" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.git.</span></span><span class="sig-name descname"><span class="pre">clone</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_failure</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">commit_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shallow</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">recreate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'autobuild'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">all_branches</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.clone" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
@@ -138,7 +138,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.git.get_repo_data">
-<span class="sig-prename descclassname"><span class="pre">phobos.utils.git.</span></span><span class="sig-name descname"><span class="pre">get_repo_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.get_repo_data" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.git.</span></span><span class="sig-name descname"><span class="pre">get_repo_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">directory</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'autobuild'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.get_repo_data" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
@@ -168,7 +168,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.git.reset">
-<span class="sig-prename descclassname"><span class="pre">phobos.utils.git.</span></span><span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branch</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.reset" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.git.</span></span><span class="sig-name descname"><span class="pre">reset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">remote</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">branch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hard</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.git.reset" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
@@ -304,6 +304,11 @@ Mechanik 3 - Dynamik’ (2012) by Russel C. Hibbeler this has been fixed.</p>
 <section id="module-phobos.utils.misc">
 <span id="phobos-utils-misc-module"></span><h2>phobos.utils.misc module<a class="headerlink" href="#module-phobos.utils.misc" title="Link to this heading">¶</a></h2>
 <dl class="py function">
+<dt class="sig sig-object py" id="phobos.utils.misc.abspath">
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">abspath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'/home/runner/work/phobos/phobos/docs'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.abspath" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.misc.append_string">
 <span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">append_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">s</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.append_string" title="Link to this definition">¶</a></dt>
 <dd><p>Replacement for print so that the printed string is put to s</p>
@@ -321,7 +326,7 @@ Mechanik 3 - Dynamik’ (2012) by Russel C. Hibbeler this has been fixed.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.misc.copy">
-<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.copy" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">copy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.copy" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
@@ -340,18 +345,23 @@ Mechanik 3 - Dynamik’ (2012) by Russel C. Hibbeler this has been fixed.</p>
 <dd></dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="phobos.utils.misc.deserialize">
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">deserialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">key</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.deserialize" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.misc.duplicate">
 <span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">duplicate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">link_obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.duplicate" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.misc.edit_name_string">
-<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">edit_name_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replacements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.edit_name_string" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">edit_name_string</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">suffix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replacements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">do_not_double</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correspondance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float_fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'%.3f'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.edit_name_string" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.misc.execute_shell_command">
-<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">execute_shell_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.execute_shell_command" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">execute_shell_command</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">cmd</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cwd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dry_run</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">executable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.execute_shell_command" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
@@ -365,8 +375,23 @@ Mechanik 3 - Dynamik’ (2012) by Russel C. Hibbeler this has been fixed.</p>
 <dd></dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="phobos.utils.misc.get_var">
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">get_var</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">object</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">varname_string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ABORT'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float_fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.get_var" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.misc.is_binary_file">
 <span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">is_binary_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filepath</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.is_binary_file" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.utils.misc.is_float">
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">is_float</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.is_float" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.utils.misc.is_int">
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">is_int</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">val</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.is_int" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py function">
@@ -383,6 +408,23 @@ Mechanik 3 - Dynamik’ (2012) by Russel C. Hibbeler this has been fixed.</p>
 <dt class="sig sig-object py" id="phobos.utils.misc.merge_default">
 <span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">merge_default</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default_dict</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.merge_default" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.utils.misc.patch_dict">
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">patch_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">patch_list_strategy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'APPEND'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.patch_dict" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.utils.misc.plural">
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">plural</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.plural" title="Link to this definition">¶</a></dt>
+<dd><p>Makes sure prop is a list
+:param prop: The property to check</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>prop as list</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.misc.posix_path">
@@ -402,7 +444,7 @@ Mechanik 3 - Dynamik’ (2012) by Russel C. Hibbeler this has been fixed.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.misc.regex_replace">
-<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">regex_replace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replacements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.regex_replace" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">regex_replace</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">string</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replacements</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correspondance</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float_fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.regex_replace" title="Link to this definition">¶</a></dt>
 <dd><p>In string applies all replacements defined in replacements dict.
 It can be a list of dicts or a dict of strings that shall be replaced.0
 Regular expressions can be used.</p>
@@ -417,6 +459,35 @@ Regular expressions can be used.</p>
 <dt class="sig sig-object py" id="phobos.utils.misc.restore_persisting_files">
 <span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">restore_persisting_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pipeline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repo</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">list_of_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temp_dir</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.restore_persisting_files" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.utils.misc.serialize">
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">serialize</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">entry</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">float_fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">str</span></span></span><a class="headerlink" href="#phobos.utils.misc.serialize" title="Link to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>entry</strong> – The entry to serialize</p></li>
+<li><p><strong>precision_dict</strong> – the float format in the style “%.6f”</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns:</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="phobos.utils.misc.singular">
+<span class="sig-prename descclassname"><span class="pre">phobos.utils.misc.</span></span><span class="sig-name descname"><span class="pre">singular</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prop</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.utils.misc.singular" title="Link to this definition">¶</a></dt>
+<dd><p>Makes sure the prop is single and not a list
+:param prop: The property to check</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>prop as a single element</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>Assertion error if prop is a list with more than one element</strong> – </p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="phobos.utils.misc.store_persisting_files">
@@ -614,7 +685,7 @@ submechanism</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -666,6 +737,7 @@ submechanism</p>
 </ul>
 </li>
 <li><a class="reference internal" href="#module-phobos.utils.misc">phobos.utils.misc module</a><ul>
+<li><a class="reference internal" href="#phobos.utils.misc.abspath"><code class="docutils literal notranslate"><span class="pre">abspath()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.append_string"><code class="docutils literal notranslate"><span class="pre">append_string()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.check_for_iterable"><code class="docutils literal notranslate"><span class="pre">check_for_iterable()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.color_parser"><code class="docutils literal notranslate"><span class="pre">color_parser()</span></code></a></li>
@@ -673,21 +745,29 @@ submechanism</p>
 <li><a class="reference internal" href="#phobos.utils.misc.create_dir"><code class="docutils literal notranslate"><span class="pre">create_dir()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.create_symlink"><code class="docutils literal notranslate"><span class="pre">create_symlink()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.deepen_dict"><code class="docutils literal notranslate"><span class="pre">deepen_dict()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.utils.misc.deserialize"><code class="docutils literal notranslate"><span class="pre">deserialize()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.duplicate"><code class="docutils literal notranslate"><span class="pre">duplicate()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.edit_name_string"><code class="docutils literal notranslate"><span class="pre">edit_name_string()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.execute_shell_command"><code class="docutils literal notranslate"><span class="pre">execute_shell_command()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.flatten_dict"><code class="docutils literal notranslate"><span class="pre">flatten_dict()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.get_thumbnail"><code class="docutils literal notranslate"><span class="pre">get_thumbnail()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.utils.misc.get_var"><code class="docutils literal notranslate"><span class="pre">get_var()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.is_binary_file"><code class="docutils literal notranslate"><span class="pre">is_binary_file()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.utils.misc.is_float"><code class="docutils literal notranslate"><span class="pre">is_float()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.utils.misc.is_int"><code class="docutils literal notranslate"><span class="pre">is_int()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.list_files"><code class="docutils literal notranslate"><span class="pre">list_files()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.make_icon"><code class="docutils literal notranslate"><span class="pre">make_icon()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.merge_default"><code class="docutils literal notranslate"><span class="pre">merge_default()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.utils.misc.patch_dict"><code class="docutils literal notranslate"><span class="pre">patch_dict()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.utils.misc.plural"><code class="docutils literal notranslate"><span class="pre">plural()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.posix_path"><code class="docutils literal notranslate"><span class="pre">posix_path()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.read_number_from_config"><code class="docutils literal notranslate"><span class="pre">read_number_from_config()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.recreate_dir"><code class="docutils literal notranslate"><span class="pre">recreate_dir()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.regex_replace"><code class="docutils literal notranslate"><span class="pre">regex_replace()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.remove_dir"><code class="docutils literal notranslate"><span class="pre">remove_dir()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.restore_persisting_files"><code class="docutils literal notranslate"><span class="pre">restore_persisting_files()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.utils.misc.serialize"><code class="docutils literal notranslate"><span class="pre">serialize()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.utils.misc.singular"><code class="docutils literal notranslate"><span class="pre">singular()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.store_persisting_files"><code class="docutils literal notranslate"><span class="pre">store_persisting_files()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.sys_path"><code class="docutils literal notranslate"><span class="pre">sys_path()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.utils.misc.to_hex_color"><code class="docutils literal notranslate"><span class="pre">to_hex_color()</span></code></a></li>
@@ -766,7 +846,7 @@ submechanism</p>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -781,13 +861,13 @@ submechanism</p>
         <li class="right" >
           <a href="phobos.geometry.html" title="phobos geometry module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (4e37f7f) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.1.0 (8d2df7a) documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">phobos utils module</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014-2022, DFKI GmbH and University of Bremen.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>

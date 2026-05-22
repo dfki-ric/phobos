@@ -5,12 +5,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>phobos ci module &#8212; Phobos 2.0.0 (4e37f7f) documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=def86cc0" />
+    <title>phobos ci module &#8212; Phobos 2.1.0 (8d2df7a) documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
     
-    <script src="_static/documentation_options.js?v=b4864922"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/documentation_options.js?v=4e162a14"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
@@ -18,7 +18,7 @@
     <link rel="next" title="phobos scripts" href="phobos.scripts.html" />
     <link rel="prev" title="phobos utils module" href="phobos.utils.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="phobos.utils.html" title="phobos utils module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (4e37f7f) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.1.0 (8d2df7a) documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">phobos ci module</a></li> 
       </ul>
     </div>  
@@ -54,7 +54,7 @@
 <span id="phobos-ci-pipeline-module"></span><h2>phobos.ci.pipeline module<a class="headerlink" href="#module-phobos.ci.pipeline" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="phobos.ci.pipeline.Pipeline">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">phobos.ci.pipeline.</span></span><span class="sig-name descname"><span class="pre">Pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processed_model_exists</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subclass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.Pipeline" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">phobos.ci.pipeline.</span></span><span class="sig-name descname"><span class="pre">Pipeline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_file</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processed_model_exists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">subclass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.Pipeline" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">YAMLObject</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="phobos.ci.pipeline.Pipeline.deploy_models">
@@ -65,6 +65,11 @@
 <dl class="py method">
 <dt class="sig sig-object py" id="phobos.ci.pipeline.Pipeline.get_coverage">
 <span class="sig-name descname"><span class="pre">get_coverage</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">phases</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_na</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.Pipeline.get_coverage" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.pipeline.Pipeline.get_model">
+<span class="sig-name descname"><span class="pre">get_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">modelname_or_configkey</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.pipeline.Pipeline.get_model" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 <dl class="py method">
@@ -122,7 +127,7 @@
 <span id="phobos-ci-base-model-module"></span><h2>phobos.ci.base_model module<a class="headerlink" href="#module-phobos.ci.base_model" title="Link to this heading">¶</a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="phobos.ci.base_model.BaseModel">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">phobos.ci.base_model.</span></span><span class="sig-name descname"><span class="pre">BaseModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processed_model_exists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.base_model.BaseModel" title="Link to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">phobos.ci.base_model.</span></span><span class="sig-name descname"><span class="pre">BaseModel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">configfile</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pipeline</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">processed_model_exists</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">configkey</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.base_model.BaseModel" title="Link to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">YAMLObject</span></code></p>
 <dl class="py method">
 <dt class="sig sig-object py" id="phobos.ci.base_model.BaseModel.deploy">
@@ -313,6 +318,11 @@
 <span class="sig-name descname"><span class="pre">test_topological_self_consistency</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_topological_self_consistency" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="phobos.ci.model_testing.ModelTest.test_total_mass">
+<span class="sig-name descname"><span class="pre">test_total_mass</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">expected_mass</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.ci.model_testing.ModelTest.test_total_mass" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
 </dd></dl>
 
 </section>
@@ -323,7 +333,7 @@
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -334,6 +344,7 @@
 <li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline"><code class="docutils literal notranslate"><span class="pre">Pipeline</span></code></a><ul>
 <li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline.deploy_models"><code class="docutils literal notranslate"><span class="pre">Pipeline.deploy_models()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline.get_coverage"><code class="docutils literal notranslate"><span class="pre">Pipeline.get_coverage()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline.get_model"><code class="docutils literal notranslate"><span class="pre">Pipeline.get_model()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline.has_failure"><code class="docutils literal notranslate"><span class="pre">Pipeline.has_failure()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline.number_unfinished_models"><code class="docutils literal notranslate"><span class="pre">Pipeline.number_unfinished_models()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.ci.pipeline.Pipeline.print_fail_log"><code class="docutils literal notranslate"><span class="pre">Pipeline.print_fail_log()</span></code></a></li>
@@ -399,6 +410,7 @@
 <li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_process_double_check"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_process_double_check()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_symmetry_check_masses"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_symmetry_check_masses()</span></code></a></li>
 <li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_topological_self_consistency"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_topological_self_consistency()</span></code></a></li>
+<li><a class="reference internal" href="#phobos.ci.model_testing.ModelTest.test_total_mass"><code class="docutils literal notranslate"><span class="pre">ModelTest.test_total_mass()</span></code></a></li>
 </ul>
 </li>
 </ul>
@@ -439,7 +451,7 @@
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -454,13 +466,13 @@
         <li class="right" >
           <a href="phobos.utils.html" title="phobos utils module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (4e37f7f) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.1.0 (8d2df7a) documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">phobos ci module</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014-2022, DFKI GmbH and University of Bremen.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>

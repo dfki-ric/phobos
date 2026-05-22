@@ -5,12 +5,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>phobos geometry module &#8212; Phobos 2.0.0 (4e37f7f) documentation</title>
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=def86cc0" />
+    <title>phobos geometry module &#8212; Phobos 2.1.0 (8d2df7a) documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css?v=2bf1fcf8" />
     
-    <script src="_static/documentation_options.js?v=b4864922"></script>
-    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/documentation_options.js?v=4e162a14"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
@@ -18,7 +18,7 @@
     <link rel="next" title="phobos utils module" href="phobos.utils.html" />
     <link rel="prev" title="phobos scenes module" href="phobos.scenes.html" /> 
   </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -33,7 +33,7 @@
         <li class="right" >
           <a href="phobos.scenes.html" title="phobos scenes module"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (4e37f7f) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.1.0 (8d2df7a) documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">phobos geometry module</a></li> 
       </ul>
     </div>  
@@ -52,7 +52,7 @@
 <span id="phobos-geometry-geometry-module"></span><h3>phobos.geometry.geometry module<a class="headerlink" href="#module-phobos.geometry.geometry" title="Link to this heading">¶</a></h3>
 <dl class="py function">
 <dt class="sig sig-object py" id="phobos.geometry.geometry.create_box">
-<span class="sig-prename descclassname"><span class="pre">phobos.geometry.geometry.</span></span><span class="sig-name descname"><span class="pre">create_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oriented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.geometry.create_box" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.geometry.</span></span><span class="sig-name descname"><span class="pre">create_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oriented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.geometry.create_box" title="Link to this definition">¶</a></dt>
 <dd><p>Create a box element.</p>
 </dd></dl>
 
@@ -90,7 +90,7 @@
 
 <dl class="py function">
 <dt class="sig sig-object py" id="phobos.geometry.geometry.reduce_mesh">
-<span class="sig-prename descclassname"><span class="pre">phobos.geometry.geometry.</span></span><span class="sig-name descname"><span class="pre">reduce_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.geometry.reduce_mesh" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.geometry.</span></span><span class="sig-name descname"><span class="pre">reduce_mesh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mesh</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_faces</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_faces</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.geometry.reduce_mesh" title="Link to this definition">¶</a></dt>
 <dd></dd></dl>
 
 </section>
@@ -282,21 +282,21 @@ that’S only purpose is to generate the kccd model</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="phobos.geometry.robot.replace_collision">
-<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">replace_collision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'box'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oriented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.replace_collision" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">replace_collision</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linkname</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'box'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oriented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_primitives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.replace_collision" title="Link to this definition">¶</a></dt>
 <dd><p>Replace the collision(s) stated in linkname of the robot with an oriented shape.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="phobos.geometry.robot.replace_collisions">
-<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">replace_collisions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'box'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oriented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.replace_collisions" title="Link to this definition">¶</a></dt>
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">replace_collisions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'box'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oriented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_primitives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.replace_collisions" title="Link to this definition">¶</a></dt>
 <dd><p>Replace all collisions of the robot ( except exclude’s ) with a given shape. This can be
 a ‘sphere’, ‘cylinder’, ‘box’ or ‘convex’.</p>
 </dd></dl>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="phobos.geometry.robot.replace_geometry">
-<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">replace_geometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'box'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oriented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.replace_geometry" title="Link to this definition">¶</a></dt>
-<dd><p>Replace the geometry of the element with an oriented shape. urdf_path is needed for mesh loading.
+<span class="sig-prename descclassname"><span class="pre">phobos.geometry.robot.</span></span><span class="sig-name descname"><span class="pre">replace_geometry</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">element</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shape</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'box'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oriented</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">apply_primitives</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#phobos.geometry.robot.replace_geometry" title="Link to this definition">¶</a></dt>
+<dd><p>Creates a geometry of the element with an oriented shape. urdf_path is needed for mesh loading.
 :param element: An geometry element representation.Visual or representation.Collision
 :param shape: [‘box’, ‘sphere’, ‘cylinder’, ‘convex’]
 :param oriented: Whether the bounding box should be oriented to have the minimum volume to cover the element
@@ -330,7 +330,7 @@ a ‘sphere’, ‘cylinder’, ‘box’ or ‘convex’.</p>
           </div>
         </div>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
         <div class="sphinxsidebarwrapper">
   <div>
     <h3><a href="index.html">Table of Contents</a></h3>
@@ -415,7 +415,7 @@ a ‘sphere’, ‘cylinder’, ‘box’ or ‘convex’.</p>
       </div>
       <div class="clearer"></div>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
+    <div class="related" role="navigation" aria-label="Related">
       <h3>Navigation</h3>
       <ul>
         <li class="right" style="margin-right: 10px">
@@ -430,13 +430,13 @@ a ‘sphere’, ‘cylinder’, ‘box’ or ‘convex’.</p>
         <li class="right" >
           <a href="phobos.scenes.html" title="phobos scenes module"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.0.0 (4e37f7f) documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">Phobos 2.1.0 (8d2df7a) documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">phobos geometry module</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
     &#169; Copyright 2014-2022, DFKI GmbH and University of Bremen.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.3.7.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
     </div>
   </body>
 </html>
