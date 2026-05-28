@@ -822,17 +822,23 @@ class Mesh(Representation, SmurfBase):
                 self._mesh_object = bpy.data.meshes[bpy.context.object.data.name]
                 bpy.ops.object.delete()
             elif self.input_type in ["file_obj", "file_mars_obj"]:
+                forward_axis = self.mesh_orientation["forward"]
+                if forward_axis[0] == "-":
+                    forward_axis = "NEGATIVE_"+forward_axis[1:]
+                up_axis = self.mesh_orientation["up"]
+                if up_axis[0] == "-":
+                    up_axis = "NEGATIVE_"+up_axis[1:]
                 if b41Import:
                     bpy.ops.wm.obj_import(filepath=self.input_file,
-                                             forward_axis=self.mesh_orientation["forward"],
-                                             up_axis=self.mesh_orientation["up"],
+                                             forward_axis=forward_axis,
+                                             up_axis=up_axis,
                                              use_split_objects=False,
                                              use_split_groups=False,
                                              import_vertex_groups=True)
                 else:
                     bpy.ops.import_scene.obj(filepath=self.input_file,
-                                             axis_forward=self.mesh_orientation["forward"],
-                                             axis_up=self.mesh_orientation["up"],
+                                             axis_forward=forward_axis,
+                                             axis_up=up_axis,
                                              use_split_objects=False,
                                              use_split_groups=False,
                                              use_groups_as_vgroups=True,
