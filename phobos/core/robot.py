@@ -73,6 +73,13 @@ class Robot(SMURFRobot):
         for vis in export_instance.visuals:
             if isinstance(vis.geometry, representation.Mesh):
                 vis.geometry.apply_scale()
+            elif isinstance(vis.geometry, representation.Cylinder):
+                # Cylinders in URDF are z-axis aligned, in X3D they are y-axis aligned
+                # So we have to rotate the visual accordingly.
+                vis.origin = representation.Pose.from_matrix(
+                        vis.origin.to_matrix().dot(create_transformation(xyz=[0.0, 0.0, 0.0], rpy=[1.57, 0.0, 0.0])),
+                        relative_to=vis.origin.relative_to
+                        )
 
         if reduce_meshes > 0:
             for vis in export_instance.visuals:

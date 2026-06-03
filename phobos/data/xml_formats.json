@@ -1324,7 +1324,7 @@
             "DEF": "name"
           },
           "children": {
-            "Cylinder": {
+            "cylinder": {
               "classname": "Cylinder",
               "varname": "geometry"
             },
