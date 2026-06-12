@@ -1061,25 +1061,25 @@ class GenerateInertialObjectsOperator(Operator):
         description="Clear existing inertial objects of selected links.",
     )
 
-    _toggling : BoolProperty(
+    toggling_internal : BoolProperty(
         name="Ensure no infinite recursion when toggling visuals and collisions",
         default=False,
         description="Used to avoid infine recursion when toggling visuals/collisions",
     )
 
     def toggleVisual(self, context):
-        if self._toggling:
+        if self.toggling_internal:
             return
-        self._toggling = True
+        self.toggling_internal = True
         self.collisions = not bool(self.visuals)
-        self._toggling = False
+        self.toggling_internal = False
 
     def toggleCollision(self, context):
-        if self._toggling:
+        if self.toggling_internal:
             return
-        self._toggling = True
+        self.toggling_internal = True
         self.visuals = not bool(self.collisions)
-        self._toggling = False
+        self.toggling_internal = False
 
     visuals : BoolProperty(
         name="visual",
