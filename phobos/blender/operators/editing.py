@@ -1629,19 +1629,7 @@ class DefineJointConstraintsOperator(Operator):
         name='Flip Visual Axis', default=False, description='Flip calculated axis'
     )
 
-    def __init__(self):
-        self.sRefBody = False  # Show gearbox options: reference body drop down and gearbox ratio
-        self.sAxis = False  # Show first axis
-        self.sLimit = False  # Show axis limits
-        self.sLimitEqual = False  # Upper and lower limits are the same
-        self.sEffort = False  # Show max axis effort (N or Nm)
-        self.sVelocity = False  # Show max axis velocity (meters/s or angle/s)
-        self.isAngle = False  # Rotating joint, affects max velocity, effort and limits
-        self.sAxis2 = False  # Show second axis
-        self.sSpring = False  # Show spring
-        self.sDamping = False  # Show damping
-        self.sThreadPitch = False  # Show screw parameter
-        self.sAxisFlip = False  # Show checkbox to flip calculated axis
+    def invoke(self, context, event):
         self.setOptionalParameters()
 
     executeMessage = []
