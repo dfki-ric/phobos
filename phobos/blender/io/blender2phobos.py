@@ -67,7 +67,7 @@ def deriveMaterial(mat, logging=False, errors=None):
             elif tex.outputs["Color"].links[0].to_socket.node.name == "Normal Map" and tex.image is not None:
                 normalTexture = representation.Texture(image=tex.image)
         # A new file handler API was introduced in Blender 4.1
-        b41Export = bpy.app.version[0] == 4 and bpy.app.version[1] >= 1
+        b41Export = bpy.app.version[0] > 4 or (bpy.app.version[0] == 4 and bpy.app.version[1] >= 1)
         if "Specular BSDF" in mat.node_tree.nodes.keys():
             diffuse_color = mat.node_tree.nodes["Specular BSDF"].inputs["Base Color"].default_value
             if b41Export:
