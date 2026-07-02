@@ -201,12 +201,25 @@ def setJointConstraints(
         applySpringDamping(joint)
 
     # set constraints accordingly
+    if lower is None:
+        lower = 0.0
+    if upper is None:
+        upper = 0.0
+    if lower2 is None:
+        lower2 = 0.0
+    if upper2 is None:
+        upper2 = 0.0
     joint['joint/limits/lower'] = lower
     joint['joint/limits/upper'] = upper
     joint['joint/limits/lower2'] = lower2
     joint['joint/limits/upper2'] = upper2
     joint.data.bones.active = joint.pose.bones[0].bone
-    joint.data.bones.active.select = True
+
+    bpy.ops.object.mode_set(mode='EDIT')
+    eb = joint.data.edit_bones[0]
+    eb.select = True
+    bpy.ops.object.mode_set(mode='POSE')
+
     remove_screwdrivers(joint)
 
     if jointtype == 'revolute':
