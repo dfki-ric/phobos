@@ -84,6 +84,7 @@ def deriveMaterial(mat, logging=False, errors=None):
                 specular_color = np.array(diffuse_color) * mat.node_tree.nodes["Principled BSDF"].inputs[
                     "Specular Tint"].default_value
                 emissive = np.array(mat.node_tree.nodes["Principled BSDF"].inputs["Emission Color"].default_value)
+                emissive[:-1] *= mat.node_tree.nodes["Principled BSDF"].inputs["Emission Strength"].default_value
             else:
                 specular_color = np.array(diffuse_color) * mat.node_tree.nodes["Principled BSDF"].inputs[
                     "Specular"].default_value
