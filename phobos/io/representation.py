@@ -37,7 +37,7 @@ if BPY_AVAILABLE:
 
     del _bpy_mesh_dc
 
-    MESH_DATA_TYPES += ["bpy_types.Mesh"]
+    MESH_DATA_TYPES += ["bpy_types.Mesh", "_bpy_types.Mesh"]
 
 from ..commandline_logging import get_logger
 log = get_logger(__name__)
