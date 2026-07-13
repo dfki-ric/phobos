@@ -263,8 +263,11 @@ class XMLRobot(Representation):
         if target == new_name:
             return {}
         # new_name exists? otherwise we'd have to fix the name
-        assert self.get_aggregate(targettype, new_name) is None,\
-                f"Can't rename {targettype} {target} to {new_name} as the new name already exists"
+        #assert self.get_aggregate(targettype, new_name) is None,\
+        #        f"Can't rename {targettype} {target} to {new_name} as the new name already exists"
+        i = 0
+        while self.get_aggregate(targettype, new_name) is not None:
+            new_name = f"{new_name}_[i]"
 
         other_targettypes = ['collision', 'visual', 'material', 'sensor', "motor"]
         if further_targettypes is not None:
