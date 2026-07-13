@@ -335,7 +335,10 @@ class Robot(SMURFRobot):
                 additional_meshes = []
             meshes = [_mesh_format] + additional_meshes
             for mf in [f.lower() for f in meshes]:
-                self.export_meshes(mesh_output_dir=os.path.join(outputdir, rel_mesh_pathes[mf]), format=mf)
+                rpath = 'meshes'
+                if rel_mesh_pathes and mf in rel_mesh_pathes:
+                    rpath = rel_mesh_pathes[mf]
+                self.export_meshes(mesh_output_dir=os.path.join(outputdir, rpath), format=mf)
         # Export the smurf files
         smurf_dir = os.path.join(outputdir, "smurf")
         self.smurffile = os.path.join(smurf_dir, "{}.smurf".format(filename))
