@@ -262,12 +262,15 @@ class XMLRobot(Representation):
     def _rename(self, targettype, target, new_name, further_targettypes=None):
         if target == new_name:
             return {}
-        # new_name exists? otherwise we'd have to fix the name
-        #assert self.get_aggregate(targettype, new_name) is None,\
-        #        f"Can't rename {targettype} {target} to {new_name} as the new name already exists"
-        i = 0
-        while self.get_aggregate(targettype, new_name) is not None:
-            new_name = f"{new_name}_[i]"
+
+        # Because the higher-level prefix/suffix mechanism will not produce unique strings properly
+        # the following snippet will find one by appending a number
+        i = 1
+        possible_new_name = f"{new_name}"
+        while self.get_aggregate(targettype, possible_new_name) is not None:
+            possible_new_name = f"{new_name}_{i}"
+            i = i + 1
+        new_name = possible_new_name
 
         other_targettypes = ['collision', 'visual', 'material', 'sensor', "motor"]
         if further_targettypes is not None:
